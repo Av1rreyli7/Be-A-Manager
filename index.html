@@ -364,7 +364,7 @@ tr.me td{background:rgba(53,224,194,.05)}
 
 /* ---------- transfer wire ticker ---------- */
 .ticker{display:flex;background:var(--screen);border:1px solid var(--line2);border-radius:8px;overflow:hidden;white-space:nowrap;align-items:stretch;height:40px;margin-bottom:14px}
-.ticker::before{content:"TRANSFER WIRE";display:flex;align-items:center;padding:0 15px;background:linear-gradient(135deg,var(--gold),#1a8f7c);color:#04110d;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.08em;flex:none}
+.ticker::before{content:attr(data-label);display:flex;align-items:center;padding:0 15px;background:linear-gradient(135deg,var(--gold),#1a8f7c);color:#04110d;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.08em;flex:none}
 .ticker-inner{display:inline-flex;align-items:center;padding:0;animation:tick 40s linear infinite;font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
 @keyframes tick{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
 
@@ -390,6 +390,11 @@ tr.me td{background:rgba(53,224,194,.05)}
 .cabitem .ci-extra{font-size:9px;letter-spacing:.08em;color:var(--faint);margin-top:2px;text-transform:uppercase}
 
 /* basketball mode */
+button.teamcard{display:block;width:100%;text-align:left;background:#0d141c;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:13px 15px;box-shadow:none;text-transform:none;letter-spacing:0;font-family:'Barlow',sans-serif}
+button.teamcard:hover{background:#141e2a;border-color:var(--gold)}
+button.teamcard .tc-name{display:block;color:var(--ink)}
+button.teamcard .tc-sub{display:block;color:var(--dim2)}
+button.teamcard:disabled{cursor:not-allowed}
 .sporton{background:linear-gradient(135deg,#35e0c2,#1fae96)!important;color:#04251f!important;border-color:transparent!important;box-shadow:0 0 18px rgba(53,224,194,.35)}
 #sportRow button{background:#0d141c;border:1px solid var(--line);color:var(--dim)}
 .bbcourt{position:relative;background:radial-gradient(ellipse at 50% 0%,rgba(53,224,194,.14),transparent 60%),#0d141c;border:1px solid var(--line);border-radius:12px;padding:26px 14px;min-height:340px}
@@ -467,13 +472,13 @@ tr.me td{background:rgba(53,224,194,.05)}
 </div>
 
 <div id="app" class="hidden">
-  <div class="ticker"><div class="ticker-inner" id="ticker">Welcome to the league.</div></div>
+  <div class="ticker" id="tickerBar" data-label="TRANSFER WIRE"><div class="ticker-inner" id="ticker">Welcome to the league.</div></div>
   <div class="wrap">
     <div class="topbar">
       <div class="brand"><span class="sq"></span><span class="nm">FLOODLIGHTS</span><span class="tg">WORLD CAREER MODE</span></div>
       <div class="topchips">
         <span class="chip">ROOM <b id="hCode" class="mono"></b></span>
-        <span class="chip">S<b id="hSeason"></b> &middot; WEEK <b id="hRound"></b>/38</span>
+        <span class="chip">S<b id="hSeason"></b> &middot; WEEK <b id="hRound"></b>/<span id="hTotal">38</span></span>
         <span class="chip" id="hWindow"></span>
         <span class="chip"><span class="pulse"></span><span id="hLive">LIVE</span></span>
         <span class="chip dimchip" id="hMe"></span>
@@ -737,7 +742,7 @@ tr.me td{background:rgba(53,224,194,.05)}
 
 <script>
 let ME = { name: localStorage.getItem("fl_name") || "", code: localStorage.getItem("fl_code") || "" };
-let STATE = null;
+var STATE = null;
 const $ = id => document.getElementById(id);
 
 async function api(path, body) {
@@ -753,6 +758,7 @@ async function api(path, body) {
 let PICK_SPORT = "football";
 function setSport(sp){
   PICK_SPORT = sp;
+  try { localStorage.setItem("fl_sport", sp); } catch(e) {}
   $("sportFoot").classList.toggle("sporton", sp === "football");
   $("sportBall").classList.toggle("sporton", sp === "basketball");
   $("sportMsg").textContent = sp === "basketball"
@@ -761,6 +767,7 @@ function setSport(sp){
 }
 $("sportFoot").onclick = () => setSport("football");
 $("sportBall").onclick = () => setSport("basketball");
+try { if (localStorage.getItem("fl_sport") === "basketball") setSport("basketball"); } catch(e) {}
 $("createBtn").onclick = async () => {
   try {
     ME.name = $("nameIn").value.trim(); if (!ME.name) throw new Error("Enter a name first.");
@@ -791,6 +798,7 @@ function leave(){
   $("lobbyMsg").textContent = "";
   $("app").classList.add("hidden");
   $("lobby").classList.remove("hidden");
+  flReload();
 }
 $("leaveBtn").onclick = leave;
 
@@ -1079,8 +1087,13 @@ function rcol(r) { return r >= 85 ? "#3ce0c2" : r >= 78 ? "#7ad97a" : r >= 70 ? 
 function rchip(r) { return `<span class="rchip" style="color:${rcol(r)}">${r}</span>`; }
 function money(v){ return "£" + (Math.round(v*10)/10) + "m"; }
 
+function flReload(){ location.reload(); }
+let RENDERED_SPORT = null;
 function render() {
   const s = STATE;
+  const sportNow = s.sport === "basketball" ? "b" : "f";
+  if (RENDERED_SPORT && RENDERED_SPORT !== sportNow) { flReload(); return; }
+  RENDERED_SPORT = sportNow;
   if (s.sport === "basketball") { renderHoops(s); return; }
   $("hCode").textContent = s.code;
   $("hSeason").textContent = s.season;
@@ -2193,8 +2206,9 @@ function renderHoops(s){
   }
   $("hCode").textContent = s.code;
   $("hSeason").textContent = s.season;
-  $("hRound").textContent = s.week;
-  const hr = document.getElementById("hRound"); if (hr && hr.nextSibling) {}
+  $("hRound").textContent = Math.min(s.week, s.totalRounds);
+  if ($("hTotal")) $("hTotal").textContent = s.totalRounds;
+  if ($("tickerBar")) $("tickerBar").setAttribute("data-label", "THE WIRE");
   $("hMe").textContent = s.you + (s.you === s.host ? " (host)" : "");
   $("hTeam").textContent = s.myTeam || "No team yet";
   $("hBudget").textContent = "$" + s.salary + "m of $" + s.capSoft + "m";
