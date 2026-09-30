@@ -462,21 +462,6 @@ function giveDefaultContract(p) {
   p.wage = defaultWage(p);
   p.squadRole = defaultRole(p);
 }
-function signingDemands(p) {
-  const wantWage = Math.max(Math.round(defaultWage(p) * 1.15 * 10) / 10, Math.round((p.wage || defaultWage(p)) * 1.1 * 10) / 10);
-  const wantYears = p.age <= 23 ? 3 : p.age <= 29 ? 2 : 1;
-  let wantRole = p.rating >= 85 ? "Star" : p.rating >= 79 ? "First team" : "Rotation";
-  if (p.age <= 19 && p.rating < 79) wantRole = "Prospect";
-  return { wantWage, wantYears, wantRole };
-}
-function termsAccepted(demands, wage, years, role) {
-  if (!(wage > 0) || !Number.isFinite(years) || years < 1 || years > 5) return false;
-  if (!SQUAD_ROLES.includes(role)) return false;
-  if (years < demands.wantYears) return false;
-  const roleOk = ROLE_RANK[role] >= ROLE_RANK[demands.wantRole] ||
-    (ROLE_RANK[role] >= ROLE_RANK[demands.wantRole] - 1 && wage >= demands.wantWage * 1.3);
-  return roleOk && wage >= demands.wantWage - 0.05;
-}
 function signedThisWeek(game, user) {
   return !!(user.signings && user.signings.week === game.round && user.signings.count >= 1);
 }
@@ -484,11 +469,24 @@ function markSigning(game, user) {
   user.signings = { week: game.round, count: 1 };
 }
 
-function enterTerms(game, offer, p) {
-  offer.status = "terms";
-  offer.terms = { tries: 0, ...signingDemands(p) };
-  offer.note = `Fee agreed with ${offer.sellerClub}. Now agree personal terms with ${p.name} in the Offers tab: wage, contract length and squad role. Two attempts before he walks.`;
-  romano(game, `🟢 ${offer.toClub} and ${offer.sellerClub} have a full agreement on ${p.name}, ${fmtFee(offer.fee)}. Personal terms are next, the player's camp is at the table now.`);
+function completeSigning(game, offer, p) {
+  const buyer = game.users[offer.buyerUser];
+  if (buyer && signedThisWeek(game, buyer)) {
+    offer.status = "failed";
+    offer.note = `You already completed a signing this week. One signing per week, come back for ${p.name} after the matchweek.`;
+    return;
+  }
+  const r = doTransfer(game, offer);
+  if (r.ok) {
+    if (buyer) markSigning(game, buyer);
+    giveDefaultContract(p);
+    offer.status = "accepted";
+    offer.note = `Fee agreed and the deal is done. ${p.name} is a ${offer.toClub} player. No wage talk, he just wanted the move.`;
+    romano(game, `🚨✅ HERE WE GO! ${p.name} to ${offer.toClub}, confirmed! ${fmtFee(offer.fee)} to ${offer.sellerClub}. Deal completed the same day, no personal terms drama.`);
+  } else {
+    offer.status = "failed";
+    offer.note = r.msg;
+  }
 }
 
 const ROLE_LABELS = {
@@ -846,7 +844,7 @@ function stripFromLineup(club, id) {
 function voidOtherOffers(game, playerId, keepId) {
   for (const o of game.offers || []) {
     if (o.playerId !== playerId || o.id === keepId) continue;
-    if (["pending_seller", "countered", "terms"].includes(o.status)) {
+    if (["pending_seller", "countered"].includes(o.status)) {
       o.status = "void";
       o.note = "The player was sold in another deal, so this offer is dead.";
     }
@@ -917,7 +915,7 @@ function resolveAiSellerOffer(game, offer) {
         romano(game, `❌ BREAKING: ${p.name} to ${offer.toClub} is OFF! The clubs agreed a cash plus player deal but the player said no to the project.`);
         return;
       }
-      if (humanOf(game, offer.toClub) && offer.buyerUser) { enterTerms(game, offer, p); return; }
+      if (humanOf(game, offer.toClub) && offer.buyerUser) { completeSigning(game, offer, p); return; }
       const res = doTransfer(game, offer);
       offer.status = res.ok ? "accepted" : "failed";
       offer.note = res.ok ? `Deal done: £${offer.fee}m plus ${sw.name}. They valued the package at £${total}m against an ask of £${Math.round(baseAsk * 10) / 10}m.` : res.msg;
@@ -955,7 +953,7 @@ function resolveAiSellerOffer(game, offer) {
       romano(game, `❌ BREAKING: ${p.name} to ${offer.toClub} is OFF! Clubs had a full agreement at ${fmtFee(offer.fee)} but the player said no to the project. He is waiting for a bigger club.`);
       return;
     }
-    if (humanOf(game, offer.toClub) && offer.buyerUser) { enterTerms(game, offer, p); return; }
+    if (humanOf(game, offer.toClub) && offer.buyerUser) { completeSigning(game, offer, p); return; }
     const res = doTransfer(game, offer);
     offer.status = res.ok ? "accepted" : "failed";
     offer.note = res.ok ? `Deal completed at £${offer.fee}m.` : res.msg;
@@ -2185,55 +2183,13 @@ app.post("/api/hijack", (req, res) => {
   } else {
     resolveAiSellerOffer(game, offer);
     for (const o of activeRivalOffers(game, p.id, user.team)) {
-      if (offer.status === "accepted" || offer.status === "terms") { o.status = "void"; o.note = `HIJACKED: ${user.team} gazumped your deal for ${p.name}.`; }
+      if (offer.status === "accepted") { o.status = "void"; o.note = `HIJACKED: ${user.team} gazumped your deal for ${p.name}.`; }
     }
   }
   game.offers.unshift(offer);
   game.offers = game.offers.slice(0, 200);
   save();
   res.json({ ok: true, offer, price });
-});
-
-app.post("/api/terms", (req, res) => {
-  const ctx = getCtx(req, res); if (!ctx) return;
-  const { game, user } = ctx;
-  const offer = game.offers.find(o => o.id === Number(req.body.offerId));
-  if (!offer) return res.status(404).json({ error: "Offer not found." });
-  if (offer.status !== "terms") return res.status(400).json({ error: "Personal terms are not on the table for this offer." });
-  if (offer.buyerUser !== user.name) return res.status(403).json({ error: "This is not your negotiation." });
-  if (signedThisWeek(game, user)) return res.status(400).json({ error: "You already completed a signing this week. One signing per week. His camp will wait, finish this one after the matchweek." });
-  const p = game.players[offer.playerId];
-  if (!p || p.club !== offer.sellerClub) { offer.status = "void"; offer.note = "The player already left that club."; save(); return res.json({ ok: true, offer }); }
-  const wage = Math.round(Number(req.body.wage) * 10) / 10;
-  const years = Math.floor(Number(req.body.years));
-  const role = String(req.body.role || "");
-  if (termsAccepted(offer.terms, wage, years, role)) {
-    const r = doTransfer(game, offer);
-    if (r.ok) {
-      markSigning(game, user);
-      p.wage = wage;
-      p.contractYears = years;
-      p.squadRole = role;
-      offer.status = "accepted";
-      offer.note = `Personal terms agreed: £${wage}m a season, ${years} year${years > 1 ? "s" : ""}, ${role}. Welcome to ${offer.toClub}.`;
-      romano(game, `🖊️ Contract SIGNED: ${p.name} agrees personal terms with ${offer.toClub}. £${wage}m a season until ${2026 + game.season + years}. All done.`);
-    } else {
-      offer.status = "failed";
-      offer.note = r.msg;
-    }
-  } else {
-    offer.terms.tries++;
-    if (offer.terms.tries >= 2) {
-      offer.status = "player_declined";
-      offer.note = `${p.name} has walked away from the table. The terms never got close to what his camp wanted.`;
-      romano(game, `❌ COLLAPSED at the last stage: ${p.name} to ${offer.toClub} is OFF. Clubs had a full agreement but personal terms broke down.`);
-    } else {
-      const d = offer.terms;
-      offer.note = `${p.name}'s camp rejected that. They want around £${d.wantWage}m a season, at least ${d.wantYears} year${d.wantYears > 1 ? "s" : ""}, coming in as ${d.wantRole === "Prospect" ? "a Prospect" : d.wantRole === "Star" ? "the Star man" : d.wantRole}. One more try before he walks.`;
-    }
-  }
-  save();
-  res.json({ ok: true, offer });
 });
 
 app.post("/api/renegotiate", (req, res) => {
@@ -2333,7 +2289,7 @@ app.post("/api/respond", (req, res) => {
       if (offer.direction === "inbound") {
         return respondInboundAccept(game, offer, p, res);
       } else {
-        if (humanOf(game, offer.toClub) && offer.buyerUser) { enterTerms(game, offer, p); }
+        if (humanOf(game, offer.toClub) && offer.buyerUser) { completeSigning(game, offer, p); }
         else {
           const r = doTransfer(game, offer);
           offer.status = r.ok ? "accepted" : "failed";
@@ -2366,7 +2322,7 @@ app.post("/api/respond", (req, res) => {
       if (offer.direction === "inbound") return res.status(400).json({ error: "Not applicable." });
       const sellerHuman = humanOf(game, offer.sellerClub);
       if (sellerHuman) {
-        if (humanOf(game, offer.toClub) && offer.buyerUser) { enterTerms(game, offer, p); }
+        if (humanOf(game, offer.toClub) && offer.buyerUser) { completeSigning(game, offer, p); }
         else {
           const r = doTransfer(game, offer);
           offer.status = r.ok ? "accepted" : "failed";

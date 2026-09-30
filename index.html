@@ -1352,18 +1352,6 @@ function offerCard(o, role) {
     <button class="small red" onclick="respond(${o.id},'decline')">Decline</button>
     <button class="small ghost" onclick="respond(${o.id},'counter', prompt('Counter fee in £m'))">Counter</button>` :
     `<span class="tag">Window shut</span> <button class="small red" onclick="respond(${o.id},'decline')">Decline</button>`;
-  if (o.status === "terms" && role === "buyer") actions = `
-    <div class="row" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-      <input id="tw${o.id}" type="number" step="0.1" min="0.1" placeholder="Wage m/season" style="width:120px;background:#0b0e15;border:1px solid var(--line);color:#f4f5f8;padding:6px">
-      <select id="ty${o.id}" style="background:#0b0e15;border:1px solid var(--line);color:#f4f5f8;padding:6px">
-        <option value="1">1 year</option><option value="2">2 years</option><option value="3" selected>3 years</option><option value="4">4 years</option><option value="5">5 years</option>
-      </select>
-      <select id="tr${o.id}" style="background:#0b0e15;border:1px solid var(--line);color:#f4f5f8;padding:6px">
-        <option>Star</option><option selected>First team</option><option>Rotation</option><option>Prospect</option>
-      </select>
-      <button class="small" onclick="sendTerms(${o.id})">Offer terms</button>
-      <button class="small red" onclick="respond(${o.id},'withdraw')">Walk away</button>
-    </div>`;
   if (o.status === "countered" && role === "seller" && o.direction === "inbound") actions = open ? `
     <button class="small" onclick="respond(${o.id},'accept')">Take their ${money(o.fee)}</button>
     <button class="small ghost" onclick="respond(${o.id},'counter', prompt('New counter in £m'))">Counter again</button>
@@ -2070,18 +2058,12 @@ $("ctSave").onclick = async () => {
     else $("ctNote").textContent = r.note || "He said no. Sweeten it.";
   } catch (e) { $("ctNote").textContent = e.message; }
 };
-window.sendTerms = async (offerId) => {
-  try {
-    await api("/api/terms", { offerId, wage: Number($("tw" + offerId).value), years: Number($("ty" + offerId).value), role: $("tr" + offerId).value });
-    await tick();
-  } catch (e) { alert(e.message); }
-};
 window.hijack = async (id, price, name) => {
   if (!confirm("Hijack the " + name + " deal for " + money(price) + "? That is the gazumping price. If he signs, he counts as your one signing this week.")) return;
   try { const r = await api("/api/hijack", { playerId: id }); alert(r.offer && r.offer.note ? r.offer.note : "Hijack attempt in."); await tick(); loadMarket(); } catch (e) { alert(e.message); }
 };
 window.releasePlayer = async (id, name) => {
-  if (!confirm("Terminate " + name + "'s contract? It costs 0.5m in compensation and he walks away a free agent for anyone to sign.")) return;
+  if (!confirm("Release " + name + "? It costs 0.5m in compensation and he immediately joins an AI club for free. Human managers can never pick up released players, only AI clubs get them.")) return;
   try { await api("/api/release", { playerId: id }); await tick(); } catch(e){ alert(e.message); }
 };
 $("mgo").onclick = loadMarket;
