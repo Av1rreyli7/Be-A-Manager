@@ -389,36 +389,6 @@ tr.me td{background:rgba(53,224,194,.05)}
 .cabitem .ci-season{font-size:10px;font-weight:700;letter-spacing:.16em;color:var(--gold);margin-top:4px}
 .cabitem .ci-extra{font-size:9px;letter-spacing:.08em;color:var(--faint);margin-top:2px;text-transform:uppercase}
 
-/* basketball mode */
-button.teamcard{display:block;width:100%;text-align:left;background:#0d141c;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:13px 15px;box-shadow:none;text-transform:none;letter-spacing:0;font-family:'Barlow',sans-serif}
-button.teamcard:hover{background:#141e2a;border-color:var(--gold)}
-button.teamcard .tc-name{display:block;color:var(--ink)}
-button.teamcard .tc-sub{display:block;color:var(--dim2)}
-button.teamcard:disabled{cursor:not-allowed}
-.sporton{background:linear-gradient(135deg,#35e0c2,#1fae96)!important;color:#04251f!important;border-color:transparent!important;box-shadow:0 0 18px rgba(53,224,194,.35)}
-#sportRow button{background:#0d141c;border:1px solid var(--line);color:var(--dim)}
-.bbcourt{position:relative;background:radial-gradient(ellipse at 50% 0%,rgba(53,224,194,.14),transparent 60%),#0d141c;border:1px solid var(--line);border-radius:12px;padding:26px 14px;min-height:340px}
-.bbcourt:before{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:220px;height:110px;border:2px solid rgba(53,224,194,.25);border-top:none;border-radius:0 0 130px 130px}
-.bbcourt:after{content:"";position:absolute;left:50%;top:96px;transform:translateX(-50%);width:70px;height:6px;background:rgba(255,77,94,.6);border-radius:3px}
-.bbslot{background:#121b26;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
-.bbslot .pos{font-family:'Barlow Condensed';letter-spacing:.2em;color:var(--gold);font-size:12px;margin-bottom:6px}
-.bbslot select{width:100%;background:#0d141c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 6px;font-size:13px}
-.bbfive{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;position:relative;z-index:1;margin-top:120px}
-@media(max-width:760px){.bbfive{grid-template-columns:repeat(2,1fr);margin-top:80px}}
-.tradecols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:760px){.tradecols{grid-template-columns:1fr}}
-.tr-asset{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line);font-size:13px}
-.tr-asset:last-child{border-bottom:none}
-.tr-asset input{accent-color:var(--gold)}
-.tr-box{background:#0d141c;border:1px solid var(--line);border-radius:10px;max-height:340px;overflow:auto}
-.serieRow{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:13px}
-.serieRow b{color:var(--gold)}
-.wirepost{background:#121b26;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:14px;line-height:1.5}
-.wirehead{font-family:'Barlow Condensed';letter-spacing:.25em;font-size:11px;color:var(--gold);margin-bottom:5px}
-.champBanner{background:linear-gradient(135deg,rgba(232,192,82,.18),rgba(53,224,194,.1));border:1px solid rgba(232,192,82,.5);border-radius:12px;padding:18px;text-align:center;margin-bottom:14px}
-.champBanner h2{font-family:'Barlow Condensed';letter-spacing:.15em;color:var(--warm);margin:0 0 4px}
-.bbdrrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px}
-.pickchip{display:inline-block;background:#0d141c;border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;margin:2px;color:var(--dim)}
 </style>
 <style id="extra-styles">
   .tag.derby { background: var(--red); color: #fff; border: 1px solid var(--red); }
@@ -456,13 +426,7 @@ button.teamcard:disabled{cursor:not-allowed}
   <p class="msub" style="letter-spacing:.3em;margin-top:-10px">World career mode</p>
   <p class="sub">3,900 players &middot; 250 clubs &middot; 15 leagues &middot; one world. Pick a club with your mates, sign anyone on the planet, haggle with each other, and sim a full 38 game season. Unpicked clubs are run by the AI.</p>
   <div class="card">
-    <h3>Pick your sport</h3>
-    <div class="row" id="sportRow">
-      <button id="sportFoot" class="sporton" style="flex:1" type="button">&#9917; Football</button>
-      <button id="sportBall" style="flex:1" type="button">&#127936; Basketball</button>
-    </div>
-    <p class="msg" id="sportMsg" style="margin-top:6px">Full world career mode. 15 leagues, transfers, Romano.</p>
-    <h3 style="margin-top:14px">Your manager name</h3>
+    <h3>Your manager name</h3>
     <div class="row"><input id="nameIn" maxlength="20" placeholder="e.g. Fergie2"></div>
     <div class="row"><button id="createBtn" style="flex:1">Create a game</button></div>
     <h3 style="margin-top:18px">Or join with a code</h3>
@@ -759,23 +723,10 @@ async function api(path, body) {
 }
 
 // ---- lobby ----
-let PICK_SPORT = "football";
-function setSport(sp){
-  PICK_SPORT = sp;
-  try { localStorage.setItem("fl_sport", sp); } catch(e) {}
-  $("sportFoot").classList.toggle("sporton", sp === "football");
-  $("sportBall").classList.toggle("sporton", sp === "basketball");
-  $("sportMsg").textContent = sp === "basketball"
-    ? "NBA mode. 30 real teams, 82 games, trades, the draft, free agency and the Finals. Rosters up to date as of September 26, 2026."
-    : "Full world career mode. 15 leagues, transfers, Romano.";
-}
-$("sportFoot").onclick = () => setSport("football");
-$("sportBall").onclick = () => setSport("basketball");
-try { if (localStorage.getItem("fl_sport") === "basketball") setSport("basketball"); } catch(e) {}
 $("createBtn").onclick = async () => {
   try {
     ME.name = $("nameIn").value.trim(); if (!ME.name) throw new Error("Enter a name first.");
-    const j = await api("/api/create", { name: ME.name, sport: PICK_SPORT });
+    const j = await api("/api/create", { name: ME.name });
     ME.code = j.code; persist(); enter();
   } catch(e){ $("lobbyMsg").textContent = e.message; }
 };
@@ -1091,14 +1042,8 @@ function rcol(r) { return r >= 85 ? "#3ce0c2" : r >= 78 ? "#7ad97a" : r >= 70 ? 
 function rchip(r) { return `<span class="rchip" style="color:${rcol(r)}">${r}</span>`; }
 function money(v){ return "£" + (Math.round(v*10)/10) + "m"; }
 
-function flReload(){ location.reload(); }
-let RENDERED_SPORT = null;
 function render() {
   const s = STATE;
-  const sportNow = s.sport === "basketball" ? "b" : "f";
-  if (RENDERED_SPORT && RENDERED_SPORT !== sportNow) { flReload(); return; }
-  RENDERED_SPORT = sportNow;
-  if (s.sport === "basketball") { renderHoops(s); return; }
   $("hCode").textContent = s.code;
   $("hSeason").textContent = s.season;
   $("hRound").textContent = s.round;
@@ -2153,205 +2098,6 @@ $("nameIn").value = ME.name;
 </script>
 
 <script>
-// ================= BASKETBALL MODE UI =================
-let BB_INIT = false, BB_TRADE_TEAM = null;
-function rc(r){ return r>=85?"#3ce0c2":r>=78?"#7ad97a":r>=70?"#e8c052":"#9aa7b4"; }
-function chip(r){ return '<span class="rchip" style="color:'+rc(r)+';border-color:'+rc(r)+'55">'+r+'</span>'; }
-function esc(x){ return String(x).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
-function phaseLabel(s){
-  if (s.phase==="regular") return s.week <= s.deadline ? "Trade window open" : "Deadline passed";
-  return {playin:"Play-in tournament",playoffs:"Playoffs, round "+((s.playoffs||{}).round||1),draft:"Draft night",fa:"Free agency open"}[s.phase] || s.phase;
-}
-function simLabel(s){
-  if (s.phase==="regular") return s.week >= s.totalRounds ? "&#9654; Run the play-in" : "&#9654; Sim week "+(s.week+1);
-  if (s.phase==="playin") return "&#9654; Run the play-in";
-  if (s.phase==="playoffs") return "&#9654; Sim "+["","first round","conference semis","conference finals","the NBA Finals"][(s.playoffs||{}).round||1];
-  if (s.phase==="draft") return "&#9654; Continue the draft";
-  if (s.phase==="fa") return "&#9654; Run free agency and start next season";
-  return "&#9654; Sim";
-}
-window.bbSim = async () => { try { await api("/api/sim", {}); tick(); } catch(e){ alert(e.message); } };
-window.bbStart = async () => { try { await api("/api/start", {}); tick(); } catch(e){ $("pickMsgB") && ($("pickMsgB").textContent = e.message); } };
-window.bbPick = async t => { try { await api("/api/pick", {team:t}); tick(); } catch(e){ $("pickMsgB") && ($("pickMsgB").textContent = e.message); } };
-window.bbLineupSave = async () => {
-  const xi = ["PG","SG","SF","PF","C"].map(p => Number(($("bbsel"+p)||{}).value));
-  try { await api("/api/lineup", { xi, subs: [] }); $("bbLuMsg").textContent = "Starting five locked in."; tick(); }
-  catch(e){ $("bbLuMsg").textContent = e.message; }
-};
-window.bbDraftPick = async pid => { try { await api("/api/draftpick", {prospectId: pid}); tick(); } catch(e){ alert(e.message); } };
-window.bbSignFA = async id => { try { await api("/api/signfa", {playerId: id}); tick(); } catch(e){ alert(e.message); } };
-window.bbSetTradeTeam = t => { BB_TRADE_TEAM = t; render(); };
-window.bbTrade = async () => {
-  const grab = pre => Array.from(document.querySelectorAll('input[data-side="'+pre+'"]:checked'));
-  const give = grab("give").filter(x=>x.dataset.kind==="p").map(x=>Number(x.value));
-  const givePicks = grab("give").filter(x=>x.dataset.kind==="k").map(x=>x.value);
-  const get = grab("get").filter(x=>x.dataset.kind==="p").map(x=>Number(x.value));
-  const getPicks = grab("get").filter(x=>x.dataset.kind==="k").map(x=>x.value);
-  const m = $("bbTradeMsg");
-  try {
-    const j = await api("/api/trade", { toTeam: BB_TRADE_TEAM, give, givePicks, get, getPicks });
-    m.textContent = j.ok ? "TRADE ACCEPTED. Done deal." : (j.reason || "Rejected.");
-    m.style.color = j.ok ? "var(--gold)" : "var(--softred)";
-    if (j.ok) tick();
-  } catch(e){ m.textContent = e.message; m.style.color = "var(--softred)"; }
-};
-function bbFeedHtml(list){
-  return (list||[]).map(f => {
-    const m = /^([A-Z][A-Z \-]{2,14}):\s*(.*)$/.exec(f.text);
-    const cls = m ? (/LOSS|INJUR|COLLAPS/.test(m[1]) ? "fchip soft" : /WIN|CHAMPIONS|PICK|SIGNING|MVP/.test(m[1]) ? "fchip" : /TRADE|DEADLINE|DRAFT|CONTRACT/.test(m[1]) ? "fchip warm" : "fchip") : "";
-    const body = m ? '<span class="'+cls+'">'+m[1]+'</span>'+esc(m[2]) : esc(f.text);
-    const tm = new Date(f.t); const hh = String(tm.getHours()).padStart(2,"0")+":"+String(tm.getMinutes()).padStart(2,"0");
-    return '<div class="fitem"><div>'+body+'</div><div class="ftime">'+hh+'</div></div>';
-  }).join("") || '<p class="msg">Nothing yet.</p>';
-}
-function renderHoops(s){
-  $("matchday") && $("matchday").classList.add("hidden");
-  if (!BB_INIT){
-    BB_INIT = true;
-    const labels = { squad:"Roster", lineup:"Starting five", market:"Trades", offers:"Trade log", romano:"The Wire", matches:"Games", calendar:"Season", cups:"Playoffs", table:"Standings", cabinet:"Cabinet", academy:"Draft", feed:"News feed" };
-    document.querySelectorAll("#tabs button").forEach(b => {
-      const t = b.dataset.t;
-      if (t === "nations") { b.style.display = "none"; return; }
-      if (labels[t]) b.innerHTML = labels[t] + (t==="offers" ? ' <span id="offerDot"></span>' : "");
-    });
-  }
-  $("hCode").textContent = s.code;
-  $("hSeason").textContent = s.season;
-  $("hRound").textContent = Math.min(s.week, s.totalRounds);
-  if ($("hTotal")) $("hTotal").textContent = s.totalRounds;
-  if ($("tickerBar")) $("tickerBar").setAttribute("data-label", "THE WIRE");
-  $("hMe").textContent = s.you + (s.you === s.host ? " (host)" : "");
-  $("hTeam").textContent = s.myTeam || "No team yet";
-  $("hBudget").textContent = "$" + s.salary + "m of $" + s.capSoft + "m";
-  $("hWindow").innerHTML = '<span class="win-open">&#9679;</span> ' + phaseLabel(s);
-  if ($("hLive")) $("hLive").textContent = s.users.length + (s.users.length === 1 ? " GM LIVE" : " GMS LIVE");
-  if ($("hubWho")) $("hubWho").textContent = s.myTeam ? "YOUR FRANCHISE \u00b7 NBA \u00b7 GM " + s.you.toUpperCase() + (s.you===s.host?" (HOST)":"") : "WELCOME \u00b7 " + s.you.toUpperCase();
-  if ($("stSquad")) $("stSquad").textContent = s.roster.length || "-";
-  const conf = s.myTeam ? (s.teamsLite.find(t=>t.name===s.myTeam)||{}).division : null;
-  const stand = conf ? s.standings[conf] : [];
-  const seedIdx = s.myTeam ? stand.findIndex(r=>r.team===s.myTeam) : -1;
-  if ($("stPos")) $("stPos").textContent = seedIdx>=0 ? (seedIdx+1)+" seed "+conf : "-";
-  if ($("stPts")) $("stPts").textContent = s.record ? s.record.w+" - "+s.record.l : "-";
-  if ($("stBoard")) {
-    const cf = s.myTeam ? s.myBoard : null;
-    $("stBoard").textContent = cf===null?"-":cf+"%";
-    $("stBoard").className = "cmv " + (cf===null?"":cf>=60?"green":cf>=40?"":"red");
-    const cfl = $("confFill"); if (cfl) cfl.style.width = (cf===null?0:cf)+"%";
-  }
-  $("ticker").textContent = s.champion
-    ? "THE " + s.champion.toUpperCase() + " ARE NBA CHAMPIONS \u00b7 season " + s.season
-    : (s.wire[0] ? s.wire[0].text : "The Association Wire \u00b7 rosters accurate to September 26, 2026 \u00b7 82 games \u00b7 30 teams");
-  const needsTeam = !s.myTeam || !s.started;
-  $("preStart").classList.toggle("hidden", !needsTeam);
-  if (needsTeam){
-    const col = div => s.standings[div].length ? s.standings[div] : s.teamsLite.filter(t=>t.division===div).map(t=>({team:t.name}));
-    const cell = t => {
-      const info = s.teamsLite.find(x=>x.name===t.team) || {};
-      const taken = info.manager !== "AI";
-      return '<button class="teamcard" '+(taken&&info.manager!==s.you?'disabled style="opacity:.4"':'')+' onclick="bbPick(\''+t.team.replace(/'/g,"\\'")+'\')"><span class="tc-name">'+esc(t.team)+'</span><span class="tc-sub">'+(taken?("GM "+esc(info.manager)):"AI run")+' \u00b7 top man '+((info.roster||[])[0]||{name:"?"}).name+'</span></button>';
-    };
-    $("preStart").innerHTML = '<div class="card"><h3>Pick your franchise</h3><p class="msg">30 real NBA teams, rosters as of today. '+(s.you===s.host?"Everyone picks, then you tip the season off.":"Pick a team and wait for the host.")+'</p>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px"><div><h3 style="color:var(--gold)">East</h3><div style="display:grid;gap:8px">'+col("East").map(cell).join("")+'</div></div>'+
-      '<div><h3 style="color:var(--gold)">West</h3><div style="display:grid;gap:8px">'+col("West").map(cell).join("")+'</div></div></div>'+
-      '<div class="msg" id="pickMsgB"></div>'+
-      (s.you===s.host?'<div class="row" style="margin-top:12px"><button style="flex:1" onclick="bbStart()">Tip off season '+s.season+'</button></div>':'')+
-      '<p class="msg" style="margin-top:8px">In the room: '+s.users.map(u=>esc(u.name)+(u.team?" ("+esc(u.team)+")":"")).join(" \u00b7 ")+'</p></div>';
-    return;
-  }
-  const bbActiveTab = (document.querySelector("#tabs button.on")||{}).dataset ? document.querySelector("#tabs button.on").dataset.t : "squad";
-  const luBusy = bbActiveTab === "lineup" && $("tab-lineup").querySelector(".bbcourt");
-  const trBusy = bbActiveTab === "market" && ($("tab-market").querySelector(".tradecols") && (document.querySelector('input[data-side]:checked') || ($("tab-market").contains(document.activeElement) && document.activeElement !== document.body)));
-  // Roster
-  $("tab-squad").innerHTML = '<div class="controls"><h3 style="margin-right:auto">Roster \u00b7 '+esc(s.myTeam)+'</h3><span class="chipmsg">Payroll $'+s.salary+'m \u00b7 soft ceiling $'+s.capSoft+'m</span></div>'+
-    '<table class="tbl"><thead><tr><th>Player</th><th>Pos</th><th>Age</th><th>Rating</th><th>PPG</th><th>Salary</th><th>Years</th></tr></thead><tbody>'+
-    s.roster.map(p=>'<tr><td>'+esc(p.name)+'</td><td>'+p.pos+'</td><td>'+p.age+'</td><td>'+chip(p.rating)+'</td><td>'+(p.ppg||"-")+'</td><td>$'+p.wage+'m</td><td>'+p.years+(p.years<=1?' <span class="tag derby">EXPIRING</span>':'')+'</td></tr>').join("")+'</tbody></table>'+
-    '<p class="msg">Contracts tick down each season. Expiring players hit free agency in the offseason unless the roster would drop too low.</p>';
-  // Starting five
-  if (!luBusy) {
-  const luSel = pos => {
-    const cur = (s.lineup && s.lineup.xi) || [];
-    const idx = {PG:0,SG:1,SF:2,PF:3,C:4}[pos];
-    const opts = s.roster.map(p=>'<option value="'+p.id+'" '+(cur[idx]===p.id?"selected":"")+'>'+esc(p.name)+' \u00b7 '+p.pos+' \u00b7 '+p.rating+'</option>').join("");
-    return '<div class="bbslot"><div class="pos">'+pos+'</div><select id="bbsel'+pos+'">'+opts+'</select></div>';
-  };
-  $("tab-lineup").innerHTML = '<div class="controls"><h3 style="margin-right:auto">Starting five</h3><button onclick="bbLineupSave()">Save five</button></div>'+
-    '<div class="bbcourt"><div class="bbfive">'+["PG","SG","SF","PF","C"].map(luSel).join("")+'</div></div>'+
-    '<p class="msg" id="bbLuMsg">'+(s.lineup?"Five saved. A set lineup gives your team a small edge every game.":"Pick five starters. Any positions, your rotation, your funeral.")+'</p>';
-  }
-  $("tab-lineup").classList.add("panel");
-  // Trades
-  const windowOpen = (s.phase==="regular" && s.week <= s.deadline) || s.phase==="fa";
-  if (!trBusy) {
-  const others = s.teamsLite.filter(t=>t.name!==s.myTeam);
-  if (!BB_TRADE_TEAM || BB_TRADE_TEAM===s.myTeam) BB_TRADE_TEAM = others[0].name;
-  const mineT = s.teamsLite.find(t=>t.name===s.myTeam) || {roster:[],picks:[]};
-  const themT = s.teamsLite.find(t=>t.name===BB_TRADE_TEAM) || {roster:[],picks:[]};
-  const assetRow = (side,p)=>'<label class="tr-asset"><input type="checkbox" data-side="'+side+'" data-kind="p" value="'+p.id+'"><span style="flex:1">'+esc(p.name)+' \u00b7 '+p.pos+' \u00b7 '+p.age+'</span>'+chip(p.rating)+'<span style="color:var(--dim)">$'+p.wage+'m</span></label>';
-  const pickRow = (side,k)=>'<label class="tr-asset"><input type="checkbox" data-side="'+side+'" data-kind="k" value="'+k.id+'"><span style="flex:1">'+k.year+' round '+k.round+' pick</span><span class="pickchip">via '+esc(k.orig.split(" ").pop())+'</span></label>';
-  $("tab-market").innerHTML = '<div class="controls"><h3 style="margin-right:auto">Trade machine</h3><span class="chipmsg">'+(windowOpen?(s.phase==="fa"?"Offseason window open":"Deadline after week "+s.deadline):"Window closed")+'</span></div>'+
-    '<div class="row" style="margin-bottom:10px"><label style="color:var(--dim);font-size:13px">Trade with</label><select onchange="bbSetTradeTeam(this.value)" style="flex:1;background:#0d141c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px">'+others.map(t=>'<option '+(t.name===BB_TRADE_TEAM?"selected":"")+'>'+esc(t.name)+'</option>').join("")+'</select></div>'+
-    '<div class="tradecols"><div><h3>You send</h3><div class="tr-box">'+mineT.roster.map(p=>assetRow("give",p)).join("")+mineT.picks.map(k=>pickRow("give",k)).join("")+'</div></div>'+
-    '<div><h3>'+esc(BB_TRADE_TEAM)+' send <span style="color:var(--dim);font-size:12px">('+themT.w+' - '+themT.l+', payroll $'+themT.salary+'m)</span></h3><div class="tr-box">'+themT.roster.map(p=>assetRow("get",p)).join("")+themT.picks.map(k=>pickRow("get",k)).join("")+'</div></div></div>'+
-    '<div class="row" style="margin-top:12px"><button style="flex:1" onclick="bbTrade()" '+(windowOpen?"":"disabled")+'>Propose trade</button></div>'+
-    '<p class="msg" id="bbTradeMsg">Max 4 assets a side. Rosters must land between 8 and 15. The AI knows what its stars are worth.</p>';
-  }
-  // Trade log
-  $("tab-offers").innerHTML = '<h3>Trade log</h3>'+(s.trades.length ? s.trades.map(t=>'<div class="serieRow"><span><b>Week '+t.week+'</b> '+esc(t.a)+' &rarr; '+esc(t.b)+'</span><span>'+esc(t.gave.join(", "))+' for '+esc(t.got.join(", "))+'</span></div>').join("") : '<p class="msg">No trades yet. The phones are charged.</p>');
-  // Wire
-  $("tab-romano").innerHTML = '<div class="feedcol"><h3 style="text-align:center;letter-spacing:.2em">THE ASSOCIATION WIRE</h3><p class="msg" style="text-align:center">League sources, cap gossip and deal breakers. Here we go.</p>'+
-    s.wire.map(w=>'<div class="wirepost"><div class="wirehead">WEEK '+w.week+' \u00b7 THE WIRE</div>'+esc(w.text)+'</div>').join("")+'</div>';
-  // Games
-  const myFix = s.thisWeek.filter(g=>g.mine), restFix = s.thisWeek.filter(g=>!g.mine);
-  const resRow = r => '<div class="serieRow'+(r.mine?'" style="border-left:3px solid var(--gold);padding-left:9px':'')+'"><span>'+esc(r.home)+' <b>'+r.hp+'</b> - <b>'+r.ap+'</b> '+esc(r.away)+(r.ot?' <span class="tag nego">OT</span>':'')+'</span>'+(r.mine&&r.top&&r.top[s.myTeam]?'<span style="color:var(--dim)">'+esc(r.top[s.myTeam].name)+' '+r.top[s.myTeam].pts+' pts</span>':'')+'</div>';
-  $("tab-matches").innerHTML = (s.you===s.host
-      ? '<div class="row" style="margin-bottom:14px"><button style="flex:1" onclick="bbSim()">'+simLabel(s)+'</button></div>'
-      : '<p class="msg">Waiting on the host to sim. Phase: '+phaseLabel(s)+'.</p>')+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px"><div class="subcard"><h3>This week</h3>'+
-    (s.phase==="regular" ? (myFix.map(g=>'<div class="serieRow" style="border-left:3px solid var(--gold);padding-left:9px"><span>'+esc(g.home)+' vs '+esc(g.away)+'</span></div>').join("")+restFix.slice(0,14).map(g=>'<div class="serieRow"><span>'+esc(g.home)+' vs '+esc(g.away)+'</span></div>').join("")) : '<p class="msg">'+phaseLabel(s)+'.</p>')+
-    '</div><div class="subcard"><h3>Last week</h3>'+((s.lastResults||[]).length?s.lastResults.slice().sort((a,b)=>(b.mine?1:0)-(a.mine?1:0)).slice(0,16).map(resRow).join(""):'<p class="msg">No results yet.</p>')+'</div></div>';
-  // Standings
-  const standTable = div => '<div class="subcard"><h3>'+div+'</h3><table class="tbl"><thead><tr><th>#</th><th>Team</th><th>W</th><th>L</th><th>PCT</th></tr></thead><tbody>'+
-    s.standings[div].map((r,i)=>'<tr'+(r.team===s.myTeam?' style="background:rgba(53,224,194,.08)"':'')+'><td>'+(i+1)+'</td><td>'+esc(r.team)+(i===5?'':'')+'</td><td>'+r.w+'</td><td>'+r.l+'</td><td>'+(r.pct*100).toFixed(1)+'</td></tr>'+(i===5?'<tr><td colspan="5" style="color:var(--dim);font-size:11px;letter-spacing:.15em;text-align:center">PLAY-IN LINE</td></tr>':'')+(i===9?'<tr><td colspan="5" style="color:var(--softred);font-size:11px;letter-spacing:.15em;text-align:center">LOTTERY</td></tr>':'')).join("")+'</tbody></table></div>';
-  $("tab-table").innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+standTable("East")+standTable("West")+'</div>';
-  // Playoffs
-  let po = "";
-  if (s.champion) po += '<div class="champBanner"><h2>'+esc(s.champion).toUpperCase()+' ARE NBA CHAMPIONS</h2>'+(s.awards&&s.awards.mvp?'<p>MVP: '+esc(s.awards.mvp.name)+' ('+esc(s.awards.mvp.team)+') \u00b7 '+s.awards.mvp.ppg+' ppg</p>':'')+(s.awards&&s.awards.scoring?'<p class="msg">Scoring champion: '+esc(s.awards.scoring.name)+' \u00b7 '+s.awards.scoring.ppg+' ppg</p>':'')+'</div>';
-  if (s.playin) po += '<div class="subcard" style="margin-bottom:12px"><h3>Play-in results</h3>'+["East","West"].map(d=>'<p style="color:var(--gold);font-size:12px;letter-spacing:.2em;margin:8px 0 4px">'+d.toUpperCase()+'</p>'+s.playin[d].lines.map(l=>'<div class="serieRow"><span>'+esc(l)+'</span></div>').join("")).join("")+'</div>';
-  if (s.playoffs && s.playoffs.history.length) {
-    const byRound = {};
-    s.playoffs.history.forEach(h=>{ (byRound[h.name]=byRound[h.name]||[]).push(h); });
-    po += Object.entries(byRound).map(([name,list])=>'<div class="subcard" style="margin-bottom:12px"><h3>'+esc(name)+'</h3>'+list.map(h=>'<div class="serieRow"><span><b>'+esc(h.winner)+'</b> beat '+esc(h.winner===h.hi?h.lo:h.hi)+' '+Math.max(h.hw,h.lw)+' - '+Math.min(h.hw,h.lw)+'</span><span style="color:var(--dim)">'+esc(h.scores[h.scores.length-1])+'</span></div>').join("")+'</div>').join("");
-  }
-  $("tab-cups").innerHTML = po || '<p class="msg">The playoffs run after week 26. Top 6 in each conference are locked in, 7 through 10 fight through the play-in, then four best of seven rounds to the Larry O\u2019Brien.</p>';
-  // Draft + FA
-  let dr = "";
-  if (s.draft) {
-    dr += '<h3>Draft night \u00b7 class of '+((s.season||1)+2026)+'</h3>';
-    if (s.draft.onClock) dr += '<p class="msg" style="color:var(--gold)">Pick '+s.draft.onClock.no+': '+esc(s.draft.onClock.team)+' are on the clock ('+esc(s.draft.onClock.user)+').</p>';
-    if (s.draft.myClock) dr += '<div class="subcard"><h3>Make your pick</h3>'+s.draft.board.map(p=>'<div class="bbdrrow"><span>'+esc(p.name)+' \u00b7 '+p.pos+' \u00b7 age '+p.age+'</span><span>'+chip(p.rating)+' <button class="small" onclick="bbDraftPick(\''+p.pid+'\')">Draft</button></span></div>').join("")+'</div>';
-    if (s.draft.recent.length) dr += '<div class="subcard" style="margin-top:12px"><h3>Latest picks</h3>'+s.draft.recent.slice().reverse().map(p=>'<div class="serieRow"><span><b>'+p.no+'</b> '+esc(p.team)+'</span><span>'+esc(p.name)+'</span></div>').join("")+'</div>';
-  } else if (s.phase==="fa") {
-    dr += '<h3>Free agency</h3><p class="msg">Payroll $'+s.salary+'m of $'+s.capSoft+'m. Sign who you can afford, then the host sims to let the AI spend and tip off next season.</p>'+
-      s.faPool.map(p=>'<div class="bbdrrow"><span>'+esc(p.name)+' \u00b7 '+p.pos+' \u00b7 age '+p.age+'</span><span>'+chip(p.rating)+' $'+p.wage+'m <button class="small" onclick="bbSignFA('+p.id+')">Sign</button></span></div>').join("") || '<p class="msg">Pool is empty.</p>';
-  } else {
-    dr += '<h3>Draft assets</h3><p class="msg">Your war chest. Picks convey at the draft after the Finals and can be traded before the deadline.</p>'+
-      (s.myPicks.length ? s.myPicks.map(k=>'<span class="pickchip">'+k.year+' round '+k.round+(k.orig!==s.myTeam?' via '+esc(k.orig.split(" ").pop()):'')+'</span>').join(" ") : '<p class="msg">You have traded every pick you own. Bold.</p>');
-  }
-  $("tab-academy").innerHTML = dr;
-  // Season calendar
-  const marks = w => w===s.deadline?" \u00b7 trade deadline":w===s.totalRounds?" \u00b7 seeds lock":"";
-  $("tab-calendar").innerHTML = '<h3>Season '+s.season+' \u00b7 82 games over '+s.totalRounds+' weeks</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">'+
-    Array.from({length:s.totalRounds},(_,i)=>i+1).map(w=>'<div class="pickchip" style="text-align:center;'+(w<=s.week?'opacity:.45;':'')+(w===s.week+1?'border-color:var(--gold);color:var(--gold);':'')+'">Week '+w+marks(w)+'</div>').join("")+
-    '</div><p class="msg" style="margin-top:10px">Then the play-in, four playoff rounds, draft night and free agency before it all rolls again.</p>';
-  // Cabinet
-  $("tab-cabinet").innerHTML = '<h3>Trophy cabinet</h3>'+
-    ((s.myTrophies||[]).length ? s.myTrophies.map(t=>'<div class="serieRow"><span><b>'+esc(t.name)+'</b></span><span>Season '+t.season+'</span></div>').join("") : '<p class="msg">Empty shelves. Banners are not hung in September.</p>')+
-    '<h3 style="margin-top:16px">League history</h3>'+
-    ((s.history||[]).length ? s.history.map(h=>'<div class="serieRow"><span>Season '+h.season+': <b>'+esc(h.champion)+'</b> over '+esc(h.runnerUp)+'</span><span style="color:var(--dim)">MVP '+esc((h.mvp||{}).name||"?")+'</span></div>').join("") : '<p class="msg">The Knicks won it all in real life 2026. Your legend starts now.</p>');
-  // Feed
-  $("feedInner").innerHTML = bbFeedHtml(s.feed);
-}
-// ================= END BASKETBALL MODE UI =================
 </script>
 
 </body>

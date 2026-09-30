@@ -1672,8 +1672,7 @@ function refreshNations(game) {
 app.post("/api/create", (req, res) => {
   const name = String(req.body.name || "").trim().slice(0, 20);
   if (!name) return res.status(400).json({ error: "Enter a manager name." });
-  const sport = req.body.sport === "basketball" ? "basketball" : "football";
-  const game = sport === "basketball" ? newHoopsGame(name) : newGame(name);
+  const game = newGame(name);
   res.json({ code: game.code });
 });
 
@@ -1695,11 +1694,6 @@ function migrate(game) {
   // keeps saves from the previous version of the game working on this server
   if (!game) return;
   if (!game.sport) game.sport = "football";
-  if (game.sport === "basketball") {
-    if (!game.hoops) game.hoops = { phase: "regular", schedule: {}, results: {}, pts: {}, gp: {}, wire: [], trades: [], tradeSeq: 1, picks: [], playin: null, playoffs: null, awards: null, champion: null, draft: null, faPool: [] };
-    for (const u of Object.values(game.users || {})) { if (u.sacked === undefined) u.sacked = false; if (!u.trophies) u.trophies = []; }
-    return;
-  }
   if (game.totalRounds === undefined) game.totalRounds = TOTAL_ROUNDS;
   if (game.playerSeq === undefined) game.playerSeq = 100000;
   if (!game.lock) game.lock = { active: false, week: 0 };
@@ -1734,6 +1728,7 @@ function migrate(game) {
 function getCtx(req, res) {
   const game = games[String(req.query.code || req.body.code || "").toUpperCase()];
   if (!game) { res.status(404).json({ error: "Game not found." }); return null; }
+  if (game.sport === "basketball") { res.status(400).json({ error: "Basketball has moved to its own game. This server is football only now." }); return null; }
   migrate(game);
   const name = String(req.query.name || req.body.name || "");
   const user = game.users[name];
@@ -1747,15 +1742,6 @@ app.post("/api/pick", (req, res) => {
   if (game.started && user.team) return res.status(400).json({ error: "Season already started. You can only take a new job if you lose yours." });
   const team = req.body.team;
   const club = game.clubs[team];
-  if (game.sport === "basketball") {
-    if (!club) return res.status(400).json({ error: "Pick one of the 30 NBA teams." });
-    if (humanOf(game, team) && humanOf(game, team).name !== user.name) return res.status(400).json({ error: "That team is taken." });
-    user.team = team; user.sacked = false;
-    club.conf = club.conf !== undefined ? club.conf : 60;
-    log(game, game.started ? "NEW JOB: " + user.name + " takes over " + team + " midseason." : user.name + " will run the " + team + ".");
-    save();
-    return res.json({ ok: true });
-  }
   if (!club || !(LEAGUES[club.league] || {}).playable) return res.status(400).json({ error: "Pick a club from one of the playable leagues." });
   if (humanOf(game, team) && humanOf(game, team).name !== user.name) return res.status(400).json({ error: "That club is taken." });
   user.team = team;
@@ -1815,15 +1801,6 @@ app.post("/api/lineup", (req, res) => {
   if (!user.team) return res.status(400).json({ error: "Pick a club first." });
   const xi = (Array.isArray(req.body.xi) ? req.body.xi : []).map(Number);
   const subs = (Array.isArray(req.body.subs) ? req.body.subs : []).map(Number);
-  if (game.sport === "basketball") {
-    if (xi.length !== 5) return res.status(400).json({ error: "Pick exactly 5 starters." });
-    if (new Set(xi).size !== 5) return res.status(400).json({ error: "A player can only start once." });
-    const squadB = new Set(game.clubs[user.team].squad);
-    for (const id of xi) if (!squadB.has(id) || !game.players[id]) return res.status(400).json({ error: "One of those players is not on your roster." });
-    game.clubs[user.team].lineup = { xi, subs: [], formation: "five" };
-    save();
-    return res.json({ ok: true });
-  }
   if (xi.length !== 11) return res.status(400).json({ error: "Pick exactly 11 starters." });
   if (subs.length > 9) return res.status(400).json({ error: "Max 9 subs." });
   if (new Set([...xi, ...subs]).size !== xi.length + subs.length) return res.status(400).json({ error: "A player can only be picked once." });
@@ -2077,11 +2054,6 @@ app.post("/api/sim", (req, res) => {
   const { game, user } = ctx;
   if (user.name !== game.host) return res.status(403).json({ error: "Only the host can sim the matchweek." });
   if (!game.started) return res.status(400).json({ error: "Start the season first." });
-  if (game.sport === "basketball") {
-    try { hoopsSim(game); } catch (e) { if (e && e.code) { save(); return res.status(e.code).json({ error: e.msg }); } throw e; }
-    save();
-    return res.json({ ok: true });
-  }
   if (game.round >= (game.totalRounds || 38)) return res.status(400).json({ error: "The season is over. Check the final tables and awards, then press Start next season." });
   playMatchweek(game);
   save();
@@ -2093,14 +2065,6 @@ app.post("/api/simto", (req, res) => {
   const { game, user } = ctx;
   if (user.name !== game.host) return res.status(403).json({ error: "Only the host can sim the matchweek." });
   if (!game.started) return res.status(400).json({ error: "Start the season first." });
-  if (game.sport === "basketball") {
-    const targetB = Math.max(1, Math.min(26, Math.floor(Number(req.body.week)) || 1));
-    let guardB = 0;
-    while (game.hoops.phase === "regular" && game.round < targetB && guardB < 30) { playHoopsWeek(game); guardB++; }
-    log(game, "FAST FORWARD: the host simmed ahead to week " + game.round + ".");
-    save();
-    return res.json({ ok: true, round: game.round });
-  }
   const total = game.totalRounds || 38;
   if (game.round >= total) return res.status(400).json({ error: "The season is over. Check the final tables and awards, then press Start next season." });
   const target = Math.floor(Number(req.body.week));
@@ -2119,7 +2083,6 @@ app.post("/api/simto", (req, res) => {
 app.post("/api/nextseason", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
-  if (game.sport === "basketball") return res.status(400).json({ error: "Not available in NBA mode." });
   if (user.name !== game.host) return res.status(403).json({ error: "Only the host can start the next season." });
   if (!game.started) return res.status(400).json({ error: "Start the first season first." });
   if (game.round < (game.totalRounds || 38)) return res.status(400).json({ error: "The season isn't finished yet." });
@@ -2142,7 +2105,6 @@ app.post("/api/unlock", (req, res) => {
 app.post("/api/offer", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
-  if (game.sport === "basketball") return res.status(400).json({ error: "Not available in NBA mode." });
   if (!user.team) return res.status(400).json({ error: "Pick a club first." });
   if (!windowOpen(game)) return res.status(400).json({ error: "The transfer window is shut. No new bids until it reopens." });
   const p = game.players[req.body.playerId];
@@ -2186,7 +2148,6 @@ app.post("/api/offer", (req, res) => {
 app.post("/api/hijack", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
-  if (game.sport === "basketball") return res.status(400).json({ error: "Not available in NBA mode." });
   if (!user.team) return res.status(400).json({ error: "Pick a club first." });
   if (!windowOpen(game)) return res.status(400).json({ error: "The transfer window is shut. No hijacking until it reopens." });
   const p = game.players[req.body.playerId];
@@ -2236,7 +2197,6 @@ app.post("/api/hijack", (req, res) => {
 app.post("/api/terms", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
-  if (game.sport === "basketball") return res.status(400).json({ error: "Not available in NBA mode." });
   const offer = game.offers.find(o => o.id === Number(req.body.offerId));
   if (!offer) return res.status(404).json({ error: "Offer not found." });
   if (offer.status !== "terms") return res.status(400).json({ error: "Personal terms are not on the table for this offer." });
@@ -2279,7 +2239,6 @@ app.post("/api/terms", (req, res) => {
 app.post("/api/renegotiate", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
-  if (game.sport === "basketball") return res.status(400).json({ error: "Not available in NBA mode." });
   return res.status(400).json({ error: "Contracts never run out anymore. Your players stay until you sell or loan them." });
   if (!user.team) return res.status(400).json({ error: "Pick a club first." });
   const p = game.players[req.body.playerId];
@@ -2716,7 +2675,6 @@ app.post("/api/react", (req, res) => {
 app.get("/api/state", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
-  if (game.sport === "basketball") return res.json(hoopsState(game, user));
   const myTeam = user.team;
   const myLeague = myTeam ? game.clubs[myTeam].league : "Premier League";
   const myFix = (game.leagueFixtures || {})[myLeague] || [];
@@ -2889,524 +2847,6 @@ app.get("/api/market", (req, res) => {
 });
 
 
-// ================= BASKETBALL MODE =================
-const { HOOPS_TEAMS } = require("./hoops_data.js");
-const HOOPS_CAP_SOFT = 205; // near the real 2026-27 tax and apron zone
-const HOOPS_REG_WEEKS = 26;
-const HOOPS_DEADLINE = 16;
-const BB_FIRST = ["Jalen","Marcus","Devin","Tyrese","Cam","Jaylen","Zion","Trey","Malik","Andre","Isaiah","Keon","Darius","Jaden","Amari","Chris","Miles","Xavier","Trent","Kobe","Bryce","DeShawn","Elijah","Jordan","Micah","Noah","Omari","Quincy","Rasheed","Silas"];
-const BB_LAST = ["Carter","Hughes","Bell","Sanders","Whitfield","Douglas","Maxwell","Rivers","Holloway","Bishop","Fletcher","Sturgess","McKinney","Rollins","Vance","Whitaker","Boone","Calloway","Dillard","Easley","Foreman","Granger","Hollis","Ingram","Jarrett","Kimble","Landry","Mercer","Nabors","Overton"];
-function bbAgeFactor(age) { return age <= 23 ? 1.25 : age <= 26 ? 1.1 : age <= 29 ? 1.0 : age <= 32 ? 0.72 : age <= 35 ? 0.48 : 0.3; }
-function bbValue(p) { return Math.max(2, Math.round((p.rating - 55) * (p.rating - 55) * 0.12 * bbAgeFactor(p.age))); }
-function bbWage(p) { return Math.max(1, Math.min(58, Math.round(bbValue(p) * 0.22))); }
-function bbContractYears(age) { return (age <= 22 ? 4 : age <= 27 ? 3 : age <= 31 ? 2 : 1) + (Math.random() < 0.4 ? 1 : 0); }
-function bbSalary(game, team) { return game.clubs[team].squad.reduce((s, id) => s + ((game.players[id] || {}).wage || 0), 0); }
-function wire(game, text) {
-  game.hoops.wire.unshift({ t: Date.now(), week: game.round, text });
-  game.hoops.wire = game.hoops.wire.slice(0, 60);
-}
-function buildHoopsSchedule(teams, divOf) {
-  const games = [];
-  for (let i = 0; i < teams.length; i++) for (let j = i + 1; j < teams.length; j++) { games.push([teams[i], teams[j]]); games.push([teams[j], teams[i]]); }
-  for (const div of ["East", "West"]) {
-    const names = teams.filter(t => divOf[t] === div);
-    // cyclic construction: 12 offsets, each gives every team exactly 2 extra games, 24 total, never a self matchup
-    for (let s = names.length - 1; s > 0; s--) { const r = Math.floor(Math.random() * (s + 1)); [names[s], names[r]] = [names[r], names[s]]; }
-    for (let off = 1; off <= 12; off++) {
-      for (let i = 0; i < names.length; i++) {
-        const a = names[i], b = names[(i + off) % names.length];
-        games.push(Math.random() < 0.5 ? [a, b] : [b, a]);
-      }
-    }
-  }
-  for (let i = games.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [games[i], games[j]] = [games[j], games[i]]; }
-  const weeks = {}; for (let w = 1; w <= HOOPS_REG_WEEKS; w++) weeks[w] = [];
-  const load = {}; teams.forEach(t => { load[t] = {}; for (let w = 1; w <= HOOPS_REG_WEEKS; w++) load[t][w] = 0; });
-  const leftovers = [];
-  for (const g of games) {
-    let placed = false;
-    const order = Array.from({ length: HOOPS_REG_WEEKS }, (_, k) => k + 1).sort((a, b) => (weeks[a].length - weeks[b].length) || (Math.random() - 0.5));
-    for (const w of order) { if (load[g[0]][w] < 4 && load[g[1]][w] < 4) { weeks[w].push(g); load[g[0]][w]++; load[g[1]][w]++; placed = true; break; } }
-    if (!placed) leftovers.push(g);
-  }
-  for (const g of leftovers) { for (let w = 1; w <= HOOPS_REG_WEEKS; w++) { if (load[g[0]][w] < 5 && load[g[1]][w] < 5) { weeks[w].push(g); load[g[0]][w]++; load[g[1]][w]++; break; } } }
-  return weeks;
-}
-function newHoopsGame(hostName) {
-  const players = {}; const clubs = {}; let seq = 1;
-  const divOf = {};
-  for (const [team, data] of Object.entries(HOOPS_TEAMS)) {
-    divOf[team] = data.conf;
-    clubs[team] = { name: team, league: "NBA", division: data.conf, budget: Math.max(0.5, data.cap), baseBudget: Math.max(0.5, data.cap), squad: [], tactic: "balanced", lineup: null, wins: 0, losses: 0, conf: 60 };
-    for (const [name, pos, age, rating] of data.roster) {
-      if (rating <= 0) continue;
-      const p = { id: seq++, name, pos, age, rating, club: team, value: 0, wage: 0, contractYears: bbContractYears(age), squadRole: rating >= 88 ? "Star" : rating >= 80 ? "First team" : rating >= 74 ? "Rotation" : "Prospect", goals: 0, assists: 0, injuredWeeks: 0 };
-      p.value = bbValue(p); p.wage = bbWage(p);
-      players[p.id] = p; clubs[team].squad.push(p.id);
-    }
-  }
-  const teamNames = Object.keys(clubs);
-  const game = {
-    sport: "basketball",
-    code: code4(), host: hostName,
-    users: { [hostName]: { name: hostName, team: null, nation: null, sacked: false, trophies: [] } },
-    players, clubs, premTeams: teamNames,
-    started: false, season: 1, round: 0, totalRounds: HOOPS_REG_WEEKS,
-    playerSeq: seq, lock: { active: false, week: 0 },
-    offers: [], offerSeq: 1, stats: {}, romano: [], feed: [], reacts: [], lastEvents: {}, shootouts: {},
-    nations: {}, cups: {}, leagueFixtures: {}, history: [],
-    created: Date.now()
-  };
-  game.hoops = {
-    phase: "regular",
-    schedule: buildHoopsSchedule(teamNames, divOf),
-    results: {}, pts: {}, gp: {},
-    wire: [], trades: [], tradeSeq: 1,
-    picks: [], playin: null, playoffs: null, awards: null, champion: null,
-    draft: null, faPool: []
-  };
-  for (const y of [game.season + 1, game.season + 2]) for (const r of [1, 2]) for (const t of teamNames) game.hoops.picks.push({ id: t.replace(/\s+/g, "") + "-" + y + "-" + r, year: y, round: r, owner: t, orig: t });
-  log(game, "Game created. NBA mode. Waiting in the lobby.");
-  wire(game, "Welcome to the 2026-27 season. The Knicks enter as defending champions after ending a 53 year wait. Giannis is in Miami, LeBron is in Philadelphia and the league has never looked like this.");
-  games[game.code] = game; save(); ensureRoles(game);
-  return game;
-}
-function bbStrength(game, team) {
-  const club = game.clubs[team];
-  const ratings = club.squad.map(id => game.players[id]).filter(Boolean).map(p => p.rating).sort((a, b) => b - a).slice(0, 8);
-  const base = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 60;
-  const human = humanOf(game, team);
-  const five = (club.lineup && Array.isArray(club.lineup.xi) && club.lineup.xi.length === 5) ? 1.2 : 0;
-  return base + (human ? five : 0);
-}
-function gauss() { let s = 0; for (let i = 0; i < 3; i++) s += Math.random(); return (s - 1.5) * 2; }
-function simHoopsGame(game, home, away) {
-  const sh = bbStrength(game, home), sa = bbStrength(game, away);
-  const diff = sh - sa;
-  let hp = Math.round(113 + diff * 1.5 + gauss() * 9 + 1.4);
-  let ap = Math.round(113 - diff * 1.5 + gauss() * 9);
-  hp = Math.max(88, Math.min(146, hp)); ap = Math.max(88, Math.min(146, ap));
-  let ot = false;
-  if (hp === ap) { ot = true; if (Math.random() < 0.5 + diff * 0.02) hp += 2 + Math.floor(Math.random() * 4); else ap += 2 + Math.floor(Math.random() * 4); }
-  const scorers = {};
-  for (const [team, total] of [[home, hp], [away, ap]]) {
-    const squad = game.clubs[team].squad.map(id => game.players[id]).filter(Boolean).sort((a, b) => b.rating - a.rating).slice(0, 9);
-    const weights = squad.map(p => Math.pow(p.rating - 52, 2.1) * (0.75 + Math.random() * 0.6));
-    const wsum = weights.reduce((a, b) => a + b, 0) || 1;
-    let assigned = 0; const rows = [];
-    squad.forEach((p, i) => { const pts = Math.round(total * weights[i] / wsum); assigned += pts; rows.push({ p, pts }); });
-    if (rows.length) rows[0].pts += total - assigned;
-    for (const r of rows) {
-      game.hoops.pts[r.p.id] = (game.hoops.pts[r.p.id] || 0) + Math.max(0, r.pts);
-      game.hoops.gp[r.p.id] = (game.hoops.gp[r.p.id] || 0) + 1;
-    }
-    rows.sort((a, b) => b.pts - a.pts);
-    scorers[team] = rows[0] ? { name: rows[0].p.name, pts: rows[0].pts } : null;
-  }
-  return { home, away, hp, ap, ot, top: scorers };
-}
-function aiHoopsTrade(game) {
-  if (game.round > HOOPS_DEADLINE || Math.random() > 0.35) return;
-  const teams = Object.keys(game.clubs).filter(t => !humanOf(game, t));
-  for (let tries = 0; tries < 25; tries++) {
-    const a = teams[Math.floor(Math.random() * teams.length)];
-    const b = teams[Math.floor(Math.random() * teams.length)];
-    if (a === b) continue;
-    const pa = game.clubs[a].squad.map(id => game.players[id]).filter(p => p && p.rating >= 72 && p.rating <= 83);
-    const pb = game.clubs[b].squad.map(id => game.players[id]).filter(p => p && p.rating >= 72 && p.rating <= 83);
-    if (!pa.length || !pb.length || game.clubs[a].squad.length <= 9 || game.clubs[b].squad.length <= 9) continue;
-    const x = pa[Math.floor(Math.random() * pa.length)], y = pb[Math.floor(Math.random() * pb.length)];
-    if (Math.abs(bbValue(x) - bbValue(y)) > 22) continue;
-    game.clubs[a].squad = game.clubs[a].squad.filter(id => id !== x.id);
-    game.clubs[b].squad = game.clubs[b].squad.filter(id => id !== y.id);
-    game.clubs[a].squad.push(y.id); game.clubs[b].squad.push(x.id);
-    x.club = b; y.club = a;
-    game.hoops.trades.unshift({ id: game.hoops.tradeSeq++, week: game.round, a, b, gave: [x.name], got: [y.name], by: "AI" });
-    log(game, "TRADE: " + a + " send " + x.name + " to " + b + " for " + y.name + ".");
-    wire(game, "Deal done. " + x.name + " lands with " + b + " and " + y.name + " heads to " + a + ". Both front offices call it a fit swap.");
-    return;
-  }
-}
-function hoopsStandings(game, div) {
-  return Object.values(game.clubs).filter(c => c.division === div)
-    .map(c => ({ team: c.name, w: c.wins, l: c.losses, pct: c.wins + c.losses ? c.wins / (c.wins + c.losses) : 0 }))
-    .sort((a, b) => b.pct - a.pct || b.w - a.w || a.team.localeCompare(b.team));
-}
-function playHoopsWeek(game) {
-  game.round++;
-  const list = game.hoops.schedule[game.round] || [];
-  const results = [];
-  for (const [home, away] of list) {
-    const r = simHoopsGame(game, home, away);
-    game.clubs[home].wins += r.hp > r.ap ? 1 : 0; game.clubs[home].losses += r.hp > r.ap ? 0 : 1;
-    game.clubs[away].wins += r.ap > r.hp ? 1 : 0; game.clubs[away].losses += r.ap > r.hp ? 0 : 1;
-    results.push(r);
-  }
-  game.hoops.results[game.round] = results;
-  for (const u of Object.values(game.users)) {
-    if (!u.team) continue;
-    const mine = results.filter(r => r.home === u.team || r.away === u.team);
-    for (const r of mine) {
-      const won = (r.home === u.team && r.hp > r.ap) || (r.away === u.team && r.ap > r.hp);
-      const line = r.home + " " + r.hp + " - " + r.ap + " " + r.away + (r.ot ? " OT" : "");
-      const star = r.top[u.team] ? " " + r.top[u.team].name + " " + r.top[u.team].pts + " pts." : "";
-      log(game, (won ? "WIN: " : "LOSS: ") + line + "." + star);
-      const club = game.clubs[u.team];
-      club.conf = Math.max(20, Math.min(95, (club.conf || 60) + (won ? 1.5 : -2)));
-    }
-  }
-  const big = results.filter(r => Math.abs(r.hp - r.ap) >= 25)[0];
-  if (big) log(game, "BLOWOUT: " + big.home + " " + big.hp + " - " + big.ap + " " + big.away + ". Statement made.");
-  aiHoopsTrade(game);
-  if (game.round === HOOPS_DEADLINE) { log(game, "DEADLINE: the trade deadline has passed. Rosters are locked until the offseason."); wire(game, "Deadline day is over. The buyers bought, the sellers sold, and the West is a bloodbath."); }
-  if (game.round >= HOOPS_REG_WEEKS) {
-    game.hoops.phase = "playin";
-    const e = hoopsStandings(game, "East"), w = hoopsStandings(game, "West");
-    log(game, "REGULAR SEASON COMPLETE: " + e[0].team + " take the East at " + e[0].w + " wins, " + w[0].team + " take the West at " + w[0].w + ". Play-in is next.");
-    wire(game, "82 games down. Seeds are locked. Sim the next week to run the play-in tournament.");
-  }
-}
-function seriesSim(game, hiTeam, loTeam) {
-  let hw = 0, lw = 0; const scores = [];
-  let g = 0;
-  while (hw < 4 && lw < 4 && g < 7) {
-    g++;
-    const hiHome = [1, 2, 5, 7].includes(g);
-    const r = hiHome ? simHoopsGame(game, hiTeam, loTeam) : simHoopsGame(game, loTeam, hiTeam);
-    const hiPts = hiHome ? r.hp : r.ap, loPts = hiHome ? r.ap : r.hp;
-    if (hiPts > loPts) hw++; else lw++;
-    scores.push(hiTeam.split(" ").pop() + " " + hiPts + "-" + loPts + " " + loTeam.split(" ").pop());
-  }
-  return { hw, lw, scores, winner: hw === 4 ? hiTeam : loTeam };
-}
-function simPlayin(game) {
-  const bracket = {};
-  for (const div of ["East", "West"]) {
-    const s = hoopsStandings(game, div).map(r => r.team);
-    const g78 = simHoopsGame(game, s[6], s[7]);
-    const g910 = simHoopsGame(game, s[8], s[9]);
-    const w78 = g78.hp > g78.ap ? s[6] : s[7], l78 = g78.hp > g78.ap ? s[7] : s[6];
-    const w910 = g910.hp > g910.ap ? s[8] : s[9];
-    const g8 = simHoopsGame(game, l78, w910);
-    const seed8 = g8.hp > g8.ap ? l78 : w910;
-    bracket[div] = { seeds: s.slice(0, 6).concat([w78, seed8]), lines: [
-      s[6] + " " + g78.hp + " - " + g78.ap + " " + s[7],
-      s[8] + " " + g910.hp + " - " + g910.ap + " " + s[9],
-      l78 + " " + g8.hp + " - " + g8.ap + " " + w910
-    ]};
-    log(game, "PLAY-IN " + div + ": " + w78 + " grab the 7 seed. " + seed8 + " survive the elimination game and take the 8 seed.");
-  }
-  game.hoops.playin = bracket;
-  game.hoops.phase = "playoffs";
-  game.hoops.playoffs = { round: 1, alive: { East: bracket.East.seeds, West: bracket.West.seeds }, history: [] };
-  wire(game, "The field of 16 is set. " + bracket.East.seeds[7] + " and " + bracket.West.seeds[7] + " sneak in through the back door. Sim to run round one.");
-  game.round++;
-}
-function simPlayoffRound(game) {
-  const po = game.hoops.playoffs;
-  const roundName = ["", "First round", "Conference semifinals", "Conference finals", "NBA Finals"][po.round];
-  if (po.round <= 3) {
-    for (const div of ["East", "West"]) {
-      const alive = po.alive[div]; const next = [];
-      const pairs = [];
-      for (let i = 0; i < alive.length / 2; i++) pairs.push([alive[i], alive[alive.length - 1 - i]]);
-      for (const [hi, lo] of pairs) {
-        const s = seriesSim(game, hi, lo);
-        po.history.push({ round: po.round, name: roundName, conf: div, hi, lo, hw: s.hw, lw: s.lw, winner: s.winner, scores: s.scores });
-        log(game, roundName.toUpperCase() + " " + div + ": " + s.winner + " win the series " + Math.max(s.hw, s.lw) + " - " + Math.min(s.hw, s.lw) + " over " + (s.winner === hi ? lo : hi) + ".");
-        next.push(s.winner);
-      }
-      po.alive[div] = next;
-    }
-    if (po.round === 3) {
-      wire(game, "Conference champions crowned. " + po.alive.East[0] + " against " + po.alive.West[0] + " for everything. Sim to run the Finals.");
-      for (const u of Object.values(game.users)) if (u.team === po.alive.East[0] || u.team === po.alive.West[0]) u.trophies.push({ name: (u.team === po.alive.East[0] ? "Eastern" : "Western") + " Conference Title", season: game.season });
-    }
-    po.round++;
-  } else {
-    const east = po.alive.East[0], west = po.alive.West[0];
-    const eastRec = game.clubs[east].wins, westRec = game.clubs[west].wins;
-    const hi = eastRec >= westRec ? east : west, lo = hi === east ? west : east;
-    const s = seriesSim(game, hi, lo);
-    po.history.push({ round: 4, name: "NBA Finals", conf: "Finals", hi, lo, hw: s.hw, lw: s.lw, winner: s.winner, scores: s.scores });
-    game.hoops.champion = s.winner;
-    const pts = game.hoops.pts, gp = game.hoops.gp;
-    let mvp = null, best = 0, scorer = null, bestPpg = 0;
-    const topTeams = new Set(hoopsStandings(game, "East").slice(0, 6).map(r => r.team).concat(hoopsStandings(game, "West").slice(0, 6).map(r => r.team)));
-    for (const p of Object.values(game.players)) {
-      const g = gp[p.id] || 0; if (g < 30) continue;
-      const ppg = (pts[p.id] || 0) / g;
-      if (ppg > bestPpg) { bestPpg = ppg; scorer = p; }
-      const score = ppg + p.rating * 0.35 + (topTeams.has(p.club) ? 6 : 0);
-      if (score > best) { best = score; mvp = p; }
-    }
-    game.hoops.awards = { mvp: mvp ? { name: mvp.name, team: mvp.club, ppg: +( (pts[mvp.id]||0) / (gp[mvp.id]||1) ).toFixed(1) } : null, scoring: scorer ? { name: scorer.name, team: scorer.club, ppg: +bestPpg.toFixed(1) } : null };
-    log(game, "NBA CHAMPIONS: " + s.winner + " win the Finals " + Math.max(s.hw, s.lw) + " - " + Math.min(s.hw, s.lw) + " over " + (s.winner === hi ? lo : hi) + ". The city goes wild.");
-    if (game.hoops.awards.mvp) log(game, "MVP: " + game.hoops.awards.mvp.name + " (" + game.hoops.awards.mvp.team + ") at " + game.hoops.awards.mvp.ppg + " points a game.");
-    wire(game, s.winner + " are champions of the world. Parade routes are being drawn. The draft is next, sim when ready.");
-    for (const u of Object.values(game.users)) if (u.team === s.winner) { u.trophies.push({ name: "NBA Championship", season: game.season }); game.clubs[u.team].conf = 95; }
-    game.history.push({ season: game.season, sport: "basketball", champion: s.winner, runnerUp: s.winner === hi ? lo : hi, east: east, west: west, mvp: game.hoops.awards.mvp, scoring: game.hoops.awards.scoring });
-    startHoopsDraft(game);
-  }
-}
-function startHoopsDraft(game) {
-  game.hoops.phase = "draft";
-  for (const p of Object.values(game.players)) if (p.contractYears !== undefined) p.contractYears = Math.max(0, p.contractYears - 1);
-  for (const [team, club] of Object.entries(game.clubs)) {
-    const human = humanOf(game, team);
-    const expiring = club.squad.map(id => game.players[id]).filter(p => p && p.contractYears === 0);
-    for (const p of expiring) {
-      if (!human && (Math.random() < 0.6 || club.squad.length <= 9)) { p.contractYears = bbContractYears(p.age); continue; }
-      if (human && club.squad.length <= 9) { p.contractYears = 1; log(game, "CONTRACT: " + p.name + " grudgingly signs a 1 year extension to keep your roster legal."); continue; }
-      club.squad = club.squad.filter(id => id !== p.id);
-      p.club = null;
-      game.hoops.faPool.push(p.id);
-      if (p.rating >= 82) wire(game, "FREE AGENT ALERT: " + p.name + " hits the open market. Contenders are circling.");
-    }
-  }
-  const e = hoopsStandings(game, "East"), w = hoopsStandings(game, "West");
-  const all = e.concat(w).sort((a, b) => a.pct - b.pct || a.w - b.w);
-  const lottery = all.slice(0, 14).map(r => r.team);
-  for (let i = 0; i < 4; i++) { const j = Math.floor(Math.random() * Math.min(6, lottery.length)); const k = Math.floor(Math.random() * Math.min(6, lottery.length)); [lottery[j], lottery[k]] = [lottery[k], lottery[j]]; }
-  const order = lottery.concat(all.slice(14).map(r => r.team));
-  const prospects = [];
-  const used = new Set(Object.values(game.players).map(p => p.name));
-  for (let i = 0; i < 60; i++) {
-    let name = "";
-    do { name = BB_FIRST[Math.floor(Math.random() * BB_FIRST.length)] + " " + BB_LAST[Math.floor(Math.random() * BB_LAST.length)]; } while (used.has(name));
-    used.add(name);
-    const rating = Math.max(58, Math.round(83 - i * 0.36 + gauss() * 2));
-    prospects.push({ pid: "pr" + (i + 1), name, pos: ["PG", "SG", "SF", "PF", "C"][Math.floor(Math.random() * 5)], age: 18 + Math.floor(Math.random() * 3), rating });
-  }
-  const picks = [];
-  const year = game.season + 1;
-  for (const r of [1, 2]) for (let i = 0; i < order.length; i++) {
-    const slot = order[i];
-    const asset = game.hoops.picks.find(pk => pk.year === year && pk.round === r && pk.orig === slot);
-    picks.push({ no: (r - 1) * 30 + i + 1, round: r, team: asset ? asset.owner : slot, taken: null });
-  }
-  game.hoops.draft = { year, order: picks, prospects, cursor: 0, onClock: null };
-  log(game, "THE DRAFT: draft night is here. " + picks[0].team + " are on the clock with the first overall pick.");
-  advanceHoopsDraft(game);
-}
-function advanceHoopsDraft(game) {
-  const d = game.hoops.draft;
-  while (d.cursor < d.order.length) {
-    const pick = d.order[d.cursor];
-    const human = humanOf(game, pick.team);
-    if (human) { d.onClock = { no: pick.no, team: pick.team, user: human.name }; return; }
-    const best = d.prospects.find(pr => !pr.taken);
-    hoopsMakePick(game, pick, best);
-  }
-  d.onClock = null;
-  finishHoopsDraft(game);
-}
-function hoopsMakePick(game, pick, prospect) {
-  const d = game.hoops.draft;
-  prospect.taken = pick.no; pick.taken = prospect.name;
-  const p = { id: game.playerSeq++, name: prospect.name, pos: prospect.pos, age: prospect.age, rating: prospect.rating, club: pick.team, value: 0, wage: 0, contractYears: 4, squadRole: "Prospect", goals: 0, assists: 0, injuredWeeks: 0, rookie: true };
-  p.value = bbValue(p); p.wage = Math.max(2, Math.round(p.rating / 10));
-  game.players[p.id] = p;
-  game.clubs[pick.team].squad.push(p.id);
-  if (pick.no <= 14 || humanOf(game, pick.team)) log(game, "PICK " + pick.no + ": " + pick.team + " select " + prospect.name + ", " + prospect.pos + ", rated " + prospect.rating + ".");
-  if (pick.no === 1) wire(game, prospect.name + " goes first overall to " + pick.team + ". The war room erupted.");
-  d.cursor++;
-}
-function finishHoopsDraft(game) {
-  game.hoops.phase = "fa";
-  log(game, "DRAFT COMPLETE: 60 picks made. Free agency is open. Sign players from the pool, then sim to let the league spend and roll into next season.");
-  wire(game, "Draft night is a wrap. Now the money moves. Free agency opens league wide.");
-}
-function runHoopsFA(game) {
-  const pool = () => game.hoops.faPool.map(id => game.players[id]).filter(Boolean).sort((a, b) => b.rating - a.rating);
-  for (const [team, club] of Object.entries(game.clubs)) {
-    if (humanOf(game, team)) continue;
-    let guard = 0;
-    while (club.squad.length < 12 && pool().length && guard < 30) {
-      guard++;
-      const cands = pool().filter(p => bbSalary(game, team) + bbWage(p) <= HOOPS_CAP_SOFT);
-      const p = cands[Math.floor(Math.random() * Math.min(4, cands.length))] || pool()[pool().length - 1];
-      if (!p) break;
-      game.hoops.faPool = game.hoops.faPool.filter(id => id !== p.id);
-      p.club = team; p.contractYears = bbContractYears(p.age); p.wage = bbWage(p);
-      club.squad.push(p.id);
-      if (p.rating >= 80) { log(game, "SIGNING: " + p.name + " agrees terms with " + team + "."); wire(game, p.name + " picks " + team + " in free agency. Sources say the pitch meeting sealed it."); }
-    }
-  }
-  rolloverHoopsSeason(game);
-}
-function rolloverHoopsSeason(game) {
-  for (const p of Object.values(game.players)) {
-    if (!p.club && !game.hoops.faPool.includes(p.id)) continue;
-    p.age++;
-    if (p.age <= 24) p.rating = Math.min(99, p.rating + 1 + (Math.random() < 0.5 ? 1 : 0));
-    else if (p.age >= 36) p.rating = Math.max(55, p.rating - 2 - (Math.random() < 0.5 ? 1 : 0));
-    else if (p.age >= 33) p.rating = Math.max(55, p.rating - 1 - (Math.random() < 0.4 ? 1 : 0));
-    p.value = bbValue(p);
-  }
-  for (const p of Object.values(game.players)) { if (p.age >= 40 && p.club && Math.random() < 0.6) { log(game, "RETIREMENT: " + p.name + " calls it a career at " + p.age + "."); game.clubs[p.club].squad = game.clubs[p.club].squad.filter(id => id !== p.id); p.club = null; p.retired = true; } }
-  game.season++;
-  game.round = 0;
-  for (const c of Object.values(game.clubs)) { c.wins = 0; c.losses = 0; c.lineup = null; }
-  const divOf = {}; for (const c of Object.values(game.clubs)) divOf[c.name] = c.division;
-  game.hoops.schedule = buildHoopsSchedule(Object.keys(game.clubs), divOf);
-  game.hoops.results = {}; game.hoops.pts = {}; game.hoops.gp = {};
-  game.hoops.phase = "regular"; game.hoops.playin = null; game.hoops.playoffs = null; game.hoops.draft = null; game.hoops.champion = null; game.hoops.awards = null;
-  const y = game.season + 2;
-  for (const r of [1, 2]) for (const t of Object.keys(game.clubs)) if (!game.hoops.picks.find(pk => pk.year === y && pk.round === r && pk.orig === t)) game.hoops.picks.push({ id: t.replace(/\s+/g, "") + "-" + y + "-" + r, year: y, round: r, owner: t, orig: t });
-  game.hoops.picks = game.hoops.picks.filter(pk => pk.year > game.season);
-  log(game, "NEW SEASON: season " + game.season + " tips off. 82 games. Everyone is 0 and 0.");
-  wire(game, "Media day is done, the schedule just dropped and the champs get their rings on opening night. Season " + game.season + " starts now.");
-}
-function hoopsSim(game) {
-  const ph = game.hoops.phase;
-  if (ph === "regular") { playHoopsWeek(game); return; }
-  if (ph === "playin") { simPlayin(game); return; }
-  if (ph === "playoffs") { simPlayoffRound(game); return; }
-  if (ph === "draft") { advanceHoopsDraft(game); if (game.hoops.draft && game.hoops.draft.onClock) throw { code: 400, msg: game.hoops.draft.onClock.team + " are on the clock. " + game.hoops.draft.onClock.user + " must make the pick from the Draft tab." }; return; }
-  if (ph === "fa") { runHoopsFA(game); return; }
-}
-function bbTradeVal(p) { return bbValue(p); }
-function bbPickVal(pk, game) { return pk.round === 1 ? 26 : 8; }
-app.post("/api/trade", (req, res) => {
-  const ctx = getCtx(req, res); if (!ctx) return;
-  const { game, user } = ctx;
-  if (game.sport !== "basketball") return res.status(400).json({ error: "Trades are a basketball thing. Use the transfer market." });
-  if (!user.team) return res.status(400).json({ error: "Pick a team first." });
-  if (!game.started) return res.status(400).json({ error: "Start the season first." });
-  const ph = game.hoops.phase;
-  if (!(ph === "regular" && game.round <= HOOPS_DEADLINE) && ph !== "fa") return res.status(400).json({ error: "The trade window is closed. Trades work until the week " + HOOPS_DEADLINE + " deadline and again in the offseason." });
-  const toTeam = String(req.body.toTeam || "");
-  const other = game.clubs[toTeam];
-  if (!other || toTeam === user.team) return res.status(400).json({ error: "Pick a valid team to trade with." });
-  const give = (Array.isArray(req.body.give) ? req.body.give : []).map(Number);
-  const get = (Array.isArray(req.body.get) ? req.body.get : []).map(Number);
-  const givePicks = (Array.isArray(req.body.givePicks) ? req.body.givePicks : []).map(String);
-  const getPicks = (Array.isArray(req.body.getPicks) ? req.body.getPicks : []).map(String);
-  if (!give.length && !givePicks.length) return res.status(400).json({ error: "Offer at least one player or pick." });
-  if (!get.length && !getPicks.length) return res.status(400).json({ error: "Ask for at least one player or pick." });
-  if (give.length + givePicks.length > 4 || get.length + getPicks.length > 4) return res.status(400).json({ error: "Max 4 assets per side." });
-  const mine = new Set(game.clubs[user.team].squad), theirs = new Set(other.squad);
-  for (const id of give) if (!mine.has(id)) return res.status(400).json({ error: "You can only trade your own players." });
-  for (const id of get) if (!theirs.has(id)) return res.status(400).json({ error: "One of those players is not on " + toTeam + "." });
-  const myPicks = givePicks.map(id => game.hoops.picks.find(p => p.id === id));
-  const theirPicks = getPicks.map(id => game.hoops.picks.find(p => p.id === id));
-  if (myPicks.some(p => !p || p.owner !== user.team)) return res.status(400).json({ error: "You can only trade picks you own." });
-  if (theirPicks.some(p => !p || p.owner !== toTeam)) return res.status(400).json({ error: toTeam + " do not own one of those picks." });
-  const newMine = game.clubs[user.team].squad.length - give.length + get.length;
-  const newTheirs = other.squad.length - get.length + give.length;
-  if (newMine < 8 || newMine > 15 || newTheirs < 8 || newTheirs > 15) return res.status(400).json({ error: "Rosters must stay between 8 and 15 players after the trade." });
-  const outVal = give.reduce((s, id) => s + bbTradeVal(game.players[id]), 0) + myPicks.reduce((s, p) => s + bbPickVal(p, game), 0);
-  const inVal = get.reduce((s, id) => s + bbTradeVal(game.players[id]), 0) + theirPicks.reduce((s, p) => s + bbPickVal(p, game), 0);
-  const human = humanOf(game, toTeam);
-  if (!human) {
-    const theirBest = Math.max(0, ...other.squad.map(id => (game.players[id] || {}).rating || 0));
-    const askingBest = get.some(id => game.players[id].rating >= theirBest && theirBest >= 88);
-    const need = askingBest ? inVal * 1.2 : inVal * 0.97;
-    if (outVal < need) {
-      return res.json({ ok: false, verdict: "rejected", reason: toTeam + " say no. They value that package at " + Math.round(inVal) + " and yours at " + Math.round(outVal) + "." + (askingBest ? " You are asking for their franchise player. Massively overpay or move on." : " Sweeten the deal.") });
-    }
-  } else {
-    return res.status(400).json({ error: "That team is run by a human. Agree the deal in chat, then have them accept here. Human to human trades land in a later patch, for now trade with AI teams." });
-  }
-  for (const id of give) { game.clubs[user.team].squad = game.clubs[user.team].squad.filter(x => x !== id); other.squad.push(id); game.players[id].club = toTeam; }
-  for (const id of get) { other.squad = other.squad.filter(x => x !== id); game.clubs[user.team].squad.push(id); game.players[id].club = user.team; }
-  for (const p of myPicks) p.owner = toTeam;
-  for (const p of theirPicks) p.owner = user.team;
-  const gaveNames = give.map(id => game.players[id].name).concat(myPicks.map(p => p.year + " R" + p.round));
-  const gotNames = get.map(id => game.players[id].name).concat(theirPicks.map(p => p.year + " R" + p.round));
-  game.hoops.trades.unshift({ id: game.hoops.tradeSeq++, week: game.round, a: user.team, b: toTeam, gave: gaveNames, got: gotNames, by: user.name });
-  log(game, "TRADE: " + user.team + " send " + gaveNames.join(", ") + " to " + toTeam + " for " + gotNames.join(", ") + ".");
-  wire(game, "Blockbuster or bust, the deal is in. " + user.team + " and " + toTeam + " swap " + gaveNames[0] + " for " + gotNames[0] + (gaveNames.length + gotNames.length > 2 ? " and more" : "") + ".");
-  save();
-  res.json({ ok: true, verdict: "accepted" });
-});
-app.post("/api/draftpick", (req, res) => {
-  const ctx = getCtx(req, res); if (!ctx) return;
-  const { game, user } = ctx;
-  if (game.sport !== "basketball") return res.status(400).json({ error: "There is no draft in football mode." });
-  const d = game.hoops.draft;
-  if (!d || !d.onClock) return res.status(400).json({ error: "Nobody is on the clock." });
-  if (d.onClock.user !== user.name) return res.status(403).json({ error: d.onClock.user + " is on the clock, not you." });
-  const prospect = d.prospects.find(p => p.pid === String(req.body.prospectId) && !p.taken);
-  if (!prospect) return res.status(400).json({ error: "That prospect is gone. Pick another." });
-  const pick = d.order[d.cursor];
-  hoopsMakePick(game, pick, prospect);
-  d.onClock = null;
-  advanceHoopsDraft(game);
-  save();
-  res.json({ ok: true });
-});
-app.post("/api/signfa", (req, res) => {
-  const ctx = getCtx(req, res); if (!ctx) return;
-  const { game, user } = ctx;
-  if (game.sport !== "basketball") return res.status(400).json({ error: "Free agency is a basketball thing." });
-  if (!user.team) return res.status(400).json({ error: "Pick a team first." });
-  if (game.hoops.phase !== "fa") return res.status(400).json({ error: "Free agency is not open. It opens after the draft." });
-  const id = Number(req.body.playerId);
-  if (!game.hoops.faPool.includes(id)) return res.status(400).json({ error: "That player is not a free agent." });
-  const p = game.players[id];
-  const club = game.clubs[user.team];
-  if (club.squad.length >= 15) return res.status(400).json({ error: "Your roster is full at 15." });
-  const wage = bbWage(p);
-  if (bbSalary(game, user.team) + wage > HOOPS_CAP_SOFT) return res.status(400).json({ error: "That signing blows past the " + HOOPS_CAP_SOFT + "M apron. Clear salary first." });
-  game.hoops.faPool = game.hoops.faPool.filter(x => x !== id);
-  p.club = user.team; p.wage = wage; p.contractYears = bbContractYears(p.age);
-  club.squad.push(id);
-  log(game, "SIGNING: " + p.name + " signs with " + user.team + ".");
-  wire(game, p.name + " chooses " + user.team + ". The front office got their man.");
-  save();
-  res.json({ ok: true });
-});
-function hoopsState(game, user) {
-  const myTeam = user.team;
-  const club = myTeam ? game.clubs[myTeam] : null;
-  const week = game.round;
-  const upWeek = Math.min(HOOPS_REG_WEEKS, week + 1);
-  const thisWeek = (game.hoops.schedule[upWeek] || []).map(([h, a]) => ({ home: h, away: a, mine: h === myTeam || a === myTeam }));
-  const lastResults = (game.hoops.results[week] || []).map(r => ({ home: r.home, away: r.away, hp: r.hp, ap: r.ap, ot: r.ot, mine: r.home === myTeam || r.away === myTeam, top: r.top }));
-  const rosterOf = t => game.clubs[t].squad.map(id => game.players[id]).filter(Boolean).map(p => ({
-    id: p.id, name: p.name, pos: p.pos, age: p.age, rating: p.rating, wage: p.wage, years: p.contractYears,
-    ppg: game.hoops.gp[p.id] ? +((game.hoops.pts[p.id] || 0) / game.hoops.gp[p.id]).toFixed(1) : 0
-  })).sort((a, b) => b.rating - a.rating);
-  const teamsLite = Object.keys(game.clubs).map(t => ({
-    name: t, division: game.clubs[t].division, w: game.clubs[t].wins, l: game.clubs[t].losses,
-    manager: (humanOf(game, t) || {}).name || "AI", salary: +bbSalary(game, t).toFixed(1),
-    roster: rosterOf(t), picks: game.hoops.picks.filter(pk => pk.owner === t).map(pk => ({ id: pk.id, year: pk.year, round: pk.round, orig: pk.orig }))
-  }));
-  const d = game.hoops.draft;
-  return {
-    sport: "basketball",
-    code: game.code, you: user.name, host: game.host, started: game.started, season: game.season,
-    week, totalRounds: HOOPS_REG_WEEKS, phase: game.hoops.phase,
-    users: Object.values(game.users).map(u => ({ name: u.name, team: u.team, trophies: u.trophies || [] })),
-    teams: Object.keys(game.clubs),
-    myTeam,
-    myBoard: club ? Math.round(club.conf || 60) : 60,
-    salary: myTeam ? +bbSalary(game, myTeam).toFixed(1) : 0,
-    capSoft: HOOPS_CAP_SOFT,
-    record: club ? { w: club.wins, l: club.losses } : null,
-    lineup: club && club.lineup ? club.lineup : null,
-    roster: myTeam ? rosterOf(myTeam) : [],
-    myPicks: myTeam ? game.hoops.picks.filter(pk => pk.owner === myTeam).map(pk => ({ id: pk.id, year: pk.year, round: pk.round, orig: pk.orig })) : [],
-    teamsLite,
-    standings: { East: hoopsStandings(game, "East"), West: hoopsStandings(game, "West") },
-    thisWeek, lastResults,
-    deadline: HOOPS_DEADLINE,
-    trades: game.hoops.trades.slice(0, 25),
-    playin: game.hoops.playin,
-    playoffs: game.hoops.playoffs ? { round: game.hoops.playoffs.round, history: game.hoops.playoffs.history } : null,
-    champion: game.hoops.champion,
-    awards: game.hoops.awards,
-    draft: d ? { onClock: d.onClock, myClock: !!(d.onClock && d.onClock.user === user.name), recent: d.order.filter(p => p.taken).slice(-10).map(p => ({ no: p.no, team: p.team, name: p.taken })), board: d.onClock ? d.prospects.filter(p => !p.taken).slice(0, 24).map(p => ({ pid: p.pid, name: p.name, pos: p.pos, age: p.age, rating: p.rating })) : [] } : null,
-    faPool: game.hoops.phase === "fa" ? game.hoops.faPool.map(id => game.players[id]).filter(Boolean).sort((a, b) => b.rating - a.rating).slice(0, 40).map(p => ({ id: p.id, name: p.name, pos: p.pos, age: p.age, rating: p.rating, wage: bbWage(p) })) : [],
-    wire: game.hoops.wire.slice(0, 30),
-    feed: game.feed.slice(0, 60),
-    history: game.history || [],
-    myTrophies: (user.trophies || [])
-  };
-}
-// ================= END BASKETBALL MODE =================
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Floodlights running on port ${PORT}`));
