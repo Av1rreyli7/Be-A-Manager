@@ -547,7 +547,7 @@ button.teamcard:disabled{cursor:not-allowed}
           <option value="defensive">Defensive</option>
         </select>
       </div>
-      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rating</th><th class="num">Value</th><th>Contract</th><th></th></tr></thead>
+      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rating</th><th class="num">Value</th><th></th></tr></thead>
       <tbody id="squadBody"></tbody></table>
       <div id="loanOutBox"></div>
       <div class="controls" style="margin-top:6px">
@@ -630,6 +630,10 @@ button.teamcard:disabled{cursor:not-allowed}
         <button id="simBtn" class="gold hidden">▶ Play matchweek</button>
         <button id="ffBtn18" class="ghost hidden">⏩ Winter window</button>
         <button id="ffBtn37" class="ghost hidden">⏭ End of season</button>
+        <span id="simToWrap" class="hidden" style="display:inline-flex;gap:6px;align-items:center">
+          <input id="simToW" type="number" min="1" max="38" placeholder="Week" style="width:74px;background:#0b0e15;border:1px solid var(--line);color:#f4f5f8;padding:8px;border-radius:6px">
+          <button id="simToGo" class="ghost">⏩ Sim to week</button>
+        </span>
         <button id="nextSeasonBtn" class="gold hidden">Start next season</button>
         <span class="msub" style="align-self:center">Host controls &middot; the week advances for everyone</span>
       </div>
@@ -1203,17 +1207,13 @@ function render() {
         ? `<button class="small" onclick="buyLoan(${p.id})" title="Make it permanent at his value">Buy ${money(p.value)}</button>`
         : `<button class="small ghost" onclick="toggleList(${p.id})">${p.listed?'Unlist':'List'}</button>
            <button class="small ghost" onclick="setTrain(${s.myClub.trainFocus === p.id ? "null" : p.id})">${s.myClub.trainFocus === p.id ? "Stop" : "Train"}</button>
-           ${p.age <= 23 ? `<button class="small ghost" onclick="loanOut(${p.id})">Loan out</button>` : ""}
+           <button class="small ghost" onclick="loanOut(${p.id})">Loan out</button>
            <button class="small ghost" onclick="releasePlayer(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Release</button>`;
-      const ct = onLoanHere ? '<span class="msub">parent club deal</span>' :
-        `${p.contractYears !== undefined ? p.contractYears + "y" : ""} \u00b7 ${money(p.wage || 0)}/s \u00b7 ${p.squadRole || ""}${p.contractYears === 1 ? ' <span class="tag inj">EXPIRING</span>' : ''}`;
-      const ctBtn = onLoanHere ? "" : ` <button class="small ghost" onclick="openTerms(${p.id})">Terms</button>`;
       return `
       <tr><td>${p.name} ${tags}</td>
       <td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${rchip(p.rating)}</td>
       <td class="num">${money(p.value)}</td>
-      <td style="white-space:nowrap;font-size:12px">${ct}</td>
-      <td style="white-space:nowrap">${acts}${ctBtn}</td></tr>`;
+      <td style="white-space:nowrap">${acts}</td></tr>`;
     }).join("");
     const outs = s.myClub.loanedOut || [];
     if ($("loanOutBox")) $("loanOutBox").innerHTML = !outs.length ? "" : `
@@ -1265,6 +1265,7 @@ function render() {
   const seasonDone = !!s.seasonOver;
   $("simBtn").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone));
   $("ffBtn18").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone && s.round < 18));
+  $("simToWrap").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone));
   $("ffBtn37").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone && s.round < 37));
   $("nextSeasonBtn").classList.toggle("hidden", !(s.you === s.host && s.started && seasonDone));
   if ($("seasonOverTag")) $("seasonOverTag").classList.toggle("hidden", !seasonDone);
@@ -1418,14 +1419,19 @@ function offerCard(o, role) {
       <button class="small" onclick="sendTerms(${o.id})">Offer terms</button>
       <button class="small red" onclick="respond(${o.id},'withdraw')">Walk away</button>
     </div>`;
+  if (o.status === "countered" && role === "seller" && o.direction === "inbound") actions = open ? `
+    <button class="small" onclick="respond(${o.id},'accept')">Take their ${money(o.fee)}</button>
+    <button class="small ghost" onclick="respond(${o.id},'counter', prompt('New counter in £m'))">Counter again</button>
+    <button class="small red" onclick="respond(${o.id},'decline')">Decline</button>` :
+    `<span class="tag">Window shut</span> <button class="small red" onclick="respond(${o.id},'decline')">Decline</button>`;
   if (o.status === "countered" && role === "buyer") actions = open ? `
     <button class="small" onclick="respond(${o.id},'accept')">Pay ${money(o.counterFee)}</button>
     <button class="small ghost" onclick="respond(${o.id},'counter', prompt('New fee in £m'))">Counter</button>
     <button class="small red" onclick="respond(${o.id},'decline')">Walk away</button>` :
     `<span class="tag">Window shut</span> <button class="small red" onclick="respond(${o.id},'decline')">Walk away</button>`;
-  const who = o.direction === "inbound"
+  const who = (o.direction === "inbound"
     ? `${o.fromClub} → YOUR ${p.toUpperCase()}`
-    : `${o.toClub} → ${p.toUpperCase()} (${o.sellerClub})`;
+    : `${o.toClub} → ${p.toUpperCase()} (${o.sellerClub})`) + (o.kind === "loan" ? ' <span class="tag loan">LOAN ASK</span>' : '');
   const shownFee = (o.status === "countered" && o.counterFee) ? o.counterFee : o.fee;
   const feeTag = (o.status === "countered" && o.counterFee) ? "THEIR COUNTER" : "BID";
   return `<div class="offer"><div class="ohead"><span class="who">${who}</span>
@@ -2011,6 +2017,11 @@ window.simTo = async n => {
   $("ffBtn18").disabled = false; $("ffBtn37").disabled = false;
 };
 $("ffBtn18").onclick = () => simTo(18);
+$("simToGo").onclick = () => {
+  const w = Math.floor(Number($("simToW").value));
+  if (!Number.isFinite(w) || w < 1 || w > 38) { alert("Pick a week between 1 and 38."); return; }
+  simTo(w);
+};
 $("ffBtn37").onclick = () => simTo(37);
 
 $("nextSeasonBtn").onclick = async () => {

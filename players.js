@@ -537,10 +537,17 @@ for (const [club, extras] of Object.entries(EXTRA_DEPTH)) {
 // Merge in the world pack: full playable leagues everywhere plus AI second divisions.
 const { WORLD_CLUBS, SECOND_DIV_CLUBS, LEAGUES } = require("./world_pack");
 Object.assign(CLUBS, WORLD_CLUBS, SECOND_DIV_CLUBS);
+const { buildFillClubs } = require("./league_fill");
+{
+  const existingNames = [];
+  for (const info of Object.values(CLUBS)) for (const row of info.squad) existingNames.push(row[0]);
+  Object.assign(CLUBS, buildFillClubs(existingNames));
+}
 // Unify the Brazilian league name.
 for (const c of Object.values(CLUBS)) if (c.league === "Brazil") c.league = "Brasileirao";
 
 // Compute market value in millions from rating and age, with a small position tweak.
+const VALUE_CAP = 400;
 function marketValue(rating, age, pos) {
   if (rating <= 62) return 1; // placeholder entries for departed players
   let base = 2.5 * Math.exp(0.19 * (rating - 70));
@@ -559,7 +566,7 @@ function marketValue(rating, age, pos) {
   else ageF = 0.15;
   let posF = pos === "GK" ? 0.65 : pos === "DF" ? 0.9 : 1.0;
   let v = base * ageF * posF;
-  return Math.max(0.5, Math.round(v * 10) / 10);
+  return Math.min(VALUE_CAP, Math.max(0.5, Math.round(v * 10) / 10));
 }
 
 function buildDatabase() {

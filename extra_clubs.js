@@ -92,7 +92,7 @@ const EXTRA_CLUBS = {
     ["Mattia Zaccagni","FW",30,79],["Taty Castellanos","FW",27,78],["Boulaye Dia","FW",29,76],["Gustav Isaksen","FW",24,76],["Pedro","FW",38,72]
   ]},
   "Bologna": { league: "Serie A", squad: [
-    ["Emil Holm","DF",26,74],
+    
     ["Nicolo Cambiaghi","FW",25,74],
     ["Tommaso Pobega","MF",27,74],
     ["Lukasz Skorupski","GK",34,76],
