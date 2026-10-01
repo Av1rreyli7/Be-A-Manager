@@ -23,6 +23,7 @@ A multiplayer football career mode you host online and play with friends in the 
 - Pick your own starting lineup: exactly 11 starters with one keeper, plus up to 9 subs. If a starter gets sold the game auto strips him and falls back to your best XI.
 - Real transfer windows. The summer window runs until matchweek 4 and the January window covers weeks 20 to 23. Outside those, no new bids and no completed deals.
 - Sign players from any club in the world. AI clubs accept, decline or counter. Bid for your friends' players and haggle properly with counters both ways. Transfer list players to attract AI bids from abroad.
+- Play your own matches. In the Matches tab, hit Play this match next to your fixture for the week and play it yourself in a top down 11 v 11 game: WASD to move, Shift to sprint, Q to pass, hold E to shoot, Esc to pause. How hard it is follows the real squad ratings of both clubs. Your final score is used when the host sims the week. One match per manager per week, league or cup. If you skip it or leave early, the match is simmed like normal.
 - Matchday screen. When the host sims a week the whole lobby is taken to a full screen results view with your league scores and your cup ties. Nobody leaves until the host sends everyone back.
 - Tables tab covers every league in the world, including the AI second divisions.
 - End of season prize money scaled by league, player ageing, kids improving, academy intakes, and a fresh season with new cup draws starts automatically. Old saves from the previous version still load.
@@ -49,6 +50,7 @@ Heads up: the free Render plan restarts the server when it sleeps, and saves liv
 
 - `server.js` runs the whole game world.
 - `index.html` is the entire interface.
+- `match.js` is the playable match engine. It must be uploaded next to `index.html`.
 - `players.js` builds the database.
 - `extra_clubs.js` and `world_pack.js` hold the club, player, nation and league data.
 - `package.json` and `package-lock.json` for install.

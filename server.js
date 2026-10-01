@@ -9,6 +9,10 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
+// the playable match engine, loaded by index.html
+app.get("/match.js", (req, res) => {
+  res.sendFile(path.join(__dirname, "match.js"));
+});
 
 const SAVE_FILE = path.join(__dirname, "games.json");
 let games = {};
@@ -354,6 +358,8 @@ function simCupsForWeek(game) {
     const matches = cup.rounds[cup.roundIdx];
     for (const m of matches) {
       simMatch(game, m);
+      // the league week already moved the round on, so a played cup tie was stored one round back
+      usePlayedScore(game, m, cup.key, game.round - 1);
       if (humanInvolved(game, [m.home, m.away]) || matches.length === 1) cupEvents(game, m);
       if (m.hg === m.ag) {
         // level after ninety: human managers take the penalties themselves,
@@ -789,6 +795,7 @@ function newGame(hostName) {
     totalRounds: TOTAL_ROUNDS,
     playerSeq: players.length + 1,
     lock: { active: false, week: 0 },
+    plays: {},
     offers: [],
     offerSeq: 1,
     stats: {},
@@ -1701,6 +1708,7 @@ function migrate(game) {
   if (!game.lastEvents) game.lastEvents = {};
   if (!game.reacts) game.reacts = [];
   if (!game.shootouts) game.shootouts = {};
+  if (!game.plays) game.plays = {};
   ensureRoles(game);
   for (const u of Object.values(game.users || {})) if (u.sacked === undefined) u.sacked = false;
   for (const p of Object.values(game.players || {})) {
@@ -1908,6 +1916,61 @@ function cupEvents(game, match) {
   game.lastEvents[match.home + "|" + match.away] = { ev, potm: star ? { n: star, c: starClub } : null };
 }
 
+// ---------- playable matches ----------
+// A manager can play their own fixture in the browser before the host sims the week.
+// The final score is parked in game.plays and the sim uses it in place of a generated one.
+const MAX_PLAY_GOALS = 12;
+function xiRating(game, team) {
+  const xi = chosenXI(game, team).filter(Boolean);
+  return xi.length ? Math.round(xi.reduce((s, p) => s + p.rating, 0) / xi.length * 10) / 10 : 60;
+}
+
+function playableFixtures(game, user) {
+  const out = [];
+  if (!game.started || !user.team || !game.clubs[user.team]) return out;
+  if (game.round >= (game.totalRounds || 38)) return out;
+  const me = user.team;
+  const add = (kind, label, m) => {
+    const rival = humanOf(game, m.home === me ? m.away : m.home);
+    out.push({
+      kind, label, home: m.home, away: m.away, side: m.home === me ? "home" : "away",
+      homeRating: xiRating(game, m.home), awayRating: xiRating(game, m.away),
+      blocked: rival ? "This one is against " + rival.name + ", another manager, so it gets simmed to keep it fair." : null
+    });
+  };
+  const league = game.clubs[me].league;
+  const lm = (((game.leagueFixtures || {})[league] || [])[game.round] || []).find(m => m.home === me || m.away === me);
+  if (lm && lm.hg === null) add("league", league + ", week " + (game.round + 1), lm);
+  for (const cup of Object.values(game.cups || {})) {
+    if (cup.winner || cup.scope === "intl") continue;
+    if (cup.weeks[cup.roundIdx] !== game.round + 1) continue;
+    const ties = cup.rounds[cup.roundIdx] || [];
+    const cm = ties.find(m => m.home === me || m.away === me);
+    if (!cm || !cm.away || cm.hg !== null || !game.clubs[cm.home] || !game.clubs[cm.away]) continue;
+    add(cup.key, cup.title + ", " + ((cup.roundNames && cup.roundNames[cup.roundIdx]) || nameForMatches(ties.length)), cm);
+  }
+  return out;
+}
+
+function currentPlay(game, user) {
+  const p = (game.plays || {})[user.name];
+  return p && p.season === game.season && p.round === game.round ? p : null;
+}
+
+// swaps the generated score for the one a manager actually played, if there is one
+function usePlayedScore(game, m, kind, round) {
+  for (const p of Object.values(game.plays || {})) {
+    if (p.status !== "done" || p.season !== game.season || p.round !== round || p.kind !== kind) continue;
+    if (p.home !== m.home || p.away !== m.away) continue;
+    m.hg = p.hg;
+    m.ag = p.ag;
+    m.played = p.user;
+    log(game, `PLAYED LIVE: ${p.user} played ${m.home} ${m.hg}-${m.ag} ${m.away} on the pitch.`);
+    return true;
+  }
+  return false;
+}
+
 function playMatchweek(game) {
   const wasOpen = windowOpen(game);
   const humanLeagues = new Set(Object.values(game.users).filter(u => u.team && game.clubs[u.team]).map(u => game.clubs[u.team].league));
@@ -1922,7 +1985,11 @@ function playMatchweek(game) {
         }
       }
     }
-    for (const m of round) { simMatch(game, m); recordScorers(game, m, league, humanLeagues.has(league)); }
+    for (const m of round) {
+      simMatch(game, m);
+      usePlayedScore(game, m, "league", game.round);
+      recordScorers(game, m, league, humanLeagues.has(league));
+    }
     if (humanLeagues.has(league)) {
       log(game, `${league.toUpperCase()} WEEK ${game.round + 1}: ` + round.map(m => `${m.home} ${m.hg}-${m.ag} ${m.away}`).join(" | "));
       for (const m of round) {
@@ -2045,6 +2112,8 @@ function playMatchweek(game) {
   if (wasOpen && !isOpen) log(game, "The transfer window has SLAMMED SHUT. No deals until it reopens.");
   if (!wasOpen && isOpen) log(game, "The transfer window is OPEN. Get your deals done.");
   game.lock = { active: true, week: playedWeek };
+  // played scores only ever count for the week they were played in
+  game.plays = {};
 }
 
 app.post("/api/sim", (req, res) => {
@@ -2076,6 +2145,59 @@ app.post("/api/simto", (req, res) => {
   log(game, "FAST FORWARD: the host simmed ahead to week " + game.round + ".");
   save();
   res.json({ ok: true, round: game.round });
+});
+
+app.post("/api/playstart", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!game.started) return res.status(400).json({ error: "The season has not started yet." });
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  const prev = currentPlay(game, user);
+  if (prev) {
+    return res.status(400).json({ error: prev.status === "done"
+      ? "You already played your match this week. One match per week."
+      : "You already kicked off a match this week. A match you leave gets simmed like normal." });
+  }
+  const kind = String(req.body.kind || "league");
+  const fx = playableFixtures(game, user).find(f => f.kind === kind);
+  if (!fx) return res.status(400).json({ error: "You have no match like that to play this week." });
+  if (fx.blocked) return res.status(400).json({ error: fx.blocked });
+  game.plays[user.name] = {
+    user: user.name, season: game.season, round: game.round, kind: fx.kind,
+    home: fx.home, away: fx.away, status: "started", hg: null, ag: null, t: Date.now()
+  };
+  const row = p => ({ n: p.name, pos: p.pos, role: p.role || p.pos, r: p.rating });
+  save();
+  res.json({
+    ok: true, kind: fx.kind, label: fx.label, home: fx.home, away: fx.away, side: fx.side,
+    homeRating: fx.homeRating, awayRating: fx.awayRating,
+    homeXI: chosenXI(game, fx.home).filter(Boolean).map(row),
+    awayXI: chosenXI(game, fx.away).filter(Boolean).map(row)
+  });
+});
+
+app.post("/api/playresult", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!game.started) return res.status(400).json({ error: "The season has not started yet." });
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  const home = String(req.body.home || ""), away = String(req.body.away || "");
+  const fx = playableFixtures(game, user).find(f => f.home === home && f.away === away && (!req.body.kind || f.kind === req.body.kind));
+  if (!fx) return res.status(400).json({ error: "That is not your match for this week. If the host already simmed the week, a played score cannot count." });
+  if (fx.blocked) return res.status(400).json({ error: fx.blocked });
+  const play = currentPlay(game, user);
+  if (play && play.status === "done") return res.status(400).json({ error: "You already played your match this week. One match per week." });
+  if (!play || play.kind !== fx.kind || play.home !== home || play.away !== away) return res.status(400).json({ error: "Kick off the match first." });
+  const hg = req.body.hg, ag = req.body.ag;
+  if (!Number.isInteger(hg) || !Number.isInteger(ag) || hg < 0 || ag < 0 || hg > MAX_PLAY_GOALS || ag > MAX_PLAY_GOALS) {
+    return res.status(400).json({ error: "That score does not look right. A played match can have at most " + MAX_PLAY_GOALS + " goals a side." });
+  }
+  play.status = "done";
+  play.hg = hg;
+  play.ag = ag;
+  log(game, `${user.name} just played their ${fx.label} match on the pitch. The score lands when the week is simmed.`);
+  save();
+  res.json({ ok: true, message: `Saved. ${home} ${hg}-${ag} ${away} is locked in and counts when the host sims the week.` });
 });
 
 app.post("/api/nextseason", (req, res) => {
@@ -2658,7 +2780,12 @@ app.get("/api/state", (req, res) => {
     round: game.round,
     seasonOver: game.started && game.round >= (game.totalRounds || 38),
     totalRounds: game.totalRounds || 38,
-    users: Object.values(game.users).map(u => ({ name: u.name, team: u.team, nation: u.nation || null })),
+    users: Object.values(game.users).map(u => ({ name: u.name, team: u.team, nation: u.nation || null, play: (currentPlay(game, u) || {}).status || null })),
+    playable: playableFixtures(game, user),
+    myPlay: (() => {
+      const p = currentPlay(game, user);
+      return p ? { status: p.status, kind: p.kind, home: p.home, away: p.away, hg: p.hg, ag: p.ag } : null;
+    })(),
     leagues: PLAYABLE,
     allLeagues: Object.keys(game.leagueFixtures || {}),
     myLeague,

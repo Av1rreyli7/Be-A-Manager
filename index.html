@@ -401,6 +401,28 @@ tr.me td{background:rgba(53,224,194,.05)}
   .ct-card label { width: 118px; color: var(--dim2); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
   .ct-card input, .ct-card select { flex: 1; background: #0d141c; border: 1px solid var(--line); color: var(--chalk); border-radius: 7px; padding: 9px 11px; font-family: inherit; font-size: 14px; }
   .ct-note { color: var(--dim); font-size: 12px; margin-top: 10px; min-height: 16px; line-height: 1.5; }
+  /* ---------- playable match ---------- */
+  .playrow { grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--hair); padding-top: 8px; font-size: 12.5px; color: var(--dim); text-align: center; }
+  #playStatus { margin: -4px 0 12px; color: var(--dim); }
+  #playStatus:empty { display: none; }
+  #matchWrap { position: fixed; inset: 0; z-index: 200; background: #0a1410; }
+  #matchCanvas { display: block; width: 100%; height: 100%; }
+  #matchPanel { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: rgba(4,8,12,.62); backdrop-filter: blur(3px); overflow: auto; }
+  .mcard { background: var(--screen); border: 1px solid var(--bline); border-radius: 16px; padding: 24px 26px; width: min(94vw, 560px); box-shadow: 0 24px 70px rgba(0,0,0,.55); text-align: center; }
+  .mcard .mk { font-size: 11px; font-weight: 700; letter-spacing: .24em; color: var(--gold); text-transform: uppercase; }
+  .mcard h2 { font-size: clamp(26px, 5vw, 38px); line-height: 1.05; margin: 8px 0 12px; }
+  .mcard h2 span { color: var(--gold); }
+  .mcard p { color: var(--dim); font-size: 13.5px; line-height: 1.55; margin-top: 10px; }
+  .mcard .mdiff { color: var(--chalk); font-weight: 600; font-size: 15px; }
+  .mcard .mwarn { color: var(--warm); }
+  .mcard .merr { color: var(--softred); font-weight: 600; }
+  .mrow { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .mrow div { background: #0d141c; border: 1px solid var(--line2); border-radius: 10px; padding: 8px 18px; min-width: 110px; }
+  .mrow b { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 30px; line-height: 1.1; color: var(--gold); }
+  .mrow small { font-size: 10px; letter-spacing: .14em; color: var(--dim2); }
+  .mkeys { display: grid; gap: 7px; text-align: left; margin-top: 14px; font-size: 13px; color: var(--soft); }
+  .mkeys kbd { display: inline-block; min-width: 24px; text-align: center; background: #0d141c; border: 1px solid var(--bline); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; margin-right: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--chalk); }
+  .mbtns { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
 </style>
 </head>
 <body>
@@ -601,6 +623,7 @@ tr.me td{background:rgba(53,224,194,.05)}
         <button id="nextSeasonBtn" class="gold hidden">Start next season</button>
         <span class="msub" style="align-self:center">Host controls &middot; the week advances for everyone</span>
       </div>
+      <div class="msub" id="playStatus"></div>
       <div class="grid2">
         <div class="subcard"><div class="mlab">This week &middot; fixtures</div><div id="thisWeek"></div></div>
         <div class="subcard"><div class="mlab">Last week &middot; results</div><div id="lastWeek"></div></div>
@@ -708,6 +731,12 @@ tr.me td{background:rgba(53,224,194,.05)}
   </div>
 </div>
 
+<div id="matchWrap" class="hidden">
+  <canvas id="matchCanvas"></canvas>
+  <div id="matchPanel" class="hidden"></div>
+</div>
+
+<script src="match.js"></script>
 <script>
 let ME = { name: localStorage.getItem("fl_name") || "", code: localStorage.getItem("fl_code") || "" };
 var STATE = null;
@@ -753,7 +782,7 @@ function leave(){
   $("lobbyMsg").textContent = "";
   $("app").classList.add("hidden");
   $("lobby").classList.remove("hidden");
-  flReload();
+  location.reload();
 }
 $("leaveBtn").onclick = leave;
 
@@ -1034,7 +1063,11 @@ document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
 
 // ---- state polling ----
 async function tick() {
-  try { STATE = await api("/api/state"); render(); }
+  try {
+    STATE = await api("/api/state");
+    // the page stays still while a match is being played so the game runs smooth
+    if (!(window.FLMatch && FLMatch.isOpen())) render();
+  }
   catch(e){ /* keep last state on transient errors */ }
 }
 
@@ -1214,7 +1247,12 @@ function render() {
   $("ffBtn37").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone && s.round < 37));
   $("nextSeasonBtn").classList.toggle("hidden", !(s.you === s.host && s.started && seasonDone));
   if ($("seasonOverTag")) $("seasonOverTag").classList.toggle("hidden", !seasonDone);
-  $("thisWeek").innerHTML = s.thisWeek.map(m => fixtureRow(m, s)).join("") || "<p style='color:var(--dim)'>Season done. New one starts on next sim.</p>";
+  const myTeamName = s.myClub ? s.myClub.name : null;
+  const cupPlay = (s.playable || []).filter(f => f.kind !== "league").map(f =>
+    `<div class="cuproundname">${f.label}</div><div class="fixture mine"><span class="fh">${f.home}</span><span class="score">v</span><span class="fa">${f.away}</span>${playRow(s, f.kind)}</div>`).join("");
+  $("thisWeek").innerHTML = (s.thisWeek.map(m => fixtureRow(m, s, myTeamName && (m.home === myTeamName || m.away === myTeamName) ? playRow(s, "league") : "")).join("") || "<p style='color:var(--dim)'>Season done. New one starts on next sim.</p>") + cupPlay;
+  const playNotes = s.users.filter(u => u.play && u.name !== s.you).map(u => u.name + (u.play === "done" ? " has played their match" : " has kicked off their match"));
+  $("playStatus").textContent = playNotes.length ? playNotes.join(" \u00b7 ") + ". Played scores count when the week is simmed." : "";
   $("lastWeek").innerHTML = s.lastWeek.map(m => fixtureRow(m, s)).join("") || "<p style='color:var(--dim)'>No results yet.</p>";
   $("myFixtures").innerHTML = (s.myFixtures||[]).map(m => m.home ? `
     <div class="fixture"><span class="fh"><span class="msub" style="margin-right:8px">W${m.week}</span>${m.home}</span>
@@ -1321,10 +1359,36 @@ function render() {
 }
 
 let MANAGERS = {};
-function fixtureRow(m, s) {
+function fixtureRow(m, s, extra) {
   const nm = t => { const b = MANAGERS[t]; return (b && b !== "AI") ? ` <span class="tag human">${b}</span>` : ""; };
-  return `<div class="fixture"><span class="fh">${m.home}${nm(m.home)}</span><span class="score">${m.hg===null?"v":m.hg+"-"+m.ag}${m.derby?' <span class="tag derby">DERBY</span>':''}</span><span class="fa">${m.away}${nm(m.away)}</span></div>`;
+  return `<div class="fixture${extra ? " mine" : ""}"><span class="fh">${m.home}${nm(m.home)}</span><span class="score">${m.hg===null?"v":m.hg+"-"+m.ag}${m.derby?' <span class="tag derby">DERBY</span>':''}${m.played?' <span class="tag human">PLAYED</span>':''}</span><span class="fa">${m.away}${nm(m.away)}</span>${extra || ""}</div>`;
 }
+
+// ---- playable match ----
+function playRow(s, kind) {
+  const f = (s.playable || []).find(x => x.kind === kind);
+  if (!f) return "";
+  const mp = s.myPlay;
+  if (mp && mp.status === "done" && mp.kind === kind) return `<div class="playrow"><span class="tag human">PLAYED</span><span>You played this one, ${mp.home} ${mp.hg}-${mp.ag} ${mp.away}. It counts when the host sims the week.</span></div>`;
+  if (mp && mp.status === "done") return `<div class="playrow"><span>You already played a match this week, so this one gets simmed.</span></div>`;
+  if (mp) return `<div class="playrow"><span>You kicked off a match this week and left it, so your matches get simmed like normal.</span></div>`;
+  if (f.blocked) return `<div class="playrow"><span>${f.blocked}</span></div>`;
+  return `<div class="playrow"><button class="small gold" onclick="playMatch('${kind}')">Play this match</button><span>Play it yourself, or leave it and it gets simmed.</span></div>`;
+}
+window.playMatch = kind => {
+  const s = STATE;
+  const f = s ? (s.playable || []).find(x => x.kind === kind) : null;
+  if (!f) return;
+  if (!window.FLMatch) { alert("The match could not load. Check that match.js is uploaded next to index.html, then refresh the page."); return; }
+  const round = s.round, season = s.season;
+  FLMatch.open({
+    info: f,
+    kickoff: () => api("/api/playstart", { kind }),
+    finish: async (hg, ag) => (await api("/api/playresult", { kind, home: f.home, away: f.away, hg, ag })).message,
+    stillValid: () => !!STATE && STATE.round === round && STATE.season === season,
+    closed: () => { tick(); }
+  });
+};
 
 function renderOffers(s) {
   const mine = s.offers.filter(o => o.buyerUser === s.you);
