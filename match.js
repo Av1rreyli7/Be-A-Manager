@@ -1268,14 +1268,6 @@ function makeView(canvas) {
       }
       ctx.globalAlpha = 1;
     }
-    if (extra.invalid) {
-      ctx.font = "700 16px " + FONT;
-      const t3 = "THE HOST ALREADY SIMMED THIS WEEK. THIS MATCH WILL NOT COUNT.";
-      const t3w = ctx.measureText(t3).width;
-      pill(w / 2 - t3w / 2 - 14, by + bh + 74, t3w + 28, 28, 8, "rgba(255,77,94,.9)");
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(t3, w / 2, by + bh + 89);
-    }
     // commentary
     if (fx.toastT > 0 && fx.toast) {
       const a = Math.min(1, fx.toastT / 0.4, (3.4 - fx.toastT) / 0.2 + 0.2);
@@ -1316,12 +1308,12 @@ function open(cfg) {
   const doc = root.document;
   const wrap = doc.getElementById("matchWrap"), canvas = doc.getElementById("matchCanvas"), panel = doc.getElementById("matchPanel");
   if (!wrap || !canvas || !panel) return false;
-  const A = active = { cfg, wrap, canvas, panel, mode: "pre", sim: null, view: null, keys: {}, passQ: false, shootLatch: false, acc: 0, last: 0, raf: 0, invalid: false, checkT: 0 };
+  const A = active = { cfg, wrap, canvas, panel, mode: "pre", sim: null, view: null, keys: {}, passQ: false, shootLatch: false, acc: 0, last: 0, raf: 0, checkT: 0, saving: false, saved: false };
   wrap.classList.remove("hidden");
   A.view = makeView(canvas);
 
   const show = html => { panel.innerHTML = '<div class="mcard">' + html + "</div>"; panel.classList.remove("hidden"); };
-  const hide = () => { panel.classList.add("hidden"); panel.innerHTML = ""; };
+  const hide = () => { panel.classList.add("hidden"); panel.classList.remove("msolid"); panel.innerHTML = ""; };
   const on = (id, fn) => { const el = doc.getElementById(id); if (el) el.onclick = fn; };
   const info = cfg.info || {};
   const mineName = info.side === "away" ? info.away : info.home;
@@ -1352,7 +1344,7 @@ function open(cfg) {
       if (go) { go.disabled = true; go.textContent = "Getting the teams..."; }
       try {
         const setup = await cfg.kickoff();
-        if (active !== A) return;
+        if (active !== A || A.mode === "simmed") return;
         A.sim = createSim(setup, {});
         A.view.fx.snap = true;
         A.acc = 0;
@@ -1360,7 +1352,10 @@ function open(cfg) {
         hide();
         A.mode = "playing";
       } catch (e) {
-        if (active === A) showPre(e && e.message ? e.message : "Could not start the match.");
+        if (active !== A || A.mode === "simmed") return;
+        if (cfg.recheck) { try { await cfg.recheck(); } catch (e2) { /* show the kick off error below */ } }
+        if (active !== A || A.mode === "simmed" || checkSimmed()) return;
+        showPre(e && e.message ? e.message : "Could not start the match.");
       }
     });
   }
@@ -1392,6 +1387,35 @@ function open(cfg) {
     A.mode = "playing";
   }
 
+  // The host simmed the week while this match was open. Stop on the spot, send nothing,
+  // and show what the sim decided. cfg.simmed() gives { home, away, hg, ag, note } once the round has moved on.
+  function showSimmed(sm) {
+    A.mode = "simmed";
+    A.keys = {};
+    const known = sm && sm.hg !== null && sm.hg !== undefined && sm.ag !== null && sm.ag !== undefined;
+    const hm = sm && sm.home ? sm.home : info.home, aw = sm && sm.away ? sm.away : info.away;
+    show(
+      '<div class="mk">Match over</div>' +
+      "<h2>The host has simmed this week</h2>" +
+      '<p class="mdiff">The host has simmed this week, your match was decided by the sim.</p>' +
+      (known
+        ? '<div class="mk" style="margin-top:16px">Simmed final score</div><div class="mscore">' + esc(hm) + " <span>" + esc(sm.hg) + " - " + esc(sm.ag) + "</span> " + esc(aw) + "</div>"
+        : "<p>You can see the simmed score for " + esc(hm) + " v " + esc(aw) + " in the Matches tab.</p>") +
+      (sm && sm.note ? "<p>" + esc(sm.note) + "</p>" : "") +
+      "<p>The score from the match you were playing does not count and nothing was sent.</p>" +
+      '<div class="mbtns"><button class="gold" id="mxDone">Back to the game</button></div>'
+    );
+    panel.classList.add("msolid");
+    on("mxDone", close);
+  }
+  function checkSimmed() {
+    if (A.mode === "simmed" || A.saving || A.saved || !cfg.simmed) return false;
+    const sm = cfg.simmed();
+    if (!sm) return false;
+    showSimmed(sm);
+    return true;
+  }
+
   async function finish() {
     A.mode = "done";
     const r = A.sim.result(), st = A.sim.m.stats;
@@ -1405,14 +1429,23 @@ function open(cfg) {
       '<div class="mrow"><div><b>' + st.shots[0] + "</b><small>YOUR SHOTS</small></div><div><b>" + st.shots[1] + "</b><small>THEIR SHOTS</small></div><div><b>" + myPoss + "%</b><small>YOUR POSSESSION</small></div></div>" +
       note;
     const send = async () => {
+      if (checkSimmed()) return;
       show(body("<p>Saving your result...</p>"));
+      A.saving = true;
       try {
         const msg = await cfg.finish(Math.min(MAX_GOALS, r.home), Math.min(MAX_GOALS, r.away));
+        A.saving = false;
+        A.saved = true;
         if (active !== A) return;
         show(body("<p>" + esc(msg || "Saved. This score counts when the host sims the week.") + '</p><div class="mbtns"><button class="gold" id="mxDone">Back to the game</button></div>'));
         on("mxDone", close);
       } catch (e) {
+        A.saving = false;
         if (active !== A) return;
+        // the usual reason a save is turned down is that the host simmed in the last few seconds
+        if (cfg.recheck) { try { await cfg.recheck(); } catch (e2) { /* keep the save error below */ } }
+        if (active !== A) return;
+        if (checkSimmed()) return;
         show(body('<p class="merr">' + esc(e && e.message ? e.message : "Could not save the result.") + '</p><div class="mbtns"><button class="ghost" id="mxDone">Back to the game</button><button class="gold" id="mxRetry">Try again</button></div>'));
         on("mxDone", close);
         on("mxRetry", send);
@@ -1434,7 +1467,7 @@ function open(cfg) {
   A.onKey = e => {
     if (!KEYS.has(e.code)) return;
     const down = e.type === "keydown";
-    if (A.mode === "pre" || A.mode === "done") return;
+    if (A.mode === "pre" || A.mode === "done" || A.mode === "simmed") return;
     e.preventDefault();
     if (e.code === "Escape") {
       if (down && !e.repeat) { if (A.mode === "playing") showPause(); else resume(); }
@@ -1468,11 +1501,12 @@ function open(cfg) {
       const evs = A.sim.m.events.splice(0);
       let full = false;
       for (const ev of evs) { A.view.onEvent(ev, A.sim); if (ev.type === "full") full = true; }
-      A.checkT += dtR;
-      if (A.checkT > 1) { A.checkT = 0; if (cfg.stillValid && !cfg.stillValid()) A.invalid = true; }
       if (full) finish();
     }
-    A.view.draw(A.sim, A.mode === "paused" ? 0 : dtR, { invalid: A.invalid });
+    // a light check twice a second, in every screen of the match, for the host having simmed the week
+    A.checkT += dtR;
+    if (A.checkT > 0.5) { A.checkT = 0; checkSimmed(); }
+    A.view.draw(A.sim, A.mode === "paused" || A.mode === "simmed" ? 0 : dtR, {});
     A.raf = root.requestAnimationFrame(frame);
   }
   showPre();
@@ -1489,6 +1523,7 @@ function close() {
   root.removeEventListener("keyup", A.onKey);
   root.removeEventListener("blur", A.onBlur);
   A.panel.classList.add("hidden");
+  A.panel.classList.remove("msolid");
   A.panel.innerHTML = "";
   A.wrap.classList.add("hidden");
   if (A.cfg.closed) A.cfg.closed();

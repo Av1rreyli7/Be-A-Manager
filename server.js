@@ -1952,6 +1952,14 @@ function playableFixtures(game, user) {
   return out;
 }
 
+// true when this pairing is one of the manager's fixtures that already has a simmed score
+function alreadySimmed(game, user, home, away) {
+  const hit = m => m.home === home && m.away === away && m.hg !== null && m.hg !== undefined;
+  const league = (game.clubs[user.team] || {}).league;
+  if ((((game.leagueFixtures || {})[league]) || []).slice(0, game.round).some(r => r.some(hit))) return true;
+  return Object.values(game.cups || {}).some(c => (c.rounds || []).some(r => r.some(hit)));
+}
+
 function currentPlay(game, user) {
   const p = (game.plays || {})[user.name];
   return p && p.season === game.season && p.round === game.round ? p : null;
@@ -2162,6 +2170,10 @@ app.post("/api/playstart", (req, res) => {
   const fx = playableFixtures(game, user).find(f => f.kind === kind);
   if (!fx) return res.status(400).json({ error: "You have no match like that to play this week." });
   if (fx.blocked) return res.status(400).json({ error: fx.blocked });
+  // the page says which fixture it is showing, so a stale page can never kick off next week's game by mistake
+  if (req.body.home !== undefined && (req.body.home !== fx.home || req.body.away !== fx.away)) {
+    return res.status(400).json({ error: "The host has simmed this week, your match was decided by the sim." });
+  }
   game.plays[user.name] = {
     user: user.name, season: game.season, round: game.round, kind: fx.kind,
     home: fx.home, away: fx.away, status: "started", hg: null, ag: null, t: Date.now()
@@ -2183,7 +2195,13 @@ app.post("/api/playresult", (req, res) => {
   if (!user.team) return res.status(400).json({ error: "Pick a club first." });
   const home = String(req.body.home || ""), away = String(req.body.away || "");
   const fx = playableFixtures(game, user).find(f => f.home === home && f.away === away && (!req.body.kind || f.kind === req.body.kind));
-  if (!fx) return res.status(400).json({ error: "That is not your match for this week. If the host already simmed the week, a played score cannot count." });
+  if (!fx) {
+    // the round has moved past this fixture: the sim already decided it and a late score never replaces that
+    const mineAndSimmed = (home === user.team || away === user.team) && alreadySimmed(game, user, home, away);
+    return res.status(400).json({ error: mineAndSimmed
+      ? "The host has simmed this week, your match was decided by the sim."
+      : "That is not your match for this week." });
+  }
   if (fx.blocked) return res.status(400).json({ error: fx.blocked });
   const play = currentPlay(game, user);
   if (play && play.status === "done") return res.status(400).json({ error: "You already played your match this week. One match per week." });
