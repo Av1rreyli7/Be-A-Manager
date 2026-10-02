@@ -57,7 +57,7 @@ export default function FriendsChallenge() {
             <tbody>
               {rows.map((r, i) => (
                 <tr key={r.t} className={clsx("border-t border-line", r.t === me && "bg-accent/10")}>
-                  <td className="px-3 py-2 font-display text-lg font-bold text-mute">{i + 1}</td>
+                  <td className="px-3 py-2 font-num text-[15px] font-bold text-mute">{i + 1}</td>
                   <td className="px-3 py-2 font-semibold">
                     <span className={clsx("mr-2 inline-block h-2 w-2 rounded-full", memberOnline.get(r.t) ? "bg-good" : "bg-mute")} />
                     {r.name}{r.t === l.online!.hostTeam && <span className="chip ml-2 text-[10px]">host</span>}
@@ -66,7 +66,7 @@ export default function FriendsChallenge() {
                   <td className="px-3 py-2 text-right tabular-nums">{r.w}-{r.l}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.seed ? `${r.seed} ${r.conf}` : "-"}</td>
                   <td className="px-3 py-2 text-xs text-dim">{r.status}</td>
-                  <td className="px-3 py-2 text-right font-display text-lg font-bold text-accent">{r.points}</td>
+                  <td className="px-3 py-2 text-right font-num text-[15px] font-bold text-accent">{r.points}</td>
                 </tr>
               ))}
             </tbody>
@@ -81,7 +81,7 @@ export default function FriendsChallenge() {
               <TeamBadge league={l} teamId={r.t} size="sm" />
               <span className="font-semibold">{r.name}</span>
               <span className="ml-auto text-dim">{r.w} wins</span>
-              <span className="w-24 text-right">{r.titles ? <span className="inline-flex items-center justify-end gap-0.5 text-gold">{Array.from({ length: Math.min(5, r.titles) }, (_, i) => <Trophy key={i} size={15} weight="fill" />)}{r.titles > 5 ? <span className="ml-1 font-display font-bold">×{r.titles}</span> : null}</span> : "-"}</span>
+              <span className="w-24 text-right">{r.titles ? <span className="inline-flex items-center justify-end gap-0.5 text-gold">{Array.from({ length: Math.min(5, r.titles) }, (_, i) => <Trophy key={i} size={15} weight="fill" />)}{r.titles > 5 ? <span className="ml-1 font-num font-bold">×{r.titles}</span> : null}</span> : "-"}</span>
             </li>
           ))}
         </ul>

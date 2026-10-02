@@ -26,7 +26,7 @@ function LotteryReveal() {
     <div className="grid gap-2 sm:grid-cols-2">
       {ordered.map((r, i) => (
         <div key={r.teamId} className={clsx("flex items-center justify-between rounded-[4px] border border-line px-3 py-2", i < shown ? "anim-flip" : "opacity-0", r.teamId === me && "border-accent bg-accent/10", r.pick <= 4 && "shadow-[0_0_24px_-10px_rgba(255,90,31,.8)]")}>
-          <span className="font-display text-3xl font-black num">#{r.pick}</span>
+          <span className="font-num text-[24px] font-black num">#{r.pick}</span>
           <TeamBadge league={l} teamId={r.teamId} withName />
           <span className={clsx("text-xs font-semibold", r.pick < r.preLottery ? "text-good" : r.pick > r.preLottery ? "text-bad" : "text-dim")}>
             {r.pick < r.preLottery ? `▲ ${r.preLottery - r.pick}` : r.pick > r.preLottery ? `▼ ${r.pick - r.preLottery}` : "-"} (was {r.preLottery})
@@ -57,7 +57,7 @@ export default function OffseasonHub() {
       <div className="scroll-thin flex gap-1 overflow-x-auto pb-1">
         {ORDER.map((p, i) => (
           <div key={p} className={clsx("flex min-w-32 flex-1 flex-col rounded-[4px] border px-3 py-2 text-xs", i === idx ? "border-accent bg-accent/10 text-ink" : i < idx ? "border-line text-mute line-through" : "border-line text-dim")}>
-            <span className="font-display text-lg font-bold">{i + 1}</span>
+            <span className="font-num text-[15px] font-bold">{i + 1}</span>
             {PHASE_LABEL[p]}
           </div>
         ))}
@@ -67,7 +67,7 @@ export default function OffseasonHub() {
 
       {l.phase === "season-end" && hist && (
         <Card title={`${hist.season} in review`}>
-          {hist.champion && <p className="mb-3 flex flex-wrap items-center gap-2 font-display text-2xl font-black uppercase"><Trophy size={24} weight="fill" className="text-gold" /> {l.teams[hist.champion].fullName}{hist.finalsMvp && <span className="ml-2 text-base font-semibold normal-case text-dim">Finals MVP {l.players[hist.finalsMvp]?.name}</span>}</p>}
+          {hist.champion && <p className="mb-3 flex flex-wrap items-center gap-2 font-display text-[19px] font-black uppercase"><Trophy size={24} weight="fill" className="text-gold" /> {l.teams[hist.champion].fullName}{hist.finalsMvp && <span className="ml-2 text-base font-semibold normal-case text-dim">Finals MVP {l.players[hist.finalsMvp]?.name}</span>}</p>}
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {hist.awards.filter((a) => !a.award.startsWith("All-") && a.award !== "Finals MVP").map((a) => (
               <div key={a.award} className="rounded-[4px] border border-line px-3 py-2 text-sm"><div className="label">{a.award}</div>{a.playerId ? <PlayerLink player={l.players[a.playerId]} /> : a.name}</div>

@@ -21,7 +21,7 @@ export default function BoxPage() {
       <h1 className="sr-only">{teamName(b.away)} at {teamName(b.home)}</h1>
       <section className="panel overflow-hidden">
         <div className="flex items-center justify-between border-b border-line bg-panel-2 px-4 py-2">
-          <span className="font-display text-sm font-black uppercase tracking-[0.14em] text-accent">Final{quarters > 4 ? `/${quarters - 4 > 1 ? quarters - 4 : ""}OT` : ""}</span>
+          <span className="font-num text-[12px] font-black uppercase tracking-[0.14em] text-accent">Final{quarters > 4 ? `/${quarters - 4 > 1 ? quarters - 4 : ""}OT` : ""}</span>
           <span className="text-xs text-dim">{fmtDate(b.date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · <span className="capitalize">{b.type}</span></span>
         </div>
         <div className="grid grid-cols-[1fr_auto_1fr] items-stretch">
@@ -31,23 +31,23 @@ export default function BoxPage() {
             return (
               <div key={side} className={clsx("relative flex items-center gap-3 overflow-hidden px-4 py-5 sm:px-6", i === 1 && "order-3 flex-row-reverse text-right")}>
                 {team && <div aria-hidden className="side-wash absolute inset-0 opacity-90" style={{ ["--tc-team" as string]: team.colors.primary, ["--dir" as string]: i === 0 ? "100deg" : "260deg" }} />}
-                <div className="relative">{team ? <TeamMark id={team.id} colors={team.colors} size="lg" /> : <span className="font-display text-2xl">{t}</span>}</div>
+                <div className="relative">{team ? <TeamMark id={team.id} colors={team.colors} size="lg" /> : <span className="font-num text-[19px]">{t}</span>}</div>
                 <div className="relative min-w-0 flex-1">
-                  <div className="truncate font-display text-lg font-extrabold uppercase leading-none sm:text-2xl">{team?.name ?? teamName(t)}</div>
+                  <div className="truncate font-display text-[15px] font-extrabold uppercase leading-none sm:text-[19px]">{team?.name ?? teamName(t)}</div>
                   <div className="text-xs text-dim">{side === "away" ? "Away" : "Home"}</div>
                 </div>
-                <span className={clsx("relative font-display text-5xl font-black leading-none num sm:text-7xl", won ? "text-ink" : "text-mute")}>{sc}</span>
+                <span className={clsx("relative font-display text-[36px] font-black leading-none num sm:text-[52px]", won ? "text-ink" : "text-mute")}>{sc}</span>
               </div>
             );
           })}
-          <div className="order-2 grid place-items-center border-x border-line px-2 font-display text-sm font-black text-mute">@</div>
+          <div className="order-2 grid place-items-center border-x border-line px-2 font-num text-[12px] font-black text-mute">@</div>
         </div>
         <div className="scroll-thin overflow-x-auto border-t border-line">
           <table className="mx-auto text-sm">
             <thead><tr><th className="label px-3 py-1.5 text-left">Team</th>{Array.from({ length: quarters }, (_, i) => <th key={i} className="label px-3 py-1.5 text-center">{i < 4 ? `Q${i + 1}` : `OT${i - 3}`}</th>)}<th className="label px-3 py-1.5 text-center !text-ink">T</th></tr></thead>
             <tbody>
-              <tr className="border-t border-line/60"><td className="px-3 py-1 font-display font-bold">{b.away}</td>{s.quarters.away.map((q, i) => <td key={i} className="px-3 text-center num">{q}</td>)}<td className="px-3 text-center font-display text-base font-black num">{s.awayScore}</td></tr>
-              <tr className="border-t border-line/60"><td className="px-3 py-1 font-display font-bold">{b.home}</td>{s.quarters.home.map((q, i) => <td key={i} className="px-3 text-center num">{q}</td>)}<td className="px-3 text-center font-display text-base font-black num">{s.homeScore}</td></tr>
+              <tr className="border-t border-line/60"><td className="px-3 py-1 font-num font-bold">{b.away}</td>{s.quarters.away.map((q, i) => <td key={i} className="px-3 text-center num">{q}</td>)}<td className="px-3 text-center font-num text-[14px] font-black num">{s.awayScore}</td></tr>
+              <tr className="border-t border-line/60"><td className="px-3 py-1 font-num font-bold">{b.home}</td>{s.quarters.home.map((q, i) => <td key={i} className="px-3 text-center num">{q}</td>)}<td className="px-3 text-center font-num text-[14px] font-black num">{s.homeScore}</td></tr>
             </tbody>
           </table>
         </div>

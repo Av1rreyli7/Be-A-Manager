@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { ArrowLeft, Check, Copy, SignOut } from "@phosphor-icons/react";
 import { Button, Card, Field, TeamMark, inputCls, seg } from "@/components/ui";
+import { SiteBackdrop } from "@/components/SiteBackdrop";
 import { useGame } from "@/lib/store";
 import { loadTeamsOnly } from "@/lib/seed";
 import type { SeedTeam } from "@/engine/types/seed";
@@ -26,7 +27,7 @@ function TeamGrid({ teams, taken, selected, onPick, disabled }: { teams: SeedTea
             key={t.id}
             disabled={disabled || (!!who && !mine)}
             onClick={() => onPick(t.id)}
-            className={clsx("flex items-center gap-2 rounded-[4px] border px-2 py-1.5 text-left text-xs transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed", mine ? "card-wash on-dark border-transparent text-white" : who ? "border-line opacity-45" : "border-line bg-bg/40 hover:border-line-2")}
+            className={clsx("flex items-center gap-2 rounded-[6px] border px-2 py-1.5 text-left text-xs transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed", mine ? "card-wash on-dark border-transparent text-white" : who ? "border-line opacity-45" : "border-line bg-ink/[0.02] hover:border-line-2 hover:bg-ink/[0.05]")}
             style={mine ? { ["--tc-team" as string]: t.colors.primary } : undefined}
           >
             <TeamChip t={t} />
@@ -64,7 +65,7 @@ function LobbyView({ lobby, teams }: { lobby: Lobby; teams: SeedTeam[] }) {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex gap-1" aria-label={`Room code ${lobby.code}`}>
               {lobby.code.split("").map((ch, i) => (
-                <span key={i} className="anim-flip grid h-14 w-11 place-items-center rounded-[4px] border border-line-2 bg-bg font-display text-4xl font-black text-accent shadow-[inset_0_-14px_0_color-mix(in_oklab,var(--ink)_3%,transparent)]" style={{ animationDelay: `${i * 50}ms` }}>{ch}</span>
+                <span key={i} className="anim-flip grid h-14 w-11 place-items-center border border-line-2 bg-bg font-num text-[28px] font-bold text-accent" style={{ animationDelay: `${i * 50}ms` }}>{ch}</span>
               ))}
             </div>
             <Button size="sm" onClick={copy}><Copy size={14} /> Copy invite</Button>
@@ -211,7 +212,7 @@ function Online() {
           {mode === "join" ? (
             <>
               <Field label="Room code">
-                <input className={clsx(inputCls, "font-display text-xl tracking-[0.2em] uppercase")} value={code} maxLength={8} placeholder="ABC123" onChange={(e) => setCode(e.target.value.toUpperCase())} />
+                <input className={clsx(inputCls, "font-num text-lg tracking-[0.3em] uppercase")} value={code} maxLength={8} placeholder="ABC123" onChange={(e) => setCode(e.target.value.toUpperCase())} />
               </Field>
               <Button
                 variant="primary"
@@ -262,7 +263,7 @@ function Online() {
               </Button>
             </>
           )}
-          {online?.error && <p className="rounded-[4px] border border-bad/40 px-3 py-2 text-sm text-bad">{online.error}</p>}
+          {online?.error && <p className="border border-bad/40 bg-bad/[0.06] px-3 py-2 text-sm text-bad">{online.error}</p>}
           <p className="text-xs text-mute">Connections go directly between browsers. Some school or work networks block this: if joining fails, try a phone hotspot.</p>
         </div>
       </Card>
@@ -287,25 +288,28 @@ function Online() {
 export default function OnlinePage() {
   const online = useGame((s) => s.online);
   return (
-    <main id="main" className="mx-auto max-w-[1280px] px-4 pb-16 pt-6 sm:px-6 sm:pt-10">
-      <div className="mb-8 flex flex-wrap items-end gap-x-4 gap-y-3">
+    <main id="main" className="relative mx-auto max-w-[1280px] px-5 pb-16 pt-10 sm:px-10 sm:pt-14">
+      <SiteBackdrop />
+      <div className="relative mb-8 flex flex-wrap items-end gap-x-4 gap-y-3">
         <div>
-          <Link href="/gm" className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-dim transition-colors hover:text-ink">
-            <ArrowLeft size={14} weight="bold" /> Main menu
+          <Link href="/gm" className="mb-5 inline-flex items-center gap-2 font-num text-[10.5px] font-bold uppercase tracking-[0.16em] text-dim transition-colors hover:text-ink">
+            <ArrowLeft size={12} weight="bold" /> Main menu
           </Link>
-          <h1 className="font-display text-5xl font-black uppercase leading-[0.85] sm:text-7xl">
+          <h1 className="font-display text-[36px] font-black uppercase leading-none tracking-[0.02em] sm:text-[56px]">
             Friends <span className="text-accent">league</span>
           </h1>
         </div>
         {online && (
-          <button className="ml-auto inline-flex items-center gap-1.5 rounded-[4px] px-2 py-1.5 text-sm font-semibold text-dim transition-colors hover:bg-bad/10 hover:text-bad" onClick={() => leaveOnline()}>
+          <button className="btn btn-sm btn-ghost ml-auto hover:!bg-bad/10 hover:!text-bad" onClick={() => leaveOnline()}>
             <SignOut size={15} /> Leave room
           </button>
         )}
       </div>
-      <Suspense>
-        <Online />
-      </Suspense>
+      <div className="relative">
+        <Suspense>
+          <Online />
+        </Suspense>
+      </div>
     </main>
   );
 }

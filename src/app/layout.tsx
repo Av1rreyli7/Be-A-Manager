@@ -1,13 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Big_Shoulders } from "next/font/google";
 import "./globals.css";
 import { Toasts } from "@/components/Toasts";
 import { BOOT_SCRIPT } from "@/lib/appearanceBoot";
+import { chakra, inter } from "@/lib/fonts";
 
-// Archivo: athletic grotesk with tabular figures and a width axis for condensed labels
-const body = Archivo({ variable: "--font-body", subsets: ["latin"], axes: ["wdth"], display: "swap" });
-// Big Shoulders: condensed arena-signage display face for headings and scoreboard numbers
-const display = Big_Shoulders({ variable: "--font-display-face", subsets: ["latin"], axes: ["opsz"], display: "swap", adjustFontFallback: false });
+// The site's two faces, the same files the landing page and Floodlights use:
+// Inter for reading and headings, Chakra Petch for small labels and big numbers.
 
 export const metadata: Metadata = {
   title: { default: "Front Office", template: "%s · Front Office" },
@@ -20,13 +18,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0c0e13",
+  themeColor: "#000000",
   colorScheme: "dark light",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${body.variable} ${display.variable} h-full antialiased`} data-mode="dark" data-style="colorful" suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${chakra.variable} h-full antialiased`} data-mode="dark" data-style="colorful" suppressHydrationWarning>
       <head>
         {/* applies the saved light/dark + style choice before first paint */}
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />

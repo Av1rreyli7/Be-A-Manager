@@ -89,7 +89,7 @@ export function DataTable<T>({
           <span className="label ml-auto">{filtered.length} rows</span>
         </div>
       )}
-      <div className="scroll-thin overflow-x-auto rounded-[4px] border border-line bg-bg/40">
+      <div className="scroll-thin overflow-x-auto border border-line bg-ink/[0.012]">
         <table className="w-full min-w-max border-collapse text-[13px]">
           <thead className="sticky top-0 z-[1] bg-panel-2">
             <tr>
@@ -106,11 +106,11 @@ export function DataTable<T>({
                     }
                   }}
                   className={clsx(
-                    "label select-none whitespace-nowrap border-b border-line-2 px-2.5 py-2 transition-colors",
+                    "label select-none whitespace-nowrap border-b border-line px-2.5 py-2.5 transition-colors",
                     c.value && "cursor-pointer hover:!text-ink",
                     c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "text-left",
                     c.hideOnMobile && "hidden md:table-cell",
-                    sort === c.key && "!text-accent shadow-[inset_0_-2px_0_var(--accent)]",
+                    sort === c.key && "!text-accent shadow-[inset_0_-1px_0_var(--accent)]",
                   )}
                 >
                   {c.label}
@@ -121,7 +121,7 @@ export function DataTable<T>({
           </thead>
           <tbody>
             {shown.map((r) => (
-              <tr key={rowKey(r)} onClick={onRowClick ? () => onRowClick(r) : undefined} className={clsx("border-b border-line/50 transition-colors duration-100 last:border-0 even:bg-ink/[0.015] hover:bg-accent/[0.07]", onRowClick && "cursor-pointer", rowClassName?.(r))}>
+              <tr key={rowKey(r)} onClick={onRowClick ? () => onRowClick(r) : undefined} className={clsx("border-b border-line/60 transition-colors duration-100 last:border-0 even:bg-ink/[0.018] hover:bg-ink/[0.05]", onRowClick && "cursor-pointer", rowClassName?.(r))}>
                 {columns.map((c) => (
                   <td key={c.key} className={clsx(dense ? "px-2.5 py-1" : "px-2.5 py-1.5", "num whitespace-nowrap", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "text-left", c.hideOnMobile && "hidden md:table-cell", c.className)}>
                     {c.render ? c.render(r) : String(c.value?.(r) ?? "")}
@@ -144,7 +144,7 @@ export function DataTable<T>({
           <button className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 font-semibold transition-colors hover:bg-ink/5 hover:text-ink disabled:opacity-30" disabled={cur === 0} onClick={() => setPage(cur - 1)}>
             <CaretLeft size={12} weight="bold" /> Prev
           </button>
-          <span className="px-1 font-display text-sm font-bold text-ink num">
+          <span className="px-1 font-display text-[13px] font-bold text-ink num">
             {cur + 1} / {pages}
           </span>
           <button className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 font-semibold transition-colors hover:bg-ink/5 hover:text-ink disabled:opacity-30" disabled={cur >= pages - 1} onClick={() => setPage(cur + 1)}>

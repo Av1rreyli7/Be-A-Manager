@@ -70,7 +70,7 @@ function Contracts() {
               return (
                 <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                   <span className="flex items-center gap-2"><PlayerLink player={p} /><OvrPot p={p} /><span className="text-xs text-dim">{money(left[0]?.salary ?? 0)} · {left.length <= 1 ? <span className="text-warn">expiring</span> : `${left.length} yrs left`} · {c?.type}</span></span>
-                  <Button size="sm" variant="primary" onClick={() => setSel(p.id)}>Negotiate</Button>
+                  <Button size="sm" onClick={() => setSel(p.id)}>Negotiate</Button>
                 </li>
               );
             })}

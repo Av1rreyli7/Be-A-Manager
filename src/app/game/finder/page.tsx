@@ -25,7 +25,7 @@ function OfferCard({ o, rank }: { o: FinderOffer; rank?: number }) {
   return (
     <div className="panel anim-rise p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="flex items-center gap-2">{rank != null && <span className="font-display text-xl font-black text-mute">#{rank}</span>}<TeamBadge league={l} teamId={o.teamId} withName /></span>
+        <span className="flex items-center gap-2">{rank != null && <span className="font-num text-[17px] font-black text-mute">#{rank}</span>}<TeamBadge league={l} teamId={o.teamId} withName /></span>
         <span className="text-xs text-dim">value to you <b className="text-ink">{o.valueToMe.toFixed(1)}</b> · their meter {Math.min(100, o.meter)}%</span>
       </div>
       <div className="grid grid-cols-2 gap-3 text-sm">

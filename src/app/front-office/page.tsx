@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { ArrowLeft, ArrowRight, Basketball, Briefcase, Keyboard } from "@phosphor-icons/react";
 import { useTeamTheme } from "@/lib/theme";
 import { AppearancePicker } from "@/components/AppearancePicker";
+import { SiteBackdrop } from "@/components/SiteBackdrop";
 
 interface Progress {
   foLeague: boolean;
@@ -35,26 +36,27 @@ export default function GameHub() {
   }, []);
 
   return (
-    <main id="main" className="mx-auto flex min-h-[100dvh] max-w-[1280px] flex-col px-4 pb-10 pt-8 sm:px-6 sm:pt-12">
-      <header className="anim-rise mb-8 flex flex-wrap items-end justify-between gap-6">
+    <main id="main" className="relative mx-auto flex min-h-[100dvh] max-w-[1280px] flex-col px-5 pb-12 pt-10 sm:px-10 sm:pt-14">
+      <SiteBackdrop />
+      <header className="anim-rise relative mb-8 flex flex-wrap items-end justify-between gap-6">
         <div>
           {/* the way back to the Be-A-Manager landing page, a full page load on purpose so its own look applies cleanly */}
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a href="/" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-dim transition-colors hover:text-ink">
-            <ArrowLeft size={14} weight="bold" /> Be-A-Manager
+          <a href="/" className="mb-5 inline-flex items-center gap-2 font-num text-[10.5px] font-bold uppercase tracking-[0.16em] text-dim transition-colors hover:text-ink">
+            <ArrowLeft size={12} weight="bold" /> <span className="bam-dots" aria-hidden /> Be-A-Manager
           </a>
-          <div className="label mb-3">Pick your game</div>
-          <h1 className="font-display text-[56px] font-black uppercase leading-[0.84] sm:text-[88px]">
+          <div className="label mb-3 !text-accent">Pick your game</div>
+          <h1 className="font-display text-[44px] font-black uppercase leading-none tracking-[0.02em] sm:text-[72px]">
             Game <span className="text-accent">night</span>
           </h1>
-          <p className="mt-3 max-w-[46ch] text-[15px] text-dim">Run a franchise from the front office, or grab the controller and play the game yourself.</p>
+          <p className="mt-4 max-w-[46ch] text-[15px] leading-relaxed text-dim">Run a franchise from the front office, or grab the controller and play the game yourself.</p>
         </div>
         <div className="w-full max-w-sm">
           <AppearancePicker compact />
         </div>
       </header>
 
-      <div className="grid flex-1 gap-4 md:grid-cols-2">
+      <div className="relative grid flex-1 gap-4 md:grid-cols-2">
         <GameTile
           href="/gm"
           internal
@@ -93,17 +95,17 @@ function GameTile({ href, internal, title, kind, mark, icon, color, blurb, facts
     <>
       <div aria-hidden className="hero-wash absolute inset-0" style={{ ["--tc-team" as string]: color }} />
       <div aria-hidden className="stripes absolute inset-0 [mask-image:linear-gradient(120deg,black,transparent_70%)]" />
-      <span aria-hidden className="pointer-events-none absolute -bottom-8 -right-2 select-none font-display text-[180px] font-black uppercase leading-none text-white/[0.06] sm:text-[220px]">{mark}</span>
+      <span aria-hidden className="pointer-events-none absolute -bottom-6 right-1 select-none font-num text-[130px] font-bold uppercase leading-none text-white/[0.05] sm:text-[170px]">{mark}</span>
       <div className="relative flex h-full flex-col p-6 sm:p-8">
         <div className="flex items-center gap-2 text-white/90">
           {icon}
-          <span className="label !text-white/70">{kind}</span>
+          <span className="label !text-white/75">{kind}</span>
         </div>
-        <h2 className="mt-4 font-display text-5xl font-black uppercase leading-[0.88] text-white sm:text-6xl">{title}</h2>
-        <p className="mt-3 max-w-[44ch] text-[15px] text-white/80">{blurb}</p>
+        <h2 className="mt-4 font-display text-[30px] font-black uppercase leading-none tracking-[0.03em] text-white sm:text-[40px]">{title}</h2>
+        <p className="mt-3 max-w-[44ch] text-[15px] leading-relaxed text-white/80">{blurb}</p>
         <ul className="mt-4 flex flex-wrap gap-1.5">
           {facts.map((f) => (
-            <li key={f} className="chip !bg-black/30 !text-white/85">
+            <li key={f} className="chip !bg-black/40 !text-white/85">
               {f === "Keyboard controls" && <Keyboard size={12} weight="bold" />}
               {f}
             </li>
@@ -112,8 +114,8 @@ function GameTile({ href, internal, title, kind, mark, icon, color, blurb, facts
         <div className="mt-auto pt-8">
           {status && <p className="mb-3 text-sm font-semibold text-white">{status}</p>}
           {warning && <p className="mb-3 text-sm font-semibold text-warn">{warning}</p>}
-          <span className="inline-flex h-11 items-center gap-2 rounded-[4px] bg-white px-5 text-sm font-bold text-[#111] transition-transform duration-200 group-hover:translate-x-1">
-            {cta} <ArrowRight size={16} weight="bold" />
+          <span className="btn btn-glow !h-11 !px-5 transition-transform duration-200 group-hover:translate-x-1">
+            {cta} <ArrowRight size={14} weight="bold" />
           </span>
         </div>
       </div>

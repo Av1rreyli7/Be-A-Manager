@@ -9,15 +9,15 @@ const MODES: { id: Mode; label: string; icon: Icon }[] = [
   { id: "system", label: "System", icon: Desktop },
 ];
 const STYLES: { id: Style; label: string; icon: Icon; hint: string }[] = [
-  { id: "colorful", label: "Colorful", icon: Palette, hint: "Your team's colours everywhere" },
-  { id: "plain", label: "Plain", icon: CircleHalf, hint: "Neutral greys, muted accent" },
+  { id: "colorful", label: "Colorful", icon: Palette, hint: "Team colours on the header and cards" },
+  { id: "plain", label: "Plain", icon: CircleHalf, hint: "No team colours" },
 ];
 
 function Group<T extends string>({ label, value, options, onChange, compact }: { label: string; value: T; options: { id: T; label: string; icon: Icon; hint?: string }[]; onChange: (v: T) => void; compact?: boolean }) {
   return (
     <div role="radiogroup" aria-label={label}>
       <div className="label mb-1.5">{label}</div>
-      <div className="flex gap-1 rounded-[5px] bg-ink/[0.05] p-0.5">
+      <div className="flex gap-1 rounded-[7px] border border-line bg-ink/[0.03] p-0.5">
         {options.map((o) => {
           const on = value === o.id;
           const I = o.icon;
@@ -29,9 +29,9 @@ function Group<T extends string>({ label, value, options, onChange, compact }: {
               title={o.hint ?? o.label}
               onClick={() => onChange(o.id)}
               className={clsx(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-[4px] font-semibold transition-colors duration-150 active:translate-y-px",
+                "flex flex-1 items-center justify-center gap-1.5 rounded-[5px] font-semibold transition-colors duration-150 active:translate-y-px",
                 compact ? "px-1.5 py-1.5 text-[11.5px]" : "px-3 py-2 text-sm",
-                on ? "bg-panel text-ink shadow-[0_1px_2px_rgb(0_0_0/0.25),inset_0_-2px_0_var(--accent)]" : "text-dim hover:text-ink",
+                on ? "bg-accent/10 text-accent shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--accent)_55%,transparent)]" : "text-dim hover:text-ink",
               )}
             >
               <I size={compact ? 13 : 16} weight={on ? "fill" : "regular"} className={on ? "text-accent" : undefined} />

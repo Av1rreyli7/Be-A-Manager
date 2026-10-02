@@ -135,6 +135,157 @@ table.t tr:hover td{background:rgba(255,255,255,.04)}
 .sl{font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.5px}
 .pog{display:flex;gap:18px;align-items:center;padding:16px 20px;border-radius:8px;margin:14px 0}
 .pog .big{font-family:Impact,"Arial Black",sans-serif;font-size:38px;font-style:italic}
+
+/* ==========================================================
+   The Be-A-Manager look, shared with the landing page, Floodlights and Front Office:
+   pure black, hairlines at 13 percent white, chamfered corners, Inter for reading,
+   Chakra Petch for labels and big numbers, liquid glass buttons, and the glow
+   button for the main action. The one accent is volt.
+   Everything below only restyles the menus and the HUD. No behavior lives here,
+   and the 3D court itself is not touched.
+   ========================================================== */
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(/floodlights/fonts/inter.woff2) format('woff2')}
+@font-face{font-family:'Chakra Petch';font-style:normal;font-weight:600;font-display:swap;src:url(/floodlights/fonts/chakra-petch-600.woff2) format('woff2')}
+@font-face{font-family:'Chakra Petch';font-style:normal;font-weight:700;font-display:swap;src:url(/floodlights/fonts/chakra-petch-700.woff2) format('woff2')}
+:root{--accent:#d0e85c;--accent2:#a0b82e;--volt:#d0e85c;--panel:rgba(7,8,7,.94);--line:rgba(255,255,255,.13);--line2:rgba(255,255,255,.24);--text:#ffffff;--muted:#9a9d98;--good:#5fd38d;--bad:#f25c5c;
+  --f-ui:'Inter',system-ui,-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;--f-lbl:'Chakra Petch','Inter',system-ui,sans-serif;--cut:14px}
+html,body{background:#000000;font-family:var(--f-ui);letter-spacing:-.005em;-webkit-font-smoothing:antialiased}
+::selection{background:var(--volt);color:#12160a}
+.disp{font-family:var(--f-lbl);font-weight:700;letter-spacing:.02em}
+
+/* ---------- screens ---------- */
+.scr{padding:44px 56px 44px}
+.menu-bg{background:linear-gradient(100deg,rgba(0,0,0,.96) 0%,rgba(0,0,0,.82) 42%,rgba(0,0,0,.32) 100%)}
+.dim-bg{background:rgba(0,0,0,.86);backdrop-filter:blur(4px)}
+/* the old light streaks make way for the frame from the landing page: a hairline with cut corners */
+.streaks i{display:none}
+.streaks{inset:18px;z-index:0;--fl:rgba(255,255,255,.13);--fc:22px;
+  background:
+    linear-gradient(var(--fl),var(--fl)) var(--fc) 0/calc(100% - var(--fc)*2) 1px no-repeat,
+    linear-gradient(var(--fl),var(--fl)) var(--fc) 100%/calc(100% - var(--fc)*2) 1px no-repeat,
+    linear-gradient(var(--fl),var(--fl)) 0 var(--fc)/1px calc(100% - var(--fc)*2) no-repeat,
+    linear-gradient(var(--fl),var(--fl)) 100% var(--fc)/1px calc(100% - var(--fc)*2) no-repeat,
+    linear-gradient(to bottom right,transparent calc(50% - .65px),var(--fl) calc(50% - .65px),var(--fl) calc(50% + .65px),transparent calc(50% + .65px)) top left/var(--fc) var(--fc) no-repeat,
+    linear-gradient(to bottom left,transparent calc(50% - .65px),var(--fl) calc(50% - .65px),var(--fl) calc(50% + .65px),transparent calc(50% + .65px)) top right/var(--fc) var(--fc) no-repeat,
+    linear-gradient(to bottom left,transparent calc(50% - .65px),var(--fl) calc(50% - .65px),var(--fl) calc(50% + .65px),transparent calc(50% + .65px)) bottom left/var(--fc) var(--fc) no-repeat,
+    linear-gradient(to bottom right,transparent calc(50% - .65px),var(--fl) calc(50% - .65px),var(--fl) calc(50% + .65px),transparent calc(50% + .65px)) bottom right/var(--fc) var(--fc) no-repeat}
+.scr>:not(.streaks){position:relative;z-index:1}
+.title{font-family:var(--f-ui);font-style:normal;font-weight:700;font-size:clamp(40px,7vw,96px);line-height:1;letter-spacing:.02em;text-transform:uppercase;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--volt);filter:none}
+.title::first-line{color:#ffffff}
+.subtitle{font-family:var(--f-lbl);font-weight:700;font-size:11px;letter-spacing:.2em;margin:18px 0 34px}
+.h1{font-family:var(--f-ui);font-style:normal;font-weight:700;font-size:clamp(24px,3.4vw,36px);line-height:1.05;letter-spacing:.02em;text-transform:uppercase;margin-bottom:8px}
+.muted{color:var(--muted)}
+.mm{gap:10px;max-width:330px}
+
+/* ---------- buttons: liquid glass, and the glow button for the main action ---------- */
+.btn{position:relative;isolation:isolate;overflow:hidden;font-family:var(--f-lbl);font-weight:700;font-size:12px;letter-spacing:.1em;line-height:1.2;border-radius:6px;padding:14px 20px;color:#ffffff;
+  border:1px solid rgba(198,198,198,.42);background:linear-gradient(135deg,rgba(255,255,255,.11),rgba(0,0,0,.5) 46%,rgba(150,170,200,.09));box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+  transition:background .35s ease,border-color .35s ease,box-shadow .35s ease,color .25s ease,filter .35s ease,transform .15s ease}
+.btn::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.4) 48%,transparent 76%);transform:translateX(-130%);transition:transform .65s ease;pointer-events:none}
+.btn:hover::after{transform:translateX(130%)}
+.btn:hover{background:linear-gradient(135deg,rgba(210,225,255,.18),rgba(0,0,0,.35) 48%,rgba(180,195,220,.16));color:#ffffff;border-color:rgba(220,230,255,.78);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 0 18px rgba(170,200,255,.16);transform:translateX(4px)}
+.btn.center:hover,.btn.sm:hover,.foot .btn:hover{transform:none}
+.btn:focus-visible{outline:2px solid var(--volt);outline-offset:3px}
+.btn.sm{padding:9px 13px;font-size:10.5px;letter-spacing:.09em;border-radius:5px}
+.btn.primary{color:#ffffff;border:0;border-radius:11px;text-shadow:0 1px 2px rgba(10,16,0,.5);
+  background:linear-gradient(to top,#eef7b0 1px,#e8f59a 2px,#e1f486 3px,#d9ee6e 4px,#d0e85c 5px,#b4cc3c 6px,#a0b82e 7px,#93aa28 8px,#80961f 9px,#6b7e17 10px,#566613 12px,#4f5d16 13px,#465311 14px,#374210 16px,#2a3210 18px,#202710 20px,#171c0f 24px,#10140c 30px,#0e120b 34px,#0e120b 100%);
+  box-shadow:inset 0 3px 3px -2px rgba(236,246,190,.1),inset 1px 0 0 rgba(255,255,255,.09),inset -1px 0 0 rgba(255,255,255,.09),0 1px 0 rgba(214,234,140,.38),1px 0 0 rgba(214,234,140,.17),-1px 0 0 rgba(214,234,140,.17),0 0 8px rgba(208,232,92,.1),0 2px 5px -3px rgba(208,232,92,.45)}
+.btn.primary::before{content:"";position:absolute;left:22%;right:38%;top:.8px;height:1.9px;z-index:1;filter:blur(.55px);background:linear-gradient(90deg,rgba(225,244,134,0) 0%,rgba(225,244,134,.58) 34%,rgba(240,250,190,.74) 50%,rgba(225,244,134,.58) 66%,rgba(225,244,134,0) 100%)}
+.btn.primary::after{inset:0;z-index:-1;border-radius:inherit;transform:none;transition:none;
+  background:linear-gradient(90deg,rgba(240,250,190,.7),rgba(240,250,190,0) 13px),linear-gradient(270deg,rgba(240,250,190,.7),rgba(240,250,190,0) 13px);
+  -webkit-mask:linear-gradient(to top,#000 0,#000 6px,rgba(0,0,0,.4) 12px,rgba(0,0,0,.15) 18px,rgba(0,0,0,.09) 24px,rgba(0,0,0,.02) 30px,rgba(0,0,0,.02) 100%);
+  mask:linear-gradient(to top,#000 0,#000 6px,rgba(0,0,0,.4) 12px,rgba(0,0,0,.15) 18px,rgba(0,0,0,.09) 24px,rgba(0,0,0,.02) 30px,rgba(0,0,0,.02) 100%)}
+.btn.primary:hover::after{transform:none}
+.btn.primary:hover{filter:brightness(1.12);color:#ffffff;
+  background:linear-gradient(to top,#eef7b0 1px,#e8f59a 2px,#e1f486 3px,#d9ee6e 4px,#d0e85c 5px,#b4cc3c 6px,#a0b82e 7px,#93aa28 8px,#80961f 9px,#6b7e17 10px,#566613 12px,#4f5d16 13px,#465311 14px,#374210 16px,#2a3210 18px,#202710 20px,#171c0f 24px,#10140c 30px,#0e120b 34px,#0e120b 100%);
+  box-shadow:inset 0 1px 0 rgba(240,250,190,.6),inset 1px 0 0 rgba(225,244,134,.35),inset -1px 0 0 rgba(225,244,134,.35),0 6px 22px rgba(160,190,50,.42)}
+/* a picked option: volt wash, like the picked tabs in the other games */
+.btn.sel,.btn.sel:hover{background:rgba(208,232,92,.1);color:var(--volt);border-color:var(--volt);box-shadow:none}
+.btn.sel::after{display:none}
+
+/* ---------- surfaces: black panels, hairlines, cut corners ---------- */
+.panel,.tcard{border-radius:0;border:1px solid var(--line);background-origin:border-box;
+  background:
+    linear-gradient(to bottom left,transparent calc(50% - .65px),var(--line2) calc(50% - .65px),var(--line2) calc(50% + .65px),transparent calc(50% + .65px)) top right/var(--cut) var(--cut) no-repeat border-box,
+    linear-gradient(to bottom left,transparent calc(50% - .65px),var(--line2) calc(50% - .65px),var(--line2) calc(50% + .65px),transparent calc(50% + .65px)) bottom left/var(--cut) var(--cut) no-repeat border-box,
+    rgba(7,8,7,.94);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,var(--cut) 100%,0 calc(100% - var(--cut)))}
+.tlabel{font-family:var(--f-lbl);font-size:10px;letter-spacing:.16em;font-weight:700;color:var(--volt)}
+/* team cards: the team colour stays, toned down so it reads as a light on black */
+.tcard .wm{padding:22px 22px}
+.tcard .wm::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,.6) 55%,rgba(0,0,0,.86) 100%);pointer-events:none}
+.tcard .wm>:not(.ovr){position:relative;z-index:1}
+.tcard .wm .ovr{z-index:1;border-radius:0;background:rgba(0,0,0,.5);border:1px solid var(--line)}
+.tcard .wm .city{font-family:var(--f-lbl);font-weight:700;letter-spacing:.18em;font-size:10.5px}
+.tcard .wm .nm{font-family:var(--f-ui);font-style:normal;font-weight:700;font-size:clamp(26px,3.4vw,38px);letter-spacing:.02em;margin-top:6px}
+.tcard .wm .ovr b{font-family:var(--f-lbl);font-weight:700;font-size:26px}
+.tcard .wm .ovr small{font-family:var(--f-lbl);font-weight:700;font-size:9px;letter-spacing:.14em;color:var(--muted)}
+.pl{border-bottom-color:var(--line);font-size:13.5px}
+.pl .pos{font-family:var(--f-lbl);font-size:11px;letter-spacing:.06em}
+.ovrb{font-family:var(--f-lbl);font-weight:700;font-size:12px;border-radius:0;padding:2px 5px 1px;clip-path:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,5px 100%,0 calc(100% - 5px))}
+select{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:6px;font-family:var(--f-ui);font-weight:600;font-size:13px;padding:9px 10px}
+select:focus{outline:none;border-color:var(--volt);box-shadow:0 0 0 1px var(--volt)}
+select option{background:#0a0b0a;color:#fff}
+
+/* ---------- tables ---------- */
+table.t{font-variant-numeric:tabular-nums}
+table.t th{background:#0b0c0b;font-family:var(--f-lbl);font-weight:700;font-size:10px;letter-spacing:.1em;padding:9px 6px;border-bottom:1px solid var(--line)}
+table.t td{border-bottom-color:rgba(255,255,255,.07)}
+table.t tr:hover td{background:rgba(255,255,255,.035)}
+.tblwrap{border-radius:0;border-color:var(--line);background:rgba(7,8,7,.9)}
+.set-row{border-bottom-color:var(--line)}
+.set-row b{font-weight:600}
+.kv kbd,.lg kbd{background:#101210;border:1px solid #3b3e3a;border-bottom-width:1px;border-radius:4px;font-family:var(--f-lbl);font-weight:700;font-size:11px;padding:2px 6px}
+
+/* ---------- HUD ---------- */
+#scorebug{font-family:var(--f-lbl);font-weight:700;border-radius:0;box-shadow:0 0 0 1px rgba(255,255,255,.16),0 10px 30px rgba(0,0,0,.6)}
+.sb-abbr{font-size:17px;letter-spacing:.08em}
+.sb-score{font-size:25px}
+.sb-bonus{font-family:var(--f-lbl);color:var(--volt)}
+.sb-poss{color:var(--volt)}
+.sb-mid{background:#000000;font-size:17px;letter-spacing:.04em}
+.sb-shot{background:#0e120b;color:var(--volt);font-size:21px}
+.sb-shot.low{color:#ff5a5a;background:#1d0707}
+#pcard{background:rgba(0,0,0,.86);border-radius:0;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+.pc-num{font-family:var(--f-lbl);font-weight:700;font-size:28px}
+.pc-name{font-weight:700;font-size:13.5px;letter-spacing:.04em}
+.pc-meta{font-family:var(--f-lbl);font-weight:700;font-size:10px;letter-spacing:.12em}
+.pc-stam{height:4px;background:#222422;border-radius:0}
+.pc-stam div{background:linear-gradient(90deg,#5fd38d,#d0e85c)}
+.sm-bar{border:1px solid rgba(255,255,255,.85);border-radius:3px}
+.sm-fill{background:linear-gradient(0deg,#d0e85c,#f1f9c4)}
+.sm-label{font-family:var(--f-lbl);font-weight:700;font-size:12px;letter-spacing:.1em}
+.ft-title{font-family:var(--f-lbl);font-weight:700;font-size:12px;letter-spacing:.14em}
+.ft-bar{border:1px solid #ffffff;border-radius:3px}
+.ft-cursor{background:var(--volt);box-shadow:0 0 8px var(--volt)}
+.pop{font-family:var(--f-ui);font-style:normal;font-weight:800;font-size:48px;letter-spacing:.02em;text-transform:uppercase;text-shadow:0 0 20px rgba(208,232,92,.6),0 6px 20px rgba(0,0,0,.7)}
+.pop.small{font-family:var(--f-lbl);font-weight:700;font-size:20px;letter-spacing:.12em;text-shadow:0 2px 0 #000,0 0 12px rgba(0,0,0,.8)}
+.pop.blue{text-shadow:0 0 20px rgba(110,170,255,.75),0 6px 20px rgba(0,0,0,.7)}
+.pop.red{text-shadow:0 0 20px rgba(255,80,80,.8),0 6px 20px rgba(0,0,0,.7)}
+#banner .b1{font-family:var(--f-ui);font-style:normal;font-weight:700;font-size:52px;letter-spacing:.02em;text-transform:uppercase;background:linear-gradient(90deg,transparent,rgba(0,0,0,.8) 15%,rgba(0,0,0,.8) 85%,transparent)}
+#banner .b2{font-family:var(--f-lbl);font-weight:700;font-size:12px;letter-spacing:.2em;margin-top:10px}
+#legend{background:rgba(0,0,0,.88);border-radius:0;border-color:var(--line)}
+.lg h4{font-family:var(--f-lbl);font-weight:700;letter-spacing:.16em}
+#hint{font-family:var(--f-lbl);font-weight:700;font-size:10px;letter-spacing:.12em}
+#camLabel{font-family:var(--f-lbl);font-weight:700;font-size:11px;letter-spacing:.14em;border-radius:0;background:rgba(0,0,0,.7);box-shadow:0 0 0 1px var(--line)}
+#ticker{font-weight:600;letter-spacing:.02em}
+#ticker div{background:rgba(0,0,0,.82);border-left:2px solid var(--volt)}
+#loading{background:#000000;font-family:var(--f-lbl);font-weight:700;font-size:11px;letter-spacing:.2em}
+#loading .title{font-size:clamp(34px,6vw,54px)!important;text-align:center;color:#ffffff}
+
+/* ---------- substitutions, bracket, player of the game ---------- */
+.subp{border-radius:6px;border-color:var(--line);background:rgba(255,255,255,.02)}
+.subp:hover{border-color:rgba(220,230,255,.6)}
+.subp.sel{background:rgba(208,232,92,.1);border-color:var(--volt)}
+.mini{height:4px;background:#222422;border-radius:0}
+.mini i{background:#5fd38d}
+.bhead{font-family:var(--f-ui);font-style:normal;font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase}
+.ser{border-radius:0;border-color:var(--line);background:rgba(255,255,255,.025)}
+.ser.me{border-color:var(--volt);box-shadow:none;background:rgba(208,232,92,.07)}
+.pog{border-radius:0;clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,var(--cut) 100%,0 calc(100% - var(--cut)))}
+.pog .big{font-family:var(--f-lbl);font-style:normal;font-weight:700;font-size:32px}
+@media (max-width:900px){.scr{padding:30px 22px}.streaks{inset:8px;--fc:14px}}
+@media (prefers-reduced-motion: reduce){.btn::after{transition:none}}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -2255,7 +2406,7 @@ function showSeasonHub(){
   if(Season.data.playoffs) return showPlayoffs();
   const d=Season.data; const td=LEAGUE.teams[d.team]; const r=Season.record(); const g=d.games[d.gi];
   const rank=Season.confRank(td.conf).indexOf(d.team)+1;
-  const sched=d.games.map((x,i)=>{ const o=LEAGUE.teams[x.opp]; const res=x.result? `<b style="color:${x.result.us>x.result.them?'#3ddc84':'#ff4d4d'}">${x.result.us>x.result.them?'W':'L'} ${x.result.us}-${x.result.them}</b>${x.result.sim?' <span class="muted">(sim)</span>':''}`:(i===d.gi?'<b style="color:#ffb400">NEXT</b>':'<span class="muted">-</span>');
+  const sched=d.games.map((x,i)=>{ const o=LEAGUE.teams[x.opp]; const res=x.result? `<b style="color:${x.result.us>x.result.them?'#3ddc84':'#ff4d4d'}">${x.result.us>x.result.them?'W':'L'} ${x.result.us}-${x.result.them}</b>${x.result.sim?' <span class="muted">(sim)</span>':''}`:(i===d.gi?'<b style="color:#d0e85c">NEXT</b>':'<span class="muted">-</span>');
     return `<tr><td>${i+1}</td><td class="l">${x.home?'vs':'@'} ${o.city} ${o.name}</td><td>${teamRating(o)}</td><td>${res}</td></tr>`; }).join('');
   const done=!g;
   show(`<div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="tlabel">SEASON MODE · ${LEAGUE.season}</div><div class="h1">${td.city.toUpperCase()} ${td.name.toUpperCase()}</div>
@@ -2270,7 +2421,7 @@ function showSeasonHub(){
 function standingsTable(conf){
   const S=Season.data.standings; const my=LEAGUE.teams[Season.data.team].abbr;
   const list=Season.confRank(conf).map(i=>LEAGUE.teams[i]);
-  return `<div class="tblwrap" style="max-height:24vh;margin-bottom:10px"><table class="t"><tr><th>#</th><th class="l">${conf.toUpperCase()}</th><th>W</th><th>L</th><th>PCT</th></tr>${list.map((t,i)=>{ const s=S[t.abbr]; const pct=s.w+s.l?(s.w/(s.w+s.l)).toFixed(3).replace(/^0/,''):'.000'; return `<tr style="${t.abbr===my?'background:rgba(255,180,0,.15)':''}"><td>${i+1}</td><td class="l"><span style="display:inline-block;width:10px;height:10px;background:${t.c1};border:1px solid ${t.c2};margin-right:6px"></span>${t.city} ${t.name}</td><td>${s.w}</td><td>${s.l}</td><td>${pct}</td></tr>`; }).join('')}</table></div>`;
+  return `<div class="tblwrap" style="max-height:24vh;margin-bottom:10px"><table class="t"><tr><th>#</th><th class="l">${conf.toUpperCase()}</th><th>W</th><th>L</th><th>PCT</th></tr>${list.map((t,i)=>{ const s=S[t.abbr]; const pct=s.w+s.l?(s.w/(s.w+s.l)).toFixed(3).replace(/^0/,''):'.000'; return `<tr style="${t.abbr===my?'background:rgba(208,232,92,.1)':''}"><td>${i+1}</td><td class="l"><span style="display:inline-block;width:10px;height:10px;background:${t.c1};border:1px solid ${t.c2};margin-right:6px"></span>${t.city} ${t.name}</td><td>${s.w}</td><td>${s.l}</td><td>${pct}</td></tr>`; }).join('')}</table></div>`;
 }
 function boxTable(T){
   const pl=T.roster.filter(p=>p.stats.sec>0||T.onCourt.includes(p)).sort((a,b)=>b.stats.sec-a.stats.sec);

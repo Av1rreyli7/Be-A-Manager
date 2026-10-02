@@ -97,7 +97,7 @@ export default function DepthPage() {
             const others = players.filter((x) => x.pos !== slot && eligibleForGame(l, x, playoffs)).sort((a, b) => b.ovr - a.ovr);
             return (
               <li key={slot} className="grid grid-cols-[44px_1fr] items-center gap-3 border-b border-line/60 px-3 py-2.5 sm:grid-cols-[44px_minmax(220px,1.2fr)_minmax(160px,2fr)]">
-                <span className={clsx("text-center font-display text-2xl font-black", p && outOfPosition(p, i) ? "text-warn" : "text-accent")}>{slot}</span>
+                <span className={clsx("text-center font-num text-[19px] font-black", p && outOfPosition(p, i) ? "text-warn" : "text-accent")}>{slot}</span>
                 <div className="flex min-w-0 items-center gap-2">
                   {p && <Rating value={p.ovr} />}
                   <select className="min-w-0 flex-1 rounded-[4px] border border-line-2 bg-bg px-2 py-1.5 text-sm" value={id ?? ""} onChange={(e) => setStarter(i, e.target.value)}>
@@ -124,7 +124,7 @@ export default function DepthPage() {
             const ok = eligibleForGame(l, p, playoffs);
             return (
               <li key={id} className={clsx("grid grid-cols-[28px_1fr_auto] items-center gap-3 border-b border-line/60 px-3 py-2 sm:grid-cols-[28px_minmax(220px,1.2fr)_minmax(160px,2fr)_auto]", !ok && "opacity-50")}>
-                <span className="text-center font-display text-lg font-bold text-mute">{i + 6}</span>
+                <span className="text-center font-num text-[15px] font-bold text-mute">{i + 6}</span>
                 <div className="flex min-w-0 items-center gap-2">
                   <Rating value={p.ovr} />
                   <div className="min-w-0">

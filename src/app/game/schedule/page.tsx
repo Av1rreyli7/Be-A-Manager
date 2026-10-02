@@ -42,7 +42,7 @@ export default function SchedulePage() {
               const won = g.result && (home ? g.result.homeScore > g.result.awayScore : g.result.awayScore > g.result.homeScore);
               return (
                 <div key={g.id} className={clsx("grid grid-cols-[64px_1fr_auto] items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-ink/[0.03] sm:grid-cols-[96px_1fr_150px_130px]", !g.result && "text-dim")}>
-                  <span className="font-display text-[13px] font-bold uppercase text-mute">{fmtDate(g.date, { weekday: "short", month: "short", day: "numeric" })}</span>
+                  <span className="font-num text-[12px] font-bold uppercase text-mute">{fmtDate(g.date, { weekday: "short", month: "short", day: "numeric" })}</span>
                   <span className="flex min-w-0 items-center gap-2">
                     {mine ? (
                       <>
@@ -59,8 +59,8 @@ export default function SchedulePage() {
                   <span className="hidden text-xs text-dim sm:block">{g.result ? `${g.result.topHome.name.split(" ").pop()} ${g.result.topHome.pts} / ${g.result.topAway.name.split(" ").pop()} ${g.result.topAway.pts}` : ""}</span>
                   {g.result ? (
                     <Link href={`/game/box/${encodeURIComponent(g.id)}`} className="flex items-center justify-end gap-2 hover:text-accent">
-                      {mine && <span className={clsx("grid h-5 w-5 place-items-center rounded-[2px] font-display text-xs font-black", won ? "bg-good text-bg" : "bg-bad text-bg")}>{won ? "W" : "L"}</span>}
-                      <span className="font-display text-base font-bold num">{g.result.awayScore}-{g.result.homeScore}{g.result.ot ? ` (${g.result.ot}OT)` : ""}</span>
+                      {mine && <span className={clsx("grid h-5 w-5 place-items-center rounded-[2px] font-num text-xs font-black", won ? "bg-good text-bg" : "bg-bad text-bg")}>{won ? "W" : "L"}</span>}
+                      <span className="font-num text-[14px] font-bold num">{g.result.awayScore}-{g.result.homeScore}{g.result.ot ? ` (${g.result.ot}OT)` : ""}</span>
                     </Link>
                   ) : (
                     <span className="text-right text-xs text-mute">-</span>

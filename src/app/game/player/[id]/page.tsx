@@ -54,7 +54,7 @@ export default function PlayerPage() {
       <section className="panel on-dark relative overflow-hidden">
         <div aria-hidden className="hero-wash absolute inset-0" style={{ ["--tc-team" as string]: tc.primary }} />
         <div aria-hidden className="stripes absolute inset-0 [mask-image:linear-gradient(90deg,black,transparent_65%)]" />
-        <span aria-hidden className="pointer-events-none absolute -bottom-10 right-2 select-none font-display text-[200px] font-black leading-none text-white/[0.07] sm:text-[280px]">{p.jersey ?? p.pos}</span>
+        <span aria-hidden className="pointer-events-none absolute -bottom-10 right-2 select-none font-num text-[150px] font-black leading-none text-white/[0.07] sm:text-[210px]">{p.jersey ?? p.pos}</span>
         <div className="relative grid gap-5 p-4 sm:p-6 md:grid-cols-[auto_1fr] md:items-end">
           <div className="flex items-end gap-3">
             <div className="flex flex-col items-center gap-1">
@@ -68,10 +68,10 @@ export default function PlayerPage() {
           </div>
           <div className="min-w-0">
             <div className="text-sm font-semibold text-white/75">{p.firstName}</div>
-            <h1 className="font-display text-[46px] font-black uppercase leading-[0.85] tracking-[0.005em] text-white sm:text-[72px]">{p.lastName}</h1>
+            <h1 className="font-display text-[34px] font-black uppercase leading-[0.85] tracking-[0.005em] text-white sm:text-[54px]">{p.lastName}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/80">
               {p.teamId ? <TeamBadge league={l} teamId={p.teamId} size="sm" withName /> : <span className="chip !bg-black/30 !text-white/85">{p.status === "prospect" ? "Draft prospect" : p.status === "retired" ? `Retired ${p.retiredSeason ?? ""}` : "Free agent"}</span>}
-              <span className="font-display text-lg font-extrabold">{p.pos}{p.jersey ? ` #${p.jersey}` : ""}</span>
+              <span className="font-num text-[15px] font-extrabold">{p.pos}{p.jersey ? ` #${p.jersey}` : ""}</span>
               <span>{height(p.heightIn)}</span>
               <span>{p.weightLb} lb</span>
               <span>Age {age}</span>
@@ -149,7 +149,7 @@ export default function PlayerPage() {
                             <div className="flex justify-between"><span className="text-dim">{label(k)}</span></div>
                             <Bar value={p.ratings[k]} color={ratingFill(p.ratings[k])} />
                           </div>
-                          <span className={clsx("w-7 text-right font-display text-[15px] font-extrabold num", ratingColor(p.ratings[k]))}>{p.ratings[k]}</span>
+                          <span className={clsx("w-7 text-right font-num text-[14px] font-extrabold num", ratingColor(p.ratings[k]))}>{p.ratings[k]}</span>
                         </div>
                       ))}
                     </div>

@@ -124,14 +124,14 @@ function PlayGame() {
           {[g.away, g.home].map((t, i) => (
             <div key={t} className={i === 1 ? "order-3 flex flex-col items-end text-right" : "flex flex-col items-start"}>
               <TeamMark id={t} colors={l.teams[t].colors} size="xl" />
-              <div className="mt-2 font-display text-2xl font-black uppercase leading-none text-white sm:text-4xl">{l.teams[t].name}</div>
+              <div className="mt-2 font-display text-[19px] font-black uppercase leading-none text-white sm:text-[28px]">{l.teams[t].name}</div>
               <div className="text-sm text-white/70 num">
                 {rec(t).w}-{rec(t).l} · {i === 0 ? "Away" : "Home"}
                 {t === me ? " · You" : ""}
               </div>
             </div>
           ))}
-          <div className="order-2 font-display text-2xl font-black text-white/50">@</div>
+          <div className="order-2 font-num text-[19px] font-black text-white/50">@</div>
         </div>
       </section>
 
@@ -176,8 +176,8 @@ function PlayGame() {
                   ))}
                 </div>
               </div>
-              <Button variant="primary" className="h-11 w-full text-base" onClick={start}>
-                <Basketball size={18} weight="fill" /> Tip off in Hardwood Legends
+              <Button variant="primary" className="h-12 w-full text-[12px]" onClick={start}>
+                <Basketball size={15} weight="fill" /> Tip off in Hardwood Legends
               </Button>
             </div>
           </Card>

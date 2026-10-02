@@ -65,7 +65,7 @@ One thing changes for your friends: Floodlights used to be the front page. It no
 - **Floodlights rooms reset when the server restarts.** Saves live in a file called `games.json` on the server, and the free plan wipes it on every restart, sleep or new deploy. That is expected. A normal play session is safe as long as somebody keeps the tab open.
 - **Front Office saves are not affected.** They live in each player's own browser.
 - **Memory.** The free instance has 512 MB. The server uses about 170 MB when idle, so there is plenty of room.
-- **Fonts for Front Office are fetched while building.** The build downloads two Google fonts for Front Office (the same as before the merge). Render has internet during the build, so this just works.
+- **Fonts.** Every font is a file inside the project (`floodlights/fonts`). Nothing is downloaded from Google, not during the build and not in the browser.
 
 ## 5. If something goes wrong
 

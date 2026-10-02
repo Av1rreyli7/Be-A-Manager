@@ -44,7 +44,7 @@ export default function StaffPage() {
         {staff.map((c) => <CoachRow key={c.id} c={c} action={<Button size="sm" variant="danger" onClick={() => mutate((lg) => { lg.coaches[c.id].teamId = null; toast(`${c.name} let go`); })}>Fire</Button>} />)}
       </Card>
       <Card title="Available coaches">
-        {pool.slice(0, 20).map((c) => <CoachRow key={c.id} c={c} action={<Button size="sm" variant="primary" onClick={() => hire(c)}>Hire</Button>} />)}
+        {pool.slice(0, 20).map((c) => <CoachRow key={c.id} c={c} action={<Button size="sm" onClick={() => hire(c)}>Hire</Button>} />)}
       </Card>
       <Card title="G League assignments">
         <p className="mb-2 text-xs text-dim">Assigned players don&apos;t play NBA games but get development reps (+ progression). Two-way players can be assigned freely.</p>

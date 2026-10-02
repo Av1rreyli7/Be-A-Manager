@@ -60,7 +60,7 @@ function CapSheet() {
               <XAxis dataKey="season" stroke={C.axis} tick={{ fill: C.axis }} fontSize={11} />
               <YAxis stroke={C.axis} tick={{ fill: C.axis }} fontSize={11} unit="M" width={48} />
               <Tooltip contentStyle={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 4, color: C.ink }} cursor={{ fill: C.grid, opacity: 0.4 }} formatter={(v) => `$${v}M`} />
-              <RBar dataKey="salary" fill={C.accent} radius={[2, 2, 0, 0]} />
+              <RBar dataKey="salary" fill={C.accent} fillOpacity={0.82} />
               <ReferenceLine y={proj[0].cap / 1e6} stroke={C.good} strokeDasharray="4 3" label={{ value: "Cap", fill: C.good, fontSize: 10, position: "insideTopLeft" }} />
               <ReferenceLine y={proj[0].tax / 1e6} stroke={C.warn} strokeDasharray="4 3" label={{ value: "Tax", fill: C.warn, fontSize: 10, position: "insideTopLeft" }} />
               <ReferenceLine y={proj[0].firstApron / 1e6} stroke={C.warn} strokeDasharray="4 3" label={{ value: "1st apron", fill: C.warn, fontSize: 10, position: "insideTopLeft" }} />

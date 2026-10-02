@@ -20,9 +20,9 @@ export function NewsList({ items }: { items: NewsItem[] }) {
   return (
     <ul className="stagger divide-y divide-line/60">
       {items.map((n, i) => (
-        <li key={n.id} style={{ ["--i" as string]: Math.min(i, 12) }} className={clsx("grid grid-cols-[58px_74px_1fr] items-baseline gap-2.5 py-2 text-sm", n.important && "font-semibold")}>
-          <span className="font-display text-[13px] font-bold uppercase text-mute num">{fmtDate(n.date)}</span>
-          <span className={clsx("w-fit rounded-[2px] px-1.5 py-px text-[9.5px] font-extrabold uppercase tracking-[0.06em]", TYPE_TONE[n.type] ?? "bg-ink/10 text-dim")}>{n.type}</span>
+        <li key={n.id} style={{ ["--i" as string]: Math.min(i, 12) }} className={clsx("grid grid-cols-[52px_78px_1fr] items-baseline gap-2.5 py-2 text-sm", n.important && "font-semibold")}>
+          <span className="font-num text-[10.5px] font-bold uppercase tracking-[0.08em] text-mute num">{fmtDate(n.date)}</span>
+          <span className={clsx("w-fit rounded-[2px] px-1.5 pb-[2px] pt-[3px] font-num text-[9px] font-bold uppercase leading-none tracking-[0.1em]", TYPE_TONE[n.type] ?? "bg-ink/10 text-dim")}>{n.type}</span>
           <span className="min-w-0 text-ink/90">{n.text}</span>
         </li>
       ))}

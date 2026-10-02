@@ -15,10 +15,10 @@ export function Toasts() {
             key={t.id}
             onClick={() => dismiss(t.id)}
             className={clsx(
-              "panel anim-rise pointer-events-auto flex items-start gap-2.5 px-4 py-3 text-left text-sm shadow-[0_20px_50px_-16px_rgb(0_0_0/0.8)]",
-              t.kind === "success" && "shadow-[inset_3px_0_0_var(--color-good)]",
-              t.kind === "error" && "shadow-[inset_3px_0_0_var(--color-bad)]",
-              t.kind !== "success" && t.kind !== "error" && "shadow-[inset_3px_0_0_var(--accent)]",
+              "panel anim-rise pointer-events-auto flex items-start gap-2.5 px-4 py-3 text-left text-sm",
+              t.kind === "success" && "shadow-[inset_2px_0_0_var(--color-good)]",
+              t.kind === "error" && "shadow-[inset_2px_0_0_var(--color-bad)]",
+              t.kind !== "success" && t.kind !== "error" && "shadow-[inset_2px_0_0_var(--accent)]",
             )}
           >
             <I size={18} weight="fill" className={clsx("mt-px shrink-0", t.kind === "success" ? "text-good" : t.kind === "error" ? "text-bad" : "text-accent")} />

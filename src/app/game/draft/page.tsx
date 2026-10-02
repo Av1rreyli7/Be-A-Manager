@@ -85,7 +85,7 @@ function DraftView() {
               const p = l.players[board[i]];
               return p ? (
                 <li key={o.pickId} className="flex items-center gap-2 rounded-[4px] border border-line px-3 py-1.5 text-sm">
-                  <span className="w-7 font-display text-lg font-bold text-mute">{o.pick}</span>
+                  <span className="w-7 font-num text-[15px] font-bold text-mute">{o.pick}</span>
                   {o.owner && <TeamBadge league={l} teamId={o.owner} size="sm" />}
                   <PlayerLink player={p} />
                   <span className="ml-auto"><OvrPot p={p} /></span>
@@ -103,7 +103,7 @@ function DraftView() {
               {cur ? (
                 <div className="anim-rise">
                   <div className="flex items-center gap-3">
-                    <span className="font-display text-5xl font-black">#{cur.pick}</span>
+                    <span className="font-num text-[36px] font-black">#{cur.pick}</span>
                     <TeamBadge league={l} teamId={cur.owner} size="lg" />
                     {cur.originalTeam !== cur.owner && <span className="text-xs text-dim">via {cur.originalTeam}</span>}
                   </div>

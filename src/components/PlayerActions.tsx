@@ -33,7 +33,7 @@ export function PlayerActions({ p, compact }: { p: Player; compact?: boolean }) 
           <Field label="Position">
             <div className="flex gap-1">
               {SLOTS.map((s2) => (
-                <button key={s2} onClick={() => setPos(s2)} className={`flex-1 rounded-[4px] border px-2 py-2 text-sm font-bold ${pos === s2 ? "border-accent bg-accent/20 text-ink" : "border-line-2 text-dim hover:text-ink"}`}>
+                <button key={s2} onClick={() => setPos(s2)} className={`flex-1 rounded-[6px] border px-2 py-2 text-sm font-bold ${pos === s2 ? "border-accent bg-accent/10 text-accent" : "border-line text-dim hover:border-line-2 hover:text-ink"}`}>
                   {s2}
                 </button>
               ))}

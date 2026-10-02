@@ -1,33 +1,36 @@
 @import "tailwindcss";
 
 /*
- * Front Office: arena-broadcast theme.
- * Surface + accent tokens are rewritten at runtime from the managed team's
- * colours (src/lib/theme.ts). The :root values below are the neutral default
- * used on the main menu before a team is chosen.
+ * Game Night (Front Office and Hardwood Legends): the Be-A-Manager site look.
+ * Pure black ground, hairlines at 13 percent white, chamfered corners,
+ * Inter for reading and headings, Chakra Petch for small labels and big numbers,
+ * liquid glass buttons, and the glow button for the main action. One accent: volt.
+ * Team colours only show where they name a team (header band, team marks, washes).
+ * The tokens below are the defaults; src/lib/theme.ts writes the same set at runtime
+ * for the chosen mode (dark or light) and style (colorful or plain).
  */
 :root {
-  --bg: hsl(222 18% 5.5%);
-  --panel: hsl(222 18% 8.5%);
-  --panel-2: hsl(222 18% 11.5%);
-  --line: hsl(222 14% 16%);
-  --line-2: hsl(222 12% 23%);
-  --ink: hsl(222 10% 95%);
-  --dim: hsl(222 10% 70%);
-  --mute: hsl(222 9% 52%);
-  --accent: hsl(358 66% 56%);
-  --accent-ink: hsl(0 0% 98%);
+  --bg: #000000;
+  --panel: #070807;
+  --panel-2: #101210;
+  --line: #222422;
+  --line-2: #3b3e3a;
+  --ink: #ffffff;
+  --dim: #b9bdb6;
+  --mute: #8a8d88;
+  --accent: #d0e85c;
+  --accent-ink: #12160a;
   --team: #d6363b;
   --team-2: #14213d;
   --team-deep: hsl(358 50% 16%);
-  --hero-base: var(--panel);
-  --band-end: var(--bg);
-  --glow: 20%;
-  --wash: 55%;
-  --good: #4cc38a;
-  --warn: #e9b949;
-  --bad: #f0646a;
-  --info: #8fb0d6;
+  --hero-base: #070807;
+  --band-end: #000000;
+  --glow: 13%;
+  --wash: 46%;
+  --good: #5fd38d;
+  --warn: #f2a94a;
+  --bad: #f25c5c;
+  --info: #8fbcf2;
   --gold: #e9b949;
   --tier-elite: #d6f1ff;
   --tier-gold: #e9b949;
@@ -36,22 +39,31 @@
   --tier-bronze: #c99474;
   --tier-elite-fill: #c7ecff;
   --tier-steel-fill: #8f9db1;
+  /* liquid glass (the quiet button) */
+  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.11), rgba(0, 0, 0, 0.5) 46%, rgba(150, 170, 200, 0.09));
+  --glass-bg-hover: linear-gradient(135deg, rgba(210, 225, 255, 0.18), rgba(0, 0, 0, 0.35) 48%, rgba(180, 195, 220, 0.16));
+  --glass-ink: #ffffff;
+  --glass-edge: rgba(198, 198, 198, 0.42);
+  --glass-edge-hover: rgba(220, 230, 255, 0.78);
+  --glass-shine: rgba(255, 255, 255, 0.4);
+  --cut: 14px;
 }
 
-/* light defaults (before the team palette is computed) */
+/* light defaults (before theme.ts runs) */
 :root[data-mode="light"] {
-  --bg: hsl(222 12% 95.5%);
-  --panel: hsl(222 10% 99%);
-  --panel-2: hsl(222 12% 94%);
-  --line: hsl(222 11% 87%);
-  --line-2: hsl(222 10% 78%);
-  --ink: hsl(222 14% 11%);
-  --dim: hsl(222 9% 34%);
-  --mute: hsl(222 7% 48%);
-  --accent: hsl(358 62% 43%);
-  --hero-base: hsl(222 18% 12%);
-  --band-end: hsl(222 18% 10%);
-  --glow: 12%;
+  --bg: #f3f4f0;
+  --panel: #ffffff;
+  --panel-2: #eceee8;
+  --line: #d9dcd4;
+  --line-2: #b9bdb3;
+  --ink: #0e120b;
+  --dim: #454940;
+  --mute: #6c7167;
+  --accent: #55650f;
+  --accent-ink: #ffffff;
+  --hero-base: #10130f;
+  --band-end: #000000;
+  --glow: 9%;
   --wash: 30%;
   --good: #1f8a5b;
   --warn: #a5720f;
@@ -64,6 +76,12 @@
   --tier-steel: #5b6b80;
   --tier-bronze: #94593a;
   --tier-elite-fill: #6fb6dd;
+  --glass-bg: linear-gradient(180deg, #ffffff 0%, #f1f2ee 48%, #e2e4dd 100%);
+  --glass-bg-hover: linear-gradient(180deg, #ffffff 0%, #f6f8ef 42%, #e3e8d0 100%);
+  --glass-ink: #111111;
+  --glass-edge: #b9bdb3;
+  --glass-edge-hover: #8d9186;
+  --glass-shine: rgba(255, 255, 255, 0.9);
   color-scheme: light;
 }
 
@@ -81,15 +99,17 @@
   --color-team: var(--team);
   --color-team-2: var(--team-2);
   --color-team-deep: var(--team-deep);
-  /* semantic state colours, shared by every team theme */
+  /* semantic state colours, the same in every theme */
   --color-good: var(--good);
   --color-warn: var(--warn);
   --color-bad: var(--bad);
   --color-info: var(--info);
   --color-gold: var(--gold);
-  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display-face), var(--font-body), sans-serif;
-  --font-mono: var(--font-body), ui-monospace, monospace;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Chakra Petch: small labels and big numbers */
+  --font-num: var(--font-chakra), var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-inter), ui-monospace, monospace;
   --ease-out-quart: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -107,32 +127,20 @@ html {
 body {
   min-height: 100dvh;
   color: var(--ink);
-  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
+  /* a faint wash of the team colour in one corner, like the lights behind the landing page */
   background:
-    radial-gradient(1100px 520px at 0% -8%, color-mix(in oklab, var(--team) var(--glow), transparent), transparent 62%),
-    radial-gradient(900px 600px at 100% 120%, color-mix(in oklab, var(--team-2) calc(var(--glow) / 2), transparent), transparent 60%),
+    radial-gradient(1000px 460px at 0% -10%, color-mix(in oklab, var(--team) var(--glow), transparent), transparent 62%),
     var(--bg);
   background-attachment: fixed;
-  transition: background-color 0.4s ease;
-}
-
-/* film grain: fixed, non-interactive, never on a scrolling layer */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  pointer-events: none;
-  opacity: 0.06;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--accent) 45%, transparent);
-  color: var(--ink);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 :focus-visible {
@@ -153,52 +161,60 @@ body::before {
 }
 
 @layer components {
+  /* headings: Inter, bold, a touch of tracking. Numbers get Chakra (see .font-display.num below). */
   .font-display {
-    font-family: var(--font-display-face), var(--font-body), sans-serif;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     font-variant-numeric: tabular-nums lining-nums;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.02em;
   }
 
   .num {
     font-variant-numeric: tabular-nums;
   }
 
-  /* condensed small-caps label used for column heads and stat captions */
+  /* small Chakra Petch label: column heads, stat captions, menu groups */
   .label {
-    font-family: var(--font-body), sans-serif;
-    font-stretch: 80%;
-    font-size: 10.5px;
+    font-family: var(--font-chakra), var(--font-inter), sans-serif;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    line-height: 1.3;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--mute);
   }
 
-  /* ---------- surfaces ---------- */
+  /* ---------- surfaces: flat black, one hairline, two cut corners ---------- */
 
   .panel {
     position: relative;
-    background:
-      linear-gradient(180deg, color-mix(in oklab, var(--ink) 3.5%, transparent), transparent 42px),
-      var(--panel);
     border: 1px solid var(--line);
-    border-radius: 6px;
-    box-shadow:
-      inset 0 1px 0 color-mix(in oklab, var(--ink) 6%, transparent),
-      0 18px 40px -24px color-mix(in oklab, var(--bg) 90%, black);
+    border-radius: 0;
+    background-origin: border-box;
+    background:
+      linear-gradient(to bottom left, transparent calc(50% - 0.65px), var(--line-2) calc(50% - 0.65px), var(--line-2) calc(50% + 0.65px), transparent calc(50% + 0.65px)) top right / var(--cut) var(--cut) no-repeat border-box,
+      linear-gradient(to bottom left, transparent calc(50% - 0.65px), var(--line-2) calc(50% - 0.65px), var(--line-2) calc(50% + 0.65px), transparent calc(50% + 0.65px)) bottom left / var(--cut) var(--cut) no-repeat border-box,
+      var(--panel);
+    clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut)));
+  }
+  /* a panel that holds a menu which must be able to spill out of it keeps square corners */
+  .panel.no-cut {
+    clip-path: none;
+    background: var(--panel);
   }
 
-  /* broadcast lower-third: hard team-colour edge on the left */
+  /* marked panel: a short volt line at the top left, the site's way to flag the one that matters */
   .panel-edge {
-    box-shadow:
-      inset 3px 0 0 var(--accent),
-      inset 0 1px 0 color-mix(in oklab, var(--ink) 6%, transparent);
+    background:
+      linear-gradient(var(--accent), var(--accent)) top left / 54px 2px no-repeat border-box,
+      linear-gradient(to bottom left, transparent calc(50% - 0.65px), var(--line-2) calc(50% - 0.65px), var(--line-2) calc(50% + 0.65px), transparent calc(50% + 0.65px)) top right / var(--cut) var(--cut) no-repeat border-box,
+      linear-gradient(to bottom left, transparent calc(50% - 0.65px), var(--line-2) calc(50% - 0.65px), var(--line-2) calc(50% + 0.65px), transparent calc(50% + 0.65px)) bottom left / var(--cut) var(--cut) no-repeat border-box,
+      var(--panel);
   }
 
   .inset {
-    background: color-mix(in oklab, var(--bg) 70%, transparent);
+    background: color-mix(in oklab, var(--ink) 3%, transparent);
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-radius: 0;
   }
 
   /* diagonal pinstripe used on team-colour bands */
@@ -206,14 +222,14 @@ body::before {
     background-image: repeating-linear-gradient(
       -62deg,
       transparent 0 14px,
-      color-mix(in oklab, white 5%, transparent) 14px 15px
+      color-mix(in oklab, white 3.5%, transparent) 14px 15px
     );
   }
 
-  /* team-colour header band */
+  /* header band: black, with the team colour as a light in the left corner */
   .team-band {
     background:
-      linear-gradient(100deg, var(--team) 0%, color-mix(in oklab, var(--team) 55%, var(--band-end)) 34%, var(--band-end) 78%);
+      linear-gradient(100deg, color-mix(in oklab, var(--team) 46%, var(--band-end)) 0%, color-mix(in oklab, var(--team) 16%, var(--band-end)) 26%, var(--band-end) 58%);
   }
 
   /*
@@ -222,15 +238,15 @@ body::before {
    */
   .hero-wash {
     --tc: var(--tc-team, var(--team));
-    background: linear-gradient(105deg, color-mix(in oklab, var(--tc) 72%, var(--hero-base)) 0%, color-mix(in oklab, var(--tc) 24%, var(--hero-base)) 46%, var(--hero-base) 78%);
+    background: linear-gradient(105deg, color-mix(in oklab, var(--tc) 50%, var(--hero-base)) 0%, color-mix(in oklab, var(--tc) 15%, var(--hero-base)) 44%, var(--hero-base) 76%);
   }
   .side-wash {
     --tc: var(--tc-team, var(--team));
-    background: linear-gradient(var(--dir, 100deg), color-mix(in oklab, var(--tc) var(--wash), transparent), transparent 78%);
+    background: linear-gradient(var(--dir, 100deg), color-mix(in oklab, var(--tc) var(--wash), transparent), transparent 74%);
   }
   .card-wash {
     --tc: var(--tc-team, var(--team));
-    background: linear-gradient(135deg, var(--tc), color-mix(in oklab, var(--tc) 40%, var(--hero-base)));
+    background: linear-gradient(135deg, color-mix(in oklab, var(--tc) 82%, #000000), color-mix(in oklab, var(--tc) 30%, var(--hero-base)));
   }
   [data-style="plain"] :is(.hero-wash, .side-wash, .card-wash) {
     --tc: var(--team);
@@ -241,43 +257,264 @@ body::before {
 
   /* dark islands (header band, heroes) keep dark-mode tokens on a light page */
   [data-mode="light"] .on-dark {
-    --bg: hsl(222 16% 8%);
-    --panel: hsl(222 14% 11%);
-    --panel-2: hsl(222 13% 14%);
-    --line: hsl(222 11% 20%);
-    --line-2: hsl(222 10% 28%);
-    --ink: hsl(222 10% 95%);
-    --dim: hsl(222 8% 72%);
-    --mute: hsl(222 7% 56%);
+    --bg: #000000;
+    --panel: #070807;
+    --panel-2: #101210;
+    --line: #222422;
+    --line-2: #3b3e3a;
+    --ink: #ffffff;
+    --dim: #b9bdb6;
+    --mute: #8a8d88;
+    --accent: #d0e85c;
+    --accent-ink: #12160a;
+    --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.11), rgba(0, 0, 0, 0.5) 46%, rgba(150, 170, 200, 0.09));
+    --glass-bg-hover: linear-gradient(135deg, rgba(210, 225, 255, 0.18), rgba(0, 0, 0, 0.35) 48%, rgba(180, 195, 220, 0.16));
+    --glass-ink: #ffffff;
+    --glass-edge: rgba(198, 198, 198, 0.42);
+    --glass-edge-hover: rgba(220, 230, 255, 0.78);
+    --glass-shine: rgba(255, 255, 255, 0.4);
     color: var(--ink);
   }
 
   .chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.3rem;
     border-radius: 3px;
-    padding: 0.12rem 0.4rem;
-    font-size: 10.5px;
+    padding: 0.2rem 0.42rem 0.16rem;
+    font-family: var(--font-chakra), var(--font-inter), sans-serif;
+    font-size: 9.5px;
     font-weight: 700;
-    font-stretch: 85%;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    background: color-mix(in oklab, var(--ink) 6%, transparent);
+    background: color-mix(in oklab, var(--ink) 7%, transparent);
     color: var(--dim);
     white-space: nowrap;
-    line-height: 1.35;
+    line-height: 1.3;
   }
 
-  /* angled cut used on primary actions and badges */
+  /* cut shapes. The old slanted cuts are now the site's chamfer. */
   .cut {
-    clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
+    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
   }
   .cut-sm {
-    clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+    clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
   }
   .chamfer {
     clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    height: 36px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-family: var(--font-chakra), var(--font-inter), sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, color 0.25s ease, filter 0.35s ease, transform 0.08s ease;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn:disabled {
+    pointer-events: none;
+    opacity: 0.4;
+  }
+  .btn-sm {
+    height: 28px;
+    padding: 0 11px;
+    border-radius: 5px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+  /* liquid glass: the everyday button */
+  .btn-glass {
+    background: var(--glass-bg);
+    color: var(--glass-ink);
+    border-color: var(--glass-edge);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  .btn-glass::after,
+  .btn-solid::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(115deg, transparent 20%, var(--glass-shine) 48%, transparent 76%);
+    transform: translateX(-130%);
+    transition: transform 0.65s ease;
+    pointer-events: none;
+  }
+  .btn-glass:hover::after,
+  .btn-solid:hover::after {
+    transform: translateX(130%);
+  }
+  .btn-glass:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-edge-hover);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 18px rgba(170, 200, 255, 0.16);
+  }
+  /* solid glass: white, for the one call to action on a coloured tile */
+  .btn-solid {
+    background: linear-gradient(180deg, #ffffff 0%, #e7e7e7 48%, #cfcfcf 100%);
+    color: #111111;
+    border-color: #ffffff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    --glass-shine: rgba(255, 255, 255, 0.55);
+  }
+  .btn-solid:hover {
+    background: linear-gradient(180deg, #ffffff 0%, #f3f6ff 42%, #d5def2 100%);
+    box-shadow: inset 0 1px 0 #ffffff, 0 0 22px rgba(186, 208, 255, 0.35);
+  }
+  /* the glow button: the main action on a screen. Near black with a bank of volt light at its foot,
+     the same button the landing page uses to enter a game. */
+  .btn-glow {
+    color: #ffffff;
+    border: 0;
+    border-radius: 10px;
+    text-shadow: 0 1px 2px rgba(10, 16, 0, 0.5);
+    background: linear-gradient(to top, #eef7b0 1px, #e8f59a 2px, #e1f486 3px, #d9ee6e 4px, #d0e85c 5px, #b4cc3c 6px, #a0b82e 7px, #93aa28 8px, #80961f 9px, #6b7e17 10px, #566613 12px, #4f5d16 13px, #465311 14px, #374210 16px, #2a3210 18px, #202710 20px, #171c0f 24px, #10140c 30px, #0e120b 34px, #0e120b 100%);
+    box-shadow:
+      inset 0 3px 3px -2px rgba(236, 246, 190, 0.1),
+      inset 1px 0 0 rgba(255, 255, 255, 0.09),
+      inset -1px 0 0 rgba(255, 255, 255, 0.09),
+      0 1px 0 rgba(214, 234, 140, 0.38),
+      1px 0 0 rgba(214, 234, 140, 0.17),
+      -1px 0 0 rgba(214, 234, 140, 0.17),
+      0 0 8px rgba(208, 232, 92, 0.1),
+      0 2px 5px -3px rgba(208, 232, 92, 0.45);
+  }
+  .btn-glow::before {
+    content: "";
+    position: absolute;
+    left: 22%;
+    right: 38%;
+    top: 0.8px;
+    height: 1.9px;
+    z-index: 1;
+    filter: blur(0.55px);
+    background: linear-gradient(90deg, rgba(225, 244, 134, 0) 0%, rgba(225, 244, 134, 0.58) 34%, rgba(240, 250, 190, 0.74) 50%, rgba(225, 244, 134, 0.58) 66%, rgba(225, 244, 134, 0) 100%);
+  }
+  .btn-glow::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(240, 250, 190, 0.7), rgba(240, 250, 190, 0) 13px), linear-gradient(270deg, rgba(240, 250, 190, 0.7), rgba(240, 250, 190, 0) 13px);
+    -webkit-mask: linear-gradient(to top, #000 0, #000 6px, rgba(0, 0, 0, 0.4) 12px, rgba(0, 0, 0, 0.15) 18px, rgba(0, 0, 0, 0.09) 24px, rgba(0, 0, 0, 0.02) 30px, rgba(0, 0, 0, 0.02) 100%);
+    mask: linear-gradient(to top, #000 0, #000 6px, rgba(0, 0, 0, 0.4) 12px, rgba(0, 0, 0, 0.15) 18px, rgba(0, 0, 0, 0.09) 24px, rgba(0, 0, 0, 0.02) 30px, rgba(0, 0, 0, 0.02) 100%);
+  }
+  .btn-glow:hover {
+    filter: brightness(1.12);
+    box-shadow: inset 0 1px 0 rgba(240, 250, 190, 0.6), inset 1px 0 0 rgba(225, 244, 134, 0.35), inset -1px 0 0 rgba(225, 244, 134, 0.35), 0 6px 22px rgba(160, 190, 50, 0.42);
+  }
+  /* the small one keeps the same light on a shorter bank */
+  .btn-glow.btn-sm {
+    border-radius: 8px;
+    background: linear-gradient(to top, #e8f59a 1px, #d9ee6e 2px, #d0e85c 3px, #a0b82e 4px, #80961f 5px, #566613 7px, #465311 8px, #2a3210 10px, #202710 12px, #171c0f 15px, #0e120b 20px, #0e120b 100%);
+  }
+  .btn-glow.btn-sm::after {
+    -webkit-mask: linear-gradient(to top, #000 0, #000 4px, rgba(0, 0, 0, 0.3) 8px, rgba(0, 0, 0, 0.08) 14px, rgba(0, 0, 0, 0.02) 20px, rgba(0, 0, 0, 0.02) 100%);
+    mask: linear-gradient(to top, #000 0, #000 4px, rgba(0, 0, 0, 0.3) 8px, rgba(0, 0, 0, 0.08) 14px, rgba(0, 0, 0, 0.02) 20px, rgba(0, 0, 0, 0.02) 100%);
+  }
+  /* quiet text button */
+  .btn-ghost {
+    color: var(--dim);
+    background: transparent;
+  }
+  .btn-ghost:hover {
+    color: var(--ink);
+    background: color-mix(in oklab, var(--ink) 6%, transparent);
+  }
+  /* tinted glass for actions that remove or confirm something */
+  .btn-danger {
+    color: var(--bad);
+    background: linear-gradient(135deg, color-mix(in oklab, var(--bad) 16%, transparent), color-mix(in oklab, var(--bad) 5%, transparent));
+    border-color: color-mix(in oklab, var(--bad) 48%, transparent);
+  }
+  .btn-danger:hover {
+    background: linear-gradient(135deg, color-mix(in oklab, var(--bad) 26%, transparent), color-mix(in oklab, var(--bad) 12%, transparent));
+    border-color: var(--bad);
+  }
+  .btn-success {
+    color: var(--good);
+    background: linear-gradient(135deg, color-mix(in oklab, var(--good) 16%, transparent), color-mix(in oklab, var(--good) 5%, transparent));
+    border-color: color-mix(in oklab, var(--good) 48%, transparent);
+  }
+  .btn-success:hover {
+    background: linear-gradient(135deg, color-mix(in oklab, var(--good) 26%, transparent), color-mix(in oklab, var(--good) 12%, transparent));
+    border-color: var(--good);
+  }
+
+  /* the site mark: a bank of six floodlights, the same mark the landing page and Floodlights use */
+  .bam-dots {
+    --m: 5.4px;
+    flex: none;
+    display: inline-block;
+    width: calc(var(--m) * 3);
+    height: calc(var(--m) * 2);
+    background: radial-gradient(circle at center, var(--accent) 0 calc(var(--m) * 0.3), transparent calc(var(--m) * 0.36)) 0 0 / var(--m) var(--m);
+  }
+
+  /* the frame from the landing page: a hairline with cut corners around a whole screen */
+  .site-frame {
+    position: fixed;
+    inset: 18px;
+    z-index: 0;
+    pointer-events: none;
+    --fl: color-mix(in oklab, var(--ink) 13%, transparent);
+    --fc: 22px;
+    background:
+      linear-gradient(var(--fl), var(--fl)) var(--fc) 0 / calc(100% - var(--fc) * 2) 1px no-repeat,
+      linear-gradient(var(--fl), var(--fl)) var(--fc) 100% / calc(100% - var(--fc) * 2) 1px no-repeat,
+      linear-gradient(var(--fl), var(--fl)) 0 var(--fc) / 1px calc(100% - var(--fc) * 2) no-repeat,
+      linear-gradient(var(--fl), var(--fl)) 100% var(--fc) / 1px calc(100% - var(--fc) * 2) no-repeat,
+      linear-gradient(to bottom right, transparent calc(50% - 0.65px), var(--fl) calc(50% - 0.65px), var(--fl) calc(50% + 0.65px), transparent calc(50% + 0.65px)) top left / var(--fc) var(--fc) no-repeat,
+      linear-gradient(to bottom left, transparent calc(50% - 0.65px), var(--fl) calc(50% - 0.65px), var(--fl) calc(50% + 0.65px), transparent calc(50% + 0.65px)) top right / var(--fc) var(--fc) no-repeat,
+      linear-gradient(to bottom left, transparent calc(50% - 0.65px), var(--fl) calc(50% - 0.65px), var(--fl) calc(50% + 0.65px), transparent calc(50% + 0.65px)) bottom left / var(--fc) var(--fc) no-repeat,
+      linear-gradient(to bottom right, transparent calc(50% - 0.65px), var(--fl) calc(50% - 0.65px), var(--fl) calc(50% + 0.65px), transparent calc(50% + 0.65px)) bottom right / var(--fc) var(--fc) no-repeat;
+  }
+  @media (max-width: 640px) {
+    .site-frame {
+      inset: 8px;
+      --fc: 14px;
+    }
+  }
+  /* the starfield behind menu screens: two 1px dots, each one long box-shadow list */
+  .site-stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .site-stars i {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    border-radius: 50%;
+    background: #ffffff;
+  }
+  [data-mode="light"] .site-stars {
+    display: none;
   }
 
   /* ---------- rating tiers (colour-coded, solid fills) ---------- */
@@ -304,6 +541,17 @@ body::before {
     text-shadow: 0 1px 0 rgb(0 0 0 / 0.3);
   }
 
+}
+
+/* Unlayered on purpose, so these win over the weight and family utilities on the same element:
+   the site sets headings in bold Inter (never heavier), and big numbers in Chakra Petch. */
+.font-display {
+  font-weight: 700;
+}
+.font-display.num,
+.font-num {
+  font-family: var(--font-chakra), var(--font-inter), system-ui, sans-serif;
+  font-weight: 700;
 }
 
 /* ---------- scrollbars ---------- */
@@ -390,8 +638,10 @@ body::before {
   .anim-rise {
     animation: rise 0.42s var(--ease-out-quart) both;
   }
+  /* Fills backwards only. A transform that stays applied after the animation would trap
+     position: fixed children (the full screen Hardwood Legends game) inside the page column. */
   .page-enter {
-    animation: page-in 0.32s var(--ease-out-quart) both;
+    animation: page-in 0.32s var(--ease-out-quart) backwards;
   }
   /* staggered children: set --i on each */
   .stagger > * {

@@ -45,3 +45,44 @@ All phases are done. Nothing is left to resume.
 - Later change: on the landing page the second entry is now called Game Night (kicker BASKETBALL BUNDLE), with
   one line each for the two games inside it, Front Office and Hardwood Legends. Landing naming only: the app
   at /front-office, its path and the internal id "frontoffice" are unchanged.
+
+## Game Night restyle (visual only)
+
+Goal: the app at /front-office (Front Office and Hardwood Legends) gets the same look as the landing page and
+Floodlights: black ground, hairlines at 13 percent white, chamfered corners, Inter for reading, Chakra Petch for
+labels and big numbers, liquid glass buttons, the glow button for the main action, volt as the one accent.
+No logic, data, routes or save formats change. Resume from the first unchecked box.
+
+Decisions:
+- The look is driven from the middle: tokens and shared classes in src/app/globals.css, the palette in
+  src/lib/theme.ts, fonts in src/app/layout.tsx, shared parts in src/components/ui.tsx. Screens mostly follow.
+- Dark mode is the site look. Light mode and the Colorful / Plain switch still work (they are features).
+  The accent is volt for every team. Team colours stay only where they name a team: the header band, team
+  marks, hero and card washes.
+- Fonts are the self hosted files in floodlights/fonts, so the build no longer downloads Google fonts.
+
+Checklist:
+- [x] R0 scratch tour tool (headless Chrome, saved league, screenshots of every screen)
+- [x] R1 foundation: fonts, tokens, theme.ts, globals.css (panels, labels, chips, inputs, tables, motion)
+- [x] R2 shared parts: ui.tsx (Card, Button, Tabs, Modal, PageHeader, Stat, Rating, PlayerCard), DataTable,
+      SimControls, Toasts, NewsList, PickList, PlayerActions, AppearancePicker
+- [x] R3 Game Night hub (/front-office)
+- [x] R4 Front Office main menu (/gm) and online lobby (/online)
+- [x] R5 app shell (game/layout.tsx): header band, side menu, ticker, phone bottom bar, boot screen
+- [x] R6 Team screens: dashboard, roster, depth, schedule, cap, finances, staff
+- [x] R7 Front office screens: trade, finder, assets, free-agency, contracts, draft, offseason
+- [x] R8 League screens: standings, playoffs, stats, news, awards, history, players, compare
+- [x] R9 Detail screens: player/[id], team/[id], box/[id], play, settings, modals, the More menu
+- [x] R10 Hardwood Legends: menus, team pick, season screens, pause and help, HUD (the 3D court stays as is)
+- [x] R11 light mode and phone width pass
+- [x] R12 tests: typecheck, vitest, Floodlights batteries, site checks, build, boot test, click through
+- [x] R13 docs, upload folder, push
+
+Restyle result: all boxes done. One full run of npm run test:all passed with 0 failed (typecheck, vitest 81,
+API battery 175, DOM battery 110, 3D checks 48, site checks 154, build, boot test 47). Clicked through on the
+production build: landing to Game Night, new league, roster auto fix, sim, trade screen, save and load, a game
+day played in Hardwood Legends from Front Office, and a Hardwood Legends quick play game.
+- One layout fix came with it: the page entrance animation kept a transform on the page, which trapped the
+  full screen Hardwood Legends game inside the page column when started from Front Office. It now fills the
+  whole window. This was already so before the restyle.
+- Not clicked through with two real players: the online friends league (only its screens were checked).

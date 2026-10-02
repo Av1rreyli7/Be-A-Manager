@@ -20,10 +20,10 @@ function Table({ l, ids, me, seeds }: { l: League; ids: TeamId[]; me: TeamId; se
             const g = Math.max(1, r.w + r.l);
             return (
               <tr key={id} className={clsx("border-t border-line/50 transition-colors hover:bg-ink/[0.03]", id === me && "!bg-accent/12", seeds && i === 6 && "border-t-2 !border-t-line-2", seeds && i === 10 && "border-t-2 !border-t-line-2")}>
-                <td className={clsx("px-2 py-1.5 text-right font-display text-[15px] font-bold num", seeds ? (i < 6 ? "text-ink" : i < 10 ? "text-warn" : "text-mute") : "text-mute")} style={seeds && i < 10 ? { boxShadow: `inset 3px 0 0 ${i < 6 ? "var(--color-good)" : "var(--color-warn)"}` } : undefined}>{i + 1}</td>
+                <td className={clsx("px-2 py-1.5 text-right font-display text-[14px] font-bold num", seeds ? (i < 6 ? "text-ink" : i < 10 ? "text-warn" : "text-mute") : "text-mute")} style={seeds && i < 10 ? { boxShadow: `inset 3px 0 0 ${i < 6 ? "var(--color-good)" : "var(--color-warn)"}` } : undefined}>{i + 1}</td>
                 <td className="px-2"><TeamBadge league={l} teamId={id} size="sm" withName /></td>
-                <td className="px-2 text-right font-display text-[16px] font-bold num">{r.w}</td>
-                <td className="px-2 text-right font-display text-[16px] font-bold num">{r.l}</td>
+                <td className="px-2 text-right font-display text-[14px] font-bold num">{r.w}</td>
+                <td className="px-2 text-right font-display text-[14px] font-bold num">{r.l}</td>
                 <td className="px-2 text-right num">{winPct(r).toFixed(3).replace(/^0/, "")}</td>
                 <td className="px-2 text-right num">{i === 0 ? "-" : gamesBack(lead, r).toFixed(1)}</td>
                 <td className="px-2 text-right num">{r.homeW}-{r.homeL}</td>

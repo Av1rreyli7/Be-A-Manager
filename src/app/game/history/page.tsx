@@ -47,12 +47,12 @@ export default function HistoryPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Card title="Single game (this save)">
             {l.records.singleGame.length === 0 ? <Empty>No games played yet.</Empty> : (
-              <ul className="space-y-2 text-sm">{l.records.singleGame.map((r) => <li key={r.stat} className="flex justify-between gap-2"><span className="text-dim">{r.stat}</span><span><b className="font-display text-lg">{r.value}</b> · {l.players[r.playerId] ? <PlayerLink player={l.players[r.playerId]} /> : r.name} <span className="text-xs text-mute">vs {r.opp}, {fmtDate(r.date)}</span></span></li>)}</ul>
+              <ul className="space-y-2 text-sm">{l.records.singleGame.map((r) => <li key={r.stat} className="flex justify-between gap-2"><span className="text-dim">{r.stat}</span><span><b className="font-num text-[15px]">{r.value}</b> · {l.players[r.playerId] ? <PlayerLink player={l.players[r.playerId]} /> : r.name} <span className="text-xs text-mute">vs {r.opp}, {fmtDate(r.date)}</span></span></li>)}</ul>
             )}
           </Card>
           <Card title="Single season (this save)">
             {l.records.singleSeason.length === 0 ? <Empty>Complete a season to set records.</Empty> : (
-              <ul className="space-y-2 text-sm">{l.records.singleSeason.map((r) => <li key={r.stat} className="flex justify-between gap-2"><span className="text-dim">{r.stat}</span><span><b className="font-display text-lg">{r.value}</b> · {l.players[r.playerId] ? <PlayerLink player={l.players[r.playerId]} /> : r.name} <span className="text-xs text-mute">{r.season}</span></span></li>)}</ul>
+              <ul className="space-y-2 text-sm">{l.records.singleSeason.map((r) => <li key={r.stat} className="flex justify-between gap-2"><span className="text-dim">{r.stat}</span><span><b className="font-num text-[15px]">{r.value}</b> · {l.players[r.playerId] ? <PlayerLink player={l.players[r.playerId]} /> : r.name} <span className="text-xs text-mute">{r.season}</span></span></li>)}</ul>
             )}
           </Card>
         </div>
@@ -68,7 +68,7 @@ export default function HistoryPage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Object.values(l.teams).filter((t) => t.retiredNumbers.length).map((t) => (
             <Card key={t.id} title={<TeamBadge league={l} teamId={t.id} size="sm" withName />}>
-              <ul className="text-sm">{t.retiredNumbers.map((r) => <li key={r.number + r.playerName}><b className="font-display text-xl">#{r.number}</b> {r.playerName} <span className="text-xs text-mute">({r.season})</span></li>)}</ul>
+              <ul className="text-sm">{t.retiredNumbers.map((r) => <li key={r.number + r.playerName}><b className="font-num text-[17px]">#{r.number}</b> {r.playerName} <span className="text-xs text-mute">({r.season})</span></li>)}</ul>
             </Card>
           ))}
           {!Object.values(l.teams).some((t) => t.retiredNumbers.length) && <Empty>No numbers retired in this save yet.</Empty>}

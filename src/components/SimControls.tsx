@@ -81,11 +81,11 @@ export function SimControls() {
           </Button>
           <details ref={more} className="group relative">
             <summary className="list-none [&::-webkit-details-marker]:hidden">
-              <span className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-[4px] px-2 text-xs font-semibold text-white/90 transition-colors hover:bg-white/10" aria-label="More sim options">
+              <span className="btn btn-sm btn-ghost !text-white/85" aria-label="More sim options">
                 <span className="hidden sm:inline">More</span> <CaretDown size={12} weight="bold" className="transition-transform group-open:rotate-180" />
               </span>
             </summary>
-            <div className="panel anim-rise absolute right-0 z-50 mt-2 w-60 p-1 text-sm shadow-[0_24px_60px_-12px_rgb(0_0_0/0.7)]">
+            <div className="panel anim-rise absolute right-0 z-50 mt-2 w-64 p-1.5 text-sm">
               {(
                 [
                   ["game-day", "To my next game day (G)"],
@@ -94,7 +94,7 @@ export function SimControls() {
                   ["playoffs-end", "To end of playoffs (P)"],
                 ] as [SimTarget, string][]
               ).map(([t, label]) => (
-                <button key={t} disabled={!!busy} onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); void sim(t); }} className="block w-full rounded-[3px] px-3 py-2 text-left transition-colors hover:bg-accent/12 hover:text-ink disabled:opacity-40">
+                <button key={t} disabled={!!busy} onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); void sim(t); }} className="block w-full rounded-[3px] px-3 py-2 text-left text-dim transition-colors hover:bg-ink/[0.06] hover:text-ink disabled:opacity-40">
                   {label}
                 </button>
               ))}
@@ -136,7 +136,7 @@ export function SimControls() {
             ["?", "This help"],
           ].map(([k, d]) => (
             <li key={k} className="flex items-center gap-2">
-              <kbd className="grid h-7 min-w-7 place-items-center rounded-[3px] border border-line-2 border-b-[3px] bg-panel-2 font-display text-sm font-black">{k}</kbd>
+              <kbd className="grid h-7 min-w-7 place-items-center rounded-[4px] border border-line-2 bg-panel-2 font-num text-xs font-bold">{k}</kbd>
               <span className="text-dim">{d}</span>
             </li>
           ))}

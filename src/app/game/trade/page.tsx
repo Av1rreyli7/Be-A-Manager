@@ -152,7 +152,7 @@ function TradeMachine() {
                   <div key={e.teamId} className="mb-4">
                     <div className="mb-1 flex items-center justify-between text-sm">
                       <TeamBadge league={l} teamId={e.teamId} size="sm" withName />
-                      <span className={clsx("font-display text-xl font-bold", e.accept ? "text-good" : e.meter > 75 ? "text-warn" : "text-bad")}>{Math.min(100, e.meter)}%</span>
+                      <span className={clsx("font-num text-[17px] font-bold", e.accept ? "text-good" : e.meter > 75 ? "text-warn" : "text-bad")}>{Math.min(100, e.meter)}%</span>
                     </div>
                     <Bar value={Math.min(100, e.meter)} color={e.accept ? "bg-good" : e.meter > 75 ? "bg-warn" : "bg-bad"} />
                     <div className="mt-1 text-xs text-dim">Value in {e.valueIn} · out {e.valueOut} · needs +{e.required}</div>

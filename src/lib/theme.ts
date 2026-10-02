@@ -1,6 +1,7 @@
 /**
- * Team-driven theme. Every surface, line and accent token is derived from the
- * managed team's two brand colours, so the whole app re-skins per franchise.
+ * Game Night theme. The ground, lines and accent are the Be-A-Manager site look
+ * (black, hairlines, volt). The managed team's colours are kept for the things
+ * that name a team: the header band, the washes on heroes and cards, the corner glow.
  */
 import { useEffect } from "react";
 import { THEME_CACHE_KEY, useResolvedAppearance } from "./appearance";
@@ -30,40 +31,21 @@ function hexToHsl(hex: string): HSL {
 const hsl = ({ h, s, l }: HSL) => `hsl(${h.toFixed(1)} ${(s * 100).toFixed(1)}% ${(l * 100).toFixed(1)}%)`;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-/** Relative luminance of an HSL colour, used to pick ink on a filled accent. */
-function luminance({ h, s, l }: HSL): number {
-  const a = s * Math.min(l, 1 - l);
-  const f = (k: number) => {
-    const n = (k + h / 30) % 12;
-    const c = l - a * Math.max(-1, Math.min(n - 3, 9 - n, 1));
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * f(0) + 0.7152 * f(8) + 0.0722 * f(4);
-}
-
-const isChromatic = (c: HSL) => c.s > 0.18 && c.l > 0.08 && c.l < 0.95;
-
-/** Pick the brand colour that reads best as a single accent on a dark ground. */
-function pickAccent(p: HSL, s: HSL): HSL {
-  let base = p;
-  // near-black / navy primaries: the secondary is usually the recognisable pop (DEN, IND, NO gold)
-  if ((!isChromatic(p) || p.l < 0.26) && isChromatic(s) && s.l > 0.4) base = s;
-  // purple primaries with a strong secondary read better as that secondary (LAL gold, PHX orange)
-  else if (p.h > 245 && p.h < 300 && isChromatic(s) && s.l > 0.4) base = s;
-  if (!isChromatic(base)) return { h: base.h, s: 0.08, l: 0.84 }; // monochrome brands (BKN, SA) get silver
-  return { h: base.h, s: clamp(base.s, 0.42, 0.72), l: clamp(base.l, 0.55, 0.66) };
-}
+/** The one accent on the whole site: floodlight volt. On a light page it darkens so it still reads. */
+const VOLT = "#d0e85c";
+const VOLT_INK = "#12160a";
+const VOLT_ON_LIGHT = "#55650f";
 
 export const DEFAULT_COLORS: TeamColors = { primary: "#d6363b", secondary: "#14213d" };
 
-/** light/dark ground, and colourful (team-tinted) vs plain (neutral greys, muted accent). */
+/** light or dark ground, and colourful (team colours on bands and washes) or plain (none). */
 export interface ThemeOptions {
   light?: boolean;
   plain?: boolean;
 }
 
 const SEMANTIC = {
-  dark: { good: "#4cc38a", warn: "#e9b949", bad: "#f0646a", info: "#8fb0d6", gold: "#e9b949" },
+  dark: { good: "#5fd38d", warn: "#f2a94a", bad: "#f25c5c", info: "#8fbcf2", gold: "#e9b949" },
   light: { good: "#1f8a5b", warn: "#a5720f", bad: "#cf3a41", info: "#3a69a1", gold: "#a5760f" },
 };
 // rating-tier ink (for numbers on the page) and fills (for attribute bars)
@@ -75,59 +57,48 @@ const TIERS = {
 export function teamTheme(colors: TeamColors = DEFAULT_COLORS, opts: ThemeOptions = {}) {
   const { light = false, plain = false } = opts;
   const p = hexToHsl(colors.primary);
-  const s = hexToHsl(colors.secondary);
-  const accent = pickAccent(p, s);
-  const chroma = accent.s > 0.1;
-  if (plain && chroma) accent.s = Math.min(accent.s, 0.3);
-  if (light) accent.l = !chroma ? 0.28 : accent.h > 38 && accent.h < 75 ? 0.37 : 0.43; // darker so it reads on a pale ground
-  // background hue follows the primary; monochrome teams (and plain style) fall back to a cool slate
-  const tinted = !plain && (isChromatic(p) || isChromatic(s));
-  const hue = !tinted ? 222 : isChromatic(p) ? p.h : s.h;
-  const sat = tinted ? (light ? 0.22 : 0.26) : light ? 0.07 : 0.06;
-  const surface = (l: number, satMul = 1) => hsl({ h: hue, s: sat * satMul, l });
-  // whichever ink gives the higher WCAG contrast on the filled accent
-  const L = luminance(accent);
-  const accentInk = (L + 0.05) / 0.06 > 1.05 / (L + 0.05) ? "hsl(0 0% 7%)" : "hsl(0 0% 98%)";
   const sem = light ? SEMANTIC.light : SEMANTIC.dark;
   const tier = light ? TIERS.light : TIERS.dark;
-  const neutralTeam = light ? "hsl(222 10% 26%)" : "hsl(222 8% 22%)";
+  const neutralTeam = light ? "#3d4039" : "#30332f";
+  // The ground and the accent are the site's own, the same for every team.
+  // Team colours only reach the header band, the washes and the corner glow.
   const ground = light
     ? {
-        "--bg": surface(0.955, 0.5),
-        "--panel": surface(0.99, 0.4),
-        "--panel-2": surface(0.94, 0.5),
-        "--line": surface(0.87, 0.45),
-        "--line-2": surface(0.78, 0.4),
-        "--ink": surface(0.11, 0.45),
-        "--dim": surface(0.34, 0.3),
-        "--mute": surface(0.48, 0.25),
-        // broadcast graphics (header band, heroes) stay dark on a light page
-        "--hero-base": surface(0.12, 1.1),
-        "--band-end": surface(0.1, 1.1),
-        "--glow": plain ? "0%" : "12%",
+        "--bg": "#f3f4f0",
+        "--panel": "#ffffff",
+        "--panel-2": "#eceee8",
+        "--line": "#d9dcd4",
+        "--line-2": "#b9bdb3",
+        "--ink": "#0e120b",
+        "--dim": "#454940",
+        "--mute": "#6c7167",
+        // header band and heroes stay dark on a light page
+        "--hero-base": "#10130f",
+        "--band-end": "#000000",
+        "--glow": plain ? "0%" : "9%",
         "--wash": "30%",
       }
     : {
-        "--bg": surface(0.055),
-        "--panel": surface(0.085),
-        "--panel-2": surface(0.115),
-        "--line": surface(0.16, 0.8),
-        "--line-2": surface(0.23, 0.7),
-        "--ink": surface(0.95, 0.4),
-        "--dim": surface(0.7, 0.45),
-        "--mute": surface(0.52, 0.4),
-        "--hero-base": surface(0.085),
-        "--band-end": surface(0.055),
-        "--glow": plain ? "8%" : "20%",
-        "--wash": "55%",
+        "--bg": "#000000",
+        "--panel": "#070807",
+        "--panel-2": "#101210",
+        "--line": "#222422",
+        "--line-2": "#3b3e3a",
+        "--ink": "#ffffff",
+        "--dim": "#b9bdb6",
+        "--mute": "#8a8d88",
+        "--hero-base": "#070807",
+        "--band-end": "#000000",
+        "--glow": plain ? "0%" : "13%",
+        "--wash": "46%",
       };
   return {
     ...ground,
-    "--accent": hsl(accent),
-    "--accent-ink": accentInk,
+    "--accent": light ? VOLT_ON_LIGHT : VOLT,
+    "--accent-ink": light ? "#ffffff" : VOLT_INK,
     "--team": plain ? neutralTeam : colors.primary,
-    "--team-2": plain ? "hsl(222 8% 40%)" : colors.secondary,
-    "--team-deep": plain ? "hsl(222 10% 12%)" : hsl({ h: p.h, s: p.s * 0.85, l: clamp(p.l * 0.55, 0.06, 0.22) }),
+    "--team-2": plain ? "#6a6e66" : colors.secondary,
+    "--team-deep": plain ? "#1b1d1a" : hsl({ h: p.h, s: p.s * 0.85, l: clamp(p.l * 0.55, 0.06, 0.22) }),
     "--good": sem.good,
     "--warn": sem.warn,
     "--bad": sem.bad,

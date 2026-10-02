@@ -13,8 +13,8 @@ export function Card({ title, right, children, className, pad = true }: { title?
     <section className={clsx("panel", className)}>
       {(title || right) && (
         <header className="flex min-h-11 items-center justify-between gap-3 border-b border-line px-4 py-2">
-          <h2 className="flex min-w-0 items-center gap-2 font-display text-[17px] font-extrabold uppercase leading-none tracking-[0.04em] text-ink">
-            <span aria-hidden className="h-3.5 w-1 shrink-0 -skew-x-12 bg-accent" />
+          <h2 className="flex min-w-0 items-center gap-2.5 font-display text-[13px] font-bold uppercase leading-none tracking-[0.07em] text-ink">
+            <span aria-hidden className="h-[7px] w-[6px] shrink-0 bg-accent" />
             <span className="min-w-0 truncate">{title}</span>
           </h2>
           {right && <div className="flex shrink-0 items-center gap-2 text-xs text-dim [&_a]:font-semibold [&_a]:text-accent [&_a:hover]:underline">{right}</div>}
@@ -32,8 +32,6 @@ export function SectionTitle({ children, className }: { children: ReactNode; cla
 
 type Variant = "default" | "primary" | "ghost" | "danger" | "success";
 
-const SKEW = "relative isolate before:absolute before:inset-0 before:-z-10 before:-skew-x-[10deg] before:rounded-[3px] before:transition-[filter,background-color] before:duration-200";
-
 export function Button({ children, onClick, variant = "default", size = "md", disabled, className, title, type = "button" }: { children: ReactNode; onClick?: () => void; variant?: Variant; size?: "sm" | "md"; disabled?: boolean; className?: string; title?: string; type?: "button" | "submit" }) {
   return (
     <button
@@ -42,14 +40,14 @@ export function Button({ children, onClick, variant = "default", size = "md", di
       disabled={disabled}
       onClick={onClick}
       className={clsx(
-        "inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap font-semibold transition-transform duration-150 active:translate-y-px disabled:pointer-events-none disabled:opacity-40",
-        size === "sm" ? "h-7 px-3 text-xs" : "h-9 px-4 text-sm",
-        variant !== "ghost" && SKEW,
-        variant === "primary" && "font-bold text-accent-ink before:bg-accent before:shadow-[0_6px_18px_-8px_var(--accent)] hover:before:brightness-110",
-        variant === "default" && "text-ink before:bg-line before:shadow-[inset_0_1px_0_color-mix(in_oklab,var(--ink)_8%,transparent)] hover:before:bg-line-2",
-        variant === "ghost" && "rounded-[4px] text-dim hover:bg-ink/5 hover:text-ink",
-        variant === "danger" && "text-bad before:bg-bad/12 before:ring-1 before:ring-inset before:ring-bad/35 hover:before:bg-bad/20",
-        variant === "success" && "text-good before:bg-good/12 before:ring-1 before:ring-inset before:ring-good/35 hover:before:bg-good/20",
+        // the site's buttons (see .btn in globals.css): glow for the main action, liquid glass for the rest
+        "btn",
+        size === "sm" && "btn-sm",
+        variant === "primary" && "btn-glow",
+        variant === "default" && "btn-glass",
+        variant === "ghost" && "btn-ghost",
+        variant === "danger" && "btn-danger",
+        variant === "success" && "btn-success",
         className,
       )}
     >
@@ -61,8 +59,8 @@ export function Button({ children, onClick, variant = "default", size = "md", di
 /** Class string for segmented toggle buttons (mode pickers, filters). */
 export function seg(active: boolean) {
   return clsx(
-    "flex-1 rounded-[4px] border px-2 py-2 text-xs font-semibold transition-colors duration-150 active:translate-y-px",
-    active ? "border-accent bg-accent/15 text-ink shadow-[inset_0_-2px_0_var(--accent)]" : "border-line-2 text-dim hover:border-mute hover:text-ink",
+    "flex-1 rounded-[6px] border px-2 py-2 text-xs font-semibold transition-colors duration-150 active:translate-y-px",
+    active ? "border-accent bg-accent/10 text-accent" : "border-line text-dim hover:border-line-2 hover:text-ink",
   );
 }
 
@@ -70,7 +68,7 @@ export function Stat({ label, value, sub, tone }: { label: string; value: ReactN
   return (
     <div className="min-w-0">
       <div className="label">{label}</div>
-      <div className={clsx("font-display text-[28px] font-extrabold leading-none num", tone === "good" && "text-good", tone === "bad" && "text-bad", tone === "warn" && "text-warn")}>{value}</div>
+      <div className={clsx("mt-1 font-display text-[24px] font-extrabold leading-none num", tone === "good" && "text-good", tone === "bad" && "text-bad", tone === "warn" && "text-warn")}>{value}</div>
       {sub && <div className="mt-1 truncate text-xs text-dim">{sub}</div>}
     </div>
   );
@@ -88,12 +86,12 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
             aria-selected={on}
             onClick={() => onChange(t.id)}
             className={clsx(
-              "relative whitespace-nowrap px-3 pb-2.5 pt-2 font-display text-[15px] font-bold uppercase tracking-[0.05em] transition-colors duration-150",
+              "relative whitespace-nowrap px-3 pb-3 pt-2.5 font-num text-[11px] font-bold uppercase leading-none tracking-[0.11em] transition-colors duration-150",
               on ? "text-ink" : "text-mute hover:text-dim",
             )}
           >
             {t.label}
-            <span aria-hidden className={clsx("absolute inset-x-2 -bottom-px h-[3px] -skew-x-12 bg-accent transition-transform duration-300 ease-out", on ? "scale-x-100" : "scale-x-0")} />
+            <span aria-hidden className={clsx("absolute inset-x-2 -bottom-px h-[2px] bg-accent transition-transform duration-300 ease-out", on ? "scale-x-100" : "scale-x-0")} />
           </button>
         );
       })}
@@ -115,10 +113,10 @@ export function TeamBadge({ league, teamId, size = "md", withName }: { league: L
 
 /** Team abbreviation block in brand colours, with a secondary-colour baseline. */
 export function TeamMark({ id, colors, size = "md" }: { id: string; colors: { primary: string; secondary: string }; size?: "sm" | "md" | "lg" | "xl" }) {
-  const dim = size === "sm" ? "h-5 min-w-9 text-[11px] px-1" : size === "lg" ? "h-12 min-w-16 text-2xl px-2" : size === "xl" ? "h-16 min-w-20 text-3xl px-2.5" : "h-7 min-w-11 text-sm px-1.5";
+  const dim = size === "sm" ? "h-5 min-w-9 text-[10px] px-1" : size === "lg" ? "h-12 min-w-16 text-xl px-2" : size === "xl" ? "h-16 min-w-20 text-2xl px-2.5" : "h-7 min-w-11 text-xs px-1.5";
   return (
     <span
-      className={clsx("chamfer inline-flex shrink-0 items-center justify-center font-display font-black leading-none tracking-wide text-white transition-transform duration-200 group-hover:-translate-y-px", dim)}
+      className={clsx("chamfer inline-flex shrink-0 items-center justify-center font-num font-bold leading-none tracking-[0.06em] text-white transition-transform duration-200 group-hover:-translate-y-px", dim)}
       style={{ background: `linear-gradient(180deg, ${colors.primary} 0 82%, ${colors.secondary} 82% 100%)`, textShadow: "0 1px 2px rgba(0,0,0,.45)" }}
     >
       {id}
@@ -137,9 +135,9 @@ export function PlayerLink({ player, className }: { player: Player | undefined; 
 }
 
 export function Rating({ value, className, title, size = "sm" }: { value: number; className?: string; title?: string; size?: "sm" | "md" | "lg" | "xl" }) {
-  const dim = size === "sm" ? "h-6 min-w-[30px] text-[15px]" : size === "md" ? "h-9 min-w-11 text-2xl" : size === "lg" ? "h-14 min-w-16 text-[40px]" : "h-20 min-w-[88px] text-[58px]";
+  const dim = size === "sm" ? "h-6 min-w-[30px] text-[13px]" : size === "md" ? "h-9 min-w-11 text-xl" : size === "lg" ? "h-14 min-w-16 text-[34px]" : "h-20 min-w-[88px] text-[50px]";
   return (
-    <span title={title} className={clsx("chamfer inline-flex items-center justify-center px-1 pt-px font-display font-black leading-none num", dim, ratingBg(value), className)}>
+    <span title={title} className={clsx("chamfer inline-flex items-center justify-center px-1 font-display font-black leading-none num", dim, ratingBg(value), className)}>
       {value}
     </span>
   );
@@ -166,7 +164,7 @@ export function OvrPot({ p, size = "sm" }: { p: Player; size?: "sm" | "md" | "lg
 
 export function Bar({ value, max = 100, color = "bg-accent" }: { value: number; max?: number; color?: string }) {
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-[1px] bg-ink/[0.06]">
+    <div className="h-1.5 w-full overflow-hidden bg-ink/[0.08]">
       <div className={clsx("h-full origin-left transition-[width] duration-500 ease-out", color)} style={{ width: `${Math.max(0, Math.min(100, (value / max) * 100))}%` }} />
     </div>
   );
@@ -182,10 +180,11 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   if (!open || typeof document === "undefined") return null;
   // portal to <body> so a parent with transform/filter/backdrop-filter can't trap or clip the overlay
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-bg/75 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={onClose} role="dialog" aria-modal="true">
-      <div className={clsx("panel anim-rise max-h-[92dvh] w-full overflow-y-auto scroll-thin rounded-b-none sm:rounded-b-[6px]", wide ? "sm:max-w-4xl" : "sm:max-w-lg")} onClick={(e) => e.stopPropagation()}>
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel-2 px-4 py-3 shadow-[inset_0_3px_0_var(--accent)]">
-          <h3 className="font-display text-xl font-extrabold uppercase tracking-[0.04em]">{title}</h3>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={onClose} role="dialog" aria-modal="true">
+      <div className={clsx("panel anim-rise max-h-[92dvh] w-full overflow-y-auto scroll-thin", wide ? "sm:max-w-4xl" : "sm:max-w-lg")} onClick={(e) => e.stopPropagation()}>
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-4 py-3">
+          <span aria-hidden className="absolute left-0 top-0 h-[2px] w-[54px] bg-accent" />
+          <h3 className="font-display text-[15px] font-extrabold uppercase tracking-[0.06em]">{title}</h3>
           <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-[4px] text-dim transition-colors hover:bg-ink/5 hover:text-ink" aria-label="Close">
             <X size={18} weight="bold" />
           </button>
@@ -215,13 +214,13 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   );
 }
 
-export const inputCls = "w-full rounded-[4px] border border-line-2 bg-bg/70 px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-mute hover:border-mute focus:border-accent focus:ring-2 focus:ring-accent/25";
+export const inputCls = "w-full rounded-[6px] border border-line bg-ink/[0.035] px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-mute hover:border-line-2 focus:border-accent focus:ring-1 focus:ring-accent";
 
 export function PageHeader({ title, sub, right }: { title: ReactNode; sub?: ReactNode; right?: ReactNode }) {
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
       <div className="min-w-0">
-        <h1 className="font-display text-[38px] font-black uppercase leading-[0.92] tracking-[0.01em] sm:text-5xl">{title}</h1>
+        <h1 className="font-display text-[26px] font-black uppercase leading-none tracking-[0.02em] sm:text-[34px]">{title}</h1>
         {sub && <div className="mt-2 max-w-[75ch] text-sm text-dim">{sub}</div>}
       </div>
       {right && <div className="flex flex-wrap items-center gap-2">{right}</div>}
@@ -237,30 +236,30 @@ export function PlayerCard({ league, player, stats, href = true, className, styl
     <>
       <div className="card-wash relative h-24 overflow-hidden" style={{ ["--tc-team" as string]: colors.primary }}>
         <div className="stripes absolute inset-0" />
-        <span aria-hidden className="absolute -bottom-6 right-1 font-display text-[112px] font-black leading-none text-white/12">{player.jersey ?? ""}</span>
+        <span aria-hidden className="absolute -bottom-5 right-1 font-num text-[96px] font-bold leading-none text-white/10">{player.jersey ?? ""}</span>
         <div className="absolute left-3 top-3">
           <Rating value={player.ovr} size="md" />
         </div>
         <div className="absolute right-3 top-3 flex flex-col items-end gap-1">
-          <span className="rounded-[2px] bg-black/35 px-1.5 py-0.5 font-display text-sm font-extrabold leading-none text-white">{player.pos}</span>
+          <span className="rounded-[2px] bg-black/45 px-1.5 py-1 font-num text-[11px] font-bold leading-none tracking-[0.08em] text-white">{player.pos}</span>
           {player.injury && <span className="rounded-[2px] bg-bad px-1.5 py-0.5 text-[10px] font-bold leading-none text-bg">OUT {player.injury.daysOut}D</span>}
         </div>
         <span aria-hidden className="absolute inset-x-0 bottom-0 h-1" style={{ background: colors.secondary }} />
       </div>
       <div className="px-3 pb-3 pt-2.5">
         <div className="truncate text-xs text-dim">{player.firstName}</div>
-        <div className="truncate font-display text-2xl font-black uppercase leading-[0.95] tracking-[0.01em] group-hover:text-accent">{player.lastName}</div>
+        <div className="truncate font-display text-[17px] font-black uppercase leading-tight tracking-[0.02em] group-hover:text-accent">{player.lastName}</div>
         <div className="mt-1 flex items-center gap-1.5 text-[11px] text-mute">
           <span>POT</span>
-          <span className={clsx("font-display text-sm font-extrabold", player.pot >= 80 ? "text-gold" : "text-dim")}>{player.pot}</span>
+          <span className={clsx("font-num text-[13px] font-bold", player.pot >= 80 ? "text-gold" : "text-dim")}>{player.pot}</span>
           {player.jersey && <span className="ml-auto">#{player.jersey}</span>}
         </div>
         {stats && stats.length > 0 && (
-          <dl className="mt-2.5 grid grid-cols-3 gap-px overflow-hidden rounded-[3px] bg-line">
+          <dl className="mt-2.5 grid grid-cols-3 gap-px overflow-hidden border border-line bg-line">
             {stats.map((s) => (
-              <div key={s.label} className="bg-panel-2 px-1.5 py-1.5 text-center">
+              <div key={s.label} className="bg-panel px-1.5 py-1.5 text-center">
                 <dt className="label !text-[9.5px]">{s.label}</dt>
-                <dd className="font-display text-lg font-extrabold leading-tight num">{s.value}</dd>
+                <dd className="mt-0.5 font-display text-[15px] font-extrabold leading-tight num">{s.value}</dd>
               </div>
             ))}
           </dl>

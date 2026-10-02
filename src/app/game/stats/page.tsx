@@ -73,18 +73,18 @@ export default function StatsPage() {
                       <li key={r.p.id} className="side-wash relative flex items-center justify-between gap-2 overflow-hidden px-4 py-3" style={tc ? { ["--tc-team" as string]: tc } : undefined}>
                         <span className="flex min-w-0 flex-col gap-1">
                           <TeamBadge league={l} teamId={r.p.teamId} size="sm" />
-                          <PlayerLink player={r.p} className="truncate font-display text-lg font-extrabold uppercase leading-none" />
+                          <PlayerLink player={r.p} className="truncate font-display text-[15px] font-extrabold uppercase leading-none" />
                         </span>
-                        <span className="font-display text-4xl font-black leading-none num">{(c.fmt ?? f1)(c.get(r))}</span>
+                        <span className="font-display text-[28px] font-black leading-none num">{(c.fmt ?? f1)(c.get(r))}</span>
                       </li>
                     ) : (
                       <li key={r.p.id} className="flex items-center justify-between gap-2 border-t border-line/60 px-4 py-1.5">
                         <span className="flex min-w-0 items-center gap-2">
-                          <span className="w-3 font-display font-bold text-mute num">{i + 1}</span>
+                          <span className="w-3 font-num font-bold text-mute num">{i + 1}</span>
                           <TeamBadge league={l} teamId={r.p.teamId} size="sm" />
                           <PlayerLink player={r.p} className="truncate" />
                         </span>
-                        <span className="font-display text-lg font-bold num">{(c.fmt ?? f1)(c.get(r))}</span>
+                        <span className="font-num text-[15px] font-bold num">{(c.fmt ?? f1)(c.get(r))}</span>
                       </li>
                     );
                   })}

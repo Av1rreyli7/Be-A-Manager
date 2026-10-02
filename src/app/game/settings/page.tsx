@@ -42,7 +42,7 @@ export default function SettingsPage() {
       <PageHeader title="Settings & Saves" sub={`${l.name} · created ${fmtDate(l.created.slice(0, 10), { year: "numeric", month: "short", day: "numeric" })}`} right={<><Button onClick={() => saveNow()}>Save now</Button><Button onClick={exportJson}>Export JSON</Button><Link href="/gm"><Button variant="ghost">Main menu</Button></Link></>} />
       <Card title="Appearance">
         <AppearancePicker />
-        <p className="mt-3 text-xs text-mute">Saved in this browser. Colorful paints the app in your team&apos;s colours; Plain keeps it neutral.</p>
+        <p className="mt-3 text-xs text-mute">Saved in this browser. Colorful shows your team&apos;s colours on the header and cards. Plain leaves them out.</p>
       </Card>
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Gameplay">

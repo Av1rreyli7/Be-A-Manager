@@ -18,7 +18,7 @@ function Series({ l, s }: { l: League; s?: PlayoffSeries }) {
             {s.conference !== "Finals" && <span className="w-4 text-xs text-mute">{x.seed}</span>}
             <TeamBadge league={l} teamId={x.t} size="sm" withName />
           </span>
-          <span className={clsx("grid h-7 w-7 place-items-center font-display text-xl font-black num", s.winner === x.t ? "bg-accent text-accent-ink" : "text-ink")}>{x.w}</span>
+          <span className={clsx("grid h-7 w-7 place-items-center font-num text-[17px] font-black num", s.winner === x.t ? "bg-accent text-accent-ink" : "text-ink")}>{x.w}</span>
         </div>
       ))}
     </div>
@@ -77,9 +77,9 @@ export default function PlayoffsPage() {
               <div className="space-y-12">{[0, 1].map((i) => <Series key={i} l={l} s={find("West", 2, i)} />)}</div>
               <div><Series l={l} s={find("West", 3, 0)} /></div>
               <div>
-                <div className="mb-2 flex items-center justify-center gap-1.5 font-display text-base font-black uppercase tracking-[0.14em] text-accent"><Trophy size={16} weight="fill" /> NBA Finals</div>
+                <div className="mb-2 flex items-center justify-center gap-1.5 font-display text-[14px] font-black uppercase tracking-[0.14em] text-accent"><Trophy size={16} weight="fill" /> NBA Finals</div>
                 <Series l={l} s={finals} />
-                {finals?.winner && <div className="anim-rise mt-3 flex items-center justify-center gap-2 bg-gold px-2 py-1.5 font-display text-xl font-black uppercase text-bg [clip-path:polygon(6px_0,100%_0,calc(100%-6px)_100%,0_100%)]"><Trophy size={18} weight="fill" /> {l.teams[finals.winner].name}</div>}
+                {finals?.winner && <div className="anim-rise mt-3 flex items-center justify-center gap-2 bg-gold px-2 py-1.5 font-display text-[17px] font-black uppercase text-bg chamfer"><Trophy size={18} weight="fill" /> {l.teams[finals.winner].name}</div>}
               </div>
               <div><Series l={l} s={find("East", 3, 0)} /></div>
               <div className="space-y-12">{[0, 1].map((i) => <Series key={i} l={l} s={find("East", 2, i)} />)}</div>
@@ -102,7 +102,7 @@ export default function PlayoffsPage() {
               <div className="anim-rise mb-4 flex flex-wrap items-center gap-3 rounded-[4px] bg-gold/12 px-4 py-3 shadow-[inset_3px_0_0_var(--color-gold)]">
                 <Trophy size={28} weight="fill" className="text-gold" />
                 <div>
-                  <div className="font-display text-2xl font-black uppercase leading-none">{l.teams[l.cup.champion].fullName}</div>
+                  <div className="font-display text-[19px] font-black uppercase leading-none">{l.teams[l.cup.champion].fullName}</div>
                   <div className="text-sm text-dim">NBA Cup champions{l.cup.mvp ? `. MVP: ${l.players[l.cup.mvp]?.name ?? ""}` : ""}</div>
                 </div>
               </div>

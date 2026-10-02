@@ -1,11 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
 import Landing from "@/landing/Landing";
-
-// Self hosted latin subsets. The same files serve the Floodlights client at /floodlights/fonts/.
-const inter = localFont({ src: "../../floodlights/fonts/inter.woff2", weight: "100 900", style: "normal", display: "swap", variable: "--font-inter", fallback: ["system-ui", "-apple-system", "Segoe UI", "sans-serif"] });
-const chakra = localFont({ src: "../../floodlights/fonts/chakra-petch-700.woff2", weight: "700", style: "normal", display: "swap", variable: "--font-chakra", fallback: ["system-ui", "sans-serif"] });
-const instrument = localFont({ src: "../../floodlights/fonts/instrument-serif-italic.woff2", weight: "400", style: "italic", display: "swap", variable: "--font-instrument", fallback: ["Times New Roman", "Times", "serif"], preload: false });
+import { chakra, inter, instrument } from "@/lib/fonts";
 
 export const metadata: Metadata = {
   title: { absolute: "Be-A-Manager" },

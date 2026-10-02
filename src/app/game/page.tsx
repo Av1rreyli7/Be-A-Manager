@@ -52,7 +52,7 @@ export default function Dashboard() {
               <TeamMark id={team.id} colors={team.colors} size="xl" />
               <div className="min-w-0">
                 <div className="truncate text-sm font-semibold text-white/75">{team.city}</div>
-                <div className="truncate font-display text-[44px] font-black uppercase leading-[0.85] tracking-[0.005em] text-white sm:text-[64px]">{team.name}</div>
+                <div className="truncate font-display text-[32px] font-black uppercase leading-[0.85] tracking-[0.005em] text-white sm:text-[46px]">{team.name}</div>
               </div>
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -64,33 +64,33 @@ export default function Dashboard() {
             <dl className="mt-5 grid max-w-xl grid-cols-[1.3fr_1fr_1fr_1fr] divide-x divide-white/15 rounded-[4px] bg-black/30 py-3 backdrop-blur-sm">
               <div className="min-w-0 px-2.5 sm:px-4">
                 <dt className="label !text-white/60">Record</dt>
-                <dd className="whitespace-nowrap font-display text-[30px] font-black leading-none text-white num sm:text-5xl">{rec.w}-{rec.l}</dd>
+                <dd className="whitespace-nowrap font-display text-[24px] font-black leading-none text-white num sm:text-[36px]">{rec.w}-{rec.l}</dd>
               </div>
               <div className="min-w-0 px-2.5 sm:px-4">
                 <dt className="label !text-white/60">Seed</dt>
-                <dd className="whitespace-nowrap font-display text-[30px] font-black leading-none text-white num sm:text-5xl">{seed || "-"}</dd>
+                <dd className="whitespace-nowrap font-display text-[24px] font-black leading-none text-white num sm:text-[36px]">{seed || "-"}</dd>
               </div>
               <div className="min-w-0 px-2.5 sm:px-4">
                 <dt className="label !text-white/60">Streak</dt>
-                <dd className={clsx("whitespace-nowrap font-display text-[30px] font-black leading-none num sm:text-5xl", rec.streak > 0 ? "text-good" : rec.streak < 0 ? "text-bad" : "text-white")}>{rec.streak > 0 ? `W${rec.streak}` : rec.streak < 0 ? `L${-rec.streak}` : "-"}</dd>
+                <dd className={clsx("whitespace-nowrap font-display text-[24px] font-black leading-none num sm:text-[36px]", rec.streak > 0 ? "text-good" : rec.streak < 0 ? "text-bad" : "text-white")}>{rec.streak > 0 ? `W${rec.streak}` : rec.streak < 0 ? `L${-rec.streak}` : "-"}</dd>
               </div>
               <div className="min-w-0 px-2.5 sm:px-4">
                 <dt className="label !text-white/60">Net</dt>
-                <dd className="whitespace-nowrap font-display text-[30px] font-black leading-none text-white num sm:text-5xl">{gp ? f1((rec.pf - rec.pa) / gp) : "-"}</dd>
+                <dd className="whitespace-nowrap font-display text-[24px] font-black leading-none text-white num sm:text-[36px]">{gp ? f1((rec.pf - rec.pa) / gp) : "-"}</dd>
               </div>
             </dl>
           </div>
 
           <div className="rounded-[6px] border border-white/10 bg-bg/70 p-4 backdrop-blur-md">
             <div className="flex items-center justify-between">
-              <span className="font-display text-sm font-black uppercase tracking-[0.12em] text-accent">Up next</span>
+              <span className="font-num text-[12px] font-black uppercase tracking-[0.12em] text-accent">Up next</span>
               {next && <span className="text-xs font-semibold text-dim">{fmtDate(next.date, { weekday: "short", month: "short", day: "numeric" })}</span>}
             </div>
             {next && opp ? (
               <>
                 <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                   <MatchSide league={l} id={next.away} />
-                  <span className="font-display text-lg font-black text-mute">@</span>
+                  <span className="font-num text-[15px] font-black text-mute">@</span>
                   <MatchSide league={l} id={next.home} right />
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs text-dim">
@@ -101,7 +101,7 @@ export default function Dashboard() {
                   <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-3">
                     {gameDay?.id === next.id ? (
                       <>
-                        <Link href={`/game/play?g=${encodeURIComponent(next.id)}`} className="relative isolate inline-flex h-9 items-center gap-1.5 px-4 text-sm font-bold text-accent-ink transition-transform active:translate-y-px before:absolute before:inset-0 before:-z-10 before:-skew-x-[10deg] before:rounded-[3px] before:bg-accent hover:before:brightness-110">
+                        <Link href={`/game/play?g=${encodeURIComponent(next.id)}`} className="btn btn-glow">
                           <Basketball size={15} weight="fill" /> Play it
                         </Link>
                         {!guest && (
@@ -169,7 +169,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center justify-between px-2.5 py-2">
                   <span className="text-xs text-dim">{home ? "vs" : "@"} <span className="font-semibold text-ink">{home ? g.away : g.home}</span></span>
-                  <span className="font-display text-xl font-black leading-none num">{my}<span className="text-mute">-</span>{op}</span>
+                  <span className="font-num text-[17px] font-black leading-none num">{my}<span className="text-mute">-</span>{op}</span>
                 </div>
               </Link>
             );
@@ -193,7 +193,7 @@ export default function Dashboard() {
                 const r = l.standings[id] ?? emptyRecord(id);
                 return (
                   <tr key={id} className={clsx("border-b border-line/50 last:border-0", id === t && "bg-accent/12", i === 5 && "border-b-2 !border-b-line-2")}>
-                    <td className={clsx("py-1.5 pl-4 font-display text-[15px] font-bold num", i < 6 ? "text-ink" : "text-warn")} style={{ boxShadow: `inset 3px 0 0 ${i < 6 ? "var(--color-good)" : "var(--color-warn)"}` }}>
+                    <td className={clsx("py-1.5 pl-4 font-display text-[14px] font-bold num", i < 6 ? "text-ink" : "text-warn")} style={{ boxShadow: `inset 3px 0 0 ${i < 6 ? "var(--color-good)" : "var(--color-warn)"}` }}>
                       {i + 1}
                     </td>
                     <td className="max-w-0 py-1.5">
@@ -224,12 +224,12 @@ export default function Dashboard() {
                   <div className="label">{k}</div>
                   {best ? (
                     <>
-                      <div className="font-display text-4xl font-black leading-none num">{f1(best.pg[k])}</div>
+                      <div className="font-display text-[28px] font-black leading-none num">{f1(best.pg[k])}</div>
                       <PlayerLink player={best.p} className="mt-1 block truncate text-xs" />
                     </>
                   ) : (
                     <>
-                      <div className="font-display text-4xl font-black leading-none text-line-2">-</div>
+                      <div className="font-display text-[28px] font-black leading-none text-line-2">-</div>
                       <div className="mt-1 text-xs text-mute">No games yet</div>
                     </>
                   )}
@@ -265,12 +265,12 @@ export default function Dashboard() {
 function MatchSide({ league, id, right }: { league: ReturnType<typeof useLeague>; id: string; right?: boolean }) {
   const t = league.teams[id];
   const r = league.standings[id] ?? emptyRecord(id);
-  if (!t) return <span className="font-display text-xl">{id}</span>;
+  if (!t) return <span className="font-num text-[17px]">{id}</span>;
   return (
     <Link href={`/game/team/${id}`} className={clsx("group flex min-w-0 items-center gap-2.5", right && "flex-row-reverse text-right")}>
       <TeamMark id={t.id} colors={t.colors} size="lg" />
       <div className="min-w-0">
-        <div className="truncate font-display text-lg font-extrabold uppercase leading-none group-hover:text-accent">{t.name}</div>
+        <div className="truncate font-display text-[15px] font-extrabold uppercase leading-none group-hover:text-accent">{t.name}</div>
         <div className="mt-0.5 text-xs text-dim num">{r.w}-{r.l}</div>
       </div>
     </Link>
