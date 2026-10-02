@@ -224,32 +224,6 @@ html:has(.bam), html:has(.bam) body { background: #000000 !important; color: #ff
 }
 .bam-btn-ghost:hover { background: linear-gradient(135deg, rgba(210, 225, 255, 0.18), rgba(0, 0, 0, 0.35) 48%, rgba(180, 195, 220, 0.16)); border-color: rgba(220, 230, 255, 0.8); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 24px rgba(170, 200, 255, 0.28); }
 
-/* ---------- side slot: the other game, as a small framed preview you can pick ---------- */
-.bam-side {
-  position: absolute; right: calc(44 * var(--t)); bottom: calc(118 * var(--t) + var(--extra) * 0.22); width: calc(252 * var(--t));
-  display: block; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer;
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.bam-side:hover { transform: scale(1.035); }
-.bam-side:active { transform: scale(0.99); }
-.bam-mock { display: block; position: relative; overflow: hidden; border-radius: 9px 9px 0 0; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 18px 44px rgba(0, 0, 0, 0.6); }
-.bam-mock-bar { display: flex; align-items: center; gap: calc(8 * var(--t)); height: calc(22 * var(--t)); padding: 0 calc(9 * var(--t)); background: linear-gradient(180deg, rgba(38, 40, 36, 0.86), rgba(22, 24, 20, 0.92)); }
-.bam-mock-dots { display: flex; gap: calc(3 * var(--t)); }
-.bam-mock-dots i { width: calc(5 * var(--t)); height: calc(5 * var(--t)); border-radius: 50%; background: #ee5c62; }
-.bam-mock-dots i:nth-child(2) { background: #f6b719; }
-.bam-mock-dots i:nth-child(3) { background: #12c02f; }
-.bam-mock-url { position: relative; flex: 1; height: calc(13 * var(--t)); border-radius: 4px; background: rgba(8, 9, 7, 0.93); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.045); overflow: hidden; }
-.bam-mock-url span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--f-ui); font-size: calc(7.5 * var(--t)); letter-spacing: 0.01em; color: rgba(255, 255, 255, 0.66); opacity: 0; transition: opacity 0.35s ease; }
-.bam-mock-url span.is-on { opacity: 1; }
-.bam-mock-page { display: block; position: relative; aspect-ratio: 16 / 10; background: linear-gradient(155deg, #1b211c, #0a0d0b 60%, #14180f); }
-.bam-mock-page img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; opacity: 0; transition: opacity 0.35s ease; }
-.bam-mock-page img.is-on { opacity: 1; }
-.bam-mock-page img.broken, .bam-mock-page img:not([src]) { visibility: hidden; }
-.bam-side-cap { display: flex; align-items: center; justify-content: space-between; height: calc(34 * var(--t)); padding: 0 calc(11 * var(--t)); background: rgba(255, 255, 255, 0.045); -webkit-backdrop-filter: blur(calc(12 * var(--t))); backdrop-filter: blur(calc(12 * var(--t))); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1); clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9 * var(--t)), calc(100% - 9 * var(--t)) 100%, 0 100%); color: rgba(232, 238, 250, 0.5); letter-spacing: calc(1.2 * var(--t)); font-size: calc(9 * var(--t)); }
-.bam-side-names { display: grid; justify-items: end; color: #ffffff; font-size: calc(10 * var(--t)); }
-.bam-side-name { grid-area: 1 / 1; opacity: 0; transition: opacity 0.35s ease; }
-.bam-side-name.is-on { opacity: 1; }
-
 /* ---------- stat row (Vesper) ---------- */
 .bam-stats { position: absolute; left: 0; right: 0; bottom: calc(47 * var(--t)); height: calc(46 * var(--t)); padding: 0 calc(64 * var(--t)); display: flex; align-items: center; justify-content: space-between; gap: calc(24 * var(--t)); color: #d8d8d8; pointer-events: none; }
 .bam-stat { display: inline-flex; align-items: center; gap: calc(11 * var(--t)); font-size: calc(13 * var(--t)); letter-spacing: -0.015em; white-space: nowrap; }
@@ -284,7 +258,7 @@ html:has(.bam), html:has(.bam) body { background: #000000 !important; color: #ff
    MASK   logo, headline and game name rise out of an overflow mask
    DECODE every label resolves with the scramble effect (JS)
    SETTLE copy, pills and controls arrive on a short lift
-   The keyframes animate the individual translate / scale / clip-path
+   The keyframes animate the individual translate / scale
    properties, never transform, so they compose with the transforms that
    position elements and with hover states instead of colliding.
    .appear rests at opacity 1, so nothing is ever stranded invisible:
@@ -300,7 +274,6 @@ html:has(.bam), html:has(.bam) body { background: #000000 !important; color: #ff
 .bam .appear--btn { animation-name: bam-btn; }
 .bam .appear--side { animation-name: bam-side; }
 .bam .appear--stat { animation-name: bam-stat; }
-.bam .appear--wipe { animation-name: bam-wipe; animation-duration: 0.9s; }
 .bam .appear.is-in { animation: none; }
 
 @keyframes bam-drawx { from { scale: 0 1; } to { scale: 1 1; } }
@@ -313,17 +286,16 @@ html:has(.bam), html:has(.bam) body { background: #000000 !important; color: #ff
 @keyframes bam-btn { from { opacity: 0; translate: 0 18px; scale: 0.94; } to { opacity: 1; translate: 0 0; scale: 1; } }
 @keyframes bam-side { from { opacity: 0; translate: 22px 0; } to { opacity: 1; translate: 0 0; } }
 @keyframes bam-stat { from { opacity: 0; translate: 0 20px; } to { opacity: 1; translate: 0 0; } }
-@keyframes bam-wipe { from { opacity: 0; translate: 0 15px; clip-path: inset(100% 0 -30% 0); } to { opacity: 1; translate: 0 0; clip-path: inset(-30% 0 -30% 0); } }
 @keyframes bam-star { 0% { scale: 0.2; rotate: -50deg; } 65% { scale: 1.2; rotate: 8deg; } 100% { scale: 1; rotate: 0deg; } }
 @keyframes bam-em { from { opacity: 0.35; filter: blur(4px); } to { opacity: 1; filter: blur(0); } }
 @keyframes bam-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 @media (prefers-reduced-motion: reduce) {
   .bam *, .bam *::before, .bam *::after { transition: none !important; animation: none !important; }
-  .bam-side:hover, .bam-side:active, .bam-glowbtn:hover { transform: none; }
+  .bam-glowbtn:hover { transform: none; }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .bam-btn-ghost, .bam-side-cap { -webkit-backdrop-filter: none; backdrop-filter: none; background: #14161a; }
+  .bam-btn-ghost { -webkit-backdrop-filter: none; backdrop-filter: none; background: #14161a; }
 }
 
 /* ---------- tablet ----------
@@ -337,7 +309,6 @@ html:has(.bam), html:has(.bam) body { background: #000000 !important; color: #ff
   }
   .bam-h1 { font-size: min(calc(96 * var(--t)), 8.6vw); }
   .bam-feature { left: calc(132 * var(--t)); width: min(calc(440 * var(--t)), 48vw); }
-  .bam-side { right: calc(30 * var(--t)); width: min(calc(252 * var(--t)), 26vw); }
   .bam-stats { padding: 0 calc(34 * var(--t)); }
 }
 /* spare height (portrait tablets, tall windows): share it between the hero and the lower row */
@@ -361,8 +332,8 @@ html:has(.bam), html:has(.bam) body { background: #000000 !important; color: #ff
     position: relative; left: auto; top: auto; right: auto; bottom: auto;
     margin: 14px; min-height: calc(100dvh - 28px);
     display: grid; grid-template-columns: 1fr auto; align-content: start;
-    grid-template-areas: "logo nav" "hero hero" "rail rail" "feature feature" "side side" "stats stats" "dock dock";
-    grid-template-rows: auto auto auto auto auto 1fr auto;
+    grid-template-areas: "logo nav" "hero hero" "rail rail" "feature feature" "stats stats" "dock dock";
+    grid-template-rows: auto auto auto auto 1fr auto;
   }
   .bam .ln-t, .bam .ln-b { left: 18px; right: 18px; }
   .bam .ln-l, .bam .ln-r { top: 18px; bottom: 18px; }
@@ -380,7 +351,6 @@ html:has(.bam), html:has(.bam) body { background: #000000 !important; color: #ff
   .bam-feature { position: relative; left: auto; bottom: auto; width: auto; grid-area: feature; padding: 18px 22px 0; }
   .bam-title { font-size: min(calc(40 * var(--t)), 8vw); }
   .bam-blurb { max-width: 46ch; }
-  .bam-side { position: relative; right: auto; bottom: auto; grid-area: side; width: min(100% - 44px, 380px); margin: 30px 22px 0; }
   .bam-stats { position: relative; bottom: auto; grid-area: stats; height: auto; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 12px; padding: 34px 22px 22px; }
   .bam-stat { white-space: normal; }
   .bam-dock { position: relative; bottom: auto; grid-area: dock; height: auto; min-height: 47px; display: flex; flex-wrap: wrap; align-items: stretch; justify-content: space-between; }

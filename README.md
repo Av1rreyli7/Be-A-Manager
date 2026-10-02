@@ -4,7 +4,7 @@ Two manager games on one site, by Avir & Ayanssh.
 
 - **Floodlights** (`/floodlights/`): a multiplayer football manager. Create a room, share the 4 letter code, pick clubs and play seasons together. You can play your own matches in 3D or in the Classic top down view.
 - **Front Office** (`/front-office`): a basketball GM game with real rosters, contracts, trades, the draft and free agency, plus Hardwood Legends, a 3D game you play on the keyboard.
-- **The landing page** (`/`): pick a game. The featured game fills the stage, the other one waits at the side.
+- **The landing page** (`/`): pick a game. The featured game fills the stage, and the list on the left switches between the two.
 
 ## Run it on your computer
 

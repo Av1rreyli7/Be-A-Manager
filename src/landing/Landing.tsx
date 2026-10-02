@@ -3,8 +3,8 @@
  * Be-A-Manager landing page.
  * Frame, decode labels, masked headline and dock follow the Stratum reference.
  * Nav pills, glass buttons, badge and the appear / is-in entrance follow Vesper.
- * The glow buttons, the box-shadow starfield and the translate / scale / clip-path
- * entrance technique follow Vertex. The featured and side game switcher follows SpaceEdu:
+ * The glow buttons, the box-shadow starfield and the translate / scale
+ * entrance technique follow Vertex. The featured game switcher follows SpaceEdu:
  * both games are always in the DOM and switching only toggles classes.
  */
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
@@ -58,8 +58,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
   const [three, setThree] = useState<ThreeState>("off");
   const [still, setStill] = useState(false);
   const [stats, setStats] = useState<SiteStats | null>(null);
-  // preview images that failed to load show the plain gradient instead of a broken image
-  const [broken, setBroken] = useState<GameId[]>([]);
 
   // pointer parallax: motion values, never React state, so moving the mouse renders nothing
   const tx = useMotionValue(0);
@@ -99,7 +97,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
       // the labels of the new game decode as its copy rises back in
       d.decodeIn(root.querySelector(`.bam-rail [data-game="${next}"]`), 0);
       d.decodeIn(root.querySelector(`.bam-variant[data-game="${next}"]`), 480);
-      d.decodeIn(root.querySelector(".bam-side-cap"), 480);
     },
     [warm],
   );
@@ -120,12 +117,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
       el.addEventListener("animationend", done);
       offs.push(() => el.removeEventListener("animationend", done));
     }
-    // a preview image that failed before hydration never fires onError here, so check once
-    const dead: GameId[] = [];
-    root.querySelectorAll<HTMLImageElement>(".bam-mock-page img").forEach((img) => {
-      if (img.getAttribute("src") && img.complete && img.naturalWidth === 0) dead.push(img.dataset.game as GameId);
-    });
-    const deadT = dead.length ? setTimeout(() => setBroken(dead), 0) : undefined;
     let r2 = 0;
     const r1 = requestAnimationFrame(() => {
       r2 = requestAnimationFrame(() => {
@@ -142,7 +133,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
       cancelAnimationFrame(r1);
       cancelAnimationFrame(r2);
       clearTimeout(t);
-      clearTimeout(deadT);
       offs.forEach((f) => f());
     };
   }, []);
@@ -274,7 +264,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
   // the scene could not hold a steady frame rate: fall back to the still backdrop
   const onSlow = useCallback(() => setThree("off"), []);
 
-  const side = other(featured);
   const clubs = stats?.clubs ?? 320;
   const seasons = stats?.seasons ?? 0;
 
@@ -420,64 +409,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
             );
           })}
         </section>
-
-        <button
-          type="button"
-          className="bam-side appear appear--wipe"
-          style={{ "--d": "1s" } as React.CSSProperties}
-          aria-label={`Show ${GAMES[side].name}`}
-          data-side={side}
-          onClick={() => show(side)}
-          onPointerEnter={() => warm(side)}
-          onFocus={() => warm(side)}
-        >
-          <span className="bam-mock">
-            <span className="bam-mock-bar" aria-hidden="true">
-              <span className="bam-mock-dots">
-                <i />
-                <i />
-                <i />
-              </span>
-              <span className="bam-mock-url">
-                {ORDER.map((id) => (
-                  <span key={id} className={clsx(side === id && "is-on")}>
-                    be-a-manager{GAMES[id].href.replace(/\/$/, "")}
-                  </span>
-                ))}
-              </span>
-            </span>
-            <span className="bam-mock-page">
-              {/* both previews are siblings; switching toggles a class and never touches src once set */}
-              {ORDER.map((id) => (
-                // eslint-disable-next-line @next/next/no-img-element -- two tiny local screenshots, and the src must be set once and never swapped
-                <img
-                  key={id}
-                  className={clsx(side === id && "is-on", broken.includes(id) && "broken")}
-                  data-game={id}
-                  alt={side === id && !broken.includes(id) ? GAMES[id].previewAlt : ""}
-                  src={id === "frontoffice" || warmed.includes("frontoffice") ? GAMES[id].preview : undefined}
-                  decoding="async"
-                  draggable={false}
-                  onError={() => setBroken((b) => (b.includes(id) ? b : [...b, id]))}
-                />
-              ))}
-            </span>
-          </span>
-          <span className="bam-side-cap lbl">
-            <span className="t" data-at="1100">
-              ALSO HERE
-            </span>
-            <span className="bam-side-names">
-              {ORDER.map((id) => (
-                <span key={id} className={clsx("bam-side-name", side === id && "is-on")} data-game={id}>
-                  <span className="t" data-at={id === "frontoffice" ? 1160 : undefined}>
-                    {GAMES[id].name.toUpperCase()}
-                  </span>
-                </span>
-              ))}
-            </span>
-          </span>
-        </button>
 
         <footer className="bam-stats">
           <div className="bam-stat appear appear--stat" style={{ "--d": "1.12s" } as React.CSSProperties}>

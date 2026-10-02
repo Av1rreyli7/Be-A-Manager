@@ -58,10 +58,7 @@ async function main() {
   ok("both game variants are in the first HTML", (r.text.match(/bam-variant/g) || []).length >= 2 && r.text.includes("BASKETBALL GM") && r.text.includes("FOOTBALL MANAGER"), null);
   ok("no em or en dashes in the landing HTML", !r.text.includes(String.fromCharCode(8212)) && !r.text.includes(String.fromCharCode(8211)), null);
   ok("three.js is not in the first HTML", !r.text.includes("WebGLRenderer"), null);
-  for (const img of ["/landing/preview-floodlights.webp", "/landing/preview-frontoffice.webp"]) {
-    const g = await get(img);
-    ok("preview image " + img, g.status === 200 && g.type.includes("image/webp"), [g.status, g.type]);
-  }
+  ok("the landing has no side preview card", !r.text.includes("bam-side-cap") && !r.text.includes("bam-mock") && !r.text.includes("ALSO HERE"), null);
 
   // ---- Floodlights (Express) ----
   r = await get("/floodlights");

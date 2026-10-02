@@ -40,3 +40,5 @@ All phases are done. Nothing is left to resume.
   test only: a loan request can go to the second manager's club, so the Host now only answers one sent to
   Arsenal; and a player who moves club mid season gets a new deal, which the "contracts did not tick down"
   check now skips. The game itself was not changed.
+- Later change: the side preview card on the landing (the browser mock with the ALSO HERE label) was removed,
+  with its two preview images in public/landing. The rail on the left switches the featured game.

@@ -11,8 +11,6 @@ export interface GameInfo {
   enter: string;
   /** label on the control that brings this game to the front */
   see: string;
-  preview: string;
-  previewAlt: string;
 }
 
 export const GAMES: Record<GameId, GameInfo> = {
@@ -24,8 +22,6 @@ export const GAMES: Record<GameId, GameInfo> = {
     href: "/floodlights/",
     enter: "ENTER FLOODLIGHTS",
     see: "SEE FLOODLIGHTS",
-    preview: "/landing/preview-floodlights.webp",
-    previewAlt: "The Floodlights lobby, where you create a game or join one with a code",
   },
   frontoffice: {
     id: "frontoffice",
@@ -35,8 +31,6 @@ export const GAMES: Record<GameId, GameInfo> = {
     href: "/front-office",
     enter: "ENTER FRONT OFFICE",
     see: "SEE FRONT OFFICE",
-    preview: "/landing/preview-frontoffice.webp",
-    previewAlt: "The Front Office game picker with Front Office and Hardwood Legends",
   },
 };
 

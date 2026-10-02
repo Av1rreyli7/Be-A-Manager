@@ -105,26 +105,31 @@ describe("landing page content", () => {
 });
 
 describe("featured game switcher", () => {
-  it("starts with Floodlights featured and Front Office in the side slot", () => {
+  it("starts with Floodlights featured", () => {
     expect(featured()).toBe("floodlights");
     expect(onVariant()).toHaveLength(1);
     expect(onVariant()[0].getAttribute("data-game")).toBe("floodlights");
-    expect($(".bam-side").getAttribute("aria-label")).toBe("Show Front Office");
-    expect($(".bam-side-name.is-on").textContent).toBe("FRONT OFFICE");
     expect($(".bam-rail li.on").textContent).toBe("FLOODLIGHTS");
     expect($(".bam-glow.is-on").classList.contains("is-floodlights")).toBe(true);
   });
 
   it("keeps both games in the DOM as siblings at all times", () => {
     expect($$(".bam-variant")).toHaveLength(2);
-    expect($$(".bam-mock-page img")).toHaveLength(2);
     expect($$(".bam-glow")).toHaveLength(2);
-    expect($$(".bam-side-name")).toHaveLength(2);
+    expect($$(".bam-rail button")).toHaveLength(2);
+  });
+
+  it("has no side preview card, the rail is the switcher", () => {
+    expect(host.querySelector(".bam-side")).toBeNull();
+    expect(host.querySelector(".bam-mock")).toBeNull();
+    expect(host.querySelector(".bam-side-cap")).toBeNull();
+    expect(host.querySelectorAll("img")).toHaveLength(0);
+    expect(host.textContent).not.toContain("ALSO HERE");
+    expect($$(".bam-rail button").map((b) => b.textContent)).toEqual(["FLOODLIGHTS", "FRONT OFFICE"]);
   });
 
   it("swaps the copy and the labels together when the featured game changes", () => {
     const before = host.querySelectorAll("*").length;
-    const sideSrc = $<HTMLImageElement>('.bam-mock-page img[data-game="frontoffice"]').getAttribute("src");
     click($('.bam-rail button[data-game="frontoffice"]'));
 
     expect(featured()).toBe("frontoffice");
@@ -140,16 +145,12 @@ describe("featured game switcher", () => {
     const off = $('.bam-variant[data-game="floodlights"]');
     expect(off.getAttribute("aria-hidden")).toBe("true");
     expect(off.hasAttribute("inert")).toBe(true);
-    // rail, side slot and backdrop follow
+    // rail and backdrop follow
     expect($(".bam-rail li.on").textContent).toBe("FRONT OFFICE");
     expect($('.bam-rail button[data-game="frontoffice"]').getAttribute("aria-pressed")).toBe("true");
-    expect($(".bam-side").getAttribute("aria-label")).toBe("Show Floodlights");
-    expect($(".bam-side-name.is-on").textContent).toBe("FLOODLIGHTS");
-    expect($(".bam-mock-page img.is-on").getAttribute("data-game")).toBe("floodlights");
     expect($(".bam-glow.is-on").classList.contains("is-frontoffice")).toBe(true);
-    // zero flash: only classes changed. Same elements, and a set src is never reassigned.
+    // zero flash: only classes changed, the elements are the same
     expect(host.querySelectorAll("*").length).toBe(before);
-    expect($<HTMLImageElement>('.bam-mock-page img[data-game="frontoffice"]').getAttribute("src")).toBe(sideSrc);
   });
 
   it("is fully reversible from every control", () => {
@@ -157,19 +158,16 @@ describe("featured game switcher", () => {
     expect(featured()).toBe("frontoffice");
     click($('.bam-variant.is-on [data-see="floodlights"]'));
     expect(featured()).toBe("floodlights");
-    click($(".bam-side"));
+    click($('.bam-rail button[data-game="frontoffice"]'));
     expect(featured()).toBe("frontoffice");
-    click($(".bam-side"));
+    click($('.bam-rail button[data-game="floodlights"]'));
     expect(featured()).toBe("floodlights");
     click($('.bam-rail button[data-game="floodlights"]'));
     expect(featured()).toBe("floodlights");
     expect($(".bam-rail li.on").textContent).toBe("FLOODLIGHTS");
-    expect($(".bam-side-name.is-on").textContent).toBe("FRONT OFFICE");
   });
 
   it("warms the other game on intent, before the click", () => {
-    const hidden = $<HTMLImageElement>('.bam-mock-page img[data-game="floodlights"]');
-    expect(hidden.hasAttribute("src")).toBe(false);
     expect(document.head.querySelector('link[data-bam-warm="frontoffice"]')).toBeNull();
     act(() => {
       $('.bam-rail button[data-game="frontoffice"]').dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
@@ -177,7 +175,6 @@ describe("featured game switcher", () => {
     const link = document.head.querySelector<HTMLLinkElement>('link[data-bam-warm="frontoffice"]');
     expect(link?.rel).toBe("prefetch");
     expect(link?.getAttribute("href")).toBe("/front-office");
-    expect(hidden.getAttribute("src")).toBe(GAMES.floodlights.preview);
     expect(featured()).toBe("floodlights");
   });
 });
