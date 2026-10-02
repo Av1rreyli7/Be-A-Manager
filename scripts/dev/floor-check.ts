@@ -1,0 +1,27 @@
+import teams from "../../data/teams.json";
+import players from "../../data/players.json";
+import contracts from "../../data/contracts.json";
+import picks from "../../data/draftPicks.json";
+import { createLeague } from "../../src/engine/league/init";
+import { advancePhase, simTo } from "../../src/engine/league/advance";
+import { capStatus } from "../../src/engine/cap/payroll";
+import { teamPlayers, contractOf } from "../../src/engine/league/helpers";
+const l = createLeague({ teams, players, contracts, picks } as never, { userTeams: [], name: "f", rngSeed: 1234 });
+while (l.phase !== "season-end") simTo(l, "month");
+for (let i = 0; i < 5; i++) advancePhase(l);
+const snap = (label: string) => {
+  const rows = Object.keys(l.teams).map((t) => ({ t, st: capStatus(l, t), n: teamPlayers(l, t).length })).sort((a, b) => a.st.salary - b.st.salary).slice(0, 4);
+  console.log(label, rows.map((r) => `${r.t} $${(r.st.salary / 1e6).toFixed(0)}M room ${(r.st.room / 1e6).toFixed(0)} n=${r.n} ${l.teams[r.t].strategy.mode}`).join(" | "));
+};
+snap("FA start");
+for (let d = 0; d < 20; d++) simTo(l, "day");
+snap("FA day 20");
+const low = Object.keys(l.teams).sort((a, b) => capStatus(l, a).salary - capStatus(l, b).salary)[0];
+console.log("offers by", low, l.freeAgency.offers.filter((o) => o.teamId === low).map((o) => `${l.players[o.playerId].name}(${l.players[o.playerId].ovr}) $${(o.salary / 1e6).toFixed(1)} ${o.status}`).join(", "));
+console.log("roster", teamPlayers(l, low).map((p) => `${p.name} ${p.ovr} $${((contractOf(l, p)?.years[0]?.salary ?? 0) / 1e6).toFixed(1)}`).join(", "));
+const fas = Object.values(l.players).filter((p) => p.status === "fa").sort((a, b) => b.ovr - a.ovr).slice(0, 8);
+console.log("best FAs", fas.map((p) => `${p.name} ${p.ovr} ask $${((p.demand?.salary ?? 0) / 1e6).toFixed(1)}`).join(", "));
+const luka = Object.values(l.players).find((p) => p.name === "Luka Doncic")!;
+console.log(JSON.stringify(contractOf(l, luka), null, 0));
+console.log(l.transactions.filter((t) => t.text.includes("Doncic")).map((t) => t.date + " " + t.text));
+console.log(l.news.filter((n) => n.players.includes(luka.id)).slice(0, 8).map((n) => n.date + " " + n.text));

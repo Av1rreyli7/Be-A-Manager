@@ -1,0 +1,8532 @@
+[
+ {
+  "id": "2027-1-ATL",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "ATL",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To SAN ;",
+   "Less favorable of MIL and NOP if either or both 5-30 (via NOP)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-ATL",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "ATL",
+  "owner": "DAL",
+  "protection": {
+   "kind": "range",
+   "text": "31-55 protected, otherwise to Mavericks"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "31-55 Own; 56-60 to DAL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-ATL",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "ATL",
+  "owner": "ATL",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of (i) ATL and (ii) less favorable of UTH and CLE then least favorable of all to CLE (via UTH swap for CLE; via ATL swap for CLE or UTH)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of (i) ATL and (ii) less favorable of UTH and CLE then least favorable of all to CLE (via UTH swap for CLE; via ATL swap for CLE or UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-ATL",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "ATL",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK (via GOS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-ATL",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "ATL",
+  "owner": "ATL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-ATL",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "ATL",
+  "owner": "ATL",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of ATL and MIA to CHA then other to OKC (via OKC) ;; CLE"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of ATL and MIA to CHA then other to OKC (via OKC) ;",
+   "CLE"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-ATL",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "ATL",
+  "owner": "ATL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-ATL",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "ATL",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To OKC ;",
+   "NYK (via POR)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-ATL",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "ATL",
+  "owner": "ATL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-ATL",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "ATL",
+  "owner": "ATL",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of ATL and HOU 31-55 [or ATL if HOU 56-60] to OKC then other to HOU (via ATL swap for HOU)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of ATL and HOU 31-55 [or ATL if HOU 56-60] to OKC then other to HOU (via ATL swap for HOU)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-ATL",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "ATL",
+  "owner": "ATL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-ATL",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "ATL",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To OKC (via LAL to ATL; via LAL to ATL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-ATL",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "ATL",
+  "owner": "ATL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-ATL",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "ATL",
+  "owner": "ATL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "SAC"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-BOS",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "BOS",
+  "owner": "BOS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-BOS",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "BOS",
+  "owner": "BOS",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of BOS and ORL to UTH then other to PHX (via BOS to ORL to BOS to UTH; via ORL to CHA to PHX)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of BOS and ORL to UTH then other to PHX (via BOS to ORL to BOS to UTH; via ORL to CHA to PHX)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-BOS",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "BOS",
+  "owner": "BOS",
+  "protection": {
+   "kind": "complex",
+   "text": "1 Own; 2-30 Own or SAN (via SAN swap for BOS) [BOS then has a complex swap right with PHL] ; LAC 17-30 or [by swap from BOS] more favorable of (i) less favorable of BOS and SAN and (ii) more favorable of PHL 1-8 and LAC 1-16 [or (ii) LAC 1-16 if PHL 9-30] then least favorable of all to PHL (via SAN swap for BOS; via BOS swap of BOS or SAN for PHL or LAC)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1 Own; 2-30 Own or SAN (via SAN swap for BOS) [BOS then has a complex swap right with PHL] ;",
+   "LAC 17-30 or [by swap from BOS] more favorable of (i) less favorable of BOS and SAN and (ii) more favorable of PHL 1-8 and LAC 1-16 [or (ii) LAC 1-16 if PHL 9-30] then least favorable of all to PHL (via SAN swap for BOS; via BOS swap of BOS or SAN for PHL or LAC)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-BOS",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "BOS",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "31-45 to SAN if BOS 1 in 2028 ; 46-60 to NYK (via ORL to PHX) ;",
+   "Most favorable of GOS, MIL and OKC (via GOS to POR to WAS to PHL; via MIL to BRK to HOU to OKC to PHL; via OKC to PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-BOS",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "BOS",
+  "owner": "BOS",
+  "protection": {
+   "kind": "complex",
+   "text": "Most and least favorable of BOS, POR and MIL to POR; second most favorable to WAS (via BOS to POR; via MIL to POR; via POR to WAS)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most and least favorable of BOS, POR and MIL to POR; second most favorable to WAS (via BOS to POR; via MIL to POR; via POR to WAS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-BOS",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "BOS",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To OKC"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-BOS",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "BOS",
+  "owner": "BOS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-BOS",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "BOS",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK (via HOU) ;",
+   "CHA 56-60;",
+   "Most favorable of PHX, POR and WAS (via PHX and POR to WAS to PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-BOS",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "BOS",
+  "owner": "BOS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "PHL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-BOS",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "BOS",
+  "owner": "BOS",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of BOS and CLE then other to UTH (via CLE to ATL to BOS) ; HOU 56-60"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of BOS and CLE then other to UTH (via CLE to ATL to BOS) ; HOU 56-60"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-BOS",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "BOS",
+  "owner": "BOS",
+  "protection": {
+   "kind": "none",
+   "text": "Frozen (through 2027-28)"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": true,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Frozen (through 2027-28)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-BOS",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "BOS",
+  "owner": "BOS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-BOS",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "BOS",
+  "owner": "BOS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-BOS",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "BOS",
+  "owner": "BOS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-BKN",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or HOU (via HOU swap for BRK) ; NYK"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or HOU (via HOU swap for BRK) ; NYK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-BKN",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of BRK and DAL to WAS then other to MIL (via DAL to BRK to DET to MIL; via DET to WAS) ; LAL if LAL conveys 1st round pick to UTH in 2027"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of BRK and DAL to WAS then other to MIL (via DAL to BRK to DET to MIL; via DET to WAS) ; LAL if LAL conveys 1st round pick to UTH in 2027"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-BKN",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "complex",
+   "text": "If (i) PHL 9-30 is third most favorable and (ii) NYK is most or second most favorable of BRK, PHL 9-30 , PHX and NYK, then most and third most favorable to BRK; or most / two most favorable to BRK in all other scenarios ; least favorable of BRK, PHX and NYK to NYK if NYK and / or if PHL 9-30 is less favorable than BRK and PHX; or second most favorable of BRK, PHX and NYK to NYK in all other scenarios ; more favorable of (i) WAS and (ii) least / less favorable of BRK, PHL 9-30 and PHX to WAS then least favorable of all to PHX [WAS can then swap with MIL] (via BRK swap of BRK or PHL for PHX; via BRK swap of BRK or PHX for NYK; via WAS swap for PHX, BRK or PHL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "If (i) PHL 9-30 is third most favorable and (ii) NYK is most or second most favorable of BRK, PHL 9-30 , PHX and NYK, then most and third most favorable to BRK; or most / two most favorable to BRK in all other scenarios ; least favorable of BRK, PHX and NYK to NYK if NYK and / or if PHL 9-30 is less favorable than BRK and PHX; or second most favorable of BRK, PHX and NYK to NYK in all other scenarios ; more favorable of (i) WAS and (ii) least / less favorable of BRK, PHL 9-30 and PHX to WAS then least favorable of all to PHX [WAS can then swap with MIL] (via BRK swap of BRK or PHL for PHX; via BRK swap of BRK or PHX for NYK; via WAS swap for PHX, BRK or PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-BKN",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; ATL (via GOS) ; MEM (via PHX) ; PHL if PHL 1-8 in 2028"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-BKN",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; Least favorable of DAL, PHX and HOU (via DAL and PHX to BRK; via DAL or PHX to HOU; via HOU swap for DAL or PHX) ; NYK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-BKN",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; DAL; GOS; MEM (via PHX)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-BKN",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-BKN",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; BOS (via HOU) ; DAL (via BOS to MEM) ; LAL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-BKN",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; NYK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-BKN",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; LAL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-BKN",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; DEN"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-BKN",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "DEN;",
+   "MIA;",
+   "TOR"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-BKN",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-BKN",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "BKN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-CHA",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; DAL 3-30; MIA 15-30"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-CHA",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "complex",
+   "text": "To OKC if SAN 1-16 in 2027 or to SAC if SAN 17-30 in 2027 (via NYK to ATL to SAN to SAC) ;; MEM (via LAC to HOU) ;; More favorable of POR and NOP (via POR)"
+  },
+  "swap": false,
+  "conditional": true,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To OKC if SAN 1-16 in 2027 or to SAC if SAN 17-30 in 2027 (via NYK to ATL to SAN to SAC) ;",
+   "MEM (via LAC to HOU) ;",
+   "More favorable of POR and NOP (via POR)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-CHA",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for MIN ; MIA if not already settled"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for MIN ; MIA if not already settled"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-CHA",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of CHA and LAC then other to DET [DET may convey to UTH] (via CHA to DAL) ;; HOU;; MIA if DAL does not convey 1st round pick to CHA in 2027 (via SAN to DAL) ;; ORL"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of CHA and LAC then other to DET [DET may convey to UTH] (via CHA to DAL) ;",
+   "HOU;",
+   "MIA if DAL does not convey 1st round pick to CHA in 2027 (via SAN to DAL) ;",
+   "ORL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-CHA",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "Least / less favorable of UTH, CLE and MIN 6-30 (via UTH to PHX) *",
+   "*CHA will also have a complex swap right with MIN and PHX will receive a least favorable pick"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-CHA",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "More favorable of ATL and MIA (via OKC) ;",
+   "DEN if DEN has conveyed a first potential 1st round pick to OKC by 2029 ;",
+   "MIN if MIN conveys 1st round pick to UTH in 2029"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-CHA",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own *",
+   "*CHA will have a complex swap right with MIN, receiving MIN, SAN or DAL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-CHA",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "CHA",
+  "owner": "BOS",
+  "protection": {
+   "kind": "range",
+   "text": "31-55 protected, otherwise to Celtics"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "31-55 Own; 56-60 to BOS ; More favorable of UTH and LAC (via UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-CHA",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-CHA",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; MIL; PHX"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-CHA",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-CHA",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; MIL; MIN"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-CHA",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "MIN;",
+   "PHX"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-CHA",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "CHA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "HOU;",
+   "MIN"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-CHI",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-CHI",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "CHI",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To OKC (via WAS to NOP to WAS to DAL) ; CLE (via ATL to MIN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-CHI",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-CHI",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of CHI, IND and PHX; less favorable of (i) CHI and (ii) more favorable of IND and PHX to IND (via PHX to IND; via CHI swap for IND or PHX)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of CHI, IND and PHX; less favorable of (i) CHI and (ii) more favorable of IND and PHX to IND (via PHX to IND; via CHI swap for IND or PHX)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-CHI",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-CHI",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "Least favorable of DET, MIL and NYK (via MIL to BRK to DET; via NYK to DET; via SAC to CHI)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-CHI",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-CHI",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for IND"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for IND"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-CHI",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-CHI",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "DEN (via PHX to CHA) ;",
+   "More favorable of MIN and GOS (via MIN swap for GOS) ;",
+   "NYK (via CHA)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-CHI",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-CHI",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "More favorable of PHX and HOU (via PHX to MIN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-CHI",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-CHI",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "CHI",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-CLE",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "CLE",
+  "owner": "CLE",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of CLE, MIN and UTH (cannot be 1-5) to MEM; second most favorable to UTH and least favorable to PHX (via UTH)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of CLE, MIN and UTH (cannot be 1-5) to MEM; second most favorable to UTH and least favorable to PHX (via UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-CLE",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "CLE",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHI (via ATL to MIN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-CLE",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "CLE",
+  "owner": "CLE",
+  "protection": {
+   "kind": "complex",
+   "text": "Least favorable of CLE, UTH and ATL; less favorable of (i) more favorable of CLE and UTH and (ii) LAL to LAL then most favorable of all to UTH; more favorable of (i) ATL and (ii) less favorable of CLE and UTH to ATL (via UTH swap for CLE; via UTH swap of UTH or CLE for LAL; via ATL swap for CLE or UTH)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Least favorable of CLE, UTH and ATL; less favorable of (i) more favorable of CLE and UTH and (ii) LAL to LAL then most favorable of all to UTH; more favorable of (i) ATL and (ii) less favorable of CLE and UTH to ATL (via UTH swap for CLE; via UTH swap of UTH or CLE for LAL; via ATL swap for CLE or UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-CLE",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "CLE",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To UTH"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-CLE",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "CLE",
+  "owner": "CLE",
+  "protection": {
+   "kind": "complex",
+   "text": "Most / two most favorable of CLE, UTH and MIN 6-30 to UTH; least / less favorable to CHA (via CLE and MIN to UTH; via UTH to PHX to CHA; via CHA swap of CHA, CLE or UTH for MIN) *; *CHA will also have a complex swap right with MIN and PHX will receive a least favorable pick"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most / two most favorable of CLE, UTH and MIN 6-30 to UTH; least / less favorable to CHA (via CLE and MIN to UTH; via UTH to PHX to CHA; via CHA swap of CHA, CLE or UTH for MIN) *",
+   "*CHA will also have a complex swap right with MIN and PHX will receive a least favorable pick"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-CLE",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "CLE",
+  "owner": "ATL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To ATL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-CLE",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "CLE",
+  "owner": "CLE",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-CLE",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "CLE",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To SAN"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-CLE",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "CLE",
+  "owner": "DEN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To DEN"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-CLE",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "CLE",
+  "owner": "CLE",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of CLE and BOS to UTH then other to BOS (via CLE to ATL to BOS)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of CLE and BOS to UTH then other to BOS (via CLE to ATL to BOS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-CLE",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "CLE",
+  "owner": "CLE",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-CLE",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "CLE",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To UTH"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-CLE",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "CLE",
+  "owner": "CLE",
+  "protection": {
+   "kind": "none",
+   "text": "Frozen (through 2028-29)"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": true,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Frozen (through 2028-29)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-CLE",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "CLE",
+  "owner": "CLE",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-DAL",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "DAL",
+  "owner": "CHA",
+  "protection": {
+   "kind": "top",
+   "keepTop": 2,
+   "text": "top-2 protected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1-2 Own; 3-30 to CHA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-DAL",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "DAL",
+  "owner": "DAL",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of DAL and BRK to WAS then other to MIL (via DET to WAS; via DAL to BRK to DET to MIL) ;; ATL 56-60"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of DAL and BRK to WAS then other to MIL (via DET to WAS; via DAL to BRK to DET to MIL) ;",
+   "ATL 56-60"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-DAL",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "DAL",
+  "owner": "DAL",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or OKC (via OKC swap for DAL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or OKC (via OKC swap for DAL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-DAL",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "DAL",
+  "owner": "LAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To LAC (via SAC to IND)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-DAL",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "DAL",
+  "owner": "DAL",
+  "protection": {
+   "kind": "complex",
+   "text": "Two most favorable of DAL, HOU and PHX to HOU then other to BRK (via DAL and PHX to BRK; via DAL or PHX to HOU; via HOU swap for DAL or PHX) ; LAL"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Two most favorable of DAL, HOU and PHX to HOU then other to BRK (via DAL and PHX to BRK; via DAL or PHX to HOU; via HOU swap for DAL or PHX) ; LAL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-DAL",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "DAL",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-DAL",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "DAL",
+  "owner": "DAL",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or SAN (via SAN swap for DAL) ; less favorable of (i) MIN 2-30 and (ii) more favorable of DAL and SAN [or MIN if MIN not conveyable] to MIN then most / more favorable of all to SAN [MIN may convey to CHA] (via SAN swap for DAL; via SAN swap of SAN or DAL for MIN)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or SAN (via SAN swap for DAL) ; less favorable of (i) MIN 2-30 and (ii) more favorable of DAL and SAN [or MIN if MIN not conveyable] to MIN then most / more favorable of all to SAN [MIN may convey to CHA] (via SAN swap for DAL; via SAN swap of SAN or DAL for MIN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-DAL",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "DAL",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK (via BOS to MEM)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-DAL",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "DAL",
+  "owner": "DAL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-DAL",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "DAL",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To DET (via PHL to DET to MEM)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-DAL",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "DAL",
+  "owner": "DAL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-DAL",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "DAL",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To NYK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-DAL",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "DAL",
+  "owner": "DAL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-DAL",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "DAL",
+  "owner": "WSH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To WAS"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-DEN",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "DEN",
+  "owner": "DEN",
+  "protection": {
+   "kind": "complex",
+   "keepTop": 5,
+   "text": "1-5 Own; two most / more favorable of DEN 6-30, OKC and LAC to OKC; more favorable of (i) least / less favorable of DEN 6-30, OKC and LAC and (ii) TOR to LAC then least favorable of all to TOR (via OKC swap of OKC or DEN for LAC; via LAC swap of DEN, OKC or LAC for TOR)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": 26,
+  "terms": [
+   "1-5 Own; two most / more favorable of DEN 6-30, OKC and LAC to OKC; more favorable of (i) least / less favorable of DEN 6-30, OKC and LAC and (ii) TOR to LAC then least favorable of all to TOR (via OKC swap of OKC or DEN for LAC; via LAC swap of DEN, OKC or LAC for TOR)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-DEN",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "DEN",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To UTH (via CLE to CHI to BOS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-DEN",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "DEN",
+  "owner": "OKC",
+  "protection": {
+   "kind": "top",
+   "keepTop": 5,
+   "text": "top-5 protected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1-5 Own; 6-30 to OKC if not already settled"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-DEN",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "DEN",
+  "owner": "WSH",
+  "protection": {
+   "kind": "range",
+   "text": "31-33 protected, otherwise to Wizards"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "31-33 Own; 34-60 to WAS (via SAN to SAC) ;",
+   "MIN (via SAN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-DEN",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "DEN",
+  "owner": "OKC",
+  "protection": {
+   "kind": "top",
+   "keepTop": 5,
+   "text": "top-5 protected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1-5 Own; 6-30 to OKC if not already settled ; or 1-5 Own; 6-30 to OKC if DEN conveys a first potential 1st round pick to OKC in 2027"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-DEN",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "DEN",
+  "owner": "CHA",
+  "protection": {
+   "kind": "complex",
+   "text": "To CHA if DEN has conveyed a first potential 1st round pick to OKC by 2029 or to OKC if DEN has not conveyed a first potential 1st round pick to OKC by 2029"
+  },
+  "swap": false,
+  "conditional": true,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA if DEN has conveyed a first potential 1st round pick to OKC by 2029 or to OKC if DEN has not conveyed a first potential 1st round pick to OKC by 2029"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-DEN",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "DEN",
+  "owner": "OKC",
+  "protection": {
+   "kind": "top",
+   "keepTop": 5,
+   "text": "top-5 protected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1-5 Own; 6-30 to OKC if not already settled and if DEN has conveyed a first potential 1st round pick to OKC by 2028"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-DEN",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "DEN",
+  "owner": "DEN",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of DEN, HOU and MIA to MEM; two least favorable to OKC (via DEN to CHA to OKC or DEN to OKC; via OKC to MEM)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of DEN, HOU and MIA to MEM; two least favorable to OKC (via DEN to CHA to OKC or DEN to OKC; via OKC to MEM)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-DEN",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "DEN",
+  "owner": "DEN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "CLE"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-DEN",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "DEN",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHI (via PHX to CHA) ;",
+   "SAC (via SAN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-DEN",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "DEN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-DEN",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "DEN",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK ;",
+   "SAC (via CLE)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-DEN",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "DEN",
+  "owner": "DEN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-DEN",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "DEN",
+  "owner": "DEN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-DET",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-DET",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-DET",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-DET",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "DET",
+  "owner": "PHI",
+  "protection": {
+   "kind": "range",
+   "text": "31-55 protected, otherwise to 76ers"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "31-55 Own * ; 56-60 to PHL ;",
+   "Less favorable of CHA and LAC (via CHA to DAL) *;",
+   "MIA if DAL conveys 1st round pick to CHA in 2027 (via SAN to DAL) *;",
+   "NYK*",
+   "*Least / less favorable of these to UTH"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-DET",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-DET",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "complex",
+   "text": "Two most favorable of DET, MIL and NYK then other to CHI (via MIL to BRK to DET; via NYK to DET; via DET to MEM; via MEM to DET; via SAC to CHI)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Two most favorable of DET, MIL and NYK then other to CHI (via MIL to BRK to DET; via NYK to DET; via DET to MEM; via MEM to DET; via SAC to CHI)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-DET",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-DET",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-DET",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-DET",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "DET",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To OKC ;",
+   "DAL (via PHL to DET to MEM) ;",
+   "Less favorable of GOS and MIN (via MIN swap for GOS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-DET",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-DET",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own (via MEM)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-DET",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-DET",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "DET",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own",
+   "--- DET heavily protected and unspecified 2nd round pick to LAC"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-GS",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "GS",
+  "owner": "GS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-GS",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "GS",
+  "owner": "GS",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of GOS and PHX to PHL then other to WAS [PHL may convey to WAS] (via WAS)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of GOS and PHX to PHL then other to WAS [PHL may convey to WAS] (via WAS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-GS",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "GS",
+  "owner": "GS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-GS",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "GS",
+  "owner": "GS",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of GOS, MIL and OKC to BOS then others to PHL (via GOS to POR to WAS to PHL; via MIL to BRK to HOU to OKC to PHL; via OKC to PHL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of GOS, MIL and OKC to BOS then others to PHL (via GOS to POR to WAS to PHL; via MIL to BRK to HOU to OKC to PHL; via OKC to PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-GS",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "GS",
+  "owner": "GS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-GS",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "GS",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-GS",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "GS",
+  "owner": "MEM",
+  "protection": {
+   "kind": "top",
+   "keepTop": 20,
+   "text": "top-20 protected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1-20 Own; 21-30 to MEM (via WAS to DAL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-GS",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "GS",
+  "owner": "GS",
+  "protection": {
+   "kind": "complex",
+   "text": "To MEM if GOS does not convey 1st round pick to MEM in 2030 (via WAS to DAL)"
+  },
+  "swap": false,
+  "conditional": true,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MEM if GOS does not convey 1st round pick to MEM in 2030 (via WAS to DAL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-GS",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "GS",
+  "owner": "GS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-GS",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "GS",
+  "owner": "GS",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of GOS and MIN to CHI then other to DET (via MIN swap for GOS)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of GOS and MIN to CHI then other to DET (via MIN swap for GOS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-GS",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "GS",
+  "owner": "GS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-GS",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "GS",
+  "owner": "MEM",
+  "protection": {
+   "kind": "range",
+   "text": "31-50 protected, otherwise to Grizzlies"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "31-50 Own; 51-60 to MEM"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-GS",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "GS",
+  "owner": "GS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-GS",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "GS",
+  "owner": "GS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-HOU",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "HOU",
+  "owner": "HOU",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for BRK ; PHX (via BRK)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for BRK ; PHX (via BRK)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-HOU",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "HOU",
+  "owner": "HOU",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of HOU, OKC, IND and MIA to PHL; second most favorable to NOP and third most favorable to NYK; more favorable of (i) SAN and (ii) least favorable of HOU, OKC, IND and MIA to SAN then least favorable of all to MIA [PHL may convey to WAS] (via HOU to DET to OKC to NYK to NOP; via IND and MIA to OKC to UTH to SAN to MIA; via OKC to PHL) ; Less favorable of POR and NOP if 56-60 (via POR to BOS)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of HOU, OKC, IND and MIA to PHL; second most favorable to NOP and third most favorable to NYK; more favorable of (i) SAN and (ii) least favorable of HOU, OKC, IND and MIA to SAN then least favorable of all to MIA [PHL may convey to WAS] (via HOU to DET to OKC to NYK to NOP; via IND and MIA to OKC to UTH to SAN to MIA; via OKC to PHL) ; Less favorable of POR and NOP if 56-60 (via POR to BOS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-HOU",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "HOU",
+  "owner": "HOU",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-HOU",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "HOU",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-HOU",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "HOU",
+  "owner": "HOU",
+  "protection": {
+   "kind": "complex",
+   "text": "Two most favorable of HOU, DAL and PHX then other to BRK (via DAL and PHX to BRK; via DAL or PHX to HOU; via HOU swap for DAL or PHX)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Two most favorable of HOU, DAL and PHX then other to BRK (via DAL and PHX to BRK; via DAL or PHX to HOU; via HOU swap for DAL or PHX)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-HOU",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "HOU",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MEM (via OKC to WAS to DAL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-HOU",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "HOU",
+  "owner": "HOU",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-HOU",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "HOU",
+  "owner": "HOU",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of HOU, DEN and MIA to MEM then others to OKC (via DEN to CHA to OKC or DEN to OKC; via OKC to MEM)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of HOU, DEN and MIA to MEM then others to OKC (via DEN to CHA to OKC or DEN to OKC; via OKC to MEM)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-HOU",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "HOU",
+  "owner": "HOU",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-HOU",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "HOU",
+  "owner": "HOU",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of HOU 31-55 and ATL then other [or ATL if HOU 56-60] to OKC (via ATL swap for HOU) ; 56-60 to BOS"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of HOU 31-55 and ATL then other [or ATL if HOU 56-60] to OKC (via ATL swap for HOU) ; 56-60 to BOS"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-HOU",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "HOU",
+  "owner": "HOU",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-HOU",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "HOU",
+  "owner": "HOU",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of HOU and PHX to CHI then other to PHX (via PHX to MIN)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of HOU and PHX to CHI then other to PHX (via PHX to MIN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-HOU",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "HOU",
+  "owner": "HOU",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-HOU",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "HOU",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-IND",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-IND",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of IND, OKC, HOU and MIA to PHL; second most favorable to NOP and third most favorable to NYK; more favorable of (i) SAN and (ii) least favorable of IND, OKC, HOU and MIA to SAN then least favorable of all to MIA [PHL may convey to WAS] (via IND and MIA to OKC to UTH to SAN to MIA; via HOU to DET to OKC to NYK to NOP; via OKC to PHL) ; UTH (via CLE)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of IND, OKC, HOU and MIA to PHL; second most favorable to NOP and third most favorable to NYK; more favorable of (i) SAN and (ii) least favorable of IND, OKC, HOU and MIA to SAN then least favorable of all to MIA [PHL may convey to WAS] (via IND and MIA to OKC to UTH to SAN to MIA; via HOU to DET to OKC to NYK to NOP; via OKC to PHL) ; UTH (via CLE)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-IND",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-IND",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of (i) more favorable of IND and PHX and (ii) CHI then most favorable of all to CHI; less favorable of IND and PHX to NYK (via PHX to IND; via CHI swap for IND or PHX)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of (i) more favorable of IND and PHX and (ii) CHI then most favorable of all to CHI; less favorable of IND and PHX to NYK (via PHX to IND; via CHI swap for IND or PHX)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-IND",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "complex",
+   "text": "Forfeited by LAC: To LAC"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": true,
+  "projectedPick": null,
+  "terms": [
+   "Forfeited by LAC: To LAC"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-IND",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of IND and WAS then other to POR (via IND to NYK)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of IND and WAS then other to POR (via IND to NYK)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-IND",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-IND",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or CHI (via CHI swap for IND)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or CHI (via CHI swap for IND)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-IND",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-IND",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "complex",
+   "text": "Least favorable of IND, MIA and MEM; more favorable of IND and MIA to WAS; more favorable of (i) MEM and (ii) less favorable of IND and MIA to MEM (via MIA swap for IND; via UTH to WAS; via MEM swap for IND or MIA)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Least favorable of IND, MIA and MEM; more favorable of IND and MIA to WAS; more favorable of (i) MEM and (ii) less favorable of IND and MIA to MEM (via MIA swap for IND; via UTH to WAS; via MEM swap for IND or MIA)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-IND",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-IND",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-IND",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-IND",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "IND",
+  "owner": "IND",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-LAC",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of (i) least / less favorable of LAC, DEN 6-30 and OKC and (ii) TOR then least favorable of all to TOR; two most / more favorable of LAC, DEN 6-30 and OKC to OKC (via OKC swap of OKC or DEN for LAC; via LAC swap of LAC, DEN or OKC for TOR)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of (i) least / less favorable of LAC, DEN 6-30 and OKC and (ii) TOR then least favorable of all to TOR; two most / more favorable of LAC, DEN 6-30 and OKC to OKC (via OKC swap of OKC or DEN for LAC; via LAC swap of LAC, DEN or OKC for TOR)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-LAC",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "LAC",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To UTH (via ATL to LAC)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-LAC",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "complex",
+   "text": "LAC 17-30 to BOS or [via swap from BOS] more favorable of (i) more favorable of LAC 1-16 and PHL 1-8 [or (i) LAC 1-16 if PHL 9-30] and (ii) less favorable of BOS and SAN to BOS then least favorable of all to PHL (via SAN swap for BOS; via BOS swap of BOS or SAN for LAC or PHL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "LAC 17-30 to BOS or [via swap from BOS] more favorable of (i) more favorable of LAC 1-16 and PHL 1-8 [or (i) LAC 1-16 if PHL 9-30] and (ii) less favorable of BOS and SAN to BOS then least favorable of all to PHL (via SAN swap for BOS; via BOS swap of BOS or SAN for LAC or PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-LAC",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of LAC and CHA to CHA then other to DET [DET may convey to UTH] (via CHA to DAL) ;; DAL (via SAC to IND)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of LAC and CHA to CHA then other to DET [DET may convey to UTH] (via CHA to DAL) ;",
+   "DAL (via SAC to IND)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-LAC",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "complex",
+   "keepTop": 3,
+   "text": "1-3 Own; 4-30 Own or PHL (via PHL swap for LAC) ; Forfeited by LAC: IND"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": true,
+  "projectedPick": null,
+  "terms": [
+   "1-3 Own; 4-30 Own or PHL (via PHL swap for LAC) ;",
+   "Forfeited by LAC: IND"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-LAC",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "LAC",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To SAN (via PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-LAC",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "complex",
+   "text": "Forfeited"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": true,
+  "projectedPick": null,
+  "terms": [
+   "Forfeited"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-LAC",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of LAC and UTH to CHA then other to LAC (via LAC to UTH) ;; TOR"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of LAC and UTH to CHA then other to LAC (via LAC to UTH) ;",
+   "TOR"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-LAC",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "complex",
+   "text": "Forfeited ; TOR"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": true,
+  "projectedPick": null,
+  "terms": [
+   "Forfeited ;",
+   "TOR"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-LAC",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-LAC",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "complex",
+   "text": "Forfeited"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": true,
+  "projectedPick": null,
+  "terms": [
+   "Forfeited"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-LAC",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-LAC",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "complex",
+   "text": "Forfeited ; TOR"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": true,
+  "projectedPick": null,
+  "terms": [
+   "Forfeited ;",
+   "TOR"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-LAC",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "LAC",
+  "owner": "LAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "TOR",
+   "--- DET heavily protected and unspecified 2nd round pick to LAC"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-LAL",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "LAL",
+  "owner": "MEM",
+  "protection": {
+   "kind": "top",
+   "keepTop": 4,
+   "text": "top-4 protected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": 25,
+  "terms": [
+   "1-4 Own; 5-30 to MEM (via UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-LAL",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "LAL",
+  "owner": "BKN",
+  "protection": {
+   "kind": "complex",
+   "text": "To BRK if LAL conveys 1st round pick to MEM in 2027 or to MEM if LAL does not convey 1st round pick to MEM in 2027 (via UTH to MEM)"
+  },
+  "swap": false,
+  "conditional": true,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK if LAL conveys 1st round pick to MEM in 2027 or to MEM if LAL does not convey 1st round pick to MEM in 2027 (via UTH to MEM)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-LAL",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "LAL",
+  "owner": "LAL",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of (i) LAL and (ii) more favorable of UTH and CLE then most favorable of all to UTH (via UTH swap for CLE; via UTH swap of UTH or CLE for LAL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of (i) LAL and (ii) more favorable of UTH and CLE then most favorable of all to UTH (via UTH swap for CLE; via UTH swap of UTH or CLE for LAL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-LAL",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "LAL",
+  "owner": "LAL",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of LAL and WAS to ORL then other to WAS (via WAS to LAL to ORL; via LAL to WAS)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of LAL and WAS to ORL then other to WAS (via WAS to LAL to ORL; via LAL to WAS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-LAL",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "LAL",
+  "owner": "DAL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To DAL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-LAL",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "LAL",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MEM (via WAS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-LAL",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "LAL",
+  "owner": "LAL",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or UTH (via UTH swap for LAL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or UTH (via UTH swap for LAL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-LAL",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "LAL",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-LAL",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "LAL",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To UTH"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-LAL",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "LAL",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK ;",
+   "WAS"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-LAL",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "LAL",
+  "owner": "LAL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-LAL",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "LAL",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To OKC (via ATL; via ATL) ;",
+   "WAS"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-LAL",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "LAL",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To UTH"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-LAL",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "LAL",
+  "owner": "LAL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-MEM",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "MEM",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "LAL 5-30;",
+   "Most favorable of UTH (cannot be 1-5), CLE and MIN (via UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-MEM",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "MEM",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA (via LAC to HOU) ;",
+   "LAL if LAL does not convey 1st round pick to MEM in 2027 (via UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-MEM",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "MEM",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-MEM",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "MEM",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK (via PHX)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-MEM",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "MEM",
+  "owner": "MEM",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for ORL 3-30"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for ORL 3-30"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-MEM",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "MEM",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK (via PHX) ;",
+   "HOU (via OKC to WAS to DAL);",
+   "LAL (via WAS) ;",
+   "ORL if ORL 1-2 in 2029 ;",
+   "POR (via PHL to IND)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-MEM",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "MEM",
+  "owner": "MEM",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of (i) MEM and (ii) less favorable of PHX and WAS then least favorable of all to PHX (via WAS swap for PHX; via MEM swap for PHX or WAS) ;; GOS 21-30 (via WAS to DAL) ;; ORL"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of (i) MEM and (ii) less favorable of PHX and WAS then least favorable of all to PHX (via WAS swap for PHX; via MEM swap for PHX or WAS) ;",
+   "GOS 21-30 (via WAS to DAL) ;",
+   "ORL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-MEM",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "MEM",
+  "owner": "MIN",
+  "protection": {
+   "kind": "range",
+   "text": "31-50 protected, otherwise to Timberwolves"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "31-50 Own; 51-60 to MIN ;",
+   "Most favorable of DEN, HOU and MIA (via DEN to CHA to OKC or DEN to OKC; via OKC to MEM) ;",
+   "GOS if GOS does not convey 1st round pick to MEM in 2030 (via WAS to DAL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-MEM",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "MEM",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "PHX (via UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-MEM",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "MEM",
+  "owner": "MEM",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of (i) MEM and (ii) less favorable of IND and MIA then least favorable of all to IND (via MIA swap for IND; via MEM swap for IND or MIA)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of (i) MEM and (ii) less favorable of IND and MIA then least favorable of all to IND (via MIA swap for IND; via MEM swap for IND or MIA)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-MEM",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "MEM",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-MEM",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "MEM",
+  "owner": "MEM",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of MEM, PHL and UTH; less favorable of (i) more favorable of MEM and PHL and (ii) UTH to WAS; less favorable of MEM and PHL to PHL (via MEM swap for PHL; via UTH to WAS; via MEM swap of MEM or PHL for UTH) ;; GOS 51-60"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of MEM, PHL and UTH; less favorable of (i) more favorable of MEM and PHL and (ii) UTH to WAS; less favorable of MEM and PHL to PHL (via MEM swap for PHL; via UTH to WAS; via MEM swap of MEM or PHL for UTH) ;",
+   "GOS 51-60"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-MEM",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "MEM",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-MEM",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "MEM",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "OKC ;",
+   "WAS",
+   "--- NOP unspecified 2nd round pick to MEM",
+   "NOP unspecified 2nd round pick swap to MEM"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-MIA",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "MIA",
+  "owner": "CHA",
+  "protection": {
+   "kind": "top",
+   "keepTop": 14,
+   "text": "top-14 protected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1-14 Own; 15-30 to CHA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-MIA",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "MIA",
+  "owner": "MIA",
+  "protection": {
+   "kind": "complex",
+   "text": "Least favorable of MIA, OKC, HOU, IND and SAN; most favorable of MIA, OKC, HOU and IND to PHL; second most favorable to NOP and third most favorable to NYK; more favorable of (i) SAN and (ii) least favorable of MIA, OKC, HOU and IND to SAN [PHL may convey to WAS] (via MIA and IND to OKC to UTH to SAN to MIA; via HOU to DET to OKC to NYK to NOP; via OKC to PHL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Least favorable of MIA, OKC, HOU, IND and SAN; most favorable of MIA, OKC, HOU and IND to PHL; second most favorable to NOP and third most favorable to NYK; more favorable of (i) SAN and (ii) least favorable of MIA, OKC, HOU and IND to SAN [PHL may convey to WAS] (via MIA and IND to OKC to UTH to SAN to MIA; via HOU to DET to OKC to NYK to NOP; via OKC to PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-MIA",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "MIA",
+  "owner": "MIA",
+  "protection": {
+   "kind": "complex",
+   "text": "To CHA if not already settled"
+  },
+  "swap": false,
+  "conditional": true,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA if not already settled"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-MIA",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "MIA",
+  "owner": "DET",
+  "protection": {
+   "kind": "complex",
+   "text": "To DET if DAL conveys 1st round pick to CHA in 2027 or to CHA if DAL does not convey 1st round pick to CHA in 2027 [DET may convey to UTH] (via SAN to DAL)"
+  },
+  "swap": false,
+  "conditional": true,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To DET if DAL conveys 1st round pick to CHA in 2027 or to CHA if DAL does not convey 1st round pick to CHA in 2027 [DET may convey to UTH] (via SAN to DAL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-MIA",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "MIA",
+  "owner": "MIA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-MIA",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "MIA",
+  "owner": "MIA",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of MIA and ATL to CHA then other to OKC (via OKC)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of MIA and ATL to CHA then other to OKC (via OKC)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-MIA",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "MIA",
+  "owner": "MIA",
+  "protection": {
+   "kind": "complex",
+   "text": "Least favorable of MIA, MIL and POR; more favorable of (i) MIA and (ii) less favorable MIL and POR to MIL (via POR swap for MIL; via MIL swap of MIL or POR for MIA)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Least favorable of MIA, MIL and POR; more favorable of (i) MIA and (ii) less favorable MIL and POR to MIL (via POR swap for MIL; via MIL swap of MIL or POR for MIA)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-MIA",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "MIA",
+  "owner": "MIA",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of MIA, DEN and HOU to MEM then others to OKC (via DEN to CHA to OKC or DEN to OKC; via OKC to MEM)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of MIA, DEN and HOU to MEM then others to OKC (via DEN to CHA to OKC or DEN to OKC; via OKC to MEM)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-MIA",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "MIA",
+  "owner": "MIL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MIL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-MIA",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "MIA",
+  "owner": "MIA",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of MIA and IND to WAS; more favorable of (i) MEM and (ii) less favorable of MIA and IND to MEM then least favorable of all to IND (via MIA swap for IND; via UTH to WAS; via MEM swap for IND or MIA)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of MIA and IND to WAS; more favorable of (i) MEM and (ii) less favorable of MIA and IND to MEM then least favorable of all to IND (via MIA swap for IND; via UTH to WAS; via MEM swap for IND or MIA)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-MIA",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "MIA",
+  "owner": "MIA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-MIA",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "MIA",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-MIA",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "MIA",
+  "owner": "MIL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MIL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-MIA",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "MIA",
+  "owner": "MIL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MIL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-MIL",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "MIL",
+  "owner": "MIL",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of MIL and NOP to NOP then other to ATL if 5-30 or MIL and NOP to NOP if both 1-4 (via NOP)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of MIL and NOP to NOP then other to ATL if 5-30 or MIL and NOP to NOP if both 1-4 (via NOP)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-MIL",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "MIL",
+  "owner": "MIL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own (via PHL to DET) ;",
+   "Less favorable of BRK and DAL (via DAL to BRK to DET to MIL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-MIL",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "MIL",
+  "owner": "MIL",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of (i) less favorable of MIL and POR and (ii) more favorable of (a) WAS and (b) least / less favorable of BRK, PHL 9-30 and PHX then more favorable of (i) and (ii) to WAS (via POR swap for MIL; via BRK swap of BRK or PHL for PHX; via WAS swap for PHX, BRK or PHL; via WAS swap of WAS, BRK, PHL or PHX for MIL or POR)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of (i) less favorable of MIL and POR and (ii) more favorable of (a) WAS and (b) least / less favorable of BRK, PHL 9-30 and PHX then more favorable of (i) and (ii) to WAS (via POR swap for MIL; via BRK swap of BRK or PHL for PHX; via WAS swap for PHX, BRK or PHL; via WAS swap of WAS, BRK, PHL or PHX for MIL or POR)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-MIL",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "MIL",
+  "owner": "MIL",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of MIL, GOS and OKC to BOS then others to PHL (via MIL to BRK to HOU to OKC to PHL; via GOS to POR to WAS to PHL; via OKC to PHL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of MIL, GOS and OKC to BOS then others to PHL (via MIL to BRK to HOU to OKC to PHL; via GOS to POR to WAS to PHL; via OKC to PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-MIL",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "MIL",
+  "owner": "MIL",
+  "protection": {
+   "kind": "complex",
+   "text": "Most and least favorable of MIL, BOS and POR to POR; second most favorable to WAS (via BOS to POR; via MIL to POR; via POR to WAS)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most and least favorable of MIL, BOS and POR to POR; second most favorable to WAS (via BOS to POR; via MIL to POR; via POR to WAS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-MIL",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "MIL",
+  "owner": "MIL",
+  "protection": {
+   "kind": "complex",
+   "text": "Two most favorable of MIL, DET and NYK to DET then other to CHI (via MIL to BRK to DET; via NYK to DET; via DET to MEM; via MEM to DET; via SAC to CHI)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Two most favorable of MIL, DET and NYK to DET then other to CHI (via MIL to BRK to DET; via NYK to DET; via DET to MEM; via MEM to DET; via SAC to CHI)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-MIL",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "MIL",
+  "owner": "MIL",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of (i) less favorable MIL and POR and (ii) MIA then least favorable of all to MIA; more favorable of MIL and POR to POR (via POR swap for MIL; via MIL swap of MIL or POR for MIA)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of (i) less favorable MIL and POR and (ii) MIA then least favorable of all to MIA; more favorable of MIL and POR to POR (via POR swap for MIL; via MIL swap of MIL or POR for MIA)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-MIL",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "MIL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To ORL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-MIL",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "MIL",
+  "owner": "MIL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; MIA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-MIL",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "MIL",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-MIL",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "MIL",
+  "owner": "MIL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-MIL",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "MIL",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-MIL",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "MIL",
+  "owner": "MIL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "MIA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-MIL",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "MIL",
+  "owner": "MIL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "MIA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-MIN",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "MIN",
+  "owner": "MIN",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of MIN, CLE and UTH (cannot be 1-5) to MEM; second most favorable to UTH and least favorable to PHX (via UTH)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of MIN, CLE and UTH (cannot be 1-5) to MEM; second most favorable to UTH and least favorable to PHX (via UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-MIN",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "MIN",
+  "owner": "POR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To POR (via HOU to OKC to NYK)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-MIN",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "MIN",
+  "owner": "MIN",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or CHA (via CHA swap for MIN)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or CHA (via CHA swap for MIN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-MIN",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "MIN",
+  "owner": "DEN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To DEN (via SAN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-MIN",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "MIN",
+  "owner": "MIN",
+  "protection": {
+   "kind": "complex",
+   "keepTop": 5,
+   "text": "1-5 Own; most / two most favorable of MIN 6-30, CLE and UTH to UTH then other to CHA (via CLE and MIN to UTH; via UTH to PHX to CHA; via CHA swap of CHA, CLE or UTH for MIN) * *CHA will also have a complex swap right with MIN and PHX will receive a least favorable pick"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1-5 Own; most / two most favorable of MIN 6-30, CLE and UTH to UTH then other to CHA (via CLE and MIN to UTH; via UTH to PHX to CHA; via CHA swap of CHA, CLE or UTH for MIN) *",
+   "*CHA will also have a complex swap right with MIN and PHX will receive a least favorable pick"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-MIN",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "MIN",
+  "owner": "CHA",
+  "protection": {
+   "kind": "complex",
+   "text": "To CHA if MIN conveys 1st round pick to UTH in 2029 or to UTH if MIN does not convey 1st round pick to UTH in 2029"
+  },
+  "swap": false,
+  "conditional": true,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA if MIN conveys 1st round pick to UTH in 2029 or to UTH if MIN does not convey 1st round pick to UTH in 2029"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-MIN",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "MIN",
+  "owner": "MIN",
+  "protection": {
+   "kind": "complex",
+   "text": "1 Own; less favorable of (i) MIN 2-30 and (ii) more favorable of SAN and DAL then most / more favorable of all to SAN [MIN may convey to CHA] (via SAN swap for DAL; via SAN swap of SAN or DAL for MIN) * *CHA will have a complex swap right with MIN, receiving MIN, SAN or DAL"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1 Own; less favorable of (i) MIN 2-30 and (ii) more favorable of SAN and DAL then most / more favorable of all to SAN [MIN may convey to CHA] (via SAN swap for DAL; via SAN swap of SAN or DAL for MIN) *",
+   "*CHA will have a complex swap right with MIN, receiving MIN, SAN or DAL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-MIN",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "MIN",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To OKC (via DET) ;",
+   "MEM 51-60"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-MIN",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "MIN",
+  "owner": "SAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To SAC (via SAN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-MIN",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "MIN",
+  "owner": "MIN",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of MIN and GOS to CHI then other to DET (via MIN swap for GOS)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of MIN and GOS to CHI then other to DET (via MIN swap for GOS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-MIN",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "MIN",
+  "owner": "MIN",
+  "protection": {
+   "kind": "none",
+   "text": "Frozen (through 2027-28)"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": true,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Frozen (through 2027-28)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-MIN",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "MIN",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-MIN",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "MIN",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-MIN",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "MIN",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-NO",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of NOP and MIL then other to ATL if 5-30 or NOP and MIL if both 1-4 (via NOP)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of NOP and MIL then other to ATL if 5-30 or NOP and MIL if both 1-4 (via NOP)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-NO",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of NOP and POR to CHA then other to POR [POR may convey to HOU] (via NOP) ;; Second most favorable of OKC, HOU, IND and MIA (via HOU to DET to OKC to NYK)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of NOP and POR to CHA then other to POR [POR may convey to HOU] (via NOP) ;",
+   "Second most favorable of OKC, HOU, IND and MIA (via HOU to DET to OKC to NYK)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-NO",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-NO",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "NO",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To SAN"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-NO",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-NO",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "NO",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To SAN"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-NO",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-NO",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or ORL (via ORL swap for NOP)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or ORL (via ORL swap for NOP)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-NO",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-NO",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of NOP and ORL to ORL then other to OKC (via ORL swap for NOP) ; TOR"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of NOP and ORL to ORL then other to OKC (via ORL swap for NOP) ; TOR"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-NO",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-NO",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-NO",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-NO",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "NO",
+  "owner": "NO",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own",
+   "--- NOP unspecified 2nd round pick to MEM",
+   "NOP unspecified 2nd round pick swap to MEM"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-NY",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "NY",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-NY",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "NY",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "Third most favorable of OKC, HOU, IND and MIA (via HOU to DET to OKC) ;",
+   "WAS (via HOU to OKC)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-NY",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "NY",
+  "owner": "NY",
+  "protection": {
+   "kind": "complex",
+   "text": "Least favorable of NYK, BRK and PHX if NYK and / or if PHL 9-30 is less favorable than BRK and PHX; or second most favorable of NYK, BRK and PHX in all other scenarios ; if (i) PHL 9-30 is third most favorable and (ii) NYK is most or second most favorable of NYK, BRK, PHL 9-30 and PHX, then most and third most favorable to BRK; or most / two most favorable to BRK in all other scenarios (via BRK swap of BRK or PHL for PHX; via BRK swap of BRK or PHX for NYK; via WAS swap for PHX, BRK or PHL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Least favorable of NYK, BRK and PHX if NYK and / or if PHL 9-30 is less favorable than BRK and PHX; or second most favorable of NYK, BRK and PHX in all other scenarios ; if (i) PHL 9-30 is third most favorable and (ii) NYK is most or second most favorable of NYK, BRK, PHL 9-30 and PHX, then most and third most favorable to BRK; or most / two most favorable to BRK in all other scenarios (via BRK swap of BRK or PHL for PHX; via BRK swap of BRK or PHX for NYK; via WAS swap for PHX, BRK or PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-NY",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "NY",
+  "owner": "DET",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To DET [DET may convey to UTH] ; BOS 46-60 (via ORL to PHX) ; Less favorable of IND and PHX (via IND)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-NY",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "NY",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-NY",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "NY",
+  "owner": "NY",
+  "protection": {
+   "kind": "complex",
+   "text": "Two most favorable of NYK, DET and MIL to DET then other to CHI (via MIL to BRK to DET; via NYK to DET; via DET to MEM; via MEM to DET; via SAC to CHI) ;; PHX;; SAC (via WAS to HOU)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Two most favorable of NYK, DET and MIL to DET then other to CHI (via MIL to BRK to DET; via NYK to DET; via DET to MEM; via MEM to DET; via SAC to CHI) ;",
+   "PHX;",
+   "SAC (via WAS to HOU)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-NY",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "NY",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-NY",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "NY",
+  "owner": "ATL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To ATL (via POR) ;",
+   "PHL (via DAL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-NY",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "NY",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-NY",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "NY",
+  "owner": "CHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHI (via CHA)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-NY",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "NY",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-NY",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "NY",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "DAL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-NY",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "NY",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-NY",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "NY",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "PHX"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-OKC",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "complex",
+   "text": "Two most / more favorable of OKC, DEN 6-30 and LAC; more favorable of (i) least / less favorable of OKC, DEN 6-30 and LAC and (ii) TOR to LAC then least favorable of all to TOR (via OKC swap of OKC or DEN for LAC; via LAC swap of DEN, OKC or LAC for TOR) ;; SAN 17-30 (via SAC)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Two most / more favorable of OKC, DEN 6-30 and LAC; more favorable of (i) least / less favorable of OKC, DEN 6-30 and LAC and (ii) TOR to LAC then least favorable of all to TOR (via OKC swap of OKC or DEN for LAC; via LAC swap of DEN, OKC or LAC for TOR) ;",
+   "SAN 17-30 (via SAC)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-OKC",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of OKC, HOU, IND and MIA to PHL; second most favorable to NOP and third most favorable to NYK; more favorable of (i) SAN and (ii) least favorable of OKC, HOU, IND and MIA to SAN then least favorable of all to MIA [PHL may convey to WAS] (via HOU to DET to OKC to NYK to NOP; via IND and MIA to OKC to UTH to SAN to MIA; via OKC to PHL) ;; CHA if SAN 1-16 in 2027 (via SAC) ;; CHI (via WAS to NOP to WAS to DAL) ;; SAC if SAN 1-16 in 2027"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of OKC, HOU, IND and MIA to PHL; second most favorable to NOP and third most favorable to NYK; more favorable of (i) SAN and (ii) least favorable of OKC, HOU, IND and MIA to SAN then least favorable of all to MIA [PHL may convey to WAS] (via HOU to DET to OKC to NYK to NOP; via IND and MIA to OKC to UTH to SAN to MIA; via OKC to PHL) ;",
+   "CHA if SAN 1-16 in 2027 (via SAC) ;",
+   "CHI (via WAS to NOP to WAS to DAL) ;",
+   "SAC if SAN 1-16 in 2027"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-OKC",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for DAL ; DEN 6-30 if not already settled"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for DAL ; DEN 6-30 if not already settled"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-OKC",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of OKC, GOS and MIL to BOS then others to PHL (via OKC to PHL; GOS to POR to WAS to PHL; via MIL to BRK to HOU to OKC to PHL) ; UTH"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of OKC, GOS and MIL to BOS then others to PHL (via OKC to PHL; GOS to POR to WAS to PHL; via MIL to BRK to HOU to OKC to PHL) ; UTH"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-OKC",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; DEN 6-30 if not already settled ; or DEN 6-30 if DEN conveys a first potential 1st round pick to OKC in 2027"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-OKC",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; Less favorable of ATL and MIA; BOS; DEN if DEN has not conveyed a first potential 1st round pick to OKC by 2029"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-OKC",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; DEN 6-30 if not already settled and if DEN has conveyed a first potential 1st round pick to OKC by 2028"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-OKC",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "ATL;",
+   "Two least favorable of DEN, HOU and MIA (via DEN to CHA or DEN to OKC) ;",
+   "MIN (via DET)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-OKC",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-OKC",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "More favorable of ATL and HOU 31-55 [or ATL if HOU 56-60] (via ATL swap for HOU) ;",
+   "DET;",
+   "Less favorable of NOP and ORL (via ORL swap for NOP)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-OKC",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-OKC",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "ATL (via LAL to ATL; via LAL to ATL) ;",
+   "LAL (via ATL; via ATL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-OKC",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "OKC",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-OKC",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "OKC",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MEM"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-ORL",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "ORL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-ORL",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "ORL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of ORL and BOS to UTH then other to PHX (via BOS to ORL to BOS to UTH; via ORL to CHA to PHX)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of ORL and BOS to UTH then other to PHX (via BOS to ORL to BOS to UTH; via ORL to CHA to PHX)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-ORL",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "ORL",
+  "owner": "POR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To POR (via MEM)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-ORL",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "ORL",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA ; More favorable of LAL and WAS (via LAL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-ORL",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "ORL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "complex",
+   "keepTop": 2,
+   "text": "1-2 Own; 3-30 Own or MEM (via MEM swap for ORL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1-2 Own; 3-30 Own or MEM (via MEM swap for ORL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-ORL",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "ORL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "complex",
+   "text": "To MEM if ORL 1-2 in 2029"
+  },
+  "swap": false,
+  "conditional": true,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MEM if ORL 1-2 in 2029"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-ORL",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "ORL",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MEM"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-ORL",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "ORL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for NOP ; MIL"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for NOP ; MIL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-ORL",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "ORL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-ORL",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "ORL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of ORL and NOP then other to OKC (via ORL swap for NOP)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of ORL and NOP then other to OKC (via ORL swap for NOP)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-ORL",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "ORL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-ORL",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "ORL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-ORL",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "ORL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-ORL",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "ORL",
+  "owner": "ORL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-PHI",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-PHI",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own *;",
+   "More favorable of GOS and PHX (via WAS) *;",
+   "Most favorable of OKC, HOU, IND and MIA (via HOU to DET to OKC; via IND and MIA to OKC; via OKC to PHL) *",
+   "*Second most favorable of these to WAS"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-PHI",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "complex",
+   "keepTop": 8,
+   "text": "1-8 Own if LAC 17-30 ; or [via swap from BOS] least favorable of (i) PHL 1-8, LAC 1-16, BOS and SAN or (ii) LAC 1-16, BOS and SAN ; more favorable of (i) more favorable of PHL 1-8 and LAC 1-16 [or (i) LAC 1-16 if PHL 9-30] and (ii) less favorable of BOS and SAN to BOS; if (i) PHL 9-30 is third most favorable and (ii) NYK is most or second most favorable of PHL 9-30 , PHX, BRK and NYK, then most and third most favorable to BRK; or most / two most favorable to BRK in all other scenarios ; least favorable of PHX, BRK and NYK to NYK if NYK and / or if PHL 9-30 is less favorable than PHX and BRK; or second most favorable of PHX, BRK and NYK to NYK in all other scenarios ; more favorable of (i) WAS and (ii) least / less favorable of PHL 9-30 , PHX and BRK to WAS then least favorable of all to PHX [WAS can then swap with MIL] (via SAN swap for BOS; via BOS swap of BOS or SAN for PHL or LAC; via BRK swap of BRK or PHL for PHX; via BRK swap of BRK or PHX for NYK; via WAS swap for PHX, BRK or PHL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1-8 Own if LAC 17-30 ; or [via swap from BOS] least favorable of (i) PHL 1-8, LAC 1-16, BOS and SAN or (ii) LAC 1-16, BOS and SAN ; more favorable of (i) more favorable of PHL 1-8 and LAC 1-16 [or (i) LAC 1-16 if PHL 9-30] and (ii) less favorable of BOS and SAN to BOS; if (i) PHL 9-30 is third most favorable and (ii) NYK is most or second most favorable of PHL 9-30 , PHX, BRK and NYK, then most and third most favorable to BRK; or most / two most favorable to BRK in all other scenarios ; least favorable of PHX, BRK and NYK to NYK if NYK and / or if PHL 9-30 is less favorable than PHX and BRK; or second most favorable of PHX, BRK and NYK to NYK in all other scenarios ; more favorable of (i) WAS and (ii) least / less favorable of PHL 9-30 , PHX and BRK to WAS then least favorable of all to PHX [WAS can then swap with MIL] (via SAN swap for BOS; via BOS swap of BOS or SAN for PHL or LAC; via BRK swap of BRK or PHL for PHX; via BRK swap of BRK or PHX for NYK; via WAS swap for PHX, BRK or PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-PHI",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "complex",
+   "text": "To BRK if PHL 1-8 in 2028 ; DET 56-60; Two least favorable of GOS, MIL and OKC (via GOS to POR to WAS; via MIL to BRK to HOU to OKC)"
+  },
+  "swap": false,
+  "conditional": true,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK if PHL 1-8 in 2028 ; DET 56-60; Two least favorable of GOS, MIL and OKC (via GOS to POR to WAS; via MIL to BRK to HOU to OKC)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-PHI",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for LAC 4-30"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for LAC 4-30"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-PHI",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-PHI",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-PHI",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "PHI",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To NYK (via DAL) ; Less favorable of (i) more favorable of PHX and POR and (ii) WAS (via PHX and POR to WAS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-PHI",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "PHI",
+  "owner": "BOS",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BOS"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-PHI",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-PHI",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-PHI",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of PHL and MEM; less favorable of (i) more favorable of PHL and MEM and (ii) UTH to WAS then most favorable of all to MEM (via MEM swap for PHL; via UTH to WAS; via MEM swap of MEM or PHL for UTH)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of PHL and MEM; less favorable of (i) more favorable of PHL and MEM and (ii) UTH to WAS then most favorable of all to MEM (via MEM swap for PHL; via UTH to WAS; via MEM swap of MEM or PHL for UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-PHI",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-PHI",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "PHI",
+  "owner": "PHI",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-PHX",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "PHX",
+  "owner": "HOU",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To HOU (via BRK) ; Least favorable of UTH (cannot be 1-5), CLE and MIN (via UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-PHX",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "PHX",
+  "owner": "PHX",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of PHX and GOS to PHL then other to WAS [PHL may convey to WAS] (via WAS) ;; Less favorable of BOS and ORL (via BOS to ORL to CHA)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of PHX and GOS to PHL then other to WAS [PHL may convey to WAS] (via WAS) ;",
+   "Less favorable of BOS and ORL (via BOS to ORL to CHA)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-PHX",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "PHX",
+  "owner": "PHX",
+  "protection": {
+   "kind": "complex",
+   "text": "Least favorable of PHX, PHL 9-30, WAS and BRK; more favorable of (i) WAS and (ii) least / less favorable of PHX, PHL 9-30 and BRK to WAS [WAS can then swap with MIL] ; if (i) PHL 9-30 is third most favorable and (ii) NYK is most or second most favorable of PHX, PHL 9-30, BRK and NYK, then most and third most favorable to BRK; or most / two most favorable to BRK in all other scenarios ; least favorable of PHX, BRK and NYK to NYK if NYK and / or if PHL 9-30 is less favorable than PHX and BRK; or second most favorable of PHX, BRK and NYK to NYK in all other scenarios (via BRK swap of BRK or PHL for PHX; via BRK swap of BRK or PHX for NYK; via WAS swap for PHX, BRK or PHL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Least favorable of PHX, PHL 9-30, WAS and BRK; more favorable of (i) WAS and (ii) least / less favorable of PHX, PHL 9-30 and BRK to WAS [WAS can then swap with MIL] ; if (i) PHL 9-30 is third most favorable and (ii) NYK is most or second most favorable of PHX, PHL 9-30, BRK and NYK, then most and third most favorable to BRK; or most / two most favorable to BRK in all other scenarios ; least favorable of PHX, BRK and NYK to NYK if NYK and / or if PHL 9-30 is less favorable than PHX and BRK; or second most favorable of PHX, BRK and NYK to NYK in all other scenarios (via BRK swap of BRK or PHL for PHX; via BRK swap of BRK or PHX for NYK; via WAS swap for PHX, BRK or PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-PHX",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "PHX",
+  "owner": "PHX",
+  "protection": {
+   "kind": "complex",
+   "text": "L ess favorable of (i) more favorable of PHX and IND and (ii) CHI to IND then most favorable of all to CHI; less favorable of PHX and IND to NYK (via PHX to IND; via CHI swap for IND or PHX)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "L ess favorable of (i) more favorable of PHX and IND and (ii) CHI to IND then most favorable of all to CHI; less favorable of PHX and IND to NYK (via PHX to IND; via CHI swap for IND or PHX)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-PHX",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "PHX",
+  "owner": "PHX",
+  "protection": {
+   "kind": "complex",
+   "text": "Two most favorable of PHX, DAL and HOU to HOU then other to BRK (via DAL and PHX to BRK; via DAL or PHX to HOU; via HOU swap for DAL or PHX); --- PHX will receive a least favorable pick from a complex CHA-MIN conveyance, including CHA's swap right"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Two most favorable of PHX, DAL and HOU to HOU then other to BRK (via DAL and PHX to BRK; via DAL or PHX to HOU; via HOU swap for DAL or PHX)",
+   "--- PHX will receive a least favorable pick from a complex CHA-MIN conveyance, including CHA's swap right"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-PHX",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "PHX",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To NYK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-PHX",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "PHX",
+  "owner": "PHX",
+  "protection": {
+   "kind": "complex",
+   "text": "Least favorable of PHX, WAS and MEM; more favorable of (i) MEM and (ii) less favorable of PHX and WAS to MEM; more favorable of PHX and WAS to WAS (via WAS swap for PHX; via MEM swap for PHX or WAS)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Least favorable of PHX, WAS and MEM; more favorable of (i) MEM and (ii) less favorable of PHX and WAS to MEM; more favorable of PHX and WAS to WAS (via WAS swap for PHX; via MEM swap for PHX or WAS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-PHX",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "PHX",
+  "owner": "PHX",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of (i) more favorable of PHX and POR and (ii) WAS to PHL then most favorable of all to BOS; less favorable of PHX and POR to WAS (via PHX and POR to WAS to PHL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of (i) more favorable of PHX and POR and (ii) WAS to PHL then most favorable of all to BOS; less favorable of PHX and POR to WAS (via PHX and POR to WAS to PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-PHX",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "PHX",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MEM (via UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-PHX",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "PHX",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-PHX",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "PHX",
+  "owner": "PHX",
+  "protection": {
+   "kind": "none",
+   "text": "Frozen (through 2027-28)"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": true,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Frozen (through 2027-28)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-PHX",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "PHX",
+  "owner": "PHX",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of PHX and HOU then other to CHI (via PHX to MIN)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of PHX and HOU then other to CHI (via PHX to MIN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-PHX",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "PHX",
+  "owner": "CHA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To CHA"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-PHX",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "PHX",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To NYK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-POR",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-POR",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of POR and NOP then other to CHA [POR may convey to HOU; see following] ; then less favorable of POR and NOP to HOU if 56-60 (via POR to NOP to CHA; via POR to BOS to HOU) ; MIN (via HOU to OKC to NYK)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of POR and NOP then other to CHA [POR may convey to HOU; see following] ; then less favorable of POR and NOP to HOU if 56-60 (via POR to NOP to CHA; via POR to BOS to HOU) ; MIN (via HOU to OKC to NYK)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-POR",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for MIL [WAS then has a complex swap right with MIL] ; ORL (via MEM)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for MIL [WAS then has a complex swap right with MIL] ; ORL (via MEM)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-POR",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; SAC (via CHI to SAC to MEM)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-POR",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "complex",
+   "text": "Most and least favorable of POR, BOS and MIL; second most favorable to WAS (via BOS to POR; via MIL to POR; via POR to WAS)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most and least favorable of POR, BOS and MIL; second most favorable to WAS (via BOS to POR; via MIL to POR; via POR to WAS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-POR",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "POR",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MEM (via PHL to IND) ; Less favorable of IND and WAS (via IND to NYK)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-POR",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for MIL; more favorable of (i) less favorable MIL and POR and (ii) MIA to MIL then least favorable of all to MIA (via POR swap for MIL; via MIL swap of MIL or POR for MIA)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for MIL; more favorable of (i) less favorable MIL and POR and (ii) MIA to MIL then least favorable of all to MIA (via POR swap for MIL; via MIL swap of MIL or POR for MIA)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-POR",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of (i) more favorable of POR and PHX and (ii) WAS to PHL then most favorable of all to BOS; less favorable of POR and PHX to WAS (via PHX and POR to WAS to PHL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of (i) more favorable of POR and PHX and (ii) WAS to PHL then most favorable of all to BOS; less favorable of POR and PHX to WAS (via PHX and POR to WAS to PHL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-POR",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-POR",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-POR",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-POR",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-POR",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-POR",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "POR",
+  "owner": "POR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-SAC",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "SAC",
+  "owner": "SAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; SAN 1-16"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-SAC",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "SAC",
+  "owner": "SAC",
+  "protection": {
+   "kind": "complex",
+   "text": "To OKC if SAN 1-16 in 2027 ; CHA if SAN 17-30 in 2027 (via NYK to ATL to SAN)"
+  },
+  "swap": false,
+  "conditional": true,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To OKC if SAN 1-16 in 2027 ; CHA if SAN 17-30 in 2027 (via NYK to ATL to SAN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-SAC",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "SAC",
+  "owner": "SAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-SAC",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "SAC",
+  "owner": "POR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To POR (via CHI to SAC to MEM)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-SAC",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "SAC",
+  "owner": "SAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-SAC",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "SAC",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To NYK (via WAS to HOU)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-SAC",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "SAC",
+  "owner": "SAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-SAC",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "SAC",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To SAN (via IND)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-SAC",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "SAC",
+  "owner": "SAC",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or SAN (via SAN swap for SAC) ; MIN (via SAN)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or SAN (via SAN swap for SAC) ; MIN (via SAN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-SAC",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "SAC",
+  "owner": "DEN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To DEN (via SAN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-SAC",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "SAC",
+  "owner": "SAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-SAC",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "SAC",
+  "owner": "DEN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To DEN (via CLE)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-SAC",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "SAC",
+  "owner": "SAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-SAC",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "SAC",
+  "owner": "ATL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To ATL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-SA",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "SA",
+  "owner": "SAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "1-16 to SAC; 17-30 to OKC (via SAC) ; ATL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-SA",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of (i) SAN and (ii) least favorable of OKC, HOU, IND and MIA then least favorable of all to MIA (via HOU to DET to OKC; via MIA to OKC to UTH to SAN to MIA)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of (i) SAN and (ii) least favorable of OKC, HOU, IND and MIA then least favorable of all to MIA (via HOU to DET to OKC; via MIA to OKC to UTH to SAN to MIA)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-SA",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for BOS 2-30 [BOS then has a complex swap right with PHL]"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for BOS 2-30 [BOS then has a complex swap right with PHL]"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-SA",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "BOS 31-45 if BOS 1 in 2028 ;",
+   "NOP"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-SA",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-SA",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; LAC (via PHL) ; NOP"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-SA",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "complex",
+   "text": "Most / more favorable of SAN, DAL and MIN 2-30; less favorable of (i) more favorable of SAN and DAL and (ii) MIN 2-30 [or MIN if MIN not conveyable] to MIN [MIN may convey to CHA] ; less favorable of SAN and DAL to DAL (via SAN swap for DAL; via SAN swap of SAN or DAL for MIN)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most / more favorable of SAN, DAL and MIN 2-30; less favorable of (i) more favorable of SAN and DAL and (ii) MIN 2-30 [or MIN if MIN not conveyable] to MIN [MIN may convey to CHA] ; less favorable of SAN and DAL to DAL (via SAN swap for DAL; via SAN swap of SAN or DAL for MIN)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-SA",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; CLE; SAC (via IND)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-SA",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for SAC"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for SAC"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-SA",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-SA",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-SA",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-SA",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-SA",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "SA",
+  "owner": "SA",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-TOR",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "TOR",
+  "owner": "TOR",
+  "protection": {
+   "kind": "complex",
+   "text": "Least / less favorable of TOR, LAC, DEN 6-30 and OKC; more favorable of (i) TOR and (i) least / less favorable of LAC, DEN 6-30 and OKC to LAC (via OKC swap of OKC or DEN for LAC; via LAC swap of LAC, DEN or OKC for TOR)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Least / less favorable of TOR, LAC, DEN 6-30 and OKC; more favorable of (i) TOR and (i) least / less favorable of LAC, DEN 6-30 and OKC to LAC (via OKC swap of OKC or DEN for LAC; via LAC swap of LAC, DEN or OKC for TOR)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-TOR",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "TOR",
+  "owner": "TOR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-TOR",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "TOR",
+  "owner": "TOR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-TOR",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "TOR",
+  "owner": "TOR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-TOR",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "TOR",
+  "owner": "TOR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-TOR",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "TOR",
+  "owner": "TOR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-TOR",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "TOR",
+  "owner": "TOR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-TOR",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "TOR",
+  "owner": "LAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To LAC"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-TOR",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "TOR",
+  "owner": "LAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To LAC"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-TOR",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "TOR",
+  "owner": "NO",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To NOP"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-TOR",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "TOR",
+  "owner": "TOR",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-TOR",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "TOR",
+  "owner": "BKN",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To BRK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-TOR",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "TOR",
+  "owner": "LAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To LAC"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-TOR",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "TOR",
+  "owner": "LAC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To LAC"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-UTAH",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "complex",
+   "text": "Second most favorable of UTH (cannot be 1-5), CLE and MIN; most favorable to MEM and least favorable to PHX (via UTH)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Second most favorable of UTH (cannot be 1-5), CLE and MIN; most favorable to MEM and least favorable to PHX (via UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-UTAH",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "UTAH",
+  "owner": "IND",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To IND (via CLE) ;",
+   "More favorable of BOS and ORL (via BOS to ORL to BOS) ; DEN (via CLE to CHI to BOS) ; LAC (via ATL to LAC)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-UTAH",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "complex",
+   "text": "Most favorable of UTH, CLE and LAL; less favorable of (i) more favorable of UTH and CLE and (ii) LAL to LAL; less favorable of UTH and CLE to CLE [CLE may convey UTH to ATL] (via UTH swap for CLE; via UTH swap of UTH or CLE for LAL)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most favorable of UTH, CLE and LAL; less favorable of (i) more favorable of UTH and CLE and (ii) LAL to LAL; less favorable of UTH and CLE to CLE [CLE may convey UTH to ATL] (via UTH swap for CLE; via UTH swap of UTH or CLE for LAL)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-UTAH",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "UTAH",
+  "owner": "OKC",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To OKC ;",
+   "CLE;",
+   "Least / less favorable of (i) DET 31-55, (ii) less favorable of CHA and LAC (via CHA to DAL) , (iii) MIA if DAL conveys 1st round pick to CHA in 2027 (via SAN to DAL) and (iv) NYK"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-UTAH",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "complex",
+   "text": "Most / two most favorable of UTH, CLE and MIN 6-30 to UTH; least / less favorable to CHA (via CLE and MIN to UTH; via UTH to PHX to CHA; via CHA swap of CHA, CLE or UTH for MIN) *; *CHA will also have a complex swap right with MIN and PHX will receive a least favorable pick"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Most / two most favorable of UTH, CLE and MIN 6-30 to UTH; least / less favorable to CHA (via CLE and MIN to UTH; via UTH to PHX to CHA; via CHA swap of CHA, CLE or UTH for MIN) *",
+   "*CHA will also have a complex swap right with MIN and PHX will receive a least favorable pick"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-UTAH",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; MIN if MIN does not convey 1st round pick to UTH in 2029"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-UTAH",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "complex",
+   "text": "Own or swap for LAL"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own or swap for LAL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-UTAH",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of UTH and LAC then other to CHA (via LAC to UTH)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of UTH and LAC then other to CHA (via LAC to UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-UTAH",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "LAL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-UTAH",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; More favorable of BOS and CLE (via CLE to ATL to BOS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-UTAH",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-UTAH",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of (i) UTH and (i) more favorable of MEM and PHL to WAS then most favorable of all to MEM (via UTH to WAS; via MEM swap for PHL; via MEM swap of MEM or PHL for UTH) ;; CLE"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of (i) UTH and (i) more favorable of MEM and PHL to WAS then most favorable of all to MEM (via UTH to WAS; via MEM swap for PHL; via MEM swap of MEM or PHL for UTH) ;",
+   "CLE"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-UTAH",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ;",
+   "LAL"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-UTAH",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "UTAH",
+  "owner": "UTAH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-1-WSH",
+  "year": 2027,
+  "round": 1,
+  "originalTeam": "WSH",
+  "owner": "WSH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own (cannot be 1)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2027-2-WSH",
+  "year": 2027,
+  "round": 2,
+  "originalTeam": "WSH",
+  "owner": "NY",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To NYK (via HOU to OKC) ;",
+   "More favorable of BRK and DAL (via DAL to BRK to DET to WAS) ;",
+   "Less favorable of GOS and PHX;",
+   "Second most favorable of (i) PHL (via LAC) , (ii) more favorable of GOS and PHX (via WAS to LAC) and (iii) most favorable of OKC, HOU, IND and MIA (via HOU to DET to OKC to LAC; via IND and MIA to OKC to LAC)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-1-WSH",
+  "year": 2028,
+  "round": 1,
+  "originalTeam": "WSH",
+  "owner": "WSH",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of (i) more favorable of (a) WAS and (b) least / less favorable of BRK, PHL 9-30 and PHX and (ii) less favorable of MIL and POR then less favorable of (i) and (ii) to MIL; least favorable of WAS, PHL 9-30, BRK and PHX to PHX (via POR swap for MIL; via BRK swap of BRK or PHL for PHX; via WAS swap for PHX, BRK or PHL; via WAS swap of WAS, BRK, PHL or PHX for MIL or POR)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of (i) more favorable of (a) WAS and (b) least / less favorable of BRK, PHL 9-30 and PHX and (ii) less favorable of MIL and POR then less favorable of (i) and (ii) to MIL; least favorable of WAS, PHL 9-30, BRK and PHX to PHX (via POR swap for MIL; via BRK swap of BRK or PHL for PHX; via WAS swap for PHX, BRK or PHL; via WAS swap of WAS, BRK, PHL or PHX for MIL or POR)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2028-2-WSH",
+  "year": 2028,
+  "round": 2,
+  "originalTeam": "WSH",
+  "owner": "WSH",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of WAS and LAL then other to ORL (via WAS to LAL to ORL; via LAL to WAS) ; DEN 34-60 (via SAN to SAC)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of WAS and LAL then other to ORL (via WAS to LAL to ORL; via LAL to WAS) ; DEN 34-60 (via SAN to SAC)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-1-WSH",
+  "year": 2029,
+  "round": 1,
+  "originalTeam": "WSH",
+  "owner": "WSH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own ; Second most favorable of POR, BOS and MIL (via BOS to POR; via MIL to POR; via POR to WAS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2029-2-WSH",
+  "year": 2029,
+  "round": 2,
+  "originalTeam": "WSH",
+  "owner": "WSH",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of WAS and IND to IND then other to POR (via IND to NYK)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of WAS and IND to IND then other to POR (via IND to NYK)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-1-WSH",
+  "year": 2030,
+  "round": 1,
+  "originalTeam": "WSH",
+  "owner": "WSH",
+  "protection": {
+   "kind": "complex",
+   "text": "More favorable of WAS and PHX; more favorable of (i) MEM and (ii) less favorable of WAS and PHX to MEM then least favorable of all to PHX (via WAS swap for PHX; via MEM swap for WAS or PHX)"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "More favorable of WAS and PHX; more favorable of (i) MEM and (ii) less favorable of WAS and PHX to MEM then least favorable of all to PHX (via WAS swap for PHX; via MEM swap for WAS or PHX)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2030-2-WSH",
+  "year": 2030,
+  "round": 2,
+  "originalTeam": "WSH",
+  "owner": "WSH",
+  "protection": {
+   "kind": "complex",
+   "text": "Less favorable of (i) WAS and (ii) more favorable of PHX and POR to PHL then most favorable of all to BOS (via PHX and POR to WAS to PHL) ; Less favorable of PHX and POR"
+  },
+  "swap": true,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Less favorable of (i) WAS and (ii) more favorable of PHX and POR to PHL then most favorable of all to BOS (via PHX and POR to WAS to PHL) ; Less favorable of PHX and POR"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-1-WSH",
+  "year": 2031,
+  "round": 1,
+  "originalTeam": "WSH",
+  "owner": "WSH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2031-2-WSH",
+  "year": 2031,
+  "round": 2,
+  "originalTeam": "WSH",
+  "owner": "LAL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To LAL ; More favorable of MIA and IND (via MIA swap for IND; via UTH)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-1-WSH",
+  "year": 2032,
+  "round": 1,
+  "originalTeam": "WSH",
+  "owner": "WSH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2032-2-WSH",
+  "year": 2032,
+  "round": 2,
+  "originalTeam": "WSH",
+  "owner": "LAL",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To LAL ;",
+   "Less favorable of (i) UTH and (i) more favorable of MEM and PHL (via MEM swap for PHL; via MEM swap of MEM or PHL for UTH; via UTH to WAS)"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-1-WSH",
+  "year": 2033,
+  "round": 1,
+  "originalTeam": "WSH",
+  "owner": "WSH",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "Own"
+  ],
+  "verified": true
+ },
+ {
+  "id": "2033-2-WSH",
+  "year": 2033,
+  "round": 2,
+  "originalTeam": "WSH",
+  "owner": "MEM",
+  "protection": {
+   "kind": "none",
+   "text": "unprotected"
+  },
+  "swap": false,
+  "conditional": false,
+  "frozen": false,
+  "forfeited": false,
+  "projectedPick": null,
+  "terms": [
+   "To MEM ;",
+   "DAL"
+  ],
+  "verified": true
+ }
+]

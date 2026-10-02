@@ -1,0 +1,15 @@
+# Optional. Render reads this file if you create the service with "New > Blueprint".
+# If you create a plain Web Service by hand instead, use the same values (see DEPLOY.md).
+services:
+  - type: web
+    name: be-a-manager
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"

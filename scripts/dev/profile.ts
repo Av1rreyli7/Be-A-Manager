@@ -1,0 +1,10 @@
+import teams from "../../data/teams.json";
+import players from "../../data/players.json";
+import contracts from "../../data/contracts.json";
+import picks from "../../data/draftPicks.json";
+import { createLeague } from "../../src/engine/league/init";
+import { simTo } from "../../src/engine/league/advance";
+const l = createLeague({ teams, players, contracts, picks } as never, { userTeams: [], name: "p", rngSeed: 99 });
+const t0 = Date.now();
+for (let i = 0; i < 5; i++) simTo(l, "month");
+console.log("5 months", Date.now() - t0, "ms", l.date);

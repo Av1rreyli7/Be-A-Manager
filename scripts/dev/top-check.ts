@@ -1,0 +1,10 @@
+import teams from "../../data/teams.json";
+import players from "../../data/players.json";
+import contracts from "../../data/contracts.json";
+import picks from "../../data/draftPicks.json";
+import ov from "../../data/ratingOverrides.json";
+import { createLeague } from "../../src/engine/league/init";
+const l = createLeague({ teams, players, contracts, picks, ratingOverrides: ov } as never, { userTeams: ["LAL"], name: "r", rngSeed: 1 });
+const ps = Object.values(l.players).filter((p) => p.status === "active").sort((a, b) => b.ovr - a.ovr);
+console.log(ps.slice(0, 40).map((p, i) => `${i + 1}. ${p.name} ${p.teamId} ${p.ovr}`).join("\n"));
+for (const t of ["SA", "OKC", "WSH"]) console.log(t, ps.filter((p) => p.teamId === t).slice(0, 10).map((p) => `${p.name} ${p.ovr}`).join(", "));

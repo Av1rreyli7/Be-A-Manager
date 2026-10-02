@@ -1,0 +1,911 @@
+[
+ {
+  "id": "ATL",
+  "espnId": "1",
+  "nbaId": "1610612737",
+  "city": "Atlanta",
+  "name": "Hawks",
+  "fullName": "Atlanta Hawks",
+  "conference": "East",
+  "division": "Southeast",
+  "colors": {
+   "primary": "#c8102e",
+   "secondary": "#fdb927"
+  },
+  "venue": "State Farm Arena",
+  "hnSlug": "hawks",
+  "headCoach": {
+   "name": "Quin Snyder",
+   "experience": 10
+  },
+  "prevRecord": {
+   "w": 46,
+   "l": 36,
+   "seed": 6
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used a trade exception generated last offseason (for Clint Capela) to acquire Devin Carter."
+   ]
+  }
+ },
+ {
+  "id": "BOS",
+  "espnId": "2",
+  "nbaId": "1610612738",
+  "city": "Boston",
+  "name": "Celtics",
+  "fullName": "Boston Celtics",
+  "conference": "East",
+  "division": "Atlantic",
+  "colors": {
+   "primary": "#008348",
+   "secondary": "#ffffff"
+  },
+  "venue": "TD Garden",
+  "hnSlug": "celtics",
+  "headCoach": {
+   "name": "Joe Mazzulla",
+   "experience": 4
+  },
+  "prevRecord": {
+   "w": 56,
+   "l": 26,
+   "seed": 2
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the non-taxpayer mid-level exception to sign Mitchell Robinson."
+   ]
+  }
+ },
+ {
+  "id": "BKN",
+  "espnId": "17",
+  "nbaId": null,
+  "city": "Brooklyn",
+  "name": "Nets",
+  "fullName": "Brooklyn Nets",
+  "conference": "East",
+  "division": "Atlantic",
+  "colors": {
+   "primary": "#000000",
+   "secondary": "#ffffff"
+  },
+  "venue": "Prudential Center",
+  "hnSlug": "nets",
+  "headCoach": {
+   "name": "Jordi Fernandez",
+   "experience": 0
+  },
+  "prevRecord": {
+   "w": 20,
+   "l": 62,
+   "seed": 13
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the non-taxpayer mid-level exception to acquire Dorian Finney-Smith."
+   ]
+  }
+ },
+ {
+  "id": "CHA",
+  "espnId": "30",
+  "nbaId": "1610612766",
+  "city": "Charlotte",
+  "name": "Hornets",
+  "fullName": "Charlotte Hornets",
+  "conference": "East",
+  "division": "Southeast",
+  "colors": {
+   "primary": "#008ca8",
+   "secondary": "#1d1060"
+  },
+  "venue": "Spectrum Center",
+  "hnSlug": "hornets",
+  "headCoach": {
+   "name": "Charles Lee",
+   "experience": 0
+  },
+  "prevRecord": {
+   "w": 44,
+   "l": 38,
+   "seed": 9
+  },
+  "hardCap": null
+ },
+ {
+  "id": "CHI",
+  "espnId": "4",
+  "nbaId": "1610612741",
+  "city": "Chicago",
+  "name": "Bulls",
+  "fullName": "Chicago Bulls",
+  "conference": "East",
+  "division": "Central",
+  "colors": {
+   "primary": "#ce1141",
+   "secondary": "#000000"
+  },
+  "venue": "United Center",
+  "hnSlug": "bulls",
+  "headCoach": {
+   "name": "Tiago Splitter",
+   "experience": 1
+  },
+  "prevRecord": {
+   "w": 31,
+   "l": 51,
+   "seed": 12
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used a trade exception generated last season (for Coby White) to acquire Kam Jones."
+   ]
+  }
+ },
+ {
+  "id": "CLE",
+  "espnId": "5",
+  "nbaId": "1610612739",
+  "city": "Cleveland",
+  "name": "Cavaliers",
+  "fullName": "Cleveland Cavaliers",
+  "conference": "East",
+  "division": "Central",
+  "colors": {
+   "primary": "#860038",
+   "secondary": "#bc945c"
+  },
+  "venue": "Rocket Arena",
+  "hnSlug": "cavaliers",
+  "headCoach": {
+   "name": "Kenny Atkinson",
+   "experience": 4
+  },
+  "prevRecord": {
+   "w": 52,
+   "l": 30,
+   "seed": 4
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Acquired Peyton Watson via sign-and-trade.",
+    "Used the expanded traded player exception to acquire Peyton Watson.",
+    "Used a trade exception generated last season (for De'Andre Hunter) to acquire Cam Whitmore."
+   ]
+  }
+ },
+ {
+  "id": "DAL",
+  "espnId": "6",
+  "nbaId": "1610612742",
+  "city": "Dallas",
+  "name": "Mavericks",
+  "fullName": "Dallas Mavericks",
+  "conference": "West",
+  "division": "Southwest",
+  "colors": {
+   "primary": "#0064b1",
+   "secondary": "#bbc4ca"
+  },
+  "venue": "American Airlines Center",
+  "hnSlug": "mavericks",
+  "headCoach": {
+   "name": "Dusty May",
+   "experience": 0
+  },
+  "prevRecord": {
+   "w": 26,
+   "l": 56,
+   "seed": 12
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the expanded traded player exception to acquire Santi Aldama.",
+    "Used the bi-annual exception to acquire Marcus Sasser."
+   ]
+  }
+ },
+ {
+  "id": "DEN",
+  "espnId": "7",
+  "nbaId": "1610612743",
+  "city": "Denver",
+  "name": "Nuggets",
+  "fullName": "Denver Nuggets",
+  "conference": "West",
+  "division": "Northwest",
+  "colors": {
+   "primary": "#0e2240",
+   "secondary": "#fec524"
+  },
+  "venue": "Ball Arena",
+  "hnSlug": "nuggets",
+  "headCoach": {
+   "name": "David Adelman",
+   "experience": 0
+  },
+  "prevRecord": {
+   "w": 54,
+   "l": 28,
+   "seed": 3
+  },
+  "hardCap": null
+ },
+ {
+  "id": "DET",
+  "espnId": "8",
+  "nbaId": "1610612765",
+  "city": "Detroit",
+  "name": "Pistons",
+  "fullName": "Detroit Pistons",
+  "conference": "East",
+  "division": "Central",
+  "colors": {
+   "primary": "#1d428a",
+   "secondary": "#c8102e"
+  },
+  "venue": "Little Caesars Arena",
+  "hnSlug": "pistons",
+  "headCoach": {
+   "name": "J.B. Bickerstaff",
+   "experience": 8
+  },
+  "prevRecord": {
+   "w": 60,
+   "l": 22,
+   "seed": 1
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the non-taxpayer mid-level exception to acquire Isaiah Joe."
+   ]
+  }
+ },
+ {
+  "id": "GS",
+  "espnId": "9",
+  "nbaId": "1610612744",
+  "city": "Golden State",
+  "name": "Warriors",
+  "fullName": "Golden State Warriors",
+  "conference": "West",
+  "division": "Pacific",
+  "colors": {
+   "primary": "#fdb927",
+   "secondary": "#1d428a"
+  },
+  "venue": "Oracle Arena",
+  "hnSlug": "warriors",
+  "headCoach": {
+   "name": "Steve Kerr",
+   "experience": 10
+  },
+  "prevRecord": {
+   "w": 37,
+   "l": 45,
+   "seed": 10
+  },
+  "hardCap": {
+   "level": "second",
+   "reasons": [
+    "Used the taxpayer mid-level exception to sign De'Anthony Melton."
+   ]
+  }
+ },
+ {
+  "id": "HOU",
+  "espnId": "10",
+  "nbaId": "1610612745",
+  "city": "Houston",
+  "name": "Rockets",
+  "fullName": "Houston Rockets",
+  "conference": "West",
+  "division": "Southwest",
+  "colors": {
+   "primary": "#ce0e2d",
+   "secondary": "#000000"
+  },
+  "venue": "Toyota Center (Houston)",
+  "hnSlug": "rockets",
+  "headCoach": {
+   "name": "Ime Udoka",
+   "experience": 2
+  },
+  "prevRecord": {
+   "w": 52,
+   "l": 30,
+   "seed": 5
+  },
+  "hardCap": {
+   "level": "second",
+   "reasons": [
+    "Used the taxpayer mid-level exception to sign Marcus Smart."
+   ]
+  }
+ },
+ {
+  "id": "IND",
+  "espnId": "11",
+  "nbaId": null,
+  "city": "Indiana",
+  "name": "Pacers",
+  "fullName": "Indiana Pacers",
+  "conference": "East",
+  "division": "Central",
+  "colors": {
+   "primary": "#0c2340",
+   "secondary": "#ffd520"
+  },
+  "venue": "Gainbridge Fieldhouse",
+  "hnSlug": "pacers",
+  "headCoach": {
+   "name": "Rick Carlisle",
+   "experience": 22
+  },
+  "prevRecord": {
+   "w": 19,
+   "l": 63,
+   "seed": 14
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the non-taxpayer mid-level exception to sign Kelly Oubre Jr."
+   ]
+  }
+ },
+ {
+  "id": "LAC",
+  "espnId": "12",
+  "nbaId": "1610612746",
+  "city": "LA",
+  "name": "Clippers",
+  "fullName": "LA Clippers",
+  "conference": "West",
+  "division": "Pacific",
+  "colors": {
+   "primary": "#12173f",
+   "secondary": "#c8102e"
+  },
+  "venue": "crypto.com Arena",
+  "hnSlug": "clippers",
+  "headCoach": {
+   "name": "Tyronn Lue",
+   "experience": 8
+  },
+  "prevRecord": {
+   "w": 42,
+   "l": 40,
+   "seed": 9
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the non-taxpayer mid-level exception to sign Rui Hachimura."
+   ]
+  }
+ },
+ {
+  "id": "LAL",
+  "espnId": "13",
+  "nbaId": "1610612747",
+  "city": "Los Angeles",
+  "name": "Lakers",
+  "fullName": "Los Angeles Lakers",
+  "conference": "West",
+  "division": "Pacific",
+  "colors": {
+   "primary": "#552583",
+   "secondary": "#fdb927"
+  },
+  "venue": "crypto.com Arena",
+  "hnSlug": "lakers",
+  "headCoach": {
+   "name": "JJ Redick",
+   "experience": 1
+  },
+  "prevRecord": {
+   "w": 53,
+   "l": 29,
+   "seed": 4
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Acquired Walker Kessler via sign-and-trade."
+   ]
+  }
+ },
+ {
+  "id": "MEM",
+  "espnId": "29",
+  "nbaId": "1610612763",
+  "city": "Memphis",
+  "name": "Grizzlies",
+  "fullName": "Memphis Grizzlies",
+  "conference": "West",
+  "division": "Southwest",
+  "colors": {
+   "primary": "#5d76a9",
+   "secondary": "#12173f"
+  },
+  "venue": "FedExForum",
+  "hnSlug": "grizzlies",
+  "headCoach": {
+   "name": "Tuomas Iisalo",
+   "experience": 0
+  },
+  "prevRecord": {
+   "w": 25,
+   "l": 57,
+   "seed": 13
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the expanded traded player exception to acquire Isaiah Stewart, D'Angelo Russell, and AJ Johnson."
+   ]
+  }
+ },
+ {
+  "id": "MIA",
+  "espnId": "14",
+  "nbaId": "1610612748",
+  "city": "Miami",
+  "name": "Heat",
+  "fullName": "Miami Heat",
+  "conference": "East",
+  "division": "Southeast",
+  "colors": {
+   "primary": "#98002e",
+   "secondary": "#000000"
+  },
+  "venue": "Kaseya Center",
+  "hnSlug": "heat",
+  "headCoach": {
+   "name": "Erik Spoelstra",
+   "experience": 16
+  },
+  "prevRecord": {
+   "w": 43,
+   "l": 39,
+   "seed": 10
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the expanded traded player exception to acquire Giannis Antetokounmpo.",
+    "Used a trade exception generated last offseason (for Duncan Robinson) to acquire Bobby Portis."
+   ]
+  }
+ },
+ {
+  "id": "MIL",
+  "espnId": "15",
+  "nbaId": "1610612749",
+  "city": "Milwaukee",
+  "name": "Bucks",
+  "fullName": "Milwaukee Bucks",
+  "conference": "East",
+  "division": "Central",
+  "colors": {
+   "primary": "#00471b",
+   "secondary": "#eee1c6"
+  },
+  "venue": "BMO Harris Bradley Center",
+  "hnSlug": "bucks",
+  "headCoach": {
+   "name": "Taylor Jenkins",
+   "experience": 6
+  },
+  "prevRecord": {
+   "w": 32,
+   "l": 50,
+   "seed": 11
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the expanded traded player exception to acquire Caris LeVert."
+   ]
+  }
+ },
+ {
+  "id": "MIN",
+  "espnId": "16",
+  "nbaId": "1610612750",
+  "city": "Minnesota",
+  "name": "Timberwolves",
+  "fullName": "Minnesota Timberwolves",
+  "conference": "West",
+  "division": "Northwest",
+  "colors": {
+   "primary": "#266092",
+   "secondary": "#79bc43"
+  },
+  "venue": "Target Center",
+  "hnSlug": "timberwolves",
+  "headCoach": {
+   "name": "Chris Finch",
+   "experience": 4
+  },
+  "prevRecord": {
+   "w": 49,
+   "l": 33,
+   "seed": 6
+  },
+  "hardCap": {
+   "level": "second",
+   "reasons": [
+    "Aggregated the salaries of Julius Randle and Naz Reid."
+   ]
+  }
+ },
+ {
+  "id": "NO",
+  "espnId": "3",
+  "nbaId": "1610612740",
+  "city": "New Orleans",
+  "name": "Pelicans",
+  "fullName": "New Orleans Pelicans",
+  "conference": "West",
+  "division": "Southwest",
+  "colors": {
+   "primary": "#0a2240",
+   "secondary": "#b4975a"
+  },
+  "venue": "Smoothie King Center",
+  "hnSlug": "pelicans",
+  "headCoach": {
+   "name": "Jamahl Mosley",
+   "experience": 3
+  },
+  "prevRecord": {
+   "w": 26,
+   "l": 56,
+   "seed": 11
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the expanded traded player exception to acquire AJ Johnson."
+   ]
+  }
+ },
+ {
+  "id": "NY",
+  "espnId": "18",
+  "nbaId": "1610612752",
+  "city": "New York",
+  "name": "Knicks",
+  "fullName": "New York Knicks",
+  "conference": "East",
+  "division": "Atlantic",
+  "colors": {
+   "primary": "#1d428a",
+   "secondary": "#f58426"
+  },
+  "venue": "Madison Square Garden",
+  "hnSlug": "knicks",
+  "headCoach": {
+   "name": "Mike Brown",
+   "experience": 0
+  },
+  "prevRecord": {
+   "w": 53,
+   "l": 29,
+   "seed": 3
+  },
+  "hardCap": null
+ },
+ {
+  "id": "OKC",
+  "espnId": "25",
+  "nbaId": "1610612760",
+  "city": "Oklahoma City",
+  "name": "Thunder",
+  "fullName": "Oklahoma City Thunder",
+  "conference": "West",
+  "division": "Northwest",
+  "colors": {
+   "primary": "#007ac1",
+   "secondary": "#ef3b24"
+  },
+  "venue": "Paycom Center",
+  "hnSlug": "thunder",
+  "headCoach": {
+   "name": "Mark Daigneault",
+   "experience": 4
+  },
+  "prevRecord": {
+   "w": 64,
+   "l": 18,
+   "seed": 1
+  },
+  "hardCap": null
+ },
+ {
+  "id": "ORL",
+  "espnId": "19",
+  "nbaId": "1610612753",
+  "city": "Orlando",
+  "name": "Magic",
+  "fullName": "Orlando Magic",
+  "conference": "East",
+  "division": "Southeast",
+  "colors": {
+   "primary": "#0150b5",
+   "secondary": "#9ca0a3"
+  },
+  "venue": "Kia Center",
+  "hnSlug": "magic",
+  "headCoach": {
+   "name": "Sean Sweeney",
+   "experience": 0
+  },
+  "prevRecord": {
+   "w": 45,
+   "l": 37,
+   "seed": 8
+  },
+  "hardCap": null
+ },
+ {
+  "id": "PHI",
+  "espnId": "20",
+  "nbaId": "1610612755",
+  "city": "Philadelphia",
+  "name": "76ers",
+  "fullName": "Philadelphia 76ers",
+  "conference": "East",
+  "division": "Atlantic",
+  "colors": {
+   "primary": "#1d428a",
+   "secondary": "#e01234"
+  },
+  "venue": "Xfinity Mobile Arena",
+  "hnSlug": "76ers",
+  "headCoach": {
+   "name": "Nick Nurse",
+   "experience": 6
+  },
+  "prevRecord": {
+   "w": 45,
+   "l": 37,
+   "seed": 7
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the non-taxpayer mid-level exception to sign Dean Wade."
+   ]
+  }
+ },
+ {
+  "id": "PHX",
+  "espnId": "21",
+  "nbaId": "1610612756",
+  "city": "Phoenix",
+  "name": "Suns",
+  "fullName": "Phoenix Suns",
+  "conference": "West",
+  "division": "Pacific",
+  "colors": {
+   "primary": "#29127a",
+   "secondary": "#e56020"
+  },
+  "venue": "Mortgage Matchup Center",
+  "hnSlug": "suns",
+  "headCoach": {
+   "name": "Jordan Ott",
+   "experience": 0
+  },
+  "prevRecord": {
+   "w": 45,
+   "l": 37,
+   "seed": 8
+  },
+  "hardCap": {
+   "level": "second",
+   "reasons": [
+    "Sent out cash in a trade."
+   ]
+  }
+ },
+ {
+  "id": "POR",
+  "espnId": "22",
+  "nbaId": "1610612757",
+  "city": "Portland",
+  "name": "Trail Blazers",
+  "fullName": "Portland Trail Blazers",
+  "conference": "West",
+  "division": "Northwest",
+  "colors": {
+   "primary": "#e03a3e",
+   "secondary": "#000000"
+  },
+  "venue": "Moda Center",
+  "hnSlug": "trail-blazers",
+  "headCoach": {
+   "name": "Tiago Splitter",
+   "experience": 1
+  },
+  "prevRecord": {
+   "w": 42,
+   "l": 40,
+   "seed": 7
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the expanded traded player exception to acquire Ja Morant."
+   ]
+  }
+ },
+ {
+  "id": "SAC",
+  "espnId": "23",
+  "nbaId": "1610612758",
+  "city": "Sacramento",
+  "name": "Kings",
+  "fullName": "Sacramento Kings",
+  "conference": "West",
+  "division": "Pacific",
+  "colors": {
+   "primary": "#5a2d81",
+   "secondary": "#6a7a82"
+  },
+  "venue": "Sleep Train Arena",
+  "hnSlug": "kings",
+  "headCoach": {
+   "name": "Doug Christie",
+   "experience": 0
+  },
+  "prevRecord": {
+   "w": 22,
+   "l": 60,
+   "seed": 14
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the bi-annual exception to sign Precious Achiuwa."
+   ]
+  }
+ },
+ {
+  "id": "SA",
+  "espnId": "24",
+  "nbaId": "1610612759",
+  "city": "San Antonio",
+  "name": "Spurs",
+  "fullName": "San Antonio Spurs",
+  "conference": "West",
+  "division": "Southwest",
+  "colors": {
+   "primary": "#000000",
+   "secondary": "#c4ced4"
+  },
+  "venue": "Frost Bank Center",
+  "hnSlug": "spurs",
+  "headCoach": {
+   "name": "Mitch Johnson",
+   "experience": 1
+  },
+  "prevRecord": {
+   "w": 62,
+   "l": 20,
+   "seed": 2
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the non-taxpayer mid-level exception to sign Tobias Harris."
+   ]
+  }
+ },
+ {
+  "id": "TOR",
+  "espnId": "28",
+  "nbaId": "1610612761",
+  "city": "Toronto",
+  "name": "Raptors",
+  "fullName": "Toronto Raptors",
+  "conference": "East",
+  "division": "Atlantic",
+  "colors": {
+   "primary": "#d91244",
+   "secondary": "#000000"
+  },
+  "venue": "Scotiabank Arena",
+  "hnSlug": "raptors",
+  "headCoach": {
+   "name": "Darko Rajakovic",
+   "experience": 0
+  },
+  "prevRecord": {
+   "w": 46,
+   "l": 36,
+   "seed": 5
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the expanded traded player exception to acquire Kawhi Leonard."
+   ]
+  }
+ },
+ {
+  "id": "UTAH",
+  "espnId": "26",
+  "nbaId": "1610612762",
+  "city": "Utah",
+  "name": "Jazz",
+  "fullName": "Utah Jazz",
+  "conference": "West",
+  "division": "Northwest",
+  "colors": {
+   "primary": "#4e008e",
+   "secondary": "#79a3dc"
+  },
+  "venue": "Delta Center",
+  "hnSlug": "jazz",
+  "headCoach": {
+   "name": "Will Hardy",
+   "experience": 2
+  },
+  "prevRecord": {
+   "w": 22,
+   "l": 60,
+   "seed": 15
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used the non-taxpayer mid-level exception to sign Jaxson Hayes."
+   ]
+  }
+ },
+ {
+  "id": "WSH",
+  "espnId": "27",
+  "nbaId": "1610612764",
+  "city": "Washington",
+  "name": "Wizards",
+  "fullName": "Washington Wizards",
+  "conference": "East",
+  "division": "Southeast",
+  "colors": {
+   "primary": "#e31837",
+   "secondary": "#002b5c"
+  },
+  "venue": "Capital One Arena",
+  "hnSlug": "wizards",
+  "headCoach": {
+   "name": "Brian Keefe",
+   "experience": 0
+  },
+  "prevRecord": {
+   "w": 17,
+   "l": 65,
+   "seed": 15
+  },
+  "hardCap": {
+   "level": "first",
+   "reasons": [
+    "Used a trade exception generated last offseason (for Kelly Olynyk) to acquire Deandre Ayton."
+   ]
+  }
+ }
+]

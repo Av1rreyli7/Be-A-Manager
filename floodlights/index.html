@@ -1,0 +1,2581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Floodlights</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%225%22 fill=%22%230a0d0b%22/%3E%3Cg fill=%22%23d0e85c%22%3E%3Ccircle cx=%228%22 cy=%2211%22 r=%223%22/%3E%3Ccircle cx=%2216%22 cy=%2211%22 r=%223%22/%3E%3Ccircle cx=%2224%22 cy=%2211%22 r=%223%22/%3E%3Ccircle cx=%228%22 cy=%2221%22 r=%223%22/%3E%3Ccircle cx=%2216%22 cy=%2221%22 r=%223%22/%3E%3Ccircle cx=%2224%22 cy=%2221%22 r=%223%22/%3E%3C/g%3E%3C/svg%3E">
+<style>
+
+/* ==========================================================
+   Floodlights design system
+   One dark theme, shared with the Be-A-Manager landing page:
+   pure black, white hairlines and a single accent (floodlight volt).
+   Type: Inter for reading, Chakra Petch for labels and big
+   scoreboard numbers, Geist Mono for data. All self hosted.
+   Corners: 6px on controls, chamfered panels, 3px on tags.
+   The base rules come first. The shared look that restyles
+   them sits at the end of this stylesheet.
+   Layers: ticker 40, matchday 50, cabinet 60, awards 70,
+   playable match 200, contract popup 9000.
+   ========================================================== */
+:root{
+  --night:#000000; --panel:#0b0c0b; --panel2:#0b0c0b; --screen:#070807; --raise:#161815; --raise2:#1d201b; --pitchbg:#102a1d;
+  --chalk:#ffffff; --text:#ffffff; --soft:#d8d8d8; --mid:#b9bdb6;
+  --dim:#9a9a9a; --dim2:#8a8d88; --faint:#74777a; --ghost:#4a4d48;
+  --volt:#d0e85c; --volthi:#e1f486; --voltink:#12160a; --voltwash:rgba(208,232,92,.09); --voltedge:rgba(208,232,92,.38);
+  --gold:#d0e85c; --goldhi:#e1f486;
+  --grass:#5fd38d; --red:#f25c5c; --softred:#ff938c; --warm:#f2a94a; --sky:#8fbcf2;
+  --line:rgba(255,255,255,.13); --line2:rgba(255,255,255,.1); --hair:rgba(255,255,255,.06); --bline:rgba(255,255,255,.28); --pline:rgba(240,242,234,.2);
+  --r:6px; --r-panel:0px; --r-tag:3px;
+  --f-ui:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-lbl:'Chakra Petch','Inter',system-ui,sans-serif;
+  --f-num:'Geist Mono','SFMono-Regular',ui-monospace,Menlo,monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+*{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+html,body{height:100%}
+html{background:var(--night)}
+body{background:repeating-linear-gradient(90deg,rgba(240,242,234,.012) 0 120px,transparent 120px 240px) fixed,var(--night);color:var(--chalk);font-family:var(--f-ui);font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:var(--volt);color:var(--voltink)}
+h1,h2,h3,.disp{font-family:var(--f-ui);font-weight:800;font-stretch:108%;text-transform:uppercase;letter-spacing:-.01em;line-height:1.05}
+h3{font-size:17px}
+h4{font-family:var(--f-ui);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.mlab{font-family:var(--f-ui);font-weight:700;font-size:12px;letter-spacing:.09em;color:var(--soft);text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.msub{font-size:11.5px;letter-spacing:.04em;color:var(--dim2)}
+.mono{font-family:var(--f-num)}
+
+/* ---------- buttons ---------- */
+button{font-family:var(--f-ui);font-weight:700;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;line-height:1;white-space:nowrap;background:var(--volt);color:var(--voltink);border:1px solid var(--volt);border-radius:var(--r);padding:11px 18px;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s,transform .08s}
+button:hover{background:var(--volthi);border-color:var(--volthi)}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+button.gold{background:var(--volt);color:var(--voltink);border-color:var(--volt)}
+button.gold:hover{background:var(--volthi);border-color:var(--volthi)}
+button.ghost{background:transparent;color:var(--soft);border-color:var(--line)}
+button.ghost:hover{background:var(--raise);color:var(--chalk);border-color:var(--bline)}
+button.red{background:transparent;color:var(--softred);border-color:rgba(242,92,92,.42)}
+button.red:hover{background:rgba(242,92,92,.12);border-color:var(--red)}
+button.red.hj{background:var(--red);color:#1c0707;border-color:var(--red)}
+button.red.hj:hover{background:var(--softred);border-color:var(--softred)}
+button.small{padding:7px 10px;font-size:11px}
+/* small buttons inside rows are quiet, so the solid volt stays for the main action */
+button.small:not(.ghost):not(.red):not(.gold){background:var(--voltwash);color:var(--volt);border-color:var(--voltedge)}
+button.small:not(.ghost):not(.red):not(.gold):hover{background:rgba(208,232,92,.18);border-color:var(--volt)}
+
+/* ---------- form controls ---------- */
+input:not([type=checkbox]),select{background:var(--panel);border:1px solid var(--line);color:var(--chalk);border-radius:var(--r);padding:10px 12px;font-size:14px;font-weight:500;font-family:var(--f-ui);transition:border-color .15s,box-shadow .15s}
+input::placeholder{color:var(--dim2)}
+input:not([type=checkbox]):focus,select:focus{outline:none;border-color:var(--volt);box-shadow:0 0 0 1px var(--volt)}
+select{appearance:none;-webkit-appearance:none;padding-right:30px;background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat;cursor:pointer}
+input[type=checkbox]{accent-color:var(--volt)}
+label{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--dim2)}
+
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px 84px}
+.hidden{display:none!important}
+
+
+/* ---------- lobby: the title screen ---------- */
+#lobby{position:relative;isolation:isolate;overflow:hidden;min-height:100dvh;display:grid;align-items:center;padding:48px 24px;background:repeating-linear-gradient(90deg,rgba(240,242,234,.022) 0 8vw,transparent 8vw 16vw),var(--night)}
+.lobbyin{width:min(1120px,100%);margin:0 auto;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,400px);gap:clamp(28px,6vw,96px);align-items:center}
+.lobbybrand .tg{border-left:none;padding-left:0}
+#lobby h1{font-weight:900;font-stretch:125%;font-size:clamp(54px,9.4vw,124px);line-height:.86;letter-spacing:-.025em;margin:22px 0 28px}
+#lobby h1 span{display:block;color:var(--volt);animation:lightson 1.1s linear both}
+@keyframes lightson{0%,38%{opacity:.16}40%{opacity:1}46%{opacity:.3}52%,100%{opacity:1}}
+#lobby .sub{font-size:17px;line-height:1.5;color:var(--soft);max-width:44ch}
+.lobbystats{display:flex;flex-wrap:wrap;margin-top:36px;padding-top:18px;border-top:1px solid var(--line)}
+.lobbystats div{display:flex;flex-direction:column-reverse;gap:6px;padding-right:30px;margin-right:30px;border-right:1px solid var(--line)}
+.lobbystats div:last-child{border-right:none;margin-right:0;padding-right:0}
+.lobbystats dt{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim2)}
+.lobbystats dd{font-weight:800;font-stretch:68%;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.card{position:relative;background:var(--screen);border:1px solid var(--line);border-radius:var(--r-panel);padding:28px;box-shadow:0 34px 80px -34px rgba(0,0,0,.8)}
+/* the form sits on the centre spot: centre circle and halfway line behind it */
+.card::before{content:"";position:absolute;z-index:-1;left:50%;top:50%;width:min(86vh,720px);aspect-ratio:1;border:1px solid var(--pline);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}
+.card::after{content:"";position:absolute;z-index:-1;left:50%;top:50%;width:1px;height:300vh;background:var(--pline);transform:translate(-50%,-50%);pointer-events:none}
+.card .flab{display:block;margin-bottom:8px}
+.card .row{display:flex;gap:8px;margin-top:10px}
+.card .row:first-of-type{margin-top:0}
+.card input{flex:1;min-width:0;font-size:15px;padding:12px 13px}
+.card #codeIn{font-family:var(--f-num);letter-spacing:.3em}
+.card #createBtn{flex:1;padding:14px 18px}
+.card .cardsplit{height:1px;background:var(--line2);margin:24px -28px 22px}
+.card .msg{margin-top:14px}
+.card .msg:empty{display:none}
+@media(max-width:860px){
+  #lobby{padding:36px 18px;align-items:start}
+  .lobbyin{grid-template-columns:1fr;gap:34px}
+  #lobby h1{font-size:clamp(54px,17vw,120px)}
+  .lobbystats dd{font-size:32px}
+}
+
+/* ---------- top bar ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;min-height:60px;padding:8px 0;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+/* brand mark: a bank of six floodlights */
+.brand .sq{--u:9px;flex:none;width:calc(var(--u)*3);height:calc(var(--u)*2);background:radial-gradient(circle at center,var(--volt) 0 calc(var(--u)*.3),transparent calc(var(--u)*.36)) 0 0/var(--u) var(--u)}
+.lobbybrand .sq{--u:12px}
+.brand .nm{font-weight:900;font-stretch:125%;font-size:15px;letter-spacing:.01em}
+.brand .tg{font-size:10.5px;font-weight:600;letter-spacing:.1em;color:var(--dim2);text-transform:uppercase;padding-left:12px;border-left:1px solid var(--line)}
+.topbar .brand .tg{display:none}
+.topchips{margin-left:auto;display:flex;align-items:center;flex-wrap:wrap;gap:6px 0}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:3px 12px;border-left:1px solid var(--line2);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.chip:first-child{border-left:none;padding-left:0}
+.chip b{color:var(--chalk);font-family:var(--f-num);font-weight:600;letter-spacing:.02em}
+.chip #hCode{color:var(--volt);letter-spacing:.24em}
+.chip.dimchip{color:var(--dim2)}
+.chip:empty{display:none}
+.topchips button{margin-left:6px}
+.win-open{color:var(--grass)}
+.win-shut{color:var(--red)}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--grass);animation:flpulse 1.6s infinite;display:inline-block;flex:none}
+.pulse.red{background:var(--red)}
+@keyframes flpulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ---------- club header ---------- */
+.hubhead{display:flex;align-items:flex-end;justify-content:space-between;gap:24px 40px;padding:32px 0 28px;flex-wrap:wrap}
+.hubhead .who{font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--dim2);margin-bottom:10px;text-transform:uppercase}
+.hubhead .clubname{font-weight:900;font-stretch:112%;font-size:clamp(34px,5.6vw,68px);line-height:.9;letter-spacing:-.02em;text-transform:uppercase}
+.clubmeta{display:flex;flex-wrap:wrap;gap:16px 0}
+.cm{display:flex;flex-direction:column;gap:8px;min-width:96px;padding:0 22px;border-left:1px solid var(--line)}
+.cm:last-child{padding-right:0}
+.cmk{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim2);white-space:nowrap}
+.cmv{font-weight:800;font-stretch:70%;font-size:32px;line-height:1;color:var(--chalk);font-variant-numeric:tabular-nums}
+.cmv.teal{color:var(--volt)}
+.cmv.green{color:var(--grass)}
+.cmv.red{color:var(--red)}
+.confbar{display:block;width:100%;height:3px;background:var(--line);overflow:hidden}
+.confbar span{display:block;height:100%;background:var(--chalk);width:0%;transition:width .4s ease}
+@media(max-width:720px){
+  .hubhead{padding:24px 0 20px}
+  .clubmeta{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:18px 0}
+  .cm{padding:0 14px;min-width:0}
+  .cm:nth-child(3n+1){border-left:none;padding-left:0}
+  .cmv{font-size:28px}
+}
+
+/* ---------- before the season: share the code, pick a club ---------- */
+#preStart{padding:0;overflow:hidden}
+.lobbygrid{display:grid;grid-template-columns:1fr 380px}
+.lobbyleft{padding:36px 40px;border-right:1px solid var(--line2)}
+.lobbyleft .msub{color:var(--dim);font-weight:600;letter-spacing:.1em}
+.codeboxes{display:flex;gap:8px;margin:18px 0 28px}
+/* room code as scoreboard tiles, with the split line of a flip board */
+.codebox{position:relative;width:min(92px,19vw);aspect-ratio:4/5;border:1px solid var(--line);border-radius:var(--r);background:var(--night);display:grid;place-items:center;font-family:var(--f-ui);font-weight:800;font-stretch:72%;font-size:clamp(44px,9vw,76px);line-height:1;color:var(--volt)}
+.codebox::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--night)}
+.lobbyright{padding:30px 28px}
+.mgrhead{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.mgrhead .msub{color:var(--dim);font-weight:600;letter-spacing:.1em}
+.mgrow{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:6px;padding:12px 0;border-bottom:1px solid var(--hair)}
+.mgrow .n{font-family:var(--f-num);font-size:11px;color:var(--faint)}
+.mgrow .nm{font-weight:700;font-size:16px;line-height:1.2}
+.mgrow .cl{font-size:10.5px;font-weight:600;letter-spacing:.08em;color:var(--dim2);margin-top:3px;text-transform:uppercase}
+.pickzone{padding:26px 40px 32px;border-top:1px solid var(--line2)}
+.pickzone .pickhelp{color:var(--dim);font-size:13.5px;margin-top:8px;max-width:70ch}
+.teampick{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:14px}
+.teampick>button{background:var(--panel);color:var(--chalk);border:1px solid var(--line);padding:12px 12px 11px;font-size:14px;font-weight:700;letter-spacing:0;text-transform:none;text-align:left;line-height:1.35;white-space:normal}
+.teampick>button span{font-family:var(--f-num);font-weight:500;letter-spacing:0}
+.teampick>button:hover{background:var(--raise);border-color:var(--bline)}
+.teampick>button.taken{opacity:.4;cursor:not-allowed}
+.teampick>button.taken:hover{background:var(--panel);border-color:var(--line)}
+.teampick>button.mine{background:var(--voltwash);border-color:var(--volt);color:var(--volt)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+@media(max-width:860px){
+  .lobbygrid{grid-template-columns:1fr}
+  .lobbyleft{padding:26px 20px;border-right:none;border-bottom:1px solid var(--line2)}
+  .lobbyright{padding:22px 20px}
+  .pickzone{padding:22px 20px 26px}
+}
+
+/* ---------- tabs ---------- */
+nav.tabs{position:sticky;top:0;z-index:6;display:flex;flex-wrap:nowrap;gap:0;margin:0 0 18px;background:var(--night);border-bottom:1px solid var(--line2);overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{background:transparent;color:var(--dim);border:none;border-bottom:2px solid transparent;border-radius:0;font-weight:700;font-stretch:90%;font-size:12.5px;letter-spacing:.07em;padding:16px 12px 14px;white-space:nowrap;transition:color .15s,border-color .15s}
+nav.tabs button:hover{background:transparent;color:var(--chalk)}
+nav.tabs button:active{transform:none}
+nav.tabs button:focus-visible{outline-offset:-3px}
+nav.tabs button.on{color:var(--chalk);border-bottom-color:var(--volt)}
+#offerDot{font-family:var(--f-num);font-weight:600;color:var(--volt);letter-spacing:0}
+
+/* ---------- panels and tables ---------- */
+.panel{background:var(--screen);border:1px solid var(--line2);border-radius:var(--r-panel);padding:20px;margin-bottom:16px;overflow-x:auto}
+section[id^="tab-"]{animation:tabin .24s var(--ease)}
+@keyframes tabin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel>p,.panel .lead{max-width:78ch}
+.lead{color:var(--dim);font-size:13px}
+table{width:100%;border-collapse:collapse}
+th{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--dim2);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 10px;border-bottom:1px solid var(--hair);font-size:14px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(240,242,234,.025)}
+td:first-child{font-weight:600}
+td:last-child:has(button){text-align:right}
+.num{text-align:right;font-family:var(--f-num);font-size:13px;font-variant-numeric:tabular-nums}
+th.num{font-family:var(--f-ui);font-size:10.5px}
+tr.me td,tbody tr.me:hover td{background:var(--voltwash)}
+tr.me td:first-child{box-shadow:inset 3px 0 0 var(--volt)}
+#tableBody td:first-child{font-family:var(--f-num);font-weight:500;font-size:13px;color:var(--dim);width:44px}
+#tableBody td:nth-child(2){font-weight:700}
+#tableBody tr.me td:first-child{color:var(--volt)}
+#tableBody td:last-child b{font-weight:700;color:var(--chalk)}
+.rchip{display:inline-block;min-width:34px;text-align:center;background:var(--raise);border-radius:var(--r-tag);padding:3px 6px;font-family:var(--f-num);font-weight:600;font-size:13px}
+@supports (background:color-mix(in srgb,red 10%,transparent)){
+  .rchip{background:color-mix(in srgb,currentColor 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,currentColor 30%,transparent)}
+}
+td[class^="pos-"]{font-family:var(--f-num);font-weight:600;font-size:12px;letter-spacing:.03em}
+.pos-GK{color:var(--warm)}.pos-DF{color:var(--sky)}.pos-MF{color:var(--grass)}.pos-FW{color:var(--softred)}
+.tag{display:inline-block;vertical-align:middle;font-family:var(--f-ui);font-size:9.5px;font-weight:700;line-height:1;padding:4px 6px;border:1px solid var(--line);border-radius:var(--r-tag);color:var(--dim);letter-spacing:.08em;text-transform:uppercase;background:var(--raise);white-space:nowrap}
+.tag.human,.tag.listed{border-color:var(--voltedge);color:var(--volt);background:var(--voltwash)}
+.tag.inj,.tag.derby{border-color:var(--red);color:#1c0707;background:var(--red)}
+.tag.loan,.tag.train{border-color:rgba(143,188,242,.4);color:var(--sky);background:rgba(143,188,242,.1)}
+.tag.wk,.tag.nego{border-color:rgba(242,169,74,.45);color:var(--warm);background:rgba(242,169,74,.1)}
+.tag.agreed{border-color:rgba(95,211,141,.4);color:var(--grass);background:rgba(95,211,141,.1)}
+.msg{color:var(--volt);min-height:18px;font-size:13px;font-weight:500;margin-top:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:24px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+@media(max-width:720px){
+  .wrap{padding:0 14px 84px}
+  .panel{padding:14px}
+  .topchips{margin-left:0}
+}
+.subcard .mlab,.sechead{padding-bottom:10px;margin-bottom:4px;border-bottom:1px solid var(--line)}
+.subcard.gap{margin-top:26px}
+#myFixtures{max-height:300px;overflow:auto}
+
+/* ---------- squad ---------- */
+#staffStrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin-bottom:22px}
+.staffcard{border:1px solid var(--line2);border-radius:var(--r);background:var(--panel);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.staffcard .sn{font-weight:700;font-size:14px}
+.staffcard .sd{font-size:12px;color:var(--dim2);margin-top:2px;line-height:1.35}
+.staffcard.owned{border-color:rgba(95,211,141,.45)}
+.staffcard.owned .sn{color:var(--grass)}
+.staffcard .tag{background:rgba(95,211,141,.1)}
+
+/* ---------- offers ---------- */
+.offergrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;align-content:start;margin-top:14px}
+.offer{background:var(--panel);border:1px solid var(--line2);border-left:3px solid var(--bline);border-radius:var(--r);overflow:hidden}
+.offer:has(.status-accepted){border-left-color:var(--grass)}
+.offer:has(.status-countered),.offer:has(.status-pending_seller){border-left-color:var(--warm)}
+.offer:has(.status-declined),.offer:has(.status-failed),.offer:has(.status-player_declined),.offer:has(.status-void){border-left-color:var(--red)}
+.offer .ohead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:13px 15px 0}
+.offer .who{font-size:12px;font-weight:700;letter-spacing:.03em;line-height:1.4;color:var(--soft);text-transform:uppercase}
+.offer .ohead .msub{flex:none;font-size:10px;font-weight:700;letter-spacing:.09em;padding-top:2px}
+.offer .fee{font-family:var(--f-ui);font-weight:800;font-stretch:70%;font-size:38px;line-height:1;padding:12px 15px 0;color:var(--chalk);font-variant-numeric:tabular-nums}
+.offer .fee small{display:block;font-family:var(--f-ui);font-stretch:100%;font-size:10.5px;font-weight:600;color:var(--dim2);letter-spacing:.08em;line-height:1.4;margin-top:7px;text-transform:uppercase}
+.offer .note{color:var(--dim);font-size:13px;line-height:1.5;margin:12px 15px 0;padding:1px 0 1px 11px;border-left:2px solid var(--line)}
+.offer .oact{display:flex;gap:6px;padding:14px 15px;flex-wrap:wrap;align-items:center}
+.offer .oact:empty{padding:7px 0}
+.status-accepted{color:var(--grass)}
+.status-declined,.status-failed,.status-player_declined,.status-void{color:var(--softred)}
+.status-countered,.status-pending_seller{color:var(--warm)}
+.status-terms{color:var(--volt)}
+
+/* ---------- fixtures ---------- */
+.fixture{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--hair);font-size:14px}
+.fixture .fh{font-weight:600;text-align:right}
+.fixture .fa{font-weight:600}
+.fixture .score{min-width:46px;background:var(--raise);border-radius:var(--r-tag);padding:4px 9px;font-family:var(--f-num);color:var(--chalk);font-weight:600;font-size:13px;text-align:center;font-variant-numeric:tabular-nums}
+.fixture.mine{background:var(--voltwash);box-shadow:inset 3px 0 0 var(--volt);border-bottom-color:transparent}
+.fixture.mine .score{background:var(--night)}
+.fixture .score:empty{visibility:hidden}
+.cup .fixture{grid-template-columns:1fr auto}
+.teamcard button{margin-top:4px}
+.playrow{grid-column:1/-1;display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid rgba(208,232,92,.16);padding-top:10px;font-size:12.5px;color:var(--dim);text-align:center}
+#playStatus{margin:-2px 0 14px;color:var(--dim)}
+#playStatus:empty{display:none}
+
+/* ---------- transfer market ---------- */
+#tab-market .controls{padding-bottom:14px;border-bottom:1px solid var(--line2)}
+#mq{flex:1;min-width:160px}
+.wkpill{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font-size:12px;font-weight:700;letter-spacing:.05em;color:var(--dim);cursor:pointer;transition:border-color .15s,color .15s,background-color .15s}
+.wkpill:has(:checked){background:var(--voltwash);border-color:var(--voltedge);color:var(--volt)}
+.chipmsg{flex:1 0 100%;margin:4px 0 0;min-height:0;font-size:12.5px;color:var(--soft)}
+.chipmsg:empty{display:none}
+.dlbanner{display:flex;align-items:center;gap:10px;border-radius:var(--r);background:var(--red);color:#1c0707;font-size:12px;font-weight:800;letter-spacing:.09em;padding:11px 14px;margin-bottom:14px;text-transform:uppercase}
+.dlbanner .pulse{background:#1c0707}
+
+/* ---------- romano wire and news feed ---------- */
+#romanoBox,.feedcol{max-width:720px}
+.fabpost{padding:14px 0 15px;border-bottom:1px solid var(--hair)}
+.fabpost:last-child{border-bottom:none}
+.fabpost.hero{margin:8px 0;padding:14px 16px 16px;background:var(--voltwash);box-shadow:inset 3px 0 0 var(--volt);border-bottom-color:transparent}
+.fabhead{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.fabtime{font-family:var(--f-num);font-size:11px;color:var(--faint);letter-spacing:.02em}
+.fabbadge{font-family:var(--f-ui);font-weight:700;font-size:9.5px;line-height:1;letter-spacing:.08em;border-radius:var(--r-tag);padding:4px 6px;text-transform:uppercase}
+.fabbadge.go{background:var(--volt);color:var(--voltink);border:1px solid var(--volt)}
+.fabbadge.off{background:rgba(242,92,92,.12);color:var(--softred);border:1px solid rgba(242,92,92,.4)}
+.fabbadge.info{border:1px solid var(--line);color:var(--mid);background:var(--raise)}
+.fabtext{font-size:15px;line-height:1.55;color:var(--soft)}
+.fabpost.hero .fabtext{color:var(--chalk);font-weight:600;font-size:16px}
+.fabav,.fabname,.fabtick,.fabhandle{display:none}
+.feed p{padding:13px 0;border-bottom:1px solid var(--hair);font-size:14px;color:var(--dim);line-height:1.55}
+.feed p:last-child{border-bottom:none}
+.feed p b{color:var(--chalk)}
+.fchip{display:inline-block;background:var(--raise);border:1px solid var(--line);color:var(--volt);border-radius:var(--r-tag);padding:4px 6px;font-size:9.5px;font-weight:700;line-height:1;letter-spacing:.08em;margin:0 8px 6px 0}
+.fchip.red{color:#1c0707;background:var(--red);border-color:var(--red)}
+.fchip.soft{color:var(--softred);border-color:rgba(242,92,92,.4);background:rgba(242,92,92,.1)}
+.fchip.warm{color:var(--warm);border-color:rgba(242,169,74,.45);background:rgba(242,169,74,.1)}
+.ftime{float:right;font-family:var(--f-num);color:var(--faint);font-size:11px}
+
+/* ---------- lineup ---------- */
+.lugrid{display:grid;grid-template-columns:1fr 340px;gap:0;border:1px solid var(--line2);border-radius:var(--r-panel);overflow:hidden;background:var(--screen);margin-bottom:16px}
+@media(max-width:980px){.lugrid{grid-template-columns:1fr}}
+.furail{grid-column:1/-1;display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;border-bottom:1px solid var(--line2);padding:14px 18px}
+#formList{display:flex;flex-wrap:wrap;gap:6px}
+.furow{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);cursor:pointer;transition:border-color .15s,background-color .15s}
+.furow:hover{border-color:var(--bline)}
+.furow .fn{font-family:var(--f-num);font-weight:600;font-size:13px;color:var(--soft)}
+.furow.on{background:var(--voltwash);border-color:var(--volt)}
+.furow.on .fn{color:var(--volt)}
+.furow .ft{display:none}
+.fuact{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fuact .msg{margin:0;min-height:0;flex-basis:100%;text-align:right}
+.fuact .msg:empty{display:none}
+.pitchwrap{display:grid;place-items:start center;padding:26px 14px;background:var(--panel);border-right:1px solid var(--line2)}
+@media(max-width:980px){.pitchwrap{border-right:none;border-bottom:1px solid var(--line2)}}
+#pitch{position:sticky;top:66px;width:100%;max-width:420px;aspect-ratio:10/13;border:1px solid var(--pline);border-radius:var(--r-tag);background:repeating-linear-gradient(180deg,#143122 0 8.333%,#102a1d 8.333% 16.666%)}
+#pitch::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--pline);pointer-events:none}
+#pitch::after{content:"";position:absolute;left:50%;top:50%;width:26%;aspect-ratio:1;border:1px solid var(--pline);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0}
+.pbox{position:absolute;left:50%;width:52%;height:12%;border:1px solid var(--pline);transform:translateX(-50%);pointer-events:none}
+.pbox.top{top:0;border-top:none}
+.pbox.bot{bottom:0;border-bottom:none}
+.luslot{position:absolute;z-index:1;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;user-select:none}
+.luball{width:42px;height:42px;border-radius:50%;background:rgba(10,13,11,.5);border:1px dashed var(--pline);color:var(--dim);display:grid;place-items:center;font-family:var(--f-num);font-weight:600;font-size:13px;position:relative}
+.luslot.lufilled .luball{background:var(--chalk);border:1px solid var(--chalk);color:var(--voltink)}
+.luslot.lufilled.gk .luball{background:var(--warm);border-color:var(--warm)}
+.luslot.luSel .luball{background:var(--volt);color:var(--voltink);border-color:var(--volt);box-shadow:0 0 0 4px rgba(208,232,92,.28)}
+.luplate{font-weight:700;font-size:12px;letter-spacing:.01em;background:rgba(10,13,11,.88);border-radius:var(--r-tag);padding:2px 7px;max-width:92px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.luslot:not(.lufilled) .luplate{font-size:9.5px;letter-spacing:.1em;color:var(--dim);background:transparent}
+.luage{font-family:var(--f-num);font-size:9.5px;color:rgba(240,242,234,.72)}
+.luX{position:absolute;top:-6px;right:-6px;width:16px;height:16px;line-height:15px;border-radius:50%;background:var(--red);color:#1c0707;font-family:var(--f-ui);font-size:11px;font-weight:700;cursor:pointer;text-align:center}
+.lucount{position:absolute;top:8px;right:10px;background:rgba(10,13,11,.8);border-radius:var(--r-tag);padding:3px 8px;color:var(--volt);font-family:var(--f-num);font-weight:600;font-size:12px}
+.benchcol{padding:18px 0 14px}
+.benchhead{display:flex;justify-content:space-between;align-items:baseline;padding:0 18px 10px}
+.benchcol .mlab.plain{padding:18px 18px 10px;color:var(--dim2)}
+#subCount{font-family:var(--f-num);color:var(--volt)}
+.benchrow{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:8px;padding:9px 18px;border-top:1px solid var(--hair)}
+.benchrow[onclick]{cursor:pointer}
+.benchrow:hover{background:rgba(240,242,234,.025)}
+.benchrow.sel{background:var(--voltwash);box-shadow:inset 3px 0 0 var(--volt)}
+.benchrow .bp{font-family:var(--f-num);font-size:10.5px;font-weight:600}
+.benchrow .bn{font-weight:600;font-size:14px;display:flex;align-items:baseline;gap:8px;min-width:0}
+.benchrow .bn span{font-family:var(--f-num);font-size:11px;font-weight:400;color:var(--dim2);flex:none}
+.benchrow .bn b{font-family:var(--f-num);font-size:12.5px;color:var(--chalk);font-weight:600;flex:none}
+.benchrow .ba{display:flex;gap:5px}
+.dragghint{margin:16px 18px 4px;border:1px dashed var(--line);border-radius:var(--r);padding:11px 13px;font-size:10.5px;font-weight:600;letter-spacing:.07em;color:var(--dim2);text-transform:uppercase;line-height:1.7}
+
+/* ---------- cups ---------- */
+.cup{border:1px solid var(--line2);border-radius:var(--r);background:var(--panel);padding:18px 18px 10px;margin-bottom:12px}
+.cup h3{font-size:19px}
+.cup .cupsub{color:var(--dim2);font-size:11px;font-weight:600;margin:6px 0 4px;letter-spacing:.08em;text-transform:uppercase}
+.cup .champ{color:var(--volt)}
+.cuproundname{text-transform:uppercase;font-size:10.5px;font-weight:600;letter-spacing:.1em;color:var(--dim2);margin:16px 0 4px;padding-bottom:7px;border-bottom:1px solid var(--line2)}
+
+/* ---------- calendar: a wall chart of the season ---------- */
+.calgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));border-top:1px solid var(--line2);border-left:1px solid var(--line2)}
+.calgrid>p{grid-column:1/-1}
+.calcell{background:var(--screen);border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:11px 12px 13px;min-height:108px}
+.calcell.done{background:var(--panel)}
+.calcell.done .copp{color:var(--mid)}
+.calcell.now{background:var(--voltwash);box-shadow:inset 0 0 0 1px var(--volt)}
+.calcell .ctop{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.calcell .cmw{font-family:var(--f-num);font-size:10.5px;font-weight:600;color:var(--faint);white-space:nowrap}
+.calcell.now .cmw{color:var(--volt)}
+.calcell .ccomp{font-size:9.5px;font-weight:600;letter-spacing:.07em;line-height:1.3;color:var(--dim2);text-transform:uppercase;text-align:right}
+.calcell .copp{font-weight:700;font-size:14px;line-height:1.2;margin-top:9px}
+.calcell .cres{font-family:var(--f-num);font-size:13px;font-weight:600;margin-top:6px}
+.calcell .cres::before{content:"";display:inline-block;width:6px;height:6px;margin-right:7px;background:currentColor;vertical-align:1px}
+.calcell .cres.w{color:var(--grass)}.calcell .cres.l{color:var(--red)}.calcell .cres.d{color:var(--dim)}
+.calcell .cwin{font-size:9.5px;font-weight:700;letter-spacing:.08em;color:var(--warm);margin-top:7px;text-transform:uppercase}
+.calcell .cextra{font-size:9.5px;font-weight:600;letter-spacing:.05em;color:var(--dim2);margin-top:6px;line-height:1.55;text-transform:uppercase}
+.callegend{display:flex;gap:16px;font-size:10.5px;font-weight:600;letter-spacing:.08em;color:var(--dim2);flex-wrap:wrap;text-transform:uppercase}
+.calweek{display:none}
+
+/* ---------- tables tab extras ---------- */
+.awardh{margin:0 0 4px;color:var(--soft);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+#awardsBox{margin-top:26px}
+#historyBox{margin-top:18px;color:var(--dim);font-size:13px;line-height:1.7}
+
+/* ---------- nations ---------- */
+.teamcard{border:1px solid var(--line2);border-radius:var(--r);background:var(--panel);padding:13px 14px}
+.teamcard.me{border-color:var(--volt);background:var(--voltwash)}
+.tc-name{font-weight:800;font-size:16px;text-transform:uppercase;letter-spacing:-.005em}
+.tc-sub{font-size:11px;color:var(--dim2);margin-top:3px}
+
+/* ---------- penalties ---------- */
+#pensBox{border-bottom:1px solid var(--line2);padding:22px 16px;text-align:center}
+.pen-title{font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.06em}
+.pen-title span{color:var(--dim)}
+.pen-score{font-weight:800;font-stretch:75%;font-size:clamp(30px,6vw,48px);line-height:1;margin:10px 0 12px;color:var(--chalk)}
+.pen-dots{display:flex;justify-content:center;gap:10px 26px;flex-wrap:wrap;margin:4px 0 12px}
+.pen-row{display:flex;gap:5px;align-items:center}
+.pen-row .pn{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--dim);text-transform:uppercase;margin-right:6px}
+.pendot{width:13px;height:13px;border-radius:50%;border:1px solid var(--bline);background:var(--panel)}
+.pendot.g{background:var(--grass);border-color:var(--grass)}
+.pendot.m{background:var(--red);border-color:var(--red)}
+.pen-act{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pen-act button{min-width:104px}
+.pen-wait{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;margin-top:8px}
+.pen-last{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--chalk);margin-top:6px;text-transform:uppercase}
+
+/* ---------- full screen overlays share one backdrop ---------- */
+#matchday,#awardsOverlay,#cabRoom{background:repeating-linear-gradient(90deg,rgba(240,242,234,.02) 0 120px,transparent 120px 240px),var(--night)}
+
+/* ---------- awards ceremony ---------- */
+#awardsOverlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;overflow:auto;padding:24px}
+.awinner{max-width:620px;width:100%;padding:30px 10px}
+.awinner>.msub{color:var(--volt);font-weight:700;letter-spacing:.14em}
+.awh{font-weight:900;font-stretch:118%;font-size:clamp(34px,7vw,58px);line-height:.9;letter-spacing:-.02em;margin:10px 0 26px}
+.awh span{color:var(--volt)}
+.awrow{display:flex;justify-content:space-between;align-items:center;gap:14px;border-bottom:1px solid var(--line2);padding:14px 2px}
+.awrow .ak{font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.awrow .av{font-weight:800;font-size:18px;text-transform:uppercase;text-align:right;line-height:1.2}
+.awrow .av small{font-size:10.5px;color:var(--dim);letter-spacing:.08em;display:block;font-weight:600;margin-top:3px}
+.awrow.champ{border:1px solid var(--volt);border-radius:var(--r);background:var(--voltwash);padding:16px 16px;margin-bottom:6px}
+.awrow.champ .ak,.awrow.champ .av{color:var(--volt)}
+.awrow.champ .av{font-size:24px}
+.awrow.doom .av{color:var(--softred)}
+#awardsGo{margin-top:26px}
+
+/* ---------- matchday reactions ---------- */
+.reactbar{display:flex;justify-content:center;gap:6px;padding:14px 12px;border-bottom:1px solid var(--hair);flex-wrap:wrap}
+.reactbar button{background:var(--panel);border:1px solid var(--line);font-size:19px;padding:8px 13px;line-height:1;letter-spacing:0}
+.reactbar button:hover{background:var(--raise);border-color:var(--bline)}
+.reactfeed{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:12px 14px;border-bottom:1px solid var(--hair);min-height:20px}
+.reactfeed:empty,.reactbar:empty{display:none}
+.reactchip{font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-tag);padding:3px 9px;text-transform:uppercase}
+.reactchip b{font-size:14px;margin-right:4px}
+
+/* ---------- trophy cabinet ---------- */
+.cabhero{display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px 0 20px}
+.cabhero .msub{font-weight:700;letter-spacing:.12em;color:var(--dim)}
+.cabhero p{color:var(--dim);font-size:13px;max-width:480px;text-align:center}
+.ctrophy-spin{width:150px;height:190px;perspective:700px}
+.ctrophy{width:100%;height:100%;position:relative;transform-style:preserve-3d;animation:ctspin 7s linear infinite, ctfloat 3.4s ease-in-out infinite alternate}
+@keyframes ctspin{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+@keyframes ctfloat{from{margin-top:0}to{margin-top:-14px}}
+.ct-bowl{position:absolute;left:50%;top:6px;width:104px;height:86px;transform:translateX(-50%);border-radius:8px 8px 60px 60px;background:linear-gradient(105deg,#8a5d0a 0%,#e8c052 30%,#ffe9a8 50%,#e8c052 68%,#8a5d0a 100%)}
+.ct-bowl::before,.ct-bowl::after{content:"";position:absolute;top:6px;width:34px;height:52px;border:7px solid #d99a1c;border-radius:50%}
+.ct-bowl::before{left:-30px;border-right-color:transparent}
+.ct-bowl::after{right:-30px;border-left-color:transparent}
+.ct-stem{position:absolute;left:50%;top:90px;width:18px;height:52px;transform:translateX(-50%);background:linear-gradient(105deg,#8a5d0a,#ffd061,#8a5d0a)}
+.ct-base{position:absolute;left:50%;top:140px;width:92px;height:26px;transform:translateX(-50%);background:linear-gradient(105deg,#241b07,#6b4a08,#241b07);border-top:4px solid #d99a1c}
+.ct-base::after{content:"";position:absolute;left:50%;bottom:-12px;width:118px;height:12px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--bline)}
+#cabRoom{position:fixed;inset:0;z-index:60;overflow:auto}
+.cabtop{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:18px 24px;border-bottom:1px solid var(--line2);max-width:1100px;margin:0 auto}
+.cabtop h2{font-weight:900;font-stretch:118%;font-size:clamp(24px,5vw,38px);letter-spacing:-.02em}
+.cabtop h2 span{color:var(--volt)}
+.cabtop>div{display:flex;align-items:center;gap:14px}
+.cabnote{text-align:center;padding:10px 0 26px;font-weight:600;letter-spacing:.1em}
+#cabStage{max-width:1100px;margin:0 auto;height:min(56vh,520px);cursor:grab;touch-action:none}
+#cabStage canvas{display:block;width:100%;height:100%}
+#cabStage:active{cursor:grabbing}
+#cabShelf{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;padding:0 16px 30px}
+.cabitem{background:var(--screen);border:1px solid var(--line2);border-radius:var(--r);padding:14px;text-align:center}
+#cabGridSmall .cabitem{border:none;border-radius:0}
+.cabitem .mini{width:64px;height:82px;margin:0 auto 10px;position:relative;transform:scale(.52);transform-origin:top left;left:calc(50% - 33px)}
+.cabitem .ci-name{font-weight:700;font-size:14px;text-transform:uppercase;line-height:1.2}
+.cabitem .ci-season{font-family:var(--f-num);font-size:10.5px;font-weight:600;color:var(--volt);margin-top:5px}
+.cabitem .ci-extra{font-size:10.5px;color:var(--dim2);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+
+/* ---------- matchday overlay: the full time graphic ---------- */
+#matchday{position:fixed;inset:0;z-index:50;overflow:auto}
+#matchday .inner{max-width:980px;margin:0 auto;min-height:100dvh;background:var(--screen);border-left:1px solid var(--line2);border-right:1px solid var(--line2)}
+#matchday .panel{border:none;border-bottom:1px solid var(--line2);border-radius:0;margin:0;padding:22px 24px;background:transparent}
+#matchday .sub{color:var(--dim);font-size:13px;padding:14px 24px;border-bottom:1px solid var(--hair);text-align:center}
+#matchday .waiting{color:var(--volt);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:11px;animation:flpulse 1.6s ease-in-out infinite}
+#matchday h2{font-weight:900;font-stretch:118%;font-size:clamp(22px,4vw,34px);letter-spacing:-.02em}
+#matchday h2 span{color:var(--volt)}
+#matchday .foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 24px 44px;flex-wrap:wrap}
+#matchday .foot>span:last-child{display:flex;gap:8px;flex-wrap:wrap}
+.mdtop{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 24px;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.mdlock{display:flex;align-items:center;gap:9px;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--softred);text-transform:uppercase}
+.mdhero{display:flex;align-items:center;justify-content:center;gap:10px clamp(14px,4vw,44px);padding:46px 20px 42px;border-bottom:1px solid var(--line2);background:repeating-linear-gradient(90deg,#143122 0 90px,#102a1d 90px 180px);flex-wrap:wrap}
+.mdhero .tm{flex:1 1 0;min-width:150px;font-weight:800;font-stretch:104%;font-size:clamp(20px,3.6vw,38px);line-height:1;letter-spacing:-.015em;text-transform:uppercase}
+.mdhero .tm.away{color:rgba(240,242,234,.62)}
+.mdhero .sc{font-weight:800;font-stretch:62%;font-size:clamp(72px,13vw,150px);line-height:.82;color:var(--chalk);font-variant-numeric:tabular-nums}
+.mdhero .sc.away{color:rgba(240,242,234,.62)}
+.mdhero .dash{color:rgba(240,242,234,.4);font-size:18px;font-weight:700}
+.liveclock{flex:0 0 100%;font-family:var(--f-num);font-size:12px;font-weight:600;letter-spacing:.14em;color:var(--softred);text-align:center;padding:14px 0 0}
+.liveclock b{color:var(--chalk)}
+#mdScorers{text-align:center;padding:12px 16px;border-bottom:1px solid var(--hair);font-weight:600;letter-spacing:.07em;line-height:1.9;color:var(--soft)}
+@keyframes goalpop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.goalpop{animation:goalpop .5s ease}
+@media(max-width:600px){
+  .mdhero{padding:34px 16px 30px}
+  .mdhero .tm{flex-basis:100%;text-align:center!important}
+}
+
+/* ---------- transfer wire ticker: runs along the bottom like a news channel ---------- */
+.ticker{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;align-items:stretch;height:34px;background:var(--panel);border-top:1px solid var(--line);overflow:hidden;white-space:nowrap}
+.ticker::before{content:attr(data-label);position:relative;z-index:1;display:flex;align-items:center;padding:0 14px;background:var(--volt);color:var(--voltink);font-family:var(--f-ui);font-weight:800;font-size:11px;letter-spacing:.08em;flex:none}
+.ticker-inner{display:inline-flex;align-items:center;padding:0;animation:tick 40s linear infinite;font-size:11.5px;font-weight:600;letter-spacing:.07em;color:var(--soft);text-transform:uppercase}
+@keyframes tick{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+
+/* ---------- contract popup ---------- */
+.ct-modal{position:fixed;inset:0;z-index:9000;background:rgba(6,9,7,.74);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px}
+.ct-card{background:var(--screen);border:1px solid var(--line);border-top:3px solid var(--volt);border-radius:var(--r-panel);padding:22px;width:min(92vw,420px);box-shadow:0 30px 80px -20px rgba(0,0,0,.75)}
+.ct-card h3{margin:0 0 6px;font-size:19px}
+.ct-card .row{display:flex;gap:10px;align-items:center;margin-top:12px}
+.ct-card .row.end{justify-content:flex-end;margin-top:18px}
+.ct-card label{width:118px;flex:none}
+.ct-card input,.ct-card select{flex:1;min-width:0}
+.ct-note{color:var(--dim);font-size:12.5px;margin-top:12px;min-height:16px;line-height:1.5}
+
+/* ---------- playable match: the cards over the pitch ---------- */
+#matchWrap{position:fixed;inset:0;z-index:200;background:#0a1410}
+#matchCanvas{display:block;width:100%;height:100%}
+#matchPanel{position:absolute;inset:0;display:grid;place-items:center;padding:16px;background:rgba(6,9,7,.68);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);overflow:auto}
+#matchPanel.msolid{background:repeating-linear-gradient(90deg,rgba(240,242,234,.02) 0 120px,transparent 120px 240px),var(--night);backdrop-filter:none;-webkit-backdrop-filter:none}
+.mcard{background:var(--screen);border:1px solid var(--line);border-top:3px solid var(--volt);border-radius:var(--r-panel);padding:26px 28px 24px;width:min(94vw,580px);box-shadow:0 30px 80px -20px rgba(0,0,0,.75);text-align:left;animation:tabin .28s var(--ease)}
+.mcard .mk{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--volt);text-transform:uppercase}
+.mcard h2{font-weight:900;font-stretch:108%;font-size:clamp(24px,4.6vw,36px);line-height:1;letter-spacing:-.015em;margin:10px 0 18px;text-wrap:balance}
+.mcard h2 span{color:var(--volt);white-space:nowrap}
+.mcard p{color:var(--dim);font-size:13.5px;line-height:1.55;margin-top:12px}
+.mcard .mdiff{color:var(--chalk);font-weight:600;font-size:15px}
+.mcard .mwarn{color:var(--warm)}
+.mcard .merr{color:var(--softred);font-weight:600}
+.mrow{display:flex;border:1px solid var(--line2);border-radius:var(--r);overflow:hidden}
+.mrow div{flex:1;min-width:0;background:var(--panel);border-left:1px solid var(--line2);padding:13px 16px 12px}
+.mrow div:first-child{border-left:none}
+.mrow b{display:block;font-family:var(--f-ui);font-weight:800;font-stretch:66%;font-size:44px;line-height:.95;color:var(--chalk);font-variant-numeric:tabular-nums}
+.mrow small{display:block;margin-top:7px;font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--dim2)}
+.mkeys{display:grid;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line2);font-size:13px;line-height:1.5;color:var(--soft)}
+.mkeys kbd{display:inline-block;min-width:24px;text-align:center;background:var(--raise);border:1px solid var(--bline);border-bottom-width:2px;border-radius:var(--r);padding:1px 6px;margin-right:3px;font-family:var(--f-num);font-size:11.5px;font-weight:500;color:var(--chalk)}
+.mcard .mscore{font-family:var(--f-ui);font-weight:800;font-size:clamp(22px,4.4vw,32px);line-height:1.1;text-transform:uppercase;letter-spacing:-.01em;margin-top:8px}
+.mcard .mscore span{color:var(--volt);white-space:nowrap}
+.mbtns{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:22px}
+/* 3D or Classic: the look picker on the kick off screen */
+.mlook{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px 14px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line2)}
+.mlook small{grid-column:1/-1;font-size:12px;line-height:1.5;color:var(--dim2)}
+.mseg{display:flex;gap:6px}
+.mseg button.on{background:var(--voltwash);color:var(--volt);border-color:var(--volt)}
+/* in 3D the scene has its own canvas and the classic canvas above it only carries the scoreboard and labels */
+#matchCanvas3d{position:absolute;inset:0;display:block;width:100%;height:100%}
+#matchWrap.m3d #matchCanvas{position:absolute;inset:0;background:transparent}
+#matchWrap.m3d{background:#04060b}
+
+/* ---------- people who ask for less motion get a still page ---------- */
+@media (prefers-reduced-motion: reduce){
+  .pulse,.ctrophy,#matchday .waiting,#lobby h1 span,section[id^="tab-"],.mcard,.goalpop{animation:none}
+  .ticker-inner{animation:none;padding-left:12px}
+  button,input,select,.confbar span{transition:none}
+}
+
+/* ==========================================================
+   Be-A-Manager shared design language
+   Floodlights now wears the same look as the landing page:
+   pure black, hairlines at 13% white, chamfered corners,
+   Inter for reading, Chakra Petch for every label and big
+   number, liquid glass buttons, and the glow button for the
+   main action on each screen. The one accent stays volt.
+   Everything below only restyles. No behavior lives here.
+   ========================================================== */
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(fonts/inter.woff2) format('woff2')}
+@font-face{font-family:'Chakra Petch';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/chakra-petch-600.woff2) format('woff2')}
+@font-face{font-family:'Chakra Petch';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/chakra-petch-700.woff2) format('woff2')}
+@font-face{font-family:'Geist Mono';font-style:normal;font-weight:400 700;font-display:swap;src:url(fonts/geist-mono.woff2) format('woff2')}
+@font-face{font-family:'Instrument Serif';font-style:italic;font-weight:400;font-display:swap;src:url(fonts/instrument-serif-italic.woff2) format('woff2')}
+
+html{background:#000000!important}
+body{background:transparent;font-size:14px;letter-spacing:-.005em}
+/* starfield backdrop: two 1px dots with long box-shadow lists, filled in by the script at the foot of the page */
+#bamStars{position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 34% at 50% 108%,rgba(74,168,96,.16),rgba(74,168,96,0) 70%)}
+#bamStars i{position:absolute;left:0;top:0;width:1px;height:1px;border-radius:50%;background:#fff}
+
+/* ---------- type ---------- */
+h1,h2,h3,.disp{font-weight:700;letter-spacing:.02em;line-height:1.05}
+h3{font-size:16px;letter-spacing:.04em}
+h4,.mlab,.msub,label,th,.tag,.chip,.cmk,.hubhead .who,nav.tabs button,.brand .tg,.brand .nm,.lobbystats dt,.fabbadge,.fchip,.cuproundname,.cup .cupsub,.calcell .ccomp,.calcell .cwin,.calcell .cextra,.callegend,.awrow .ak,.awardh,.mcard .mk,.mrow small,.pen-title,.pen-wait,.pen-last,.pen-row .pn,.mgrow .cl,.offer .who,.offer .fee small,.wkpill,.dlbanner,.dragghint,.reactchip,.cabitem .ci-extra,.mdlock,#matchday .waiting,.ticker::before,.ticker-inner,.tc-sub,.luslot:not(.lufilled) .luplate{font-family:var(--f-lbl)}
+th{font-weight:700;letter-spacing:.1em}
+/* big scoreboard numbers */
+.cmv,.lobbystats dd,.codebox,.offer .fee,.mrow b,.pen-score,.mdhero .sc,.awh,.cabtop h2,#matchday h2{font-family:var(--f-lbl);font-weight:700;letter-spacing:.01em}
+.codebox{font-size:clamp(38px,7.6vw,62px)}
+.mdhero .sc{font-size:clamp(64px,11vw,128px);line-height:.9}
+.hubhead .clubname{font-weight:700;letter-spacing:.02em;font-size:clamp(30px,4.8vw,58px);line-height:.98}
+.mdhero .tm{font-weight:700;letter-spacing:.03em}
+.awh{font-size:clamp(30px,6vw,50px);line-height:1}
+
+/* ---------- buttons: liquid glass (solid and ghost) ---------- */
+button{position:relative;isolation:isolate;overflow:hidden;font-family:var(--f-lbl);font-weight:700;font-size:11.5px;letter-spacing:.09em;border-radius:6px;padding:12px 18px;
+  background:linear-gradient(180deg,#ffffff 0%,#e7e7e7 48%,#cfcfcf 100%);color:#111111;border:1px solid #ffffff;
+  transition:background .35s ease,border-color .35s ease,box-shadow .35s ease,color .35s ease,filter .35s ease,transform .08s}
+button:hover{background:linear-gradient(180deg,#ffffff 0%,#f3f6ff 42%,#d5def2 100%);border-color:#f2f6ff}
+button:not(nav.tabs *):not(.teampick > *):not(.reactbar *){box-shadow:inset 0 1px 0 rgba(255,255,255,.95)}
+button:not(nav.tabs *):not(.teampick > *):not(.reactbar *):hover{box-shadow:inset 0 1px 0 #ffffff,0 0 22px rgba(186,208,255,.35),0 8px 18px rgba(255,255,255,.12)}
+/* the shine sweep */
+button:not(nav.tabs *):not(.teampick > *):not(.reactbar *)::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.45) 48%,transparent 76%);transform:translateX(-130%);transition:transform .65s ease;pointer-events:none}
+button:not(nav.tabs *):not(.teampick > *):not(.reactbar *):hover::after{transform:translateX(130%)}
+button:disabled::after{display:none}
+button:focus-visible{outline:2px solid var(--volt);outline-offset:3px}
+button.ghost{background:linear-gradient(135deg,rgba(255,255,255,.1),rgba(0,0,0,.45) 50%,rgba(160,175,200,.08));color:#ffffff;border-color:rgba(198,198,198,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)!important}
+button.ghost:hover{background:linear-gradient(135deg,rgba(210,225,255,.18),rgba(0,0,0,.35) 48%,rgba(180,195,220,.16));color:#ffffff;border-color:rgba(220,230,255,.75);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 0 20px rgba(170,200,255,.22)!important}
+button.red{background:linear-gradient(135deg,rgba(242,92,92,.14),rgba(0,0,0,.45) 50%,rgba(242,92,92,.06));color:var(--softred);border-color:rgba(242,92,92,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important}
+button.red:hover{background:linear-gradient(135deg,rgba(242,92,92,.24),rgba(0,0,0,.35) 48%,rgba(242,92,92,.14));border-color:var(--red);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 18px rgba(242,92,92,.22)!important}
+button.red.hj{background:var(--red);color:#1c0707;border-color:var(--red)}
+button.red.hj:hover{background:var(--softred);border-color:var(--softred)}
+button.small{padding:8px 11px;font-size:10.5px;letter-spacing:.08em}
+button.small:not(.ghost):not(.red):not(.gold){background:var(--voltwash);color:var(--volt);border-color:var(--voltedge);box-shadow:none!important}
+button.small:not(.ghost):not(.red):not(.gold):hover{background:rgba(208,232,92,.18);border-color:var(--volt);box-shadow:none!important}
+button.small:not(.ghost):not(.red):not(.gold)::after{display:none}
+
+/* ---------- the glow button: the main action on a screen ----------
+   Near black, with a bank of volt light pooled at its foot and clipped by the
+   button's own rounded rect. The same button the landing page uses to enter a game. */
+button.gold,.card #createBtn{color:#ffffff;border:0;border-radius:12px;padding:14px 22px;text-shadow:0 1px 2px rgba(10,16,0,.5);
+  background:linear-gradient(to top,#eef7b0 1px,#e8f59a 2px,#e1f486 3px,#d9ee6e 4px,#d0e85c 5px,#b4cc3c 6px,#a0b82e 7px,#93aa28 8px,#80961f 9px,#6b7e17 10px,#566613 12px,#4f5d16 13px,#465311 14px,#374210 16px,#2a3210 18px,#202710 20px,#171c0f 24px,#10140c 30px,#0e120b 34px,#0e120b 100%);
+  box-shadow:inset 0 3px 3px -2px rgba(236,246,190,.1),inset 1px 0 0 rgba(255,255,255,.09),inset -1px 0 0 rgba(255,255,255,.09),0 1px 0 rgba(214,234,140,.38),1px 0 0 rgba(214,234,140,.17),-1px 0 0 rgba(214,234,140,.17),0 0 8px rgba(208,232,92,.1),0 2px 5px -3px rgba(208,232,92,.45)!important}
+button.gold::before,.card #createBtn::before{content:"";position:absolute;left:22%;right:38%;top:.8px;height:1.9px;z-index:1;filter:blur(.55px);background:linear-gradient(90deg,rgba(225,244,134,0) 0%,rgba(225,244,134,.58) 34%,rgba(240,250,190,.74) 50%,rgba(225,244,134,.58) 66%,rgba(225,244,134,0) 100%)}
+button.gold::after,.card #createBtn::after{content:"";position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;transform:none!important;transition:none;
+  background:linear-gradient(90deg,rgba(240,250,190,.7),rgba(240,250,190,0) 13px),linear-gradient(270deg,rgba(240,250,190,.7),rgba(240,250,190,0) 13px);
+  -webkit-mask:linear-gradient(to top,#000 0,#000 6px,rgba(0,0,0,.4) 12px,rgba(0,0,0,.15) 18px,rgba(0,0,0,.09) 24px,rgba(0,0,0,.02) 30px,rgba(0,0,0,.02) 100%);
+  mask:linear-gradient(to top,#000 0,#000 6px,rgba(0,0,0,.4) 12px,rgba(0,0,0,.15) 18px,rgba(0,0,0,.09) 24px,rgba(0,0,0,.02) 30px,rgba(0,0,0,.02) 100%)}
+button.gold:hover,.card #createBtn:hover{filter:brightness(1.12);
+  background:linear-gradient(to top,#eef7b0 1px,#e8f59a 2px,#e1f486 3px,#d9ee6e 4px,#d0e85c 5px,#b4cc3c 6px,#a0b82e 7px,#93aa28 8px,#80961f 9px,#6b7e17 10px,#566613 12px,#4f5d16 13px,#465311 14px,#374210 16px,#2a3210 18px,#202710 20px,#171c0f 24px,#10140c 30px,#0e120b 34px,#0e120b 100%);
+  box-shadow:inset 0 1px 0 rgba(240,250,190,.6),inset 1px 0 0 rgba(225,244,134,.35),inset -1px 0 0 rgba(225,244,134,.35),0 6px 22px rgba(160,190,50,.42)!important}
+/* the small one keeps the same light on a shorter bank */
+button.small.gold{padding:9px 13px;border-radius:9px;
+  background:linear-gradient(to top,#e8f59a 1px,#d9ee6e 2px,#d0e85c 3px,#a0b82e 4px,#80961f 5px,#566613 7px,#465311 8px,#2a3210 10px,#202710 12px,#171c0f 15px,#0e120b 20px,#0e120b 100%)}
+button.small.gold:hover{background:linear-gradient(to top,#e8f59a 1px,#d9ee6e 2px,#d0e85c 3px,#a0b82e 4px,#80961f 5px,#566613 7px,#465311 8px,#2a3210 10px,#202710 12px,#171c0f 15px,#0e120b 20px,#0e120b 100%)}
+button.small.gold::after{-webkit-mask:linear-gradient(to top,#000 0,#000 4px,rgba(0,0,0,.3) 8px,rgba(0,0,0,.08) 14px,rgba(0,0,0,.02) 20px,rgba(0,0,0,.02) 100%);mask:linear-gradient(to top,#000 0,#000 4px,rgba(0,0,0,.3) 8px,rgba(0,0,0,.08) 14px,rgba(0,0,0,.02) 20px,rgba(0,0,0,.02) 100%)}
+
+/* buttons that are really rows, tabs or tiles keep their own plain look */
+nav.tabs button,.teampick>button,.reactbar button{overflow:visible}
+nav.tabs button{background:transparent;color:var(--dim);border:none;border-bottom:2px solid transparent;border-radius:0;font-size:11px;letter-spacing:.11em;padding:17px 12px 14px}
+nav.tabs button:hover{background:transparent;color:#ffffff;border-color:transparent}
+nav.tabs button.on{color:#ffffff;border-bottom-color:var(--volt)}
+.teampick>button{background:var(--panel);color:var(--chalk);border:1px solid var(--line);border-radius:6px;font-family:var(--f-ui);font-size:14px;letter-spacing:0;padding:12px 12px 11px}
+.teampick>button:hover{background:var(--raise);border-color:var(--bline)}
+.teampick>button.taken:hover{background:var(--panel);border-color:var(--line)}
+.teampick>button.mine{background:var(--voltwash);border-color:var(--volt);color:var(--volt)}
+.reactbar button{background:var(--panel);border:1px solid var(--line);font-size:19px;padding:8px 13px;letter-spacing:0;color:inherit}
+.reactbar button:hover{background:var(--raise);border-color:var(--bline)}
+
+/* ---------- form controls ---------- */
+input:not([type=checkbox]),select{background:rgba(255,255,255,.035);border-color:var(--line);border-radius:6px}
+input:not([type=checkbox]):focus,select:focus{border-color:var(--volt);box-shadow:0 0 0 1px var(--volt)}
+select option{background:#0a0b0a;color:#fff}
+
+/* ---------- surfaces: black panels, hairlines, chamfered corners ---------- */
+.panel,.card,.mcard,.ct-card,.lugrid{border-radius:0;border-color:var(--line);background-origin:border-box;
+  background:
+    linear-gradient(to bottom left,transparent calc(50% - .65px),rgba(255,255,255,.2) calc(50% - .65px),rgba(255,255,255,.2) calc(50% + .65px),transparent calc(50% + .65px)) top right/16px 16px no-repeat border-box,
+    linear-gradient(to bottom left,transparent calc(50% - .65px),rgba(255,255,255,.2) calc(50% - .65px),rgba(255,255,255,.2) calc(50% + .65px),transparent calc(50% + .65px)) bottom left/16px 16px no-repeat border-box,
+    var(--screen);
+  clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px))}
+#matchday .panel{clip-path:none}
+.mcard,.ct-card{border-top:1px solid var(--line);box-shadow:none;background-color:#070807}
+.mcard{position:relative}
+.mcard::before,.ct-card::before{content:"";position:absolute;left:0;top:0;width:54px;height:2px;background:var(--volt)}
+.ct-card{position:relative}
+.staffcard,.offer,.cup,.teamcard,.cabitem,.furow,.wkpill{border-radius:0}
+.staffcard button{flex:none}
+.mseg button.on,.mseg button.on:hover{background:var(--voltwash);color:var(--volt);border-color:var(--volt);box-shadow:none!important}
+.offer{border-left-width:2px}
+nav.tabs{background:#000000;border-bottom-color:var(--line)}
+.topbar{border-bottom-color:var(--line)}
+.brand .nm{font-weight:700;font-size:14px;letter-spacing:.2em}
+.chip{letter-spacing:.1em;font-weight:600}
+a.homechip{text-decoration:none;color:var(--dim);transition:color .25s ease}
+a.homechip:hover{color:#ffffff}
+.tag,.fabbadge,.fchip{font-weight:700;letter-spacing:.1em}
+tr.me td,tbody tr.me:hover td{background:var(--voltwash)}
+tbody tr:hover td{background:rgba(255,255,255,.03)}
+.ticker{background:#000000;border-top-color:var(--line)}
+.ticker::before{font-weight:700;letter-spacing:.14em}
+#matchday,#awardsOverlay,#cabRoom{background:#000000}
+#matchday .inner{background:#050605;border-color:var(--line)}
+.ct-modal{background:rgba(0,0,0,.74)}
+#matchWrap{background:#000000}
+#matchPanel{background:rgba(0,0,0,.7)}
+#matchPanel.msolid{background:#000000}
+.mrow{border-radius:0;border-color:var(--line)}
+.mkeys kbd{border-radius:4px}
+
+/* ---------- lobby: the same frame, starfield and masked headline as the landing page ---------- */
+#lobby{background:transparent;padding:64px 56px}
+.lobbyframe{position:fixed;inset:22px;z-index:0;pointer-events:none}
+.lobbyframe .ln{position:absolute;background:rgba(255,255,255,.13)}
+.lobbyframe .ln-t{left:22px;right:22px;top:0;height:1px;transform-origin:left center;animation:fldrawx .5s cubic-bezier(.65,0,.35,1) .04s both}
+.lobbyframe .ln-b{left:22px;right:22px;bottom:0;height:1px;transform-origin:right center;animation:fldrawx .5s cubic-bezier(.65,0,.35,1) .2s both}
+.lobbyframe .ln-l{top:22px;bottom:22px;left:0;width:1px;transform-origin:center top;animation:fldrawy .5s cubic-bezier(.65,0,.35,1) .04s both}
+.lobbyframe .ln-r{top:22px;bottom:22px;right:0;width:1px;transform-origin:center bottom;animation:fldrawy .5s cubic-bezier(.65,0,.35,1) .2s both}
+.lobbyframe .cn{position:absolute;width:22px;height:22px;animation:flfade .3s linear .55s both}
+.lobbyframe .cn-tl,.lobbyframe .cn-br{background:linear-gradient(to bottom right,transparent calc(50% - .65px),rgba(255,255,255,.13) calc(50% - .65px),rgba(255,255,255,.13) calc(50% + .65px),transparent calc(50% + .65px))}
+.lobbyframe .cn-tr,.lobbyframe .cn-bl{background:linear-gradient(to bottom left,transparent calc(50% - .65px),rgba(255,255,255,.13) calc(50% - .65px),rgba(255,255,255,.13) calc(50% + .65px),transparent calc(50% + .65px))}
+.lobbyframe .cn-tl{left:0;top:0}.lobbyframe .cn-tr{right:0;top:0}.lobbyframe .cn-bl{left:0;bottom:0}.lobbyframe .cn-br{right:0;bottom:0}
+@keyframes fldrawx{from{scale:0 1}to{scale:1 1}}
+@keyframes fldrawy{from{scale:1 0}to{scale:1 1}}
+@keyframes flfade{from{opacity:0}to{opacity:1}}
+@keyframes flmask{from{translate:0 112%}to{translate:0 0}}
+@keyframes flsoft{from{opacity:0;translate:0 9px}to{opacity:1;translate:0 0}}
+.lobbyin{position:relative;z-index:1}
+.lobbybrand{gap:14px}
+.lobbybrand .homelink{font-family:var(--f-lbl);font-weight:700;font-size:10.5px;letter-spacing:.16em;color:var(--dim);text-decoration:none;text-transform:uppercase;padding:6px 0;transition:color .25s ease}
+.lobbybrand .homelink:hover{color:#ffffff}
+.lobbybrand .tg{padding-left:14px;border-left:1px solid var(--line)}
+#lobby h1{font-weight:700;font-size:clamp(40px,6.2vw,88px);line-height:1;letter-spacing:.02em;margin:20px 0 22px;overflow:hidden;white-space:nowrap;padding:.06em 0 .1em}
+#lobby h1 .hrise{display:block;color:var(--chalk);animation:flmask .9s cubic-bezier(.16,1,.3,1) .3s both}
+#lobby h1 span span{display:inline;color:var(--volt);animation:lightson 1.1s linear .7s both}
+#lobby .sub{font-size:16px;line-height:1.55;color:rgba(224,232,245,.84);max-width:44ch;letter-spacing:-.015em;animation:flsoft .72s cubic-bezier(.22,.61,.36,1) .6s both}
+#lobby .sub em{font-family:'Instrument Serif','Times New Roman',Times,serif;font-style:italic;font-weight:400;font-size:1.2em;line-height:1.1;color:#9a9a9a;padding:0 .04em .04em}
+.lobbystats{border-top-color:var(--line);animation:flsoft .72s cubic-bezier(.22,.61,.36,1) .8s both}
+.lobbystats div{border-right-color:var(--line)}
+.lobbystats dd{font-size:36px}
+.card{padding:28px;box-shadow:none;background-color:rgba(8,9,8,.86);animation:flsoft .8s cubic-bezier(.22,.61,.36,1) .7s both}
+.card::before,.card::after{display:none}
+.card .cardsplit{background:var(--line)}
+.card #createBtn{padding:16px 18px}
+/* decode labels: width is pinned by the script so a scramble never reflows */
+.dec{display:inline-block;white-space:pre}
+@media(max-width:860px){
+  #lobby{padding:44px 30px}
+  #lobby h1{font-size:clamp(34px,11.2vw,88px)}
+}
+@media (prefers-reduced-motion: reduce){
+  .lobbyframe .ln,.lobbyframe .cn,#lobby h1 .hrise,#lobby h1 span span,#lobby .sub,.lobbystats,.card{animation:none}
+  button::after{transition:none}
+}
+
+</style>
+</head>
+<body>
+<div id="ctModal" class="ct-modal hidden">
+  <div class="ct-card">
+    <h3 id="ctName">Contract terms</h3>
+    <div class="msub" id="ctCurrent"></div>
+    <div class="row"><label for="ctWage">Wage m/season</label><input id="ctWage" type="number" step="0.1" min="0.1"></div>
+    <div class="row"><label for="ctYears">Length</label><select id="ctYears">
+      <option value="1">1 year</option><option value="2">2 years</option><option value="3">3 years</option>
+      <option value="4">4 years</option><option value="5">5 years</option></select></div>
+    <div class="row"><label for="ctRole">Squad role</label><select id="ctRole">
+      <option>Star</option><option>First team</option><option>Rotation</option><option>Prospect</option></select></div>
+    <div class="ct-note" id="ctNote"></div>
+    <div class="row end">
+      <button class="small ghost" onclick="closeTerms()">Close</button>
+      <button class="small" id="ctSave">Offer new terms</button>
+    </div>
+  </div>
+</div>
+<div id="bamStars" aria-hidden="true"><i></i><i></i></div>
+<div id="lobby">
+  <div class="lobbyframe" aria-hidden="true">
+    <span class="ln ln-t"></span><span class="ln ln-b"></span><span class="ln ln-l"></span><span class="ln ln-r"></span>
+    <span class="cn cn-tl"></span><span class="cn cn-tr"></span><span class="cn cn-bl"></span><span class="cn cn-br"></span>
+  </div>
+  <div class="lobbyin">
+    <div class="lobbyhero">
+      <div class="brand lobbybrand"><span class="sq"></span><a class="homelink" href="/" title="Back to the Be-A-Manager home page"><span class="dec">Be-A-Manager</span></a><span class="tg"><span class="dec">World career mode</span></span></div>
+      <h1><span class="hrise">Flood<span>lights</span></span></h1>
+      <p class="sub">Pick a club with your mates, sign anyone in the <em>world</em> and play out full seasons together.</p>
+      <dl class="lobbystats">
+        <div><dt><span class="dec">Players</span></dt><dd>5,000</dd></div>
+        <div><dt><span class="dec">Clubs</span></dt><dd>320</dd></div>
+        <div><dt><span class="dec">Leagues</span></dt><dd>15</dd></div>
+      </dl>
+    </div>
+    <div class="card">
+      <label class="flab" for="nameIn">Your manager name</label>
+      <div class="row"><input id="nameIn" maxlength="20" placeholder="e.g. Fergie2"></div>
+      <div class="row"><button id="createBtn">Create a game</button></div>
+      <div class="cardsplit"></div>
+      <label class="flab" for="codeIn">Or join with a code</label>
+      <div class="row"><input id="codeIn" maxlength="4" placeholder="CODE" style="text-transform:uppercase"><button id="joinBtn">Join</button></div>
+      <div class="msg" id="lobbyMsg"></div>
+    </div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="ticker" id="tickerBar" data-label="TRANSFER WIRE"><div class="ticker-inner" id="ticker">Welcome to the league.</div></div>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand"><span class="sq"></span><span class="nm">FLOODLIGHTS</span><span class="tg">WORLD CAREER MODE</span></div>
+      <div class="topchips">
+        <a class="chip homechip" href="/" title="Back to the Be-A-Manager home page">Be-A-Manager</a>
+        <span class="chip">Room <b id="hCode" class="mono"></b></span>
+        <span class="chip">Season <b id="hSeason"></b> &middot; Week <b id="hRound"></b>/<span id="hTotal">38</span></span>
+        <span class="chip" id="hWindow"></span>
+        <span class="chip"><span class="pulse"></span><span id="hLive">LIVE</span></span>
+        <span class="chip dimchip" id="hMe"></span>
+        <button id="leaveBtn" class="ghost small">Leave</button>
+      </div>
+    </div>
+    <div class="hubhead">
+      <div>
+        <div class="who" id="hubWho">YOUR CLUB</div>
+        <div class="clubname" id="hTeam">No club yet</div>
+      </div>
+      <div class="clubmeta">
+        <span class="cm"><span class="cmk">Budget</span><b class="cmv teal" id="hBudget">£0m</b></span>
+        <span class="cm"><span class="cmk">Confidence</span><b class="cmv" id="stBoard">-</b><span class="confbar"><span id="confFill"></span></span></span>
+        <span class="cm"><span class="cmk">Position</span><b class="cmv" id="stPos">-</b></span>
+        <span class="cm"><span class="cmk">Points</span><b class="cmv" id="stPts">-</b></span>
+        <span class="cm"><span class="cmk">Squad</span><b class="cmv" id="stSquad">-</b></span>
+      </div>
+    </div>
+
+    <div id="preStart" class="panel">
+      <div class="lobbygrid">
+        <div class="lobbyleft">
+          <div class="msub">YOUR WORLD IS READY. SHARE THE CODE.</div>
+          <div class="codeboxes" id="codeBoxes"></div>
+          <div class="controls"><button id="startBtn" class="gold hidden">Start world &rarr;</button><span class="msub">HOST CONTROLS TIME</span></div>
+          <div class="msg" id="pickMsg"></div>
+        </div>
+        <div class="lobbyright">
+          <div class="mgrhead"><span class="pulse"></span><span class="msub" id="mgrCount">MANAGERS</span></div>
+          <div id="lobbyList"></div>
+        </div>
+      </div>
+      <div class="pickzone">
+        <div class="mlab">PICK YOUR CLUB</div>
+        <p class="pickhelp">One club per manager, from any of the 15 playable leagues. Budgets are set to something like real life, so City money is City money and Dundee money is Dundee money. Clubs nobody picks are run by the AI.</p>
+        <div class="controls" style="margin-top:14px"><label class="msub" for="pickLeague">LEAGUE</label><select id="pickLeague"></select></div>
+        <div class="teampick" id="teamPick"></div>
+      </div>
+    </div>
+
+    <nav class="tabs" id="tabs">
+      <button data-t="squad" class="on">Squad</button>
+      <button data-t="lineup">Lineup</button>
+      <button data-t="market">Transfer market</button>
+      <button data-t="offers">Offers <span id="offerDot"></span></button>
+      <button data-t="romano">Romano</button>
+      <button data-t="matches">Matches</button>
+      <button data-t="calendar">Calendar</button>
+      <button data-t="cups">Cups</button>
+      <button data-t="table">Tables</button>
+      <button data-t="cabinet">Cabinet</button>
+      <button data-t="academy">Academy</button>
+      <button data-t="nations">Nations</button>
+      <button data-t="feed">News feed</button>
+    </nav>
+
+    <section id="tab-squad" class="panel">
+      <div id="staffStrip"></div>
+      <div class="controls">
+        <h3 style="margin-right:auto">Squad</h3>
+        <label for="tacticSel">Tactic</label>
+        <select id="tacticSel">
+          <option value="balanced">Balanced</option>
+          <option value="attacking">Attacking</option>
+          <option value="defensive">Defensive</option>
+        </select>
+        <label for="sqsort" style="margin-left:8px">Sort</label>
+        <select id="sqsort">
+          <option value="rating">Rating</option>
+          <option value="valdesc">Price: high to low</option>
+          <option value="valasc">Price: low to high</option>
+          <option value="ageasc">Age: youngest first</option>
+          <option value="agedesc">Age: oldest first</option>
+        </select>
+      </div>
+      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rating</th><th class="num">Value</th><th></th></tr></thead>
+      <tbody id="squadBody"></tbody></table>
+      <div id="loanOutBox"></div>
+      <p class="lead" style="margin-top:16px">Transfer list a player to attract bids from abroad. You need at least 13 players to sell anyone.</p>
+    </section>
+
+    <section id="tab-lineup" class="hidden">
+      <div class="lugrid">
+        <div class="furail">
+          <div class="mlab">FORMATION</div>
+          <div id="formList"></div>
+          <select id="formSel" class="hidden">
+            <option>4-3-3</option><option>4-4-2</option><option>4-2-3-1</option>
+            <option>3-5-2</option><option>5-3-2</option><option>4-1-4-1</option><option>3-4-3</option>
+          </select>
+          <div class="fuact">
+            <button id="autoPick" class="ghost small">AUTO PICK XI</button>
+            <button id="saveLineup" class="small gold">Save lineup</button>
+            <div class="msg" id="lineupMsg"></div>
+          </div>
+        </div>
+        <div class="pitchwrap"><div id="pitch"></div></div>
+        <div class="benchcol">
+          <div class="benchhead"><div class="mlab">BENCH &amp; RESERVES</div><span class="msub" id="subCountWrap">SUBS <b id="subCount">0/9</b></span></div>
+          <div id="subList"></div>
+          <div class="mlab plain">AVAILABLE</div>
+          <div id="poolList"></div>
+          <div class="dragghint">DRAG A PLAYER ONTO THE PITCH, HIT START FOR A FITTING SPOT, OR TAP PLAYER THEN SPOT. X SENDS HIM BACK. 1 GK &middot; 11 STARTERS &middot; 9 SUBS.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-romano" class="panel hidden">
+      <h3>Transfer news wire</h3>
+      <p class="lead" style="margin:6px 0 10px">Every bid, breakdown and here we go from around the world, as it happens.</p>
+      <div id="romanoBox"></div>
+    </section>
+
+    <section id="tab-market" class="panel hidden">
+      <div id="dlBanner" class="hidden dlbanner"><span class="pulse red"></span>DEADLINE DAY &middot; THE WINDOW SLAMS SHUT AFTER THIS WEEK</div>
+      <div class="controls">
+        <input id="mq" placeholder="Search player or club" aria-label="Search player or club">
+        <select id="mleague" aria-label="League"><option value="">All leagues</option></select>
+        <select id="mpos" aria-label="Position"><option value="">Any pos</option><option>GK</option><option>DF</option><option>MF</option><option>FW</option></select>
+        <select id="msort" aria-label="Sort">
+          <option value="rating">Best rating first</option>
+          <option value="valdesc">Price: high to low</option>
+          <option value="valasc">Price: low to high</option>
+          <option value="ageasc">Age: youngest first</option>
+          <option value="agedesc">Age: oldest first</option>
+        </select>
+        <label class="wkpill"><input type="checkbox" id="mwonder"> Wonderkids</label>
+        <button id="mgo" class="ghost">Search</button>
+        <div class="msg chipmsg" id="marketMsg"></div>
+      </div>
+      <table><thead><tr><th>Player</th><th>Club</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th class="num">Value</th><th class="num">Asking</th><th></th></tr></thead>
+      <tbody id="marketBody"></tbody></table>
+      <div id="freeBox"></div>
+    </section>
+
+    <section id="tab-offers" class="panel hidden">
+      <div class="grid2">
+        <div><div class="mlab sechead">Incoming</div><div id="offersIn" class="offergrid"></div></div>
+        <div><div class="mlab sechead">Your bids</div><div id="offersOut" class="offergrid"></div></div>
+      </div>
+      <div class="msg" id="offerMsg"></div>
+    </section>
+
+    <section id="tab-matches" class="panel hidden">
+      <div class="controls">
+        <button id="simBtn" class="gold hidden">Play matchweek</button>
+        <button id="ffBtn18" class="ghost hidden">Winter window</button>
+        <button id="ffBtn37" class="ghost hidden">End of season</button>
+        <span id="simToWrap" class="hidden" style="display:inline-flex;gap:6px;align-items:center">
+          <input id="simToW" type="number" min="1" max="38" placeholder="Week" aria-label="Week to sim to" style="width:84px">
+          <button id="simToGo" class="ghost">Sim to week</button>
+        </span>
+        <button id="nextSeasonBtn" class="gold hidden">Start next season</button>
+        <span class="msub" style="align-self:center">Host controls &middot; the week advances for everyone</span>
+      </div>
+      <div class="msub" id="playStatus"></div>
+      <div class="grid2">
+        <div class="subcard"><div class="mlab">This week &middot; fixtures</div><div id="thisWeek"></div></div>
+        <div class="subcard"><div class="mlab">Last week &middot; results</div><div id="lastWeek"></div></div>
+      </div>
+      <div class="subcard gap"><div class="mlab">Your season</div>
+      <div id="myFixtures"></div></div>
+    </section>
+
+    <section id="tab-cups" class="panel hidden">
+      <div class="controls">
+        <p class="lead" style="margin-right:auto">Cup rounds sim automatically on their scheduled weeks. Level after 90 goes to pens. Clubs bank prize money for every win.</p>
+        <select id="cupFilter" aria-label="Which cups to show"><option value="mine">My competitions</option><option value="all">All competitions</option></select>
+      </div>
+      <div id="cupsBox"></div>
+    </section>
+
+    <section id="tab-table" class="panel hidden">
+      <div class="controls"><label for="tableLeague">League</label><select id="tableLeague"></select><span id="seasonOverTag" class="hidden tag human">Season finished, awards are final</span></div>
+      <table><thead><tr><th>#</th><th>Club</th><th>Boss</th><th class="num">P</th><th class="num">W</th><th class="num">D</th><th class="num">L</th><th class="num">GD</th><th class="num">Pts</th></tr></thead>
+      <tbody id="tableBody"></tbody></table>
+      <div id="awardsBox"></div>
+      <div id="historyBox"></div>
+    </section>
+
+    <section id="tab-calendar" class="panel hidden">
+      <div class="controls">
+        <h3 style="margin-right:auto">Season calendar</h3>
+        <div class="callegend"><span style="color:var(--gold)">&#9632; CUP / EUROPE</span><span style="color:var(--grass)">&#9632; WIN</span><span style="color:var(--red)">&#9632; LOSS</span><span style="color:var(--dim)">&#9632; DRAW</span></div>
+      </div>
+      <p class="lead" style="margin:2px 0 16px">Every week of the season for your club: league games, cup ties, transfer windows and international rounds. Cup opponents show up once the draw for that round is made.</p>
+      <div id="calBox" class="calgrid"></div>
+    </section>
+
+    <section id="tab-cabinet" class="panel hidden">
+      <div class="mlab">TROPHY CABINET</div>
+      <div id="cabHero" class="cabhero">
+        <div class="ctrophy-spin"><div class="ctrophy"><span class="ct-bowl"></span><span class="ct-stem"></span><span class="ct-base"></span></div></div>
+        <div class="msub" id="cabCount">NO SILVERWARE YET</div>
+        <button id="cabEnter" class="gold">ENTER THE CABINET &rarr;</button>
+        <p>Every trophy your club lifts and every individual award your players win ends up in here, season after season. Win something.</p>
+      </div>
+      <div id="cabList" style="margin-top:8px"></div>
+    </section>
+
+    <section id="tab-academy" class="panel hidden">
+      <div class="controls"><h3 style="margin-right:auto">Youth academy</h3></div>
+      <p class="lead" style="margin-bottom:12px">Homegrown kids come through every season. Promote the good ones to your first team before they turn 20, or they get released. Star shows how close they are to their potential.</p>
+      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rating</th><th class="num">Potential</th><th></th></tr></thead>
+      <tbody id="academyBody"></tbody></table>
+      <div id="scoutBox" style="margin-top:22px"></div>
+      <div class="msg" id="academyMsg"></div>
+    </section>
+
+    <section id="tab-nations" class="panel hidden">
+      <div class="controls"><h3 style="margin-right:auto">National teams</h3></div>
+      <p class="lead">Take a national team job alongside your club, like real managers dream of. Your nation plays in the International Cup each season, check the Cups tab for the bracket. One nation per manager.</p>
+      <div class="teampick" id="nationPick"></div>
+      <div id="nationSquad" style="margin-top:22px"></div>
+      <div class="msg" id="nationMsg"></div>
+    </section>
+
+    <section id="tab-feed" class="panel hidden feed">
+      <div id="feedInner" class="feedcol"></div>
+    </section>
+  </div>
+
+  <div id="cabRoom" class="hidden">
+    <div class="cabtop">
+      <h2>THE <span>CABINET</span></h2>
+      <div>
+        <span class="msub" id="cabRoomCount"></span>
+        <button id="cabClose" class="ghost small">CLOSE &times;</button>
+      </div>
+    </div>
+    <div id="cabStage"></div>
+    <div id="cabShelf"></div>
+    <p class="msub cabnote">DRAG TO LOOK AROUND &middot; EVERY PIECE SPINS FOREVER</p>
+  </div>
+
+  <div id="awardsOverlay" class="hidden">
+    <div class="awinner">
+      <div class="msub">END OF SEASON</div>
+      <h2 class="awh">THE <span>AWARDS</span></h2>
+      <div id="awardsBody"></div>
+      <button id="awardsGo" class="gold">CONTINUE TO THE SUMMER &rarr;</button>
+    </div>
+  </div>
+
+  <div id="matchday" class="hidden">
+    <div class="inner">
+      <div class="mdtop">
+        <h2>MATCHWEEK <span id="mdWeek"></span></h2>
+        <div class="mdlock"><span class="pulse red"></span><span>LOCKED &middot; FULL TIME EVERYWHERE</span></div>
+      </div>
+      <div class="mdhero hidden" id="mdHero"></div>
+      <div id="mdScorers" class="msub hidden"></div>
+      <div id="pensBox" class="hidden"></div>
+      <div class="reactbar" id="reactBar"></div>
+      <div id="reactFeed" class="reactfeed"></div>
+      <p class="sub" id="mdSub"></p>
+      <div class="panel"><div class="mlab sechead" id="mdLeagueLab">LEAGUE RESULTS</div><div id="mdLeague"></div></div>
+      <div class="panel hidden" id="mdCupsPanel"><div class="mlab sechead">CUP ACTION</div><div id="mdCups"></div></div>
+      <div class="foot" id="mdFoot"></div>
+    </div>
+  </div>
+</div>
+
+<div id="matchWrap" class="hidden">
+  <canvas id="matchCanvas"></canvas>
+  <div id="matchPanel" class="hidden"></div>
+</div>
+
+<script src="match.js"></script>
+<script>
+let ME = { name: localStorage.getItem("fl_name") || "", code: localStorage.getItem("fl_code") || "" };
+var STATE = null;
+const $ = id => document.getElementById(id);
+
+async function api(path, body) {
+  const opts = body ? { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ code: ME.code, name: ME.name, ...body }) } : {};
+  const url = body ? path : path + (path.includes("?") ? "&" : "?") + "code=" + ME.code + "&name=" + encodeURIComponent(ME.name);
+  const r = await fetch(url, opts);
+  const j = await r.json().catch(()=>({error:"Server error"}));
+  if (!r.ok) throw new Error(j.error || "Something went wrong");
+  return j;
+}
+
+// ---- lobby ----
+$("createBtn").onclick = async () => {
+  try {
+    ME.name = $("nameIn").value.trim(); if (!ME.name) throw new Error("Enter a name first.");
+    const j = await api("/api/create", { name: ME.name });
+    ME.code = j.code; persist(); enter();
+  } catch(e){ $("lobbyMsg").textContent = e.message; }
+};
+$("joinBtn").onclick = async () => {
+  try {
+    ME.name = $("nameIn").value.trim(); if (!ME.name) throw new Error("Enter a name first.");
+    const j = await api("/api/join", { name: ME.name, code: $("codeIn").value.trim().toUpperCase() });
+    ME.code = j.code; persist(); enter();
+  } catch(e){ $("lobbyMsg").textContent = e.message; }
+};
+function persist(){ localStorage.setItem("fl_name", ME.name); localStorage.setItem("fl_code", ME.code); }
+let pollTimer = null;
+function enter(){
+  $("lobby").classList.add("hidden"); $("app").classList.remove("hidden");
+  if (pollTimer) clearInterval(pollTimer);
+  tick(); pollTimer = setInterval(tick, 3000);
+}
+function leave(){
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = null;
+  localStorage.removeItem("fl_code");
+  ME.code = "";
+  $("codeIn").value = "";
+  $("lobbyMsg").textContent = "";
+  $("app").classList.add("hidden");
+  $("lobby").classList.remove("hidden");
+  location.reload();
+}
+$("leaveBtn").onclick = leave;
+
+// ---- penalty shootouts ----
+function renderPens(s) {
+  const box = $("pensBox");
+  if (!box) return;
+  const live = (s.shootouts || []).filter(so => !so.done);
+  const recent = (s.shootouts || []).filter(so => so.done);
+  const mine = live.find(so => so.hMgr === s.you || so.aMgr === s.you) || live[0] || recent.find(so => so.hMgr === s.you || so.aMgr === s.you);
+  if (!mine) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  const so = mine;
+  const dots = side => {
+    const ks = so.kicks.filter(k => k.team === (side === "h" ? so.home : so.away));
+    let out = "";
+    const total = Math.max(5, ks.length);
+    for (let i = 0; i < total; i++) {
+      const k = ks[i];
+      out += `<span class="pendot ${k ? (k.goal ? "g" : "m") : ""}"></span>`;
+    }
+    return out;
+  };
+  const last = so.kicks[so.kicks.length - 1];
+  let act = "";
+  if (so.done) {
+    act = `<div class="pen-wait" style="color:var(--gold)">${so.winner.toUpperCase()} WIN THE SHOOTOUT ${so.hScore}-${so.aScore}</div>`;
+  } else if (so.yourJob === "shoot") {
+    act = `<div class="pen-wait" style="color:var(--gold)">YOU ARE UP. PICK YOUR CORNER.</div>
+      <div class="pen-act">
+        <button class="gold" onclick="penKick('${so.key}','left')">SHOOT LEFT</button>
+        <button class="gold" onclick="penKick('${so.key}','center')">DOWN THE MIDDLE</button>
+        <button class="gold" onclick="penKick('${so.key}','right')">SHOOT RIGHT</button>
+      </div>`;
+  } else if (so.yourJob === "save") {
+    act = `<div class="pen-wait" style="color:var(--gold)">THEY ARE SHOOTING. PICK A SIDE TO DIVE.</div>
+      <div class="pen-act">
+        <button onclick="penKick('${so.key}','left')">DIVE LEFT</button>
+        <button onclick="penKick('${so.key}','center')">STAND TALL</button>
+        <button onclick="penKick('${so.key}','right')">DIVE RIGHT</button>
+      </div>`;
+  } else {
+    act = `<div class="pen-wait">WAITING ON ${String(so.waitingOn || "AI").toUpperCase()}...</div>`;
+  }
+  box.innerHTML = `
+    <div class="pen-title">PENALTIES <span>&middot; ${so.cupTitle.toUpperCase()}</span></div>
+    <div class="pen-score">${so.home.toUpperCase()} ${so.hScore} - ${so.aScore} ${so.away.toUpperCase()}</div>
+    <div class="pen-dots">
+      <div class="pen-row"><span class="pn">${so.home}</span>${dots("h")}</div>
+      <div class="pen-row"><span class="pn">${so.away}</span>${dots("a")}</div>
+    </div>
+    ${last ? `<div class="pen-last">${last.taker ? last.taker.toUpperCase() + " " : ""}${last.goal ? "SCORES" : "MISSES"}${last.dive && last.dir && last.dive === last.dir && !last.goal ? " \u00b7 KEEPER GUESSED RIGHT" : ""}</div>` : ""}
+    ${act}`;
+}
+window.penKick = async (key, dir) => {
+  try { await api("/api/pens", { key, dir }); await tick(); } catch (e) { alert(e.message); }
+};
+
+// ---- season awards ceremony ----
+function renderAwards(s) {
+  const ov = $("awardsOverlay");
+  if (!ov) return;
+  const lockActive = s.lock && s.lock.active;
+  const key = "fl_awards_" + (ME.code || "") + "_" + s.season;
+  let seen = false;
+  try { seen = !!localStorage.getItem(key); } catch (e) {}
+  const show = s.seasonOver && !lockActive && !seen && s.seasonAwards;
+  ov.classList.toggle("hidden", !show);
+  if (!show) return;
+  const lg = (s.myLeague && s.seasonAwards[s.myLeague]) ? s.myLeague : "Premier League";
+  const a = s.seasonAwards[lg] || Object.values(s.seasonAwards)[0];
+  if (!a) { ov.classList.add("hidden"); return; }
+  const row = (k, v, sub, cls) => `<div class="awrow ${cls || ""}"><span class="ak">${k}</span><span class="av">${v}${sub ? `<small>${sub}</small>` : ""}</span></div>`;
+  $("awardsBody").innerHTML =
+    row("CHAMPIONS \u00b7 " + lg.toUpperCase(), a.champion, a.championManager !== "AI" ? "MANAGER: " + a.championManager.toUpperCase() : "", "champ") +
+    (a.boot ? row("GOLDEN BOOT", a.boot.name, a.boot.club.toUpperCase() + " \u00b7 " + a.boot.g + " GOALS") : "") +
+    (a.ball ? row("GOLDEN BALL", a.ball.name, a.ball.club.toUpperCase() + " \u00b7 " + a.ball.a + " ASSISTS") : "") +
+    (a.pots ? row("PLAYER OF THE SEASON", a.pots.name, a.pots.club.toUpperCase()) : "") +
+    (a.motss ? row("MANAGER OF THE SEASON", a.motss.manager !== "AI" ? a.motss.manager : a.motss.club, a.motss.manager !== "AI" ? a.motss.club.toUpperCase() : "OVERACHIEVED BY " + a.motss.over + " PLACES") : "") +
+    (a.relegated && a.relegated.length ? row("GOING DOWN", a.relegated.join(" \u00b7 "), "", "doom") : "");
+  $("awardsGo").onclick = () => {
+    try { localStorage.setItem(key, "1"); } catch (e) {}
+    ov.classList.add("hidden");
+  };
+}
+
+// ---- trophy cabinet ----
+function myTrophies(s) {
+  const out = [];
+  if (!s) return out;
+  const me = s.myClub ? s.myClub.name : null;
+  (s.history || []).forEach(h => {
+    Object.entries(h.champions || {}).forEach(([lg, team]) => {
+      if (me && team === me) out.push({ type: "league", name: lg + " Champions", season: h.season });
+    });
+    Object.entries(h.cupWinners || {}).forEach(([k, c]) => {
+      if (!c || !c.winner) return;
+      if (me && c.winner === me) out.push({ type: k, name: c.title, season: h.season });
+      else if (s.myNation && c.winner === s.myNation && k === "intl") out.push({ type: "intl", name: c.title + " (" + s.myNation + ")", season: h.season });
+    });
+    Object.entries(h.awards || {}).forEach(([lg, a]) => {
+      if (!a || !me) return;
+      [["boot", "Golden Boot"], ["ball", "Golden Ball"], ["pots", "Player of the Season"]].forEach(([kk, label]) => {
+        const w = a[kk];
+        if (w && w.club === me) out.push({ type: kk, name: label, season: h.season, extra: w.name });
+      });
+    });
+  });
+  return out.sort((a, b) => b.season - a.season);
+}
+const TROPHY_SILVER = new Set(["uel", "uecl", "pots"]);
+function miniTrophy(type) {
+  return `<div class="mini"><div class="ctrophy small ${TROPHY_SILVER.has(type) ? "silver" : ""}" style="animation:none;width:128px;height:158px"><span class="ct-bowl"></span><span class="ct-stem"></span><span class="ct-base"></span></div></div>`;
+}
+function renderCabinet(s) {
+  if (!$("cabCount")) return;
+  const tr = myTrophies(s);
+  $("cabCount").textContent = tr.length ? tr.length + " PIECE" + (tr.length > 1 ? "S" : "") + " OF SILVERWARE" : "NO SILVERWARE YET";
+  $("cabList").innerHTML = tr.length
+    ? `<div id="cabGridSmall" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1px;background:var(--hair);border:1px solid var(--hair)">` +
+      tr.map(t => `<div class="cabitem">${miniTrophy(t.type)}<div class="ci-name">${t.name}</div><div class="ci-season">SEASON ${t.season}</div>${t.extra ? `<div class="ci-extra">${t.extra}</div>` : ""}</div>`).join("") + "</div>"
+    : "";
+}
+let CAB = { anim: 0, renderer: null, drag: null };
+function closeCabinet() {
+  $("cabRoom").classList.add("hidden");
+  if (CAB.anim) cancelAnimationFrame(CAB.anim);
+  CAB.anim = 0;
+  if (CAB.renderer) { try { CAB.renderer.dispose(); } catch (e) {} CAB.renderer = null; }
+  $("cabStage").innerHTML = "";
+}
+$("cabClose").onclick = closeCabinet;
+$("cabEnter").onclick = () => {
+  const tr = myTrophies(STATE);
+  $("cabRoom").classList.remove("hidden");
+  $("cabRoomCount").textContent = tr.length ? tr.length + " PIECES ON DISPLAY" : "EMPTY. WIN SOMETHING.";
+  $("cabShelf").innerHTML = tr.map(t =>
+    `<div class="cabitem">${miniTrophy(t.type)}<div class="ci-name">${t.name}</div><div class="ci-season">SEASON ${t.season}</div>${t.extra ? `<div class="ci-extra">${t.extra}</div>` : ""}</div>`).join("");
+  const boot3d = () => cab3d(tr);
+  if (window.THREE) boot3d();
+  else {
+    const sc = document.createElement("script");
+    sc.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+    sc.onload = boot3d;
+    sc.onerror = () => cabFallback(tr);
+    document.head.appendChild(sc);
+  }
+};
+function cabFallback(tr) {
+  $("cabStage").innerHTML = `<div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+    <div class="ctrophy-spin"><div class="ctrophy"><span class="ct-bowl"></span><span class="ct-stem"></span><span class="ct-base"></span></div></div>
+    <span class="msub">${tr.length ? "THE FULL COLLECTION IS BELOW" : "THE SHELVES ARE WAITING"}</span></div>`;
+}
+function trophyMesh(type) {
+  const gold = 0xffb424, silver = 0xcfd4d9, bronze = 0xc07840, dark = 0x8a5d0a;
+  const mat = c => new THREE.MeshStandardMaterial({ color: c, metalness: 0.85, roughness: 0.28 });
+  const g = new THREE.Group();
+  const color = TROPHY_SILVER.has(type) ? silver : type === "uecl" ? bronze : gold;
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.65, 0.22, 24), new THREE.MeshStandardMaterial({ color: 0x1c1408, metalness: 0.4, roughness: 0.6 }));
+  base.position.y = 0.11;
+  g.add(base);
+  const trim = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.55, 0.06, 24), mat(dark));
+  trim.position.y = 0.25;
+  g.add(trim);
+  if (type === "intl") {
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.52, 24, 18), mat(color));
+    globe.position.y = 0.95;
+    g.add(globe);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, 0.5, 16), mat(color));
+    stem.position.y = 0.45;
+    g.add(stem);
+  } else if (type === "boot" || type === "ball" || type === "pots") {
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.13, 0.55, 16), mat(color));
+    stem.position.y = 0.5;
+    g.add(stem);
+    const top = type === "ball"
+      ? new THREE.Mesh(new THREE.SphereGeometry(0.34, 20, 16), mat(color))
+      : type === "pots"
+      ? new THREE.Mesh(new THREE.OctahedronGeometry(0.38), mat(color))
+      : new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.24, 0.26), mat(color));
+    top.position.y = type === "boot" ? 0.92 : 1.05;
+    if (type === "boot") top.rotation.z = 0.28;
+    g.add(top);
+  } else {
+    const profile = [];
+    const tall = type === "league" || type === "libertadores";
+    const wide = type === "ucl";
+    const H = tall ? 1.45 : 1.2, W = wide ? 0.62 : 0.5;
+    [[0.16, 0.28], [0.09, 0.34], [0.11, 0.62], [W * 0.72, 0.95], [W, H + 0.12], [W * 0.86, H + 0.22]].forEach(([r, y]) => profile.push(new THREE.Vector2(r, y)));
+    const cup = new THREE.Mesh(new THREE.LatheGeometry(profile, 26), mat(color));
+    cup.material.side = THREE.DoubleSide;
+    g.add(cup);
+    if (type !== "league" && type !== "libertadores") {
+      const earR = wide ? 0.42 : 0.26;
+      const t1 = new THREE.Mesh(new THREE.TorusGeometry(earR, 0.05, 10, 22), mat(color));
+      t1.position.set(-(W + earR * 0.6), H * 0.72, 0);
+      const t2 = t1.clone();
+      t2.position.x = W + earR * 0.6;
+      g.add(t1); g.add(t2);
+    }
+  }
+  return g;
+}
+function cab3d(tr) {
+  try {
+    const stage = $("cabStage");
+    stage.innerHTML = "";
+    const wPx = stage.clientWidth || 900, hPx = stage.clientHeight || 480;
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(wPx, hPx);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    stage.appendChild(renderer.domElement);
+    CAB.renderer = renderer;
+    const scene = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(42, wPx / hPx, 0.1, 100);
+    scene.add(new THREE.AmbientLight(0xfff2d8, 0.55));
+    const spot = new THREE.SpotLight(0xffd580, 1.15);
+    spot.position.set(4, 9, 7);
+    scene.add(spot);
+    const rim = new THREE.DirectionalLight(0x8899ff, 0.25);
+    rim.position.set(-6, 4, -4);
+    scene.add(rim);
+    const room = new THREE.Group();
+    scene.add(room);
+    const items = tr.length ? tr : [{ type: "league", empty: true }];
+    const perRow = Math.min(6, Math.max(3, Math.ceil(Math.sqrt(items.length))));
+    const spinners = [];
+    items.forEach((t, i) => {
+      const row = Math.floor(i / perRow), col = i % perRow;
+      const rowCount = Math.min(perRow, items.length - row * perRow);
+      const m = trophyMesh(t.type);
+      if (t.empty) m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = 0.18; } });
+      m.position.set((col - (rowCount - 1) / 2) * 2.1, -row * 2.4, -row * 1.6);
+      const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.14, 1.5),
+        new THREE.MeshStandardMaterial({ color: 0x141a10, metalness: 0.15, roughness: 0.85 }));
+      shelf.position.set(m.position.x, m.position.y - 0.08, m.position.z);
+      room.add(shelf);
+      room.add(m);
+      spinners.push(m);
+    });
+    const rows = Math.ceil(items.length / perRow);
+    room.position.y = (rows - 1) * 1.2;
+    cam.position.set(0, 1.6, 6.4 + rows * 1.4 + Math.max(0, perRow - 4) * 0.8);
+    cam.lookAt(0, 0.8, 0);
+    let targetY = 0, curY = 0, dragX = null;
+    const pd = e => { dragX = (e.touches ? e.touches[0].clientX : e.clientX); };
+    const pm = e => {
+      if (dragX === null) return;
+      const x = (e.touches ? e.touches[0].clientX : e.clientX);
+      targetY += (x - dragX) * 0.006;
+      targetY = Math.max(-0.9, Math.min(0.9, targetY));
+      dragX = x;
+    };
+    const pu = () => { dragX = null; };
+    stage.addEventListener("mousedown", pd); stage.addEventListener("mousemove", pm); window.addEventListener("mouseup", pu);
+    stage.addEventListener("touchstart", pd, { passive: true }); stage.addEventListener("touchmove", pm, { passive: true }); stage.addEventListener("touchend", pu);
+    const loop = () => {
+      spinners.forEach((m, i) => { m.rotation.y += 0.008 + (i % 3) * 0.002; });
+      curY += (targetY - curY) * 0.08;
+      room.rotation.y = curY;
+      renderer.render(scene, cam);
+      CAB.anim = requestAnimationFrame(loop);
+    };
+    loop();
+  } catch (e) {
+    cabFallback(tr);
+  }
+}
+
+// ---- tabs ----
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");
+  document.querySelectorAll("section[id^=tab-]").forEach(s=>s.classList.add("hidden"));
+  $("tab-"+b.dataset.t).classList.remove("hidden");
+  if (b.dataset.t === "market") loadMarket();
+});
+
+// ---- state polling ----
+async function tick() {
+  try {
+    STATE = await api("/api/state");
+    // the page stays still while a match is being played so the game runs smooth
+    if (!(window.FLMatch && FLMatch.isOpen())) render();
+  }
+  catch(e){ /* keep last state on transient errors */ }
+}
+
+function rcol(r) { return r >= 85 ? "#d0e85c" : r >= 78 ? "#7ad97a" : r >= 70 ? "#e8c052" : "#9aa7b4"; }
+function rchip(r) { return `<span class="rchip" style="color:${rcol(r)}">${r}</span>`; }
+function money(v){ return "£" + (Math.round(v*10)/10) + "m"; }
+
+function render() {
+  const s = STATE;
+  $("hCode").textContent = s.code;
+  $("hSeason").textContent = s.season;
+  $("hRound").textContent = s.round;
+  $("hMe").textContent = s.you + (s.you === s.host ? " (host)" : "");
+  $("hTeam").textContent = s.myClub ? s.myClub.name : "No club yet";
+  $("hBudget").textContent = s.myClub ? money(s.myClub.budget) : "£0m";
+  $("hWindow").innerHTML = s.window.open
+    ? '<span class="win-open">&#9679;</span> ' + s.window.label
+    : '<span class="win-shut">&#9679;</span> ' + s.window.label;
+  if ($("hLive")) $("hLive").textContent = s.users.length + (s.users.length === 1 ? " MANAGER LIVE" : " MANAGERS LIVE");
+  if ($("hubWho")) $("hubWho").textContent = s.myClub
+    ? "YOUR CLUB \u00b7 " + (s.myLeague || "").toUpperCase() + " \u00b7 MANAGED BY " + s.you.toUpperCase() + (s.you === s.host ? " (HOST)" : "")
+    : "WELCOME \u00b7 " + s.you.toUpperCase() + (s.you === s.host ? " (HOST)" : "");
+  if ($("stSquad")) $("stSquad").textContent = s.myClub ? s.myClub.squad.length : "-";
+  const hubTbl = (s.tables && s.myLeague && s.tables[s.myLeague]) || s.table || [];
+  const hubIdx = s.myClub ? hubTbl.findIndex(r => r.team === s.myClub.name) : -1;
+  const ordn = n => { const v = n % 100; return n + (["th","st","nd","rd"][(v - 20) % 10] || ["th","st","nd","rd"][v] || "th"); };
+  if ($("stPos")) $("stPos").textContent = hubIdx >= 0 ? ordn(hubIdx + 1) : "-";
+  if ($("stPts")) $("stPts").textContent = hubIdx >= 0 ? hubTbl[hubIdx].pts : "-";
+  if ($("stBoard")) {
+    const cf = s.myClub ? s.myClub.conf : null;
+    $("stBoard").textContent = cf === null ? "-" : cf + "%";
+    $("stBoard").className = "cmv " + (cf === null ? "" : cf >= 60 ? "green" : cf >= 40 ? "" : "red");
+    const cfl = $("confFill");
+    if (cfl) cfl.style.width = (cf === null ? 0 : Math.max(0, Math.min(100, cf))) + "%";
+    $("stBoard").title = "Board confidence. Win games and silverware to keep it up. Under 25 at the end of a season and you are sacked.";
+  }
+
+  renderMatchday(s);
+
+  // ticker: last matchweek line from feed
+  const mw = s.feed.find(f => f.text.startsWith("MATCHWEEK"));
+  $("ticker").textContent = mw ? mw.text : "Waiting for the first matchweek... " + s.users.map(u=>u.name+(u.team?" ("+u.team+")":"")).join(" · ");
+
+  // managers map across all playable leagues
+  MANAGERS = {};
+  Object.values(s.clubsByLeague || {}).forEach(list => list.forEach(t => MANAGERS[t.name] = t.manager));
+
+  // pre start
+  const needsClub = s.started && !s.myClub;
+  $("preStart").classList.toggle("hidden", s.started && !needsClub);
+  if (needsClub) {
+    $("startBtn").classList.add("hidden");
+    if ($("codeBoxes")) $("codeBoxes").innerHTML = (s.code || "").split("").map(c => `<div class="codebox">${c}</div>`).join("");
+    $("pickMsg").textContent = s.sacked
+      ? "You were sacked. Pick a free club and rebuild your reputation."
+      : "The world is already running. Pick a free club to jump in.";
+    if ($("pickLeague").options.length === 0) {
+      s.leagues.forEach(l => { const o = document.createElement("option"); o.textContent = l; $("pickLeague").appendChild(o); });
+      $("pickLeague").onchange = render;
+    }
+    const pl2 = $("pickLeague").value || s.leagues[0];
+    $("teamPick").innerHTML = (s.clubsByLeague[pl2] || []).map(t => {
+      const taken = t.manager !== "AI";
+      return `<button class="${taken?'taken':''}" ${taken?'disabled':''} onclick="pick('${t.name.replace(/'/g, "\\'")}')">${t.name}<br><span style="font-size:11px;color:var(--dim)">${money(t.budget)} \u00b7 ${taken?t.manager:'Free'}</span></button>`;
+    }).join("");
+    if ($("mgrCount")) $("mgrCount").textContent = "MANAGERS \u00b7 " + s.users.length;
+    $("lobbyList").innerHTML = s.users.map((u, i) =>
+      `<div class="mgrow"><span class="n">${String(i + 1).padStart(2, "0")}</span>
+        <div><div class="nm">${u.name}</div><div class="cl">${u.team ? u.team : "OUT OF WORK"}</div></div>
+        ${u.name === s.you ? '<span class="tag human">YOU</span>' : ''}</div>`).join("");
+  }
+  else if (!s.started) {
+    if ($("pickLeague").options.length === 0) {
+      s.leagues.forEach(l => { const o = document.createElement("option"); o.textContent = l; $("pickLeague").appendChild(o); });
+      $("pickLeague").onchange = render;
+    }
+    const pl = $("pickLeague").value || s.leagues[0];
+    $("teamPick").innerHTML = (s.clubsByLeague[pl] || []).map(t => {
+      const mine = s.myClub && s.myClub.name === t.name;
+      const taken = t.manager !== "AI" && !mine;
+      return `<button class="${taken?'taken':''} ${mine?'mine':''}" ${taken?'disabled':''} onclick="pick('${t.name.replace(/'/g, "\\'")}')">${t.name}<br><span style="font-size:11px;color:var(--dim)">${money(t.budget)} · ${taken?t.manager:(mine?'You':'Free')}</span></button>`;
+    }).join("");
+    $("startBtn").classList.toggle("hidden", s.you !== s.host);
+    if ($("codeBoxes")) $("codeBoxes").innerHTML = (s.code || "").split("").map(c => `<div class="codebox">${c}</div>`).join("");
+    if ($("mgrCount")) $("mgrCount").textContent = "MANAGERS \u00b7 " + s.users.length;
+    $("lobbyList").innerHTML = s.users.map((u, i) => {
+      const tag = u.name === s.you
+        ? '<span class="tag human">YOU</span>'
+        : (u.name === s.host ? '<span class="tag">HOST</span>' : (u.team ? '<span class="tag">READY</span>' : '<span class="tag">PICKING</span>'));
+      return `<div class="mgrow"><span class="n">${String(i + 1).padStart(2, "0")}</span>
+        <div><div class="nm">${u.name}</div><div class="cl">${u.team ? u.team : "CHOOSING A CLUB\u2026"}</div></div>${tag}</div>`;
+    }).join("") + '<div class="msub" style="padding:12px 0;color:var(--ghost)">WAITING FOR MORE MANAGERS\u2026</div>';
+  }
+
+  // squad
+  if (s.myClub) {
+    $("tacticSel").value = s.myClub.tactic;
+    const sq = [...s.myClub.squad];
+    const ss = $("sqsort") ? $("sqsort").value : "rating";
+    if (ss === "valdesc") sq.sort((a,b)=>b.value-a.value);
+    else if (ss === "valasc") sq.sort((a,b)=>a.value-b.value);
+    else if (ss === "ageasc") sq.sort((a,b)=>a.age-b.age || b.rating-a.rating);
+    else if (ss === "agedesc") sq.sort((a,b)=>b.age-a.age || b.rating-a.rating);
+    else sq.sort((a,b)=>b.rating-a.rating);
+    $("squadBody").innerHTML = sq.map(p => {
+      const onLoanHere = p.loanOwner && p.loanOwner !== s.myClub.name;
+      const tags = [
+        p.listed ? '<span class="tag listed">Listed</span>' : '',
+        p.inj > 0 ? `<span class="tag inj">INJ ${p.inj}W</span>` : '',
+        p.ban > 0 ? '<span class="tag inj">BAN</span>' : '',
+        onLoanHere ? `<span class="tag loan">LOAN \u00b7 ${p.loanOwner}</span>` : '',
+        s.myClub.trainFocus === p.id ? '<span class="tag train">TRAINING</span>' : ''
+      ].join(" ");
+      const acts = onLoanHere
+        ? `<button class="small" onclick="buyLoan(${p.id})" title="Make it permanent at his value">Buy ${money(p.value)}</button>`
+        : `<button class="small ghost" onclick="toggleList(${p.id})">${p.listed?'Unlist':'List'}</button>
+           <button class="small ghost" onclick="setTrain(${s.myClub.trainFocus === p.id ? "null" : p.id})">${s.myClub.trainFocus === p.id ? "Stop" : "Train"}</button>
+           <button class="small ghost" onclick="loanOut(${p.id})">Loan out</button>
+           <button class="small ghost" onclick="releasePlayer(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Release</button>`;
+      return `
+      <tr><td>${p.name} ${tags}</td>
+      <td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${rchip(p.rating)}</td>
+      <td class="num">${money(p.value)}</td>
+      <td style="white-space:nowrap">${acts}</td></tr>`;
+    }).join("");
+    const outs = s.myClub.loanedOut || [];
+    if ($("loanOutBox")) $("loanOutBox").innerHTML = !outs.length ? "" : `
+      <div class="controls" style="margin-top:14px"><h3 style="margin-right:auto">Out on loan</h3></div>
+      <table><thead><tr><th>Player</th><th>Pos</th><th>Age</th><th>Rat</th><th>At</th><th></th></tr></thead><tbody>
+      ${outs.map(p => `<tr><td>${p.name}</td><td>${p.role}</td><td class="num">${p.age}</td>
+        <td class="num">${p.rating}</td><td>${p.club}</td>
+        <td><button class="small" onclick="recallLoan(${p.id},'${String(p.name).replace(/'/g,"")}',${p.fee})">Recall ${money(p.fee)}</button></td></tr>`).join("")}
+      </tbody></table>`;
+    const staffDefs = [
+      { key: "scout", name: "Chief scout", blurb: "Weekly report on the best young talent" },
+      { key: "youth", name: "Youth coach", blurb: "Better academy kids every intake" },
+      { key: "physio", name: "Head physio", blurb: "Injuries heal in half the time" },
+      { key: "analyst", name: "Match analyst", blurb: "A sharper game plan at home" }
+    ];
+    if ($("staffStrip")) $("staffStrip").innerHTML = staffDefs.map(d => {
+      const owned = (s.myClub.staff || {})[d.key];
+      const price = (s.staffPrices || {})[d.key] || 0;
+      return `<div class="staffcard ${owned?'owned':''}">
+        <div><div class="sn">${d.name}</div><div class="sd">${d.blurb}</div></div>
+        ${owned ? '<span class="tag" style="border-color:var(--grass);color:var(--grass)">HIRED</span>'
+                : `<button class="small" onclick="hireStaff('${d.key}')">Hire ${money(price)}</button>`}
+      </div>`;
+    }).join("");
+  }
+
+  // lineup
+  if (s.myClub) {
+    if (!LB.dirty) {
+      const squadIds = new Set(s.myClub.squad.map(p=>p.id));
+      const byId = {}; s.myClub.squad.forEach(p => byId[p.id] = p);
+      const saved = (s.myClub.lineup.xi||[]).filter(id=>squadIds.has(id));
+      LB.formation = s.myClub.lineup.formation || LB.formation || "4-3-3";
+      LB.xi = Array(11).fill(null);
+      const gkId = saved.find(id => byId[id] && byId[id].pos === "GK");
+      const rest = saved.filter(id => id !== gkId);
+      if (gkId !== undefined) LB.xi[0] = gkId;
+      rest.forEach((id, i) => { if (i + 1 < 11) LB.xi[i + 1] = id; });
+      LB.subs = (s.myClub.lineup.subs||[]).filter(id=>squadIds.has(id));
+    }
+    renderLineup();
+  }
+  renderRomano(s);
+
+  // offers
+  renderOffers(s);
+
+  // matches
+  const seasonDone = !!s.seasonOver;
+  $("simBtn").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone));
+  $("ffBtn18").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone && s.round < 18));
+  $("simToWrap").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone));
+  $("ffBtn37").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone && s.round < 37));
+  $("nextSeasonBtn").classList.toggle("hidden", !(s.you === s.host && s.started && seasonDone));
+  if ($("seasonOverTag")) $("seasonOverTag").classList.toggle("hidden", !seasonDone);
+  const myTeamName = s.myClub ? s.myClub.name : null;
+  const cupPlay = (s.playable || []).filter(f => f.kind !== "league").map(f =>
+    `<div class="cuproundname">${f.label}</div><div class="fixture mine"><span class="fh">${f.home}</span><span class="score">v</span><span class="fa">${f.away}</span>${playRow(s, f.kind)}</div>`).join("");
+  $("thisWeek").innerHTML = (s.thisWeek.map(m => fixtureRow(m, s, myTeamName && (m.home === myTeamName || m.away === myTeamName) ? playRow(s, "league") : "")).join("") || "<p style='color:var(--dim)'>Season done. New one starts on next sim.</p>") + cupPlay;
+  const playNotes = s.users.filter(u => u.play && u.name !== s.you).map(u => u.name + (u.play === "done" ? " has played their match" : " has kicked off their match"));
+  $("playStatus").textContent = playNotes.length ? playNotes.join(" \u00b7 ") + ". Played scores count when the week is simmed." : "";
+  $("lastWeek").innerHTML = s.lastWeek.map(m => fixtureRow(m, s)).join("") || "<p style='color:var(--dim)'>No results yet.</p>";
+  $("myFixtures").innerHTML = (s.myFixtures||[]).map(m => m.home ? `
+    <div class="fixture"><span class="fh"><span class="msub" style="margin-right:8px">W${m.week}</span>${m.home}</span>
+    <span class="score">${m.hg===null?"v":m.hg+"-"+m.ag}</span><span class="fa">${m.away}</span></div>` : "").join("");
+
+  // cups
+  renderCups(s);
+
+  // tables tab with league selector
+  if ($("tableLeague").options.length === 0) {
+    (s.allLeagues || []).forEach(l => { const o = document.createElement("option"); o.textContent = l; $("tableLeague").appendChild(o); });
+    $("tableLeague").value = s.myLeague;
+    $("tableLeague").onchange = render;
+  }
+  const tl = $("tableLeague").value || s.myLeague;
+  const rows = (s.tables && s.tables[tl]) || s.table || [];
+  $("tableBody").innerHTML = rows.map((r,i) => {
+    const meRow = s.myClub && r.team === s.myClub.name;
+    const boss = MANAGERS[r.team] || "AI";
+    return `<tr class="${meRow?'me':''}"><td>${i+1}</td><td>${r.team}</td>
+    <td>${boss==="AI"?'<span class="tag">AI</span>':'<span class="tag human">'+boss+'</span>'}</td>
+    <td class="num">${r.p}</td><td class="num">${r.w}</td><td class="num">${r.d}</td><td class="num">${r.l}</td>
+    <td class="num">${r.gf-r.ga}</td><td class="num"><b>${r.pts}</b></td></tr>`;
+  }).join("");
+  const sb = (s.statBoards || {})[tl];
+  if (sb && (sb.scorers.length || sb.assisters.length)) {
+    const rowify = (list, statKey, statLabel) => list.map((p,i) =>
+      `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.club}</td><td class="num">${p[statKey]}</td></tr>`).join("") ||
+      `<tr><td colspan="4" style="color:var(--dim)">Nothing yet</td></tr>`;
+    $("awardsBox").innerHTML = `
+      <div class="grid3">
+        <div><h4 class="awardh">Golden Boot race</h4>
+          <table><thead><tr><th></th><th>Player</th><th>Club</th><th class="num">Goals</th></tr></thead>
+          <tbody>${rowify(sb.scorers, "g")}</tbody></table></div>
+        <div><h4 class="awardh">Golden Ball race</h4>
+          <table><thead><tr><th></th><th>Player</th><th>Club</th><th class="num">Assists</th></tr></thead>
+          <tbody>${rowify(sb.assisters, "a")}</tbody></table></div>
+        <div><h4 class="awardh">Player of the Season race</h4>
+          <table><thead><tr><th></th><th>Player</th><th>Club</th><th class="num">Score</th></tr></thead>
+          <tbody>${rowify(sb.stars, "score")}</tbody></table></div>
+      </div>
+      <p style="color:var(--dim);font-size:12.5px;margin:6px 0 0">Player of the Season score is goals doubled plus assists. Winners are crowned when the season wraps.</p>`;
+  } else if ($("awardsBox")) $("awardsBox").innerHTML = "";
+  $("historyBox").innerHTML = (s.history||[]).map(h=>{
+    const myChamp = (h.champions && s.myLeague && h.champions[s.myLeague]) || h.champion;
+    let line = `Season ${h.season}: <b style="color:var(--gold)">${myChamp}</b> won the ${s.myLeague || "Premier League"}.`;
+    if (h.champions && s.myLeague !== "Premier League" && h.champion) line += ` Prem: <b>${h.champion}</b>.`;
+    if (h.ucl) line += ` UCL: <b>${h.ucl}</b>.`;
+    if (h.cupWinners) {
+      const uel = h.cupWinners.uel, lib = h.cupWinners.libertadores;
+      if (uel && uel.winner) line += ` UEL: <b>${uel.winner}</b>.`;
+      if (lib && lib.winner) line += ` Libertadores: <b>${lib.winner}</b>.`;
+    }
+    const aw = h.awards && h.awards[s.myLeague];
+    if (aw) {
+      if (aw.boot) line += ` Golden Boot: <b>${aw.boot.name}</b> (${aw.boot.g}).`;
+      if (aw.ball) line += ` Golden Ball: <b>${aw.ball.name}</b> (${aw.ball.a}).`;
+      if (aw.pots) line += ` Player of the Season: <b>${aw.pots.name}</b>.`;
+    }
+    if (h.intl) line += ` International Cup: <b>${h.intl}</b>.`;
+    return line;
+  }).join("<br>");
+
+  // academy
+  if (s.myClub) {
+    $("academyBody").innerHTML = (s.myClub.academy || []).map(p => `
+      <tr><td>${p.name}</td><td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td>
+      <td class="num">${p.rating}</td><td class="num">${p.pot || "?"}</td>
+      <td><button class="small" onclick="promote(${p.id})">Promote</button></td></tr>`).join("") ||
+      "<tr><td colspan='6' style='color:var(--dim)'>No academy players right now. A new intake arrives every season.</td></tr>";
+    if ($("scoutBox")) {
+      if (s.scoutTips) {
+        $("scoutBox").innerHTML = `<div class="mlab">SCOUT REPORT \u00b7 BEST YOUNG TALENT ON THE MARKET</div>
+          <table style="margin-top:8px"><thead><tr><th>Player</th><th>Club</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th class="num">Value</th></tr></thead><tbody>` +
+          s.scoutTips.map(p => `<tr><td>${p.name}</td><td>${p.club}</td><td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${rchip(p.rating)}</td><td class="num">${money(p.value)}</td></tr>`).join("") +
+          `</tbody></table>`;
+      } else {
+        $("scoutBox").innerHTML = `<p style="color:var(--faint);font-size:12.5px">Hire a chief scout (Squad tab) and a weekly report on the best young talent in the world lands here.</p>`;
+      }
+    }
+  }
+
+  // cabinet tab
+  renderCabinet(s);
+
+  // awards ceremony and deadline day
+  renderAwards(s);
+  if ($("dlBanner")) $("dlBanner").classList.toggle("hidden", !(s.window && s.window.deadline));
+
+  // nations
+  renderNations(s);
+
+  // calendar
+  renderCalendar(s);
+
+  // feed
+  $("feedInner").innerHTML = s.feed.map(f => {
+    const m = /^([A-Z][A-Z .]{2,18}):\s*(.*)$/.exec(f.text || "");
+    const tagCls = m ? (/DERBY/.test(m[1]) ? "fchip red" : /INJUR|COLLAPS|OUT OF/.test(m[1]) ? "fchip soft" : /CONTRACT|RENEW|WONDER/.test(m[1]) ? "fchip warm" : "fchip") : "";
+    const head = m ? `<span class="${tagCls}">${m[1]}</span>` : "";
+    const body = m ? m[2] : (f.text || "");
+    return `<p>${head}<span class="ftime">${new Date(f.t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span><br>${body}</p>`;
+  }).join("");
+}
+
+let MANAGERS = {};
+function fixtureRow(m, s, extra) {
+  const nm = t => { const b = MANAGERS[t]; return (b && b !== "AI") ? ` <span class="tag human">${b}</span>` : ""; };
+  return `<div class="fixture${extra ? " mine" : ""}"><span class="fh">${m.home}${nm(m.home)}</span><span class="score">${m.hg===null?"v":m.hg+"-"+m.ag}${m.derby?' <span class="tag derby">DERBY</span>':''}${m.played?' <span class="tag human">PLAYED</span>':''}</span><span class="fa">${m.away}${nm(m.away)}</span>${extra || ""}</div>`;
+}
+
+// ---- playable match ----
+function playRow(s, kind) {
+  const f = (s.playable || []).find(x => x.kind === kind);
+  if (!f) return "";
+  const mp = s.myPlay;
+  if (mp && mp.status === "done" && mp.kind === kind) return `<div class="playrow"><span class="tag human">PLAYED</span><span>You played this one, ${mp.home} ${mp.hg}-${mp.ag} ${mp.away}. It counts when the host sims the week.</span></div>`;
+  if (mp && mp.status === "done") return `<div class="playrow"><span>You already played a match this week, so this one gets simmed.</span></div>`;
+  if (mp) return `<div class="playrow"><span>You kicked off a match this week and left it, so your matches get simmed like normal.</span></div>`;
+  if (f.blocked) return `<div class="playrow"><span>${f.blocked}</span></div>`;
+  return `<div class="playrow"><button class="small gold" onclick="playMatch('${kind}')">Play this match</button><span>Play it yourself, or leave it and it gets simmed.</span></div>`;
+}
+// Once the host has simmed past the fixture being played this gives its simmed score,
+// { home, away, hg, ag, note }. It gives null while the fixture is still to come.
+function simmedResult(s, f, round, season) {
+  if (!s || (s.round === round && s.season === season)) return null;
+  const out = { home: f.home, away: f.away, hg: null, ag: null, note: "" };
+  if (s.season !== season) return out;
+  let m = null;
+  if (f.kind === "league") {
+    m = (s.myFixtures || []).find(x => x.week === round + 1 && x.home === f.home && x.away === f.away) || null;
+  } else {
+    const cup = (s.cups || []).find(c => c.key === f.kind);
+    if (cup) cup.rounds.forEach(r => {
+      if (r.week === round + 1) m = r.matches.find(x => x.home === f.home && x.away === f.away) || m;
+    });
+  }
+  if (m && m.hg !== null && m.hg !== undefined) {
+    out.hg = m.hg; out.ag = m.ag;
+    if (m.pensPending) out.note = "It finished level, so it goes to penalties.";
+    else if (m.pens && m.winner) out.note = m.winner + " went through on penalties.";
+  }
+  return out;
+}
+window.playMatch = kind => {
+  const s = STATE;
+  const f = s ? (s.playable || []).find(x => x.kind === kind) : null;
+  if (!f) return;
+  if (!window.FLMatch) { alert("The match could not load. Check that match.js is uploaded next to index.html, then refresh the page."); return; }
+  const round = s.round, season = s.season;
+  FLMatch.open({
+    info: f,
+    kickoff: () => api("/api/playstart", { kind, home: f.home, away: f.away }),
+    finish: async (hg, ag) => (await api("/api/playresult", { kind, home: f.home, away: f.away, hg, ag })).message,
+    simmed: () => simmedResult(STATE, f, round, season),
+    recheck: () => tick(),
+    closed: () => { tick(); }
+  });
+};
+
+function renderOffers(s) {
+  const mine = s.offers.filter(o => o.buyerUser === s.you);
+  const incoming = s.offers.filter(o => o.sellerClub === (s.myClub||{}).name && o.buyerUser !== s.you);
+  // do not wipe the personal terms form while someone is typing in it
+  const act = document.activeElement;
+  const typingTerms = act && /^(tw|ty|tr)\d+$/.test(act.id || "");
+  if (!typingTerms) {
+    const saved = {};
+    document.querySelectorAll('#offersOut input[id^="tw"], #offersOut select[id^="ty"], #offersOut select[id^="tr"]').forEach(el => saved[el.id] = el.value);
+    $("offersOut").innerHTML = mine.map(o => offerCard(o, "buyer")).join("") || "<p style='color:var(--dim)'>No bids yet. Hit the market.</p>";
+    $("offersIn").innerHTML = incoming.map(o => offerCard(o, "seller")).join("") || "<p style='color:var(--dim)'>Nothing incoming.</p>";
+    Object.entries(saved).forEach(([id, v]) => { const el = $(id); if (el && v !== "") el.value = v; });
+  }
+  const hot = incoming.filter(o=>o.status==="pending_seller").length + mine.filter(o=>o.status==="countered").length;
+  $("offerDot").textContent = hot ? "("+hot+")" : "";
+}
+
+function offerCard(o, role) {
+  const p = playerName(o.playerId);
+  const open = STATE && STATE.window ? STATE.window.open : true;
+  let actions = "";
+  if (o.status === "pending_seller" && role === "seller") actions = open ? `
+    <button class="small" onclick="respond(${o.id},'accept')">Accept</button>
+    <button class="small red" onclick="respond(${o.id},'decline')">Decline</button>
+    <button class="small ghost" onclick="respond(${o.id},'counter', prompt('Counter fee in £m'))">Counter</button>` :
+    `<span class="tag">Window shut</span> <button class="small red" onclick="respond(${o.id},'decline')">Decline</button>`;
+  if (o.status === "countered" && role === "seller" && o.direction === "inbound") actions = open ? `
+    <button class="small" onclick="respond(${o.id},'accept')">Take their ${money(o.fee)}</button>
+    <button class="small ghost" onclick="respond(${o.id},'counter', prompt('New counter in £m'))">Counter again</button>
+    <button class="small red" onclick="respond(${o.id},'decline')">Decline</button>` :
+    `<span class="tag">Window shut</span> <button class="small red" onclick="respond(${o.id},'decline')">Decline</button>`;
+  if (o.status === "countered" && role === "buyer") actions = open ? `
+    <button class="small" onclick="respond(${o.id},'accept')">Pay ${money(o.counterFee)}</button>
+    <button class="small ghost" onclick="respond(${o.id},'counter', prompt('New fee in £m'))">Counter</button>
+    <button class="small red" onclick="respond(${o.id},'decline')">Walk away</button>` :
+    `<span class="tag">Window shut</span> <button class="small red" onclick="respond(${o.id},'decline')">Walk away</button>`;
+  const who = (o.direction === "inbound"
+    ? `${o.fromClub} → YOUR ${p.toUpperCase()}`
+    : `${o.toClub} → ${p.toUpperCase()} (${o.sellerClub})`) + (o.kind === "loan" ? ' <span class="tag loan">LOAN ASK</span>' : '');
+  const shownFee = (o.status === "countered" && o.counterFee) ? o.counterFee : o.fee;
+  const feeTag = (o.status === "countered" && o.counterFee) ? "THEIR COUNTER" : "BID";
+  return `<div class="offer"><div class="ohead"><span class="who">${who}</span>
+    <span class="msub status-${o.status}">${o.status.replace(/_/g," ").toUpperCase()}</span></div>
+    <div class="fee">${money(shownFee)} <small>${feeTag}${o.swapName ? " + " + o.swapName.toUpperCase() + " (" + o.swapRating + ")" : ""}${o.status === "countered" && o.counterFee ? " · YOUR BID " + money(o.fee) : ""}</small></div>
+    ${o.note?`<div class="note">"${o.note}"</div>`:""}
+    <div class="oact">${actions}</div></div>`;
+}
+
+let PLAYER_NAMES = {};
+function playerName(id){ 
+  if (STATE && STATE.myClub) STATE.myClub.squad.forEach(p=>PLAYER_NAMES[p.id]=p.name);
+  return PLAYER_NAMES[id] || ("player #" + id);
+}
+
+// ---- lineup editor: formations and a pitch you place players on ----
+const FORMATIONS = {
+  "4-3-3":   [{x:50,y:88,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:73,l:"CB"},{x:62,y:73,l:"CB"},{x:86,y:70,l:"RB"},{x:28,y:50,l:"CM"},{x:50,y:55,l:"CM"},{x:72,y:50,l:"CM"},{x:16,y:28,l:"LW"},{x:50,y:23,l:"ST"},{x:84,y:28,l:"RW"}],
+  "4-4-2":   [{x:50,y:88,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:73,l:"CB"},{x:62,y:73,l:"CB"},{x:86,y:70,l:"RB"},{x:14,y:47,l:"LM"},{x:38,y:52,l:"CM"},{x:62,y:52,l:"CM"},{x:86,y:47,l:"RM"},{x:38,y:26,l:"ST"},{x:62,y:26,l:"ST"}],
+  "4-2-3-1": [{x:50,y:88,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:73,l:"CB"},{x:62,y:73,l:"CB"},{x:86,y:70,l:"RB"},{x:38,y:56,l:"DM"},{x:62,y:56,l:"DM"},{x:18,y:38,l:"LW"},{x:50,y:40,l:"AM"},{x:82,y:38,l:"RW"},{x:50,y:21,l:"ST"}],
+  "3-5-2":   [{x:50,y:88,l:"GK",gk:1},{x:26,y:72,l:"CB"},{x:50,y:75,l:"CB"},{x:74,y:72,l:"CB"},{x:10,y:50,l:"LWB"},{x:32,y:54,l:"CM"},{x:50,y:57,l:"CM"},{x:68,y:54,l:"CM"},{x:90,y:50,l:"RWB"},{x:38,y:26,l:"ST"},{x:62,y:26,l:"ST"}],
+  "5-3-2":   [{x:50,y:88,l:"GK",gk:1},{x:10,y:65,l:"LWB"},{x:30,y:72,l:"CB"},{x:50,y:75,l:"CB"},{x:70,y:72,l:"CB"},{x:90,y:65,l:"RWB"},{x:30,y:49,l:"CM"},{x:50,y:54,l:"CM"},{x:70,y:49,l:"CM"},{x:38,y:26,l:"ST"},{x:62,y:26,l:"ST"}],
+  "4-1-4-1": [{x:50,y:88,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:73,l:"CB"},{x:62,y:73,l:"CB"},{x:86,y:70,l:"RB"},{x:50,y:58,l:"DM"},{x:14,y:43,l:"LM"},{x:38,y:45,l:"CM"},{x:62,y:45,l:"CM"},{x:86,y:43,l:"RM"},{x:50,y:23,l:"ST"}],
+  "3-4-3":   [{x:50,y:88,l:"GK",gk:1},{x:26,y:72,l:"CB"},{x:50,y:75,l:"CB"},{x:74,y:72,l:"CB"},{x:14,y:50,l:"LM"},{x:38,y:54,l:"CM"},{x:62,y:54,l:"CM"},{x:86,y:50,l:"RM"},{x:16,y:27,l:"LW"},{x:50,y:22,l:"ST"},{x:84,y:27,l:"RW"}]
+};
+let LB = { xi: Array(11).fill(null), subs: [], formation: "4-3-3", dirty: false, sel: null, selFrom: null };
+
+function luRole(l) {
+  if (l === "GK") return "GK";
+  return (l.includes("B") && l !== "ST") ? "DF" : (["CM","DM","AM","LM","RM"].includes(l) ? "MF" : "FW");
+}
+window.luQuickStart = (id, ev) => {
+  if (ev) ev.stopPropagation();
+  const p = luPlayer(id); if (!p) return;
+  const slots = FORMATIONS[LB.formation];
+  if (p.pos === "GK") {
+    if (LB.xi[0] === null) { luAssign(0, id); return; }
+    $("lineupMsg").textContent = "Goal is taken. Clear the keeper spot first (tap the x).";
+    return;
+  }
+  let idx = slots.findIndex((sl, i) => !sl.gk && LB.xi[i] === null && luRole(sl.l) === p.pos);
+  if (idx < 0) idx = slots.findIndex((sl, i) => !sl.gk && LB.xi[i] === null);
+  if (idx < 0) { $("lineupMsg").textContent = "XI is full. Clear a spot or bench someone first."; return; }
+  luAssign(idx, id);
+};
+
+function luPlayer(id) {
+  const s = STATE; if (!s || !s.myClub) return null;
+  return s.myClub.squad.find(p => p.id === id) || null;
+}
+function luShort(name) {
+  const parts = name.split(" ");
+  return parts.length > 1 ? parts[parts.length - 1] : name;
+}
+function luTouch(msg) { LB.dirty = true; $("lineupMsg").textContent = msg || "Unsaved changes. Hit Save lineup."; renderLineup(); }
+
+function luAssign(slotIdx, id) {
+  const p = luPlayer(id); if (!p) return;
+  if (p.inj > 0) { $("lineupMsg").textContent = p.name + " is injured for " + p.inj + " more week" + (p.inj > 1 ? "s" : "") + "."; return; }
+  if (p.ban > 0) { $("lineupMsg").textContent = p.name + " is suspended for the next match."; return; }
+  const slot = FORMATIONS[LB.formation][slotIdx];
+  if (slot.gk && p.pos !== "GK") { $("lineupMsg").textContent = "Only a goalkeeper can go in goal."; return; }
+  if (!slot.gk && p.pos === "GK") { $("lineupMsg").textContent = "A keeper can only play in goal."; return; }
+  const fromSlot = LB.xi.indexOf(id);
+  const displaced = LB.xi[slotIdx];
+  if (fromSlot >= 0) { LB.xi[fromSlot] = displaced !== undefined ? displaced : null; }
+  else { LB.subs = LB.subs.filter(x => x !== id); }
+  LB.xi[slotIdx] = id;
+  LB.sel = null; LB.selFrom = null;
+  luTouch();
+}
+function luClearSlot(slotIdx) {
+  if (LB.xi[slotIdx] === null) return;
+  LB.xi[slotIdx] = null;
+  LB.sel = null; LB.selFrom = null;
+  luTouch();
+}
+window.luSlotTap = slotIdx => {
+  if (LB.sel !== null) { luAssign(slotIdx, LB.sel); return; }
+  const occ = LB.xi[slotIdx];
+  if (occ !== null) { LB.sel = occ; LB.selFrom = slotIdx; renderLineup(); }
+};
+window.luPoolTap = id => {
+  if (LB.sel === id) { LB.sel = null; LB.selFrom = null; renderLineup(); return; }
+  LB.sel = id; LB.selFrom = null; renderLineup();
+};
+window.luBench = (id, ev) => {
+  if (ev) ev.stopPropagation();
+  if (LB.subs.includes(id)) { LB.subs = LB.subs.filter(x => x !== id); luTouch(); return; }
+  if (LB.subs.length >= 9) { $("lineupMsg").textContent = "Bench is full (9 max)."; return; }
+  const slotIdx = LB.xi.indexOf(id);
+  if (slotIdx >= 0) LB.xi[slotIdx] = null;
+  LB.subs.push(id);
+  LB.sel = null; LB.selFrom = null;
+  luTouch();
+};
+window.luUnbench = id => { LB.subs = LB.subs.filter(x => x !== id); luTouch(); };
+window.luSlotClear = (slotIdx, ev) => { if (ev) ev.stopPropagation(); luClearSlot(slotIdx); };
+
+function renderLineup() {
+  const s = STATE;
+  if (!s || !s.myClub) return;
+  const squadIds = new Set(s.myClub.squad.map(p => p.id));
+  LB.xi = LB.xi.map(id => (id !== null && squadIds.has(id)) ? id : null);
+  LB.subs = LB.subs.filter(id => squadIds.has(id));
+  const slots = FORMATIONS[LB.formation];
+  $("formSel").value = LB.formation;
+  const filled = LB.xi.filter(x => x !== null).length;
+  $("pitch").innerHTML = '<div class="pbox top"></div><div class="pbox bot"></div>' + slots.map((slot, i) => {
+    const id = LB.xi[i];
+    const p = id !== null ? luPlayer(id) : null;
+    const selCls = (p && LB.sel === id) ? " luSel" : "";
+    const inner = p
+      ? `<span class="luball">${p.rating}<span class="luX" onclick="luSlotClear(${i},event)">\u00d7</span></span><span class="luplate">${luShort(p.name)}</span><span class="luage">${p.age}Y \u00b7 ${p.role || p.pos}</span>`
+      : `<span class="luball">+</span><span class="luplate">${slot.l}</span>`;
+    return `<div class="luslot${p ? " lufilled" : ""}${slot.gk ? " gk" : ""}${selCls}" style="left:${slot.x}%;top:${slot.y}%"
+      data-slot="${i}" onclick="luSlotTap(${i})" ondragover="event.preventDefault()"
+      ondrop="luDrop(event,${i})">${inner}</div>`;
+  }).join("") + `<div class="lucount">${filled}/11</div>`;
+  const fl = $("formList");
+  if (fl) fl.innerHTML = Object.keys(FORMATIONS).map(f =>
+    `<div class="furow${f === LB.formation ? " on" : ""}" onclick="luSetFormation('${f}')">
+      <span class="fn">${f}</span><span class="ft">${f === LB.formation ? "ACTIVE" : "SET"}</span></div>`).join("");
+  const pool = s.myClub.squad
+    .filter(p => !LB.xi.includes(p.id) && !LB.subs.includes(p.id))
+    .sort((a, b) => ({GK:0,DF:1,MF:2,FW:3}[a.pos] - {GK:0,DF:1,MF:2,FW:3}[b.pos]) || b.rating - a.rating);
+  $("poolList").innerHTML = pool.map(p => {
+    const out = p.inj > 0 || p.ban > 0;
+    const acts = out
+      ? `<span class="tag inj">${p.inj > 0 ? "INJ " + p.inj + "W" : "BAN"}</span>`
+      : `<button class="small" onclick="luQuickStart(${p.id},event)">Start</button><button class="small ghost" onclick="luBench(${p.id},event)">Sub</button>`;
+    return `<div class="benchrow${LB.sel === p.id ? " sel" : ""}${out ? "" : ""}" ${out ? "" : 'draggable="true"'} ondragstart="luDrag(event,${p.id})"
+      onclick="${out ? "" : "luPoolTap(" + p.id + ")"}" style="${out ? "opacity:.5" : ""}"><span class="bp pos-${p.pos}">${p.role || p.pos}</span>
+      <span class="bn">${p.name} <span>${p.age}Y</span> <b>${p.rating}</b></span>
+      <span class="ba">${acts}</span></div>`;
+  }).join("") ||
+    "<p style='color:var(--dim);font-size:13px;padding:6px 18px'>Everyone is in the matchday squad.</p>";
+  $("subCount").textContent = LB.subs.length + "/9";
+  $("subList").innerHTML = LB.subs.map(id => {
+    const p = luPlayer(id); if (!p) return "";
+    return `<div class="benchrow" onclick="luUnbench(${p.id})" title="Tap to pull him off the bench"><span class="bp pos-${p.pos}">${p.role || p.pos}</span>
+      <span class="bn">${p.name} <span>${p.age}Y</span> <b>${p.rating}</b></span>
+      <span class="ba"><button class="small red">\u00d7</button></span></div>`;
+  }).join("") || "<p style='color:var(--dim);font-size:13px;padding:4px 18px'>No subs yet.</p>";
+}
+
+window.luDrag = (ev, id) => { ev.dataTransfer.setData("text/plain", String(id)); };
+const luAvail = id => { const p = luPlayer(id); return p && !(p.inj > 0) && !(p.ban > 0); };
+window.luSetFormation = f => {
+  if (!FORMATIONS[f]) return;
+  $("formSel").value = f;
+  $("formSel").onchange();
+};
+window.luDrop = (ev, slotIdx) => {
+  ev.preventDefault();
+  const id = Number(ev.dataTransfer.getData("text/plain"));
+  if (id) luAssign(slotIdx, id);
+};
+
+$("formSel").onchange = () => {
+  const outfield = LB.xi.slice(1).filter(x => x !== null);
+  const gk = LB.xi[0];
+  LB.formation = $("formSel").value;
+  LB.xi = Array(11).fill(null);
+  LB.xi[0] = gk;
+  outfield.forEach((id, i) => { if (i + 1 < 11) LB.xi[i + 1] = id; });
+  luTouch("Formation changed. Same players, new shape. Hit Save lineup.");
+};
+
+$("autoPick").onclick = () => {
+  const s = STATE; if (!s || !s.myClub) return;
+  const slots = FORMATIONS[LB.formation];
+  const byPos = { GK: [], DF: [], MF: [], FW: [] };
+  [...s.myClub.squad].sort((a, b) => b.rating - a.rating).forEach(p => byPos[p.pos].push(p));
+  const used = new Set();
+  const take = pos => { const p = (byPos[pos] || []).find(x => !used.has(x.id)); if (p) used.add(p.id); return p || null; };
+  const takeBest = () => {
+    const p = [...s.myClub.squad].filter(x => x.pos !== "GK" && !used.has(x.id)).sort((a, b) => b.rating - a.rating)[0];
+    if (p) used.add(p.id); return p || null;
+  };
+  LB.xi = slots.map(slot => {
+    if (slot.gk) { const g = take("GK"); return g ? g.id : null; }
+    const p = take(luRole(slot.l)) || takeBest();
+    return p ? p.id : null;
+  });
+  const benchGk = (byPos.GK || []).find(g => !used.has(g.id));
+  LB.subs = [];
+  if (benchGk) { LB.subs.push(benchGk.id); used.add(benchGk.id); }
+  [...s.myClub.squad].filter(p => !used.has(p.id) && p.pos !== "GK").sort((a, b) => b.rating - a.rating)
+    .slice(0, 9 - LB.subs.length).forEach(p => LB.subs.push(p.id));
+  luTouch("Auto picked for a " + LB.formation + ". Hit Save lineup to lock it in.");
+};
+
+$("saveLineup").onclick = async () => {
+  const xi = LB.xi.filter(x => x !== null);
+  if (xi.length !== 11) { $("lineupMsg").textContent = "Fill all 11 spots first (" + xi.length + "/11)."; return; }
+  try {
+    await api("/api/lineup", { xi: LB.xi, subs: LB.subs, formation: LB.formation });
+    LB.dirty = false;
+    $("lineupMsg").textContent = "Lineup saved. This " + LB.formation + " plays your next matches.";
+    tick();
+  } catch(e){ $("lineupMsg").textContent = e.message; }
+};
+
+// ---- romano wire ----
+function timeAgo(t) {
+  const m = Math.floor((Date.now() - t) / 60000);
+  if (m < 1) return "now";
+  if (m < 60) return m + "m";
+  const h = Math.floor(m / 60);
+  return h < 24 ? h + "h" : Math.floor(h / 24) + "d";
+}
+function renderRomano(s) {
+  const box = $("romanoBox");
+  if (!box) return;
+  const posts = s.romano || [];
+  if (!posts.length) {
+    box.innerHTML = "<p style='color:var(--dim)'>Quiet day on the transfer front. Bids, breakdowns and here we gos will drop here the moment something moves.</p>";
+    return;
+  }
+  const wireBadge = t => {
+    if (t.includes("HERE WE GO")) return { cls: "go", label: "HERE WE GO", hero: true };
+    if (t.includes("EXCLUSIVE")) return { cls: "info", label: "EXCL", hero: false };
+    if (/rejected|turned down|declined|walked away|pulled out|off the table|collapsed|no deal|snubbed/i.test(t)) return { cls: "off", label: "DEAL OFF", hero: false };
+    if (/window/i.test(t)) return { cls: "info", label: "OFFICIAL", hero: false };
+    return { cls: "info", label: "WIRE", hero: false };
+  };
+  box.innerHTML = posts.map(p => {
+    const b = wireBadge(p.text || "");
+    return `
+    <div class="fabpost${b.hero ? " hero" : ""}">
+      <div class="fabhead">
+        <span class="fabtime">${timeAgo(p.t)}</span>
+        <span class="fabbadge ${b.cls}">${b.label}</span>
+        <span class="fabtime" style="margin-left:auto">FABRIZIO ROMANO</span>
+      </div>
+      <div class="fabtext">${p.text}</div>
+    </div>`;
+  }).join("");
+}
+
+// ---- matchday lock ----
+const LIVE = { week: null, clock: 0, timer: null, done: true };
+function liveKey(s) { return "fl_seen_" + (ME.code || "") + "_" + (s.lock ? s.lock.week : 0) + "_" + s.season; }
+function liveEvents(s, mm) {
+  const evd = mm ? (s.lastEvents || {})[mm.home + "|" + mm.away] : null;
+  return evd && evd.ev ? evd.ev : [];
+}
+function finishLive(s) {
+  LIVE.done = true;
+  if (LIVE.timer) { clearInterval(LIVE.timer); LIVE.timer = null; }
+  try { localStorage.setItem(liveKey(s), "1"); } catch (e) {}
+  if (STATE) renderMatchday(STATE);
+}
+function renderLiveFrame(s, mm) {
+  const myName = s.myClub ? s.myClub.name : null;
+  const evs = liveEvents(s, mm).filter(e => e.min <= LIVE.clock);
+  let hg = 0, ag = 0;
+  for (const e of evs) { if (!e.red) { if (e.c === mm.home) hg++; else if (e.c === mm.away) ag++; } }
+  const homeMine = mm.home === myName;
+  $("mdHero").innerHTML = `
+    <div class="tm${homeMine ? "" : " away"}" style="text-align:right">${mm.home}</div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="sc${homeMine ? "" : " away"}">${hg}</span>
+      <span class="dash">-</span>
+      <span class="sc${homeMine ? " away" : ""}">${ag}</span>
+    </div>
+    <div class="tm${homeMine ? " away" : ""}">${mm.away}</div>
+    <div class="liveclock" style="grid-column:1/-1"><b>LIVE</b> &middot; ${Math.min(90, LIVE.clock)}'${LIVE.clock > 90 ? "+" : ""}</div>`;
+  $("mdHero").classList.remove("hidden");
+  const sc = $("mdScorers");
+  if (sc) {
+    if (evs.length) {
+      sc.innerHTML = evs.map(e => `<span class="goalpop">${e.red ? "\ud83d\udfe5 " : ""}${e.n.toUpperCase()} ${e.min}'</span>`).join(" \u00b7 ");
+      sc.classList.remove("hidden");
+    } else { sc.innerHTML = ""; sc.classList.add("hidden"); }
+  }
+  $("mdLeague").innerHTML = "<p style='color:var(--dim)'>Full time scores land when your match finishes.</p>";
+  $("mdCupsPanel").classList.add("hidden");
+  if ($("pensBox")) $("pensBox").classList.add("hidden");
+  $("mdSub").textContent = "Your match is being played right now. The rest of the results come in at full time.";
+  $("mdFoot").innerHTML = `<span class="msub">LIVE COVERAGE</span><button id="mdSkip" class="ghost">SKIP TO FULL TIME &rarr;</button>`;
+  const sk = $("mdSkip");
+  if (sk) sk.onclick = () => finishLive(s);
+}
+function renderMatchday(s) {
+  const lock = s.lock || { active: false };
+  const show = lock.active && s.started !== false;
+  $("matchday").classList.toggle("hidden", !show);
+  if (!show) { if (LIVE.timer) { clearInterval(LIVE.timer); LIVE.timer = null; } LIVE.week = null; return; }
+  const myName = s.myClub ? s.myClub.name : null;
+  $("mdWeek").textContent = lock.week;
+  // fresh week: run the match live before revealing everything, unless already seen
+  const liveWeekKey = lock.week + "_" + s.season;
+  if (LIVE.week !== liveWeekKey) {
+    LIVE.week = liveWeekKey;
+    LIVE.clock = 0;
+    let seen = false;
+    try { seen = !!localStorage.getItem(liveKey(s)); } catch (e) {}
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mm0 = myName ? (s.lastWeek || []).find(m => m.home === myName || m.away === myName) : null;
+    LIVE.done = !!(seen || reduce || window.FL_FAST === true || !mm0);
+    if (!LIVE.done) {
+      if (LIVE.timer) clearInterval(LIVE.timer);
+      LIVE.timer = setInterval(() => {
+        LIVE.clock += 2;
+        if (!STATE || !STATE.lock || !STATE.lock.active) { finishLive(s); return; }
+        const mmNow = myName ? (STATE.lastWeek || []).find(m => m.home === myName || m.away === myName) : null;
+        if (!mmNow) { finishLive(STATE); return; }
+        if (LIVE.clock > 94) { finishLive(STATE); return; }
+        renderLiveFrame(STATE, mmNow);
+      }, 380);
+    }
+  }
+  if (!LIVE.done) {
+    const mmL = myName ? (s.lastWeek || []).find(m => m.home === myName || m.away === myName) : null;
+    if (mmL) { renderLiveFrame(s, mmL); return; }
+    LIVE.done = true;
+  }
+  const lastH = s.history && s.history.length ? s.history[s.history.length-1] : null;
+  const myChamp = lastH ? ((lastH.champions && s.myLeague && lastH.champions[s.myLeague]) || lastH.champion) : null;
+  const champLine = (lock.week === (s.totalRounds || 38) && myChamp)
+    ? "Season done! " + myChamp + " win the " + (s.myLeague || "league") + ". Full wrap in the news feed."
+    : "The whole lobby watches the results together until the host moves everyone on.";
+  $("mdSub").textContent = champLine;
+  if ($("mdLeagueLab")) $("mdLeagueLab").textContent = (s.myLeague || "LEAGUE").toUpperCase() + " \u00b7 MW " + lock.week;
+  const hero = $("mdHero");
+  if (hero) {
+    let mm = myName ? (s.lastWeek || []).find(m => m.home === myName || m.away === myName) : null;
+    if (!mm && myName) (s.cups || []).forEach(cup => cup.rounds.forEach(r => {
+      if (r.week === lock.week && r.matches[0] && r.matches[0].hg !== null) {
+        const t = r.matches.find(m => m.home === myName || m.away === myName);
+        if (t && !mm) mm = t;
+      }
+    }));
+    if (mm && mm.hg !== null && mm.hg !== undefined) {
+      const homeMine = mm.home === myName;
+      hero.innerHTML = `
+        <div class="tm${homeMine ? "" : " away"}" style="text-align:right">${mm.home}</div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <span class="sc${homeMine ? "" : " away"}">${mm.hg}</span>
+          <span class="dash">-</span>
+          <span class="sc${homeMine ? " away" : ""}">${mm.ag}</span>
+        </div>
+        <div class="tm${homeMine ? " away" : ""}">${mm.away}</div>`;
+      hero.classList.remove("hidden");
+      const evd = (s.lastEvents || {})[mm.home + "|" + mm.away];
+      const sc = $("mdScorers");
+      if (sc) {
+        if (evd && (evd.ev.length || evd.potm)) {
+          const line = evd.ev.map(e => `${e.n.toUpperCase()} ${e.min}'`).join(" \u00b7 ") || "NO GOALS";
+          const star = evd.potm ? `<span style="color:var(--gold)">STAR MAN: ${evd.potm.n.toUpperCase()} (${evd.potm.c.toUpperCase()})</span>` : "";
+          sc.innerHTML = line + (star ? "<br>" + star : "");
+          sc.classList.remove("hidden");
+        } else sc.classList.add("hidden");
+      }
+    } else {
+      hero.classList.add("hidden");
+      if ($("mdScorers")) $("mdScorers").classList.add("hidden");
+    }
+  }
+  if ($("reactBar")) {
+    if (!$("reactBar").innerHTML) {
+      $("reactBar").innerHTML = ["\ud83d\ude02","\ud83d\udd25","\ud83d\udc80","\ud83d\udc4f","\ud83e\udd21","\ud83d\ude2d"]
+        .map(e => `<button onclick="sendReact('${e}')" title="Let the lobby know">${e}</button>`).join("");
+    }
+    const rf = $("reactFeed");
+    if (rf) rf.innerHTML = (s.reacts || []).slice(-12).reverse()
+      .map(x => `<span class="reactchip"><b>${x.e}</b>${x.n}</span>`).join("");
+  }
+  $("mdLeague").innerHTML = (s.lastWeek||[]).map(m => {
+    const mine = myName && (m.home === myName || m.away === myName);
+    return `<div class="fixture ${mine?'mine':''}"><span class="fh">${m.home}</span><span class="score">${m.hg}-${m.ag}</span><span class="fa">${m.away}</span></div>`;
+  }).join("") || "<p style='color:var(--dim)'>No league games this week.</p>";
+  let cupHtml = "";
+  (s.cups||[]).forEach(cup => {
+    const care = cupIsMine(cup, s) || ["ucl","uel","intl"].includes(cup.key);
+    cup.rounds.forEach(r => {
+      if (r.week !== lock.week || r.matches[0].hg === null) return;
+      if (!care && r.matches.length > 1) return;
+      cupHtml += `<div class="cuproundname">${cup.title} · ${r.name}</div>` + r.matches.map(m => {
+        const mine = myName && (m.home === myName || m.away === myName);
+        const score = m.hg + "-" + m.ag + (m.pens ? " p: " + m.winner : "");
+        return `<div class="fixture ${mine?'mine':''}"><span class="fh">${m.home}</span><span class="score">${score}</span><span class="fa">${m.away}</span></div>`;
+      }).join("");
+    });
+  });
+  $("mdCupsPanel").classList.toggle("hidden", !cupHtml);
+  $("mdCups").innerHTML = cupHtml;
+  renderPens(s);
+  if (s.you === s.host) {
+    const finalWeek = s.round >= (s.totalRounds || 38);
+    const more = finalWeek
+      ? `<button id="mdNext" class="gold">Start next season (host)</button>`
+      : `<button id="mdSim" class="gold">Sim next week</button>`;
+    $("mdFoot").innerHTML = `<span class="msub">CUPS AND EUROPE SIM WITH THE WEEK. SEE THE CUPS TAB.</span><span style="display:flex;gap:10px;flex-wrap:wrap">` + more + `<button id="mdBack">I'VE SEEN IT &rarr;</button></span>`;
+    const nextB = $("mdNext");
+    if (nextB) nextB.onclick = async () => { nextB.disabled = true; try { await api("/api/nextseason",{}); await tick(); } catch(e){ alert(e.message); } };
+    const sim = $("mdSim");
+    if (sim) sim.onclick = async () => { sim.disabled = true; try { await api("/api/sim",{}); await tick(); } catch(e){ alert(e.message); } };
+    $("mdBack").onclick = async () => { try { await api("/api/unlock",{}); await tick(); } catch(e){ alert(e.message); } };
+  } else {
+    $("mdFoot").innerHTML = `<span class="msub">CUPS AND EUROPE SIM WITH THE WEEK. SEE THE CUPS TAB.</span><span class="waiting">WAITING FOR ${s.host.toUpperCase()} TO ROLL THE WORLD ON...</span>`;
+  }
+}
+
+// ---- cups ----
+function cupIsMine(cup, s) {
+  const myName = s.myClub ? s.myClub.name : null;
+  if (cup.scope === "intl") return !!s.myNation;
+  if (!myName) return false;
+  const r0 = cup.rounds[0];
+  const inDraw = r0 && r0.matches.some(m => m.home === myName || m.away === myName);
+  return inDraw || (s.cups && cup.rounds.some(r => r.matches.some(m => m.home === myName || m.away === myName)));
+}
+function renderCups(s) {
+  const myName = s.myClub ? s.myClub.name : null;
+  const mode = $("cupFilter") ? $("cupFilter").value : "mine";
+  let list = (s.cups || []);
+  if (mode === "mine") {
+    const mine = list.filter(c => cupIsMine(c, s));
+    list = mine.length ? mine : list.filter(c => ["ucl","uel","intl"].includes(c.key));
+  }
+  $("cupsBox").innerHTML = list.map(cup => {
+    let sub;
+    if (cup.winner) sub = `<span class="champ">Champions: ${cup.winner}</span>`;
+    else {
+      const next = cup.rounds[cup.roundIdx];
+      sub = next ? `Next: ${next.name} · simmed with matchweek ${next.week}` : "";
+    }
+    const rounds = cup.rounds.map(r => `
+      <div class="cuproundname">${r.name} · Week ${r.week}</div>
+      ${r.matches.map(m => {
+        const mine = myName && (m.home === myName || m.away === myName);
+        const score = m.hg === null ? "" : m.hg + "-" + m.ag + (m.pens ? " p: " + m.winner : "");
+        return `<div class="fixture ${mine?'mine':''}"><span>${m.home} v ${m.away}</span><span class="score">${score}</span></div>`;
+      }).join("")}`).join("");
+    return `<div class="cup"><h3>${cup.title}</h3><div class="cupsub">${sub}</div>${rounds}</div>`;
+  }).join("") || "<p style='color:var(--dim)'>Cups will appear once the game is created.</p>";
+}
+
+// ---- nations ----
+function renderNations(s) {
+  const box = $("nationPick");
+  if (!box) return;
+  const list = s.nations || [];
+  if (!list.length) {
+    box.innerHTML = "<p style='color:var(--dim)'>No national teams in this save. Start a fresh game to get them.</p>";
+    $("nationSquad").innerHTML = "";
+    return;
+  }
+  box.innerHTML = list.map(n => {
+    const mine = s.myNation === n.name;
+    const taken = n.manager && !mine;
+    let btn;
+    if (mine) btn = `<button class="small red" onclick="leaveNation()">Leave job</button>`;
+    else if (taken) btn = `<span class="tag human">${n.manager}</span>`;
+    else btn = `<button class="small" onclick="takeNation('${n.name}')">Take job</button>`;
+    return `<div class="teamcard ${mine?'me':''}">
+      <div class="tc-name">${n.name}</div>
+      <div class="tc-sub">Squad strength ${n.strength}</div>
+      <div style="margin-top:6px">${btn}</div></div>`;
+  }).join("");
+  const my = list.find(n => n.name === s.myNation);
+  if (my) {
+    $("nationSquad").innerHTML = `<h3 style="margin:6px 0">${my.name} squad</h3>
+      <table><thead><tr><th>Player</th><th>Pos</th><th>Club</th><th class="num">Rating</th></tr></thead><tbody>` +
+      my.players.map(p => `<tr><td>${p.name}</td><td class="pos-${p.pos}">${p.pos}</td><td>${p.club}</td><td class="num">${p.rating}</td></tr>`).join("") +
+      `</tbody></table>
+      <p style="color:var(--dim);font-size:13px">Your nation plays in the International Cup. Find the ties in the Cups tab and the Calendar.</p>`;
+  } else {
+    $("nationSquad").innerHTML = "<p style='color:var(--dim)'>Take a national job to run a country alongside your club. It plays in the International Cup during the season.</p>";
+  }
+}
+
+// ---- calendar ----
+function renderCalendar(s) {
+  const box = $("calBox");
+  if (!box) return;
+  if (!s.started) { box.innerHTML = "<p style='color:var(--dim);padding:12px'>The calendar fills in once the season starts.</p>"; return; }
+  const total = s.totalRounds || 38;
+  const myName = s.myClub ? s.myClub.name : null;
+  const fixByWeek = {};
+  (s.myFixtures || []).forEach(f => { if (f && f.home) fixByWeek[f.week] = f; });
+  const cupsByWeek = {};
+  (s.cups || []).forEach(cup => cup.rounds.forEach(r => {
+    (cupsByWeek[r.week] = cupsByWeek[r.week] || []).push({ cup, r });
+  }));
+  const resFor = (home, away, hg, ag, pens, winner) => {
+    if (hg === null || hg === undefined) return null;
+    const score = hg + "-" + ag + (pens ? " P" : "");
+    if (!myName || (home !== myName && away !== myName)) return { txt: score, cls: "d" };
+    let cls = "d";
+    if (pens && winner) cls = winner === myName ? "w" : "l";
+    else if (hg !== ag) cls = ((home === myName && hg > ag) || (away === myName && ag > hg)) ? "w" : "l";
+    return { txt: score, cls };
+  };
+  let html = "";
+  for (let w = 1; w <= total; w++) {
+    const now = w === s.round + 1;
+    const done = w <= s.round;
+    let comp = "", compGold = false, opp = "", res = null, extra = [];
+    const f = fixByWeek[w];
+    if (f) {
+      comp = (s.myLeague || "LEAGUE").toUpperCase();
+      opp = myName ? ((f.home === myName ? f.away : f.home) + (f.home === myName ? " (H)" : " (A)")) : (f.home + " v " + f.away);
+      res = resFor(f.home, f.away, f.hg, f.ag);
+    }
+    (cupsByWeek[w] || []).forEach(({ cup, r }) => {
+      let tie = null;
+      if (myName) tie = r.matches.find(m => m.home === myName || m.away === myName);
+      const scope = cup.scope === "intl" ? " (NATIONS)" : "";
+      if (tie) {
+        const line = (tie.home === myName ? tie.away + " (H)" : tie.home + " (A)");
+        const tieRes = resFor(tie.home, tie.away, tie.hg, tie.ag, tie.pens, tie.winner);
+        if (!opp) { comp = (cup.title + " " + r.name).toUpperCase(); compGold = true; opp = line; res = tieRes; }
+        else extra.push((cup.title + " " + r.name).toUpperCase() + ": " + line + (tieRes ? " " + tieRes.txt : ""));
+      } else if (cupIsMine(cup, s) || r.matches.length === 1) {
+        extra.push((cup.title + scope + ": " + r.name).toUpperCase());
+      }
+    });
+    const windowOpen = w <= 4 || (w >= 20 && w <= 23);
+    if (w === total) extra.push("SEASON WRAPS UP");
+    if (!opp && !extra.length && !windowOpen) opp = "FREE WEEK";
+    html += `<div class="calcell ${now ? "now" : ""} ${done ? "done" : ""}">
+      <div class="ctop"><span class="cmw">MW ${String(w).padStart(2, "0")}</span><span class="ccomp" style="${compGold ? "color:var(--gold)" : ""}">${comp}</span></div>
+      ${opp ? `<div class="copp" style="${opp === "FREE WEEK" ? "color:var(--faint)" : ""}">${opp}</div>` : ""}
+      ${res ? `<div class="cres ${res.cls}">${res.txt}</div>` : ""}
+      ${windowOpen ? `<div class="cwin">WINDOW OPEN</div>` : ""}
+      ${extra.length ? `<div class="cextra">${extra.join("<br>")}</div>` : ""}
+    </div>`;
+  }
+  box.innerHTML = html;
+}
+
+// ---- actions ----
+window.setTrain = async id => {
+  try { await api("/api/train", { playerId: id }); tick(); } catch (e) { alert(e.message); }
+};
+window.loanOut = async id => {
+  if (!confirm("Loan him to an AI club in your league for the season? He comes back a better player.")) return;
+  try { await api("/api/loanout", { playerId: id }); tick(); } catch (e) { alert(e.message); }
+};
+window.recallLoan = async (id, nm, fee) => {
+  if (!confirm("Recall " + nm + " from his loan for " + fee + "m compensation? He comes straight back into your squad.")) return;
+  try { await api("/api/recall", { playerId: id }); tick(); } catch (e) { alert(e.message); }
+};
+window.loanIn = async (id, name) => {
+  if (!confirm("Take " + name + " on a season long loan? Fee is a tenth of his value, option to buy included.")) return;
+  try { const j = await api("/api/loanin", { playerId: id }); $("marketMsg").textContent = "Loan done, £" + j.fee + "m fee. He goes back at the end of the season unless you buy."; tick(); }
+  catch (e) { $("marketMsg").textContent = e.message; }
+};
+window.buyLoan = async id => {
+  if (!confirm("Trigger the option to buy at his full value?")) return;
+  try { await api("/api/buyloan", { playerId: id }); tick(); } catch (e) { alert(e.message); }
+};
+window.hireStaff = async key => {
+  try { await api("/api/staff", { key }); tick(); } catch (e) { alert(e.message); }
+};
+window.sendReact = async e => {
+  try { await api("/api/react", { emoji: e }); tick(); } catch (err) {}
+};
+window.promote = async id => {
+  try { await api("/api/promote",{playerId:id}); $("academyMsg").textContent = "Promoted to the first team."; tick(); }
+  catch(e){ $("academyMsg").textContent = e.message; }
+};
+window.takeNation = async n => {
+  try { await api("/api/nation",{nation:n}); $("nationMsg").textContent = "You have the " + n + " job."; tick(); }
+  catch(e){ $("nationMsg").textContent = e.message; }
+};
+window.leaveNation = async () => {
+  try { await api("/api/nation",{nation:""}); $("nationMsg").textContent = "You stepped down from the national job."; tick(); }
+  catch(e){ $("nationMsg").textContent = e.message; }
+};
+if ($("cupFilter")) $("cupFilter").onchange = () => { if (STATE) render(); };
+window.pick = async t => { try { await api("/api/pick",{team:t}); tick(); } catch(e){ $("pickMsg").textContent = e.message; } };
+$("startBtn").onclick = async () => { try { await api("/api/start",{}); tick(); } catch(e){ $("pickMsg").textContent = e.message; } };
+$("simBtn").onclick = async () => { $("simBtn").disabled = true; try { await api("/api/sim",{}); await tick(); } catch(e){ alert(e.message); } $("simBtn").disabled = false; };
+window.simTo = async n => {
+  if (!confirm("Fast forward to week " + n + "? Every week in between gets simmed, matches, transfers, injuries, the lot.")) return;
+  $("ffBtn18").disabled = true; $("ffBtn37").disabled = true;
+  try { await api("/api/simto", { week: n }); await tick(); } catch(e){ alert(e.message); }
+  $("ffBtn18").disabled = false; $("ffBtn37").disabled = false;
+};
+$("ffBtn18").onclick = () => simTo(18);
+$("simToGo").onclick = () => {
+  const w = Math.floor(Number($("simToW").value));
+  if (!Number.isFinite(w) || w < 1 || w > 38) { alert("Pick a week between 1 and 38."); return; }
+  simTo(w);
+};
+$("ffBtn37").onclick = () => simTo(37);
+
+$("nextSeasonBtn").onclick = async () => {
+  $("nextSeasonBtn").disabled = true;
+  try { await api("/api/nextseason",{}); await tick(); } catch(e){ alert(e.message); }
+  $("nextSeasonBtn").disabled = false;
+};
+$("tacticSel").onchange = async e => { try { await api("/api/tactic",{tactic:e.target.value}); } catch(err){ alert(err.message); } };
+window.toggleList = async id => { try { await api("/api/list",{playerId:id}); tick(); } catch(e){ alert(e.message); } };
+window.respond = async (id, action, counterFee) => {
+  if (action === "counter" && !counterFee) return;
+  try { await api("/api/respond",{offerId:id, action, counterFee}); tick(); }
+  catch(e){ $("offerMsg").textContent = e.message; }
+};
+window.bid = async (id, asking, humanSeller) => {
+  const fee = prompt("Your bid in £m (asking around " + asking + ")");
+  if (!fee) return;
+  let swapId = null;
+  const swapQ = humanSeller
+    ? "Add one of your players to sweeten the deal? (a swap)"
+    : "Add one of your players to the deal? AI clubs count him at 85% of his value and only accept a fair package, no haggling.";
+  if (STATE && STATE.myClub && confirm(swapQ)) {
+    const options = STATE.myClub.squad.filter(p => !p.loanOwner && Number(p.id) !== Number(id));
+    const swapName = prompt("Type the player's name to include:\n" + options.map(p => p.name + " (" + p.rating + ")").join("\n"));
+    if (swapName) {
+      const found = options.find(p => p.name.toLowerCase() === swapName.trim().toLowerCase()) ||
+        options.find(p => p.name.toLowerCase().includes(swapName.trim().toLowerCase()));
+      if (!found) { $("marketMsg").textContent = "No player of yours matches that name, bid not sent."; return; }
+      swapId = found.id;
+    }
+  }
+  try { const j = await api("/api/offer",{playerId:id, fee, swapId}); $("marketMsg").textContent = j.offer.note || "Bid sent. Check the Offers tab."; tick(); }
+  catch(e){ $("marketMsg").textContent = e.message; }
+};
+
+// ---- market ----
+async function loadMarket() {
+  try {
+    const j = await api("/api/market?q=" + encodeURIComponent($("mq").value) + "&league=" + encodeURIComponent($("mleague").value) + "&pos=" + $("mpos").value + "&wonder=" + ($("mwonder").checked ? "1" : "0"));
+    if ($("mleague").options.length <= 1) j.leagues.forEach(l => { const o=document.createElement("option"); o.textContent=l; $("mleague").appendChild(o); });
+    j.players.forEach(p => PLAYER_NAMES[p.id] = p.name);
+    const sort = $("msort").value;
+    if (sort === "valdesc") j.players.sort((a,b)=>b.value-a.value);
+    else if (sort === "valasc") j.players.sort((a,b)=>a.value-b.value);
+    else if (sort === "ageasc") j.players.sort((a,b)=>a.age-b.age || b.rating-a.rating);
+    else if (sort === "agedesc") j.players.sort((a,b)=>b.age-a.age || b.rating-a.rating);
+    else j.players.sort((a,b)=>b.rating-a.rating);
+    const open = STATE && STATE.window ? STATE.window.open : true;
+    $("marketBody").innerHTML = j.players.map(p => {
+      const onLoan = !!p.loanOwner;
+      const myTeam = STATE && STATE.myClub ? STATE.myClub.name : "";
+      const canHijack = p.hijackPrice !== null && p.hijackPrice !== undefined && (p.deal || (p.nego && p.nego.club !== myTeam));
+      let acts;
+      if (!open) acts = '<span class="tag">Window shut</span>';
+      else if (onLoan) acts = '<span class="tag loan">On loan</span>';
+      else acts = `<button class="small" onclick="bid(${p.id}, ${p.asking}, ${p.humanOwned ? "true" : "false"})">Bid</button>` +
+        (p.humanOwned || p.rating > 85 ? "" : ` <button class="small ghost" onclick="loanIn(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Loan</button>`) +
+        (canHijack ? ` <button class="small red hj" onclick="hijack(${p.id}, ${p.hijackPrice}, '${p.name.replace(/'/g, "\\'")}')">Hijack ${money(p.hijackPrice)}</button>` : "");
+      const negoTag = p.deal ? `<span class="tag agreed">AGREED \u2192 ${p.deal.club}</span>` :
+        (p.nego ? (p.nego.club === myTeam ? '<span class="tag nego">IN TALKS WITH YOU</span>' : `<span class="tag nego">IN TALKS: ${p.nego.club}</span>`) : "");
+      return `
+      <tr><td>${p.name} ${p.humanOwned?'<span class="tag human">Human club</span>':''} ${p.listed?'<span class="tag listed">Listed</span>':''} ${onLoan?'<span class="tag loan">Loan</span>':''} ${negoTag}</td>
+      <td>${p.club}</td><td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
+      <td class="num">${money(p.value)}</td><td class="num">${money(p.asking)}</td>
+      <td style="white-space:nowrap">${acts}</td></tr>`;
+    }).join("");
+    const fa = j.freeAgents || [];
+    $("freeBox").innerHTML = !fa.length ? "" : `
+      <div class="controls" style="margin-top:14px"><h3 style="margin-right:auto">Free agents</h3><span class="tag">No fee, sign any week</span></div>
+      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th></th></tr></thead><tbody>
+      ${fa.map(p => `<tr><td>${p.name}</td><td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${rchip(p.rating)}</td>
+      <td><button class="small" onclick="signFree(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Sign free</button></td></tr>`).join("")}
+      </tbody></table>`;
+    $("marketMsg").textContent = "Signings left this week: " + (STATE && STATE.signingsLeft !== undefined ? STATE.signingsLeft : 1) + " of 1. Talk to as many players as you like, only one deal can cross the line per week." + (!open ? " " + STATE.window.label + ". You can browse but not bid." : "");
+  } catch(e){ $("marketMsg").textContent = e.message; }
+}
+window.signFree = async (id, name) => {
+  if (!confirm("Sign " + name + " on a free? No fee, he joins straight away.")) return;
+  try { await api("/api/signfree", { playerId: id }); await tick(); loadMarket(); } catch(e){ alert(e.message); }
+};
+let CT_ID = null;
+window.openTerms = (id) => {
+  const S = window.STATE || STATE;
+  const p = S && S.myClub ? S.myClub.squad.find(x => x.id === id) : null;
+  if (!p) return;
+  CT_ID = id;
+  $("ctName").textContent = p.name + ", " + p.age + ", rated " + p.rating;
+  $("ctCurrent").textContent = "Current deal: " + (p.contractYears || 0) + " year" + ((p.contractYears || 0) === 1 ? "" : "s") + " left, " + money(p.wage || 0) + " a season, " + (p.squadRole || "no role set") + ".";
+  $("ctWage").value = p.wage || "";
+  $("ctYears").value = "3";
+  $("ctRole").value = p.squadRole || "First team";
+  $("ctNote").textContent = "";
+  $("ctModal").classList.remove("hidden");
+};
+window.closeTerms = () => { $("ctModal").classList.add("hidden"); CT_ID = null; };
+$("ctSave").onclick = async () => {
+  if (CT_ID === null) return;
+  try {
+    const r = await api("/api/renegotiate", { playerId: CT_ID, wage: Number($("ctWage").value), years: Number($("ctYears").value), role: $("ctRole").value });
+    if (r.accepted) { closeTerms(); await tick(); }
+    else $("ctNote").textContent = r.note || "He said no. Sweeten it.";
+  } catch (e) { $("ctNote").textContent = e.message; }
+};
+window.hijack = async (id, price, name) => {
+  if (!confirm("Hijack the " + name + " deal for " + money(price) + "? That is the gazumping price. If he signs, he counts as your one signing this week.")) return;
+  try { const r = await api("/api/hijack", { playerId: id }); alert(r.offer && r.offer.note ? r.offer.note : "Hijack attempt in."); await tick(); loadMarket(); } catch (e) { alert(e.message); }
+};
+window.releasePlayer = async (id, name) => {
+  if (!confirm("Release " + name + "? It costs 0.5m in compensation and he immediately joins an AI club for free. Human managers can never pick up released players, only AI clubs get them.")) return;
+  try { await api("/api/release", { playerId: id }); await tick(); } catch(e){ alert(e.message); }
+};
+$("mgo").onclick = loadMarket;
+$("msort").onchange = loadMarket;
+$("mwonder").onchange = loadMarket;
+$("sqsort").onchange = () => { if (STATE) render(); };
+$("mq").addEventListener("keydown", e => { if (e.key === "Enter") loadMarket(); });
+
+// auto resume
+if (ME.name && ME.code) {
+  api("/api/state").then(()=>enter()).catch(()=>{ localStorage.removeItem("fl_code"); });
+}
+$("nameIn").value = ME.name;
+</script>
+
+<script>
+// Shared look with the landing page: the starfield backdrop and the decode labels in the lobby.
+// Nothing in here touches the game.
+(function () {
+  "use strict";
+  // The 3D look for the playable match. three.js and the view are only fetched when a manager
+  // picks 3D on the kick off screen, so the page itself stays light.
+  if (window.FLMatch) {
+    window.FLMatch.load3D = function () {
+      return Promise.all([import("./vendor/three.module.js"), import("./match3d.mjs")]).then(function (mods) {
+        return function (opts) { return mods[1].createView3D(mods[0], opts); };
+      });
+    };
+  }
+  // starfield: two 1px dots, each with one long box-shadow list
+  var stars = document.querySelectorAll("#bamStars i");
+  function field(count, blur, aMin, aMax) {
+    var out = [];
+    for (var i = 0; i < count; i++) {
+      out.push((Math.random() * 100).toFixed(2) + "vw " + (Math.random() * 100).toFixed(2) + "vh " + blur + "px 0 rgba(255,255,255," + (aMin + Math.random() * (aMax - aMin)).toFixed(2) + ")");
+    }
+    return out.join(",");
+  }
+  if (stars.length === 2) {
+    stars[0].style.boxShadow = field(150, 0, 0.05, 0.3);
+    stars[1].style.boxShadow = field(18, 1.2, 0.35, 0.7);
+  }
+
+  // decode labels: each one resolves left to right in 400ms behind a short band of random letters
+  var RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var CH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  var labels = [].slice.call(document.querySelectorAll(".dec"));
+  labels.forEach(function (el) { el.dataset.text = el.textContent; });
+  function reserve() {
+    labels.forEach(function (el) { el.style.width = ""; });
+    var w = labels.map(function (el) { return el.getBoundingClientRect().width; });
+    labels.forEach(function (el, i) { if (w[i] > 0) el.style.width = Math.ceil(w[i] * 100) / 100 + "px"; });
+  }
+  function settle(el) {
+    if (el._raf) { cancelAnimationFrame(el._raf); el._raf = 0; }
+    if (el._t) { clearTimeout(el._t); el._t = 0; }
+    el.textContent = el.dataset.text;
+  }
+  function decode(el) {
+    var text = el.dataset.text, n = text.length;
+    settle(el);
+    if (RM || !n) return;
+    var t0 = performance.now(), lastRoll = 0, rand = new Array(n);
+    function roll() { for (var i = 0; i < n; i++) rand[i] = CH.charAt((Math.random() * 26) | 0); }
+    roll();
+    function step(now) {
+      var p = Math.min(1, (now - t0) / 400), front = p * n, out = "";
+      if (now - lastRoll > 45) { roll(); lastRoll = now; }
+      for (var i = 0; i < n; i++) {
+        var c = text.charAt(i);
+        if (i < front) out += c;
+        else if (i < front + 3.6) out += (c === " " ? " " : rand[i]);
+        else break;
+      }
+      el.textContent = out;
+      if (p < 1) el._raf = requestAnimationFrame(step); else settle(el);
+    }
+    el._raf = requestAnimationFrame(step);
+    el._t = setTimeout(function () { settle(el); }, 900);
+  }
+  function boot() {
+    reserve();
+    if (RM) return;
+    labels.forEach(function (el, i) { setTimeout(function () { decode(el); }, 420 + i * 70); });
+    setTimeout(function () { labels.forEach(settle); reserve(); }, 2600);
+  }
+  [].forEach.call(document.querySelectorAll("#lobby a"), function (a) {
+    var t = a.querySelector(".dec");
+    if (t) a.addEventListener("pointerenter", function () { decode(t); });
+  });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(boot); else addEventListener("load", boot);
+  var rt;
+  addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(reserve, 160); });
+})();
+</script>
+
+</body>
+</html>

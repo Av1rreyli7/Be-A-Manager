@@ -1,16 +1,53 @@
 {
-  "name": "floodlights-career",
+  "name": "be-a-manager",
   "version": "1.0.0",
-  "description": "Multiplayer Premier League career mode for you and your friends",
-  "main": "server.js",
+  "private": true,
   "scripts": {
-    "start": "node server.js"
-  },
-  "engines": {
-    "node": ">=18"
+    "dev": "node server.js",
+    "build": "next build",
+    "start": "NODE_ENV=production node server.js",
+    "lint": "eslint",
+    "fetch-data": "tsx scripts/fetch-data.ts",
+    "refresh-data": "tsx scripts/fetch-data.ts --refresh",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:floodlights": "node floodlights/test_sept.js && node floodlights/test_dom_sept.js && node tests-site/test_match3d.js",
+    "test:site": "node tests-site/test_site.js",
+    "test:boot": "node tests-site/test_boot.js",
+    "test:all": "npm run typecheck && npm run test && npm run test:floodlights && npm run upload && npm run test:site && npm run build && npm run test:boot",
+    "upload": "node scripts/make-upload.js"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "@react-three/fiber": "^9.8.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^22.20.4",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/three": "^0.186.0",
+    "clsx": "^2.1.1",
+    "dexie": "^4.4.6",
     "express": "^4.22.3",
-    "jsdom": "^30.0.1"
+    "motion": "^13.5.0",
+    "next": "16.3.7",
+    "peerjs": "^1.5.5",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "recharts": "^3.10.1",
+    "tailwindcss": "^4",
+    "three": "^0.186.1",
+    "typescript": "^5",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "eslint": "^9",
+    "eslint-config-next": "16.3.7",
+    "jsdom": "^30.1.1",
+    "tsx": "^4.23.15",
+    "vitest": "^5.0.2"
+  },
+  "description": "Be-A-Manager: Floodlights and Front Office in one site",
+  "engines": {
+    "node": ">=20"
   }
 }
