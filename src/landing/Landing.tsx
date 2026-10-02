@@ -384,6 +384,11 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
                 </h2>
                 <p className={clsx("bam-blurb", ap("appear--soft"))} style={d(".88s")}>
                   {g.blurb}
+                  {g.inside?.map((x) => (
+                    <span key={x.name} className="bam-in">
+                      <b>{x.name}:</b> {x.text}
+                    </span>
+                  ))}
                 </p>
                 <div className="bam-actions">
                   <a className={clsx("bam-glowbtn lbl", ap("appear--btn"))} style={d(".96s")} href={g.href} data-enter={id}>

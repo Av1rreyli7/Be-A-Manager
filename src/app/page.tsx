@@ -9,10 +9,10 @@ const instrument = localFont({ src: "../../floodlights/fonts/instrument-serif-it
 
 export const metadata: Metadata = {
   title: { absolute: "Be-A-Manager" },
-  description: "Two manager games on one site. Run a football club in Floodlights or a basketball franchise in Front Office, with your friends.",
+  description: "Run a football club with your friends in Floodlights, or open Game Night for two basketball games in one: Front Office, where you are the GM, and Hardwood Legends, where you play the games yourself.",
   openGraph: {
     title: "Be-A-Manager",
-    description: "Two manager games on one site: Floodlights and Front Office.",
+    description: "Floodlights and Game Night on one site.",
     type: "website",
   },
 };

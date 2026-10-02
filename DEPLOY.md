@@ -61,7 +61,7 @@ One thing changes for your friends: Floodlights used to be the front page. It no
 
 ## 4. Things that are normal on the free plan
 
-- **The site sleeps.** After about 15 minutes with no visitors Render stops the server. The next visit wakes it, which takes up to a minute. Keep a tab open during a game night and it stays awake.
+- **The site sleeps.** After about 15 minutes with no visitors Render stops the server. The next visit wakes it, which takes up to a minute. Keep a tab open while you play and it stays awake.
 - **Floodlights rooms reset when the server restarts.** Saves live in a file called `games.json` on the server, and the free plan wipes it on every restart, sleep or new deploy. That is expected. A normal play session is safe as long as somebody keeps the tab open.
 - **Front Office saves are not affected.** They live in each player's own browser.
 - **Memory.** The free instance has 512 MB. The server uses about 170 MB when idle, so there is plenty of room.
@@ -80,7 +80,7 @@ One thing changes for your friends: Floodlights used to be the front page. It no
 Once it is up, try these in a normal browser:
 
 1. Open the front page. The Be-A-Manager headline rises in, the labels decode, and the 3D stadium fades in behind it.
-2. Click FRONT OFFICE in the list on the left. The copy, the labels and the background all change together.
+2. Click GAME NIGHT in the list on the left. The copy, the labels and the background all change together.
 3. Click ENTER FLOODLIGHTS. Create a game, then join it from a second device or a private window with the 4 letter code.
 4. In Floodlights pick a club, start the world, open the Matches tab and click Play this match. Play a little in 3D, then start another match week in Classic.
-5. Go back to the front page and click ENTER FRONT OFFICE. Open Front Office, start a league, and also open Hardwood Legends.
+5. Go back to the front page and click ENTER GAME NIGHT. Open Front Office, start a league, and also open Hardwood Legends.

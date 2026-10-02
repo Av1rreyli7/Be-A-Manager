@@ -62,8 +62,17 @@ describe("landing page content", () => {
     expect($('[data-enter="floodlights"]').getAttribute("href")).toBe("/floodlights/");
     expect($('[data-enter="frontoffice"]').getAttribute("href")).toBe("/front-office");
     expect($('[data-enter="floodlights"]').textContent).toBe("ENTER FLOODLIGHTS");
-    expect($('[data-enter="frontoffice"]').textContent).toBe("ENTER FRONT OFFICE");
+    expect($('[data-enter="frontoffice"]').textContent).toBe("ENTER GAME NIGHT");
     expect($('[data-enter="floodlights"]').classList.contains("bam-glowbtn")).toBe(true);
+  });
+
+  it("uses Game Night as the site level name, and Front Office only for the game inside it", () => {
+    const text = host.textContent!.toUpperCase();
+    expect(text).not.toContain("ENTER FRONT OFFICE");
+    expect(text).not.toContain("SEE FRONT OFFICE");
+    expect(text).not.toContain("BASKETBALL GM");
+    expect(host.textContent!.match(/Front Office/gi)).toHaveLength(1);
+    expect(GAMES.frontoffice.href).toBe("/front-office");
   });
 
   it("shows the credit line", () => {
@@ -125,7 +134,9 @@ describe("featured game switcher", () => {
     expect(host.querySelector(".bam-side-cap")).toBeNull();
     expect(host.querySelectorAll("img")).toHaveLength(0);
     expect(host.textContent).not.toContain("ALSO HERE");
-    expect($$(".bam-rail button").map((b) => b.textContent)).toEqual(["FLOODLIGHTS", "FRONT OFFICE"]);
+    expect($$(".bam-rail button").map((b) => b.textContent)).toEqual(["FLOODLIGHTS", "GAME NIGHT"]);
+    expect($$(".bam-pill").map((b) => b.textContent)).toEqual(["FLOODLIGHTS", "GAME NIGHT"]);
+    expect($('.bam-variant[data-game="floodlights"] [data-see="frontoffice"]').textContent).toBe("SEE GAME NIGHT");
   });
 
   it("swaps the copy and the labels together when the featured game changes", () => {
@@ -138,15 +149,22 @@ describe("featured game switcher", () => {
     expect(on[0].getAttribute("data-game")).toBe("frontoffice");
     // headline, supporting text and label of the featured block
     expect(on[0].querySelector(".bam-title")!.textContent).toBe(GAMES.frontoffice.name);
-    expect(on[0].querySelector(".bam-blurb")!.textContent).toBe(GAMES.frontoffice.blurb);
-    expect(on[0].querySelector(".bam-kind")!.textContent).toBe("BASKETBALL GM");
+    expect(on[0].querySelector(".bam-title")!.textContent).toBe("Game Night");
+    expect(on[0].querySelector(".bam-kind")!.textContent).toBe("BASKETBALL BUNDLE");
+    // the copy explains the two games inside and how they differ
+    const blurb = on[0].querySelector(".bam-blurb")!;
+    expect(blurb.textContent).toContain("Two basketball games in one.");
+    const inside = Array.from(blurb.querySelectorAll(".bam-in")).map((el) => el.textContent);
+    expect(inside).toHaveLength(2);
+    expect(inside[0]).toBe("Front Office: Be the GM. Run rosters, trades and the draft. The matches play out on their own.");
+    expect(inside[1]).toBe("Hardwood Legends: No desk work. Grab the roster and play the season yourself in 5v5.");
     expect(on[0].getAttribute("aria-hidden")).toBe("false");
     // the old game is hidden from readers and from the keyboard
     const off = $('.bam-variant[data-game="floodlights"]');
     expect(off.getAttribute("aria-hidden")).toBe("true");
     expect(off.hasAttribute("inert")).toBe(true);
     // rail and backdrop follow
-    expect($(".bam-rail li.on").textContent).toBe("FRONT OFFICE");
+    expect($(".bam-rail li.on").textContent).toBe("GAME NIGHT");
     expect($('.bam-rail button[data-game="frontoffice"]').getAttribute("aria-pressed")).toBe("true");
     expect($(".bam-glow.is-on").classList.contains("is-frontoffice")).toBe(true);
     // zero flash: only classes changed, the elements are the same
@@ -198,6 +216,7 @@ describe("game data and decode labels", () => {
     expect(other("frontoffice")).toBe("floodlights");
     for (const id of ORDER) {
       expect(GAMES[id].blurb.split(" ").length).toBeLessThanOrEqual(26);
+      for (const x of GAMES[id].inside ?? []) expect(x.text.split(" ").length).toBeLessThanOrEqual(18);
       expect(JSON.stringify(GAMES[id])).not.toMatch(new RegExp("[" + String.fromCharCode(8211, 8212) + "]"));
     }
   });

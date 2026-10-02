@@ -3,7 +3,7 @@
 Two manager games on one site, by Avir & Ayanssh.
 
 - **Floodlights** (`/floodlights/`): a multiplayer football manager. Create a room, share the 4 letter code, pick clubs and play seasons together. You can play your own matches in 3D or in the Classic top down view.
-- **Front Office** (`/front-office`): a basketball GM game with real rosters, contracts, trades, the draft and free agency, plus Hardwood Legends, a 3D game you play on the keyboard.
+- **Game Night** (`/front-office`): two basketball games in one. Front Office is a GM game with real rosters, contracts, trades, the draft and free agency, where the matches play out on their own. Hardwood Legends is a 3D game you play yourself on the keyboard. The landing page calls this entry Game Night; the address and the app itself are unchanged.
 - **The landing page** (`/`): pick a game. The featured game fills the stage, and the list on the left switches between the two.
 
 ## Run it on your computer
@@ -34,7 +34,7 @@ Where things live:
 | `server.js` | the combined server |
 | `floodlights/` | the Floodlights server (`server.js`), client (`index.html`), match engine (`match.js`), 3D match look (`match3d.mjs`), world data, fonts and its two test batteries |
 | `src/app/page.tsx`, `src/landing/` | the landing page (React, Motion, three.js with React Three Fiber) |
-| `src/app/front-office/` | the Front Office game picker (it used to be the home page of Front Office) |
+| `src/app/front-office/` | the Game Night picker with Front Office and Hardwood Legends (it used to be the home page of Front Office) |
 | `src/app/game`, `src/app/gm`, `src/app/online`, `src/engine`, `src/lib`, `src/components`, `src/worker` | Front Office, unchanged |
 | `public/games/hardwood-legends.html` | Hardwood Legends |
 | `tests/` | Front Office tests and the landing page tests (vitest) |

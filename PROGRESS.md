@@ -42,3 +42,6 @@ All phases are done. Nothing is left to resume.
   check now skips. The game itself was not changed.
 - Later change: the side preview card on the landing (the browser mock with the ALSO HERE label) was removed,
   with its two preview images in public/landing. The rail on the left switches the featured game.
+- Later change: on the landing page the second entry is now called Game Night (kicker BASKETBALL BUNDLE), with
+  one line each for the two games inside it, Front Office and Hardwood Legends. Landing naming only: the app
+  at /front-office, its path and the internal id "frontoffice" are unchanged.

@@ -1,4 +1,8 @@
-/** The two games on the site and the copy the landing page shows for each. */
+/**
+ * The two entries on the site and the copy the landing page shows for each.
+ * The second entry is Game Night, a bundle of two basketball games (Front Office and Hardwood Legends).
+ * Its id stays "frontoffice" because that is only an internal key and matches the /front-office path.
+ */
 export type GameId = "floodlights" | "frontoffice";
 
 export interface GameInfo {
@@ -7,6 +11,8 @@ export interface GameInfo {
   /** small decode label above the game name */
   kind: string;
   blurb: string;
+  /** for a bundle: the games inside it, each with one short line that tells them apart */
+  inside?: { name: string; text: string }[];
   href: string;
   enter: string;
   /** label on the control that brings this game to the front */
@@ -25,12 +31,16 @@ export const GAMES: Record<GameId, GameInfo> = {
   },
   frontoffice: {
     id: "frontoffice",
-    name: "Front Office",
-    kind: "BASKETBALL GM",
-    blurb: "Be the GM of a pro basketball team. Real rosters and contracts, trades, the draft, free agency and a 3D game you can play.",
+    name: "Game Night",
+    kind: "BASKETBALL BUNDLE",
+    blurb: "Two basketball games in one.",
+    inside: [
+      { name: "Front Office", text: "Be the GM. Run rosters, trades and the draft. The matches play out on their own." },
+      { name: "Hardwood Legends", text: "No desk work. Grab the roster and play the season yourself in 5v5." },
+    ],
     href: "/front-office",
-    enter: "ENTER FRONT OFFICE",
-    see: "SEE FRONT OFFICE",
+    enter: "ENTER GAME NIGHT",
+    see: "SEE GAME NIGHT",
   },
 };
 

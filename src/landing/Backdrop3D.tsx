@@ -3,7 +3,7 @@
 /**
  * The one real 3D background of the landing page, built with three.js and React Three Fiber.
  * Two low poly sets stand in the dark: a football stadium under floodlights (Floodlights)
- * and a basketball arena (Front Office). The camera orbits the featured one slowly, drifts
+ * and a basketball arena (Game Night). The camera orbits the featured one slowly, drifts
  * with the pointer, and glides through the fog to the other when the featured game switches.
  * Everything is procedural: no model files, no shadow maps, a few thousand triangles.
  */

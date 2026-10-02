@@ -154,6 +154,9 @@ html:has(.bam), html:has(.bam) body { background: #000000 !important; color: #ff
 .bam-title { margin: calc(10 * var(--t)) 0 0; font-weight: 700; font-size: calc(46 * var(--t)); line-height: 1; letter-spacing: 0.035em; text-transform: uppercase; color: #ffffff; white-space: nowrap; }
 .bam-title .hrow { padding: 0.05em 0 0.08em; }
 .bam-blurb { margin: calc(8 * var(--t)) 0 0; max-width: calc(410 * var(--t)); font-size: calc(13.5 * var(--t)); line-height: calc(21.5 * var(--t)); color: rgba(224, 232, 245, 0.74); }
+/* a bundle lists the games inside it, one short line each */
+.bam-in { display: block; margin-top: calc(5 * var(--t)); }
+.bam-in b { font-weight: 600; color: #ffffff; }
 .bam-actions { display: flex; flex-wrap: wrap; align-items: center; gap: calc(10 * var(--t)); margin-top: calc(22 * var(--t)); }
 
 /* the swap: the old copy drops into its mask and settles out, the new copy comes back the way it entered */
@@ -351,6 +354,9 @@ html:has(.bam), html:has(.bam) body { background: #000000 !important; color: #ff
   .bam-feature { position: relative; left: auto; bottom: auto; width: auto; grid-area: feature; padding: 18px 22px 0; }
   .bam-title { font-size: min(calc(40 * var(--t)), 8vw); }
   .bam-blurb { max-width: 46ch; }
+  /* the two games have copy of different length: only the one on show takes up room, so there is never a gap */
+  .bam-variant { align-self: start; }
+  .bam-variant:not(.is-on) { position: absolute; left: 22px; right: 22px; top: 18px; }
   .bam-stats { position: relative; bottom: auto; grid-area: stats; height: auto; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 12px; padding: 34px 22px 22px; }
   .bam-stat { white-space: normal; }
   .bam-dock { position: relative; bottom: auto; grid-area: dock; height: auto; min-height: 47px; display: flex; flex-wrap: wrap; align-items: stretch; justify-content: space-between; }
