@@ -128,3 +128,64 @@ all in 3D, with no console errors beyond a three.js note about the shadow map ty
 - Measured on this Mac at full quality: about 6 ms of CPU work per frame, 1933 crowd seats, about 60k triangles.
 - Shirt textures use the Chakra Petch font when the page has it loaded, with an Arial Black fallback.
 - FLMatch.view3d() returns the live 3D view while a 3D match is open (quality(), setQuality(q), stats()).
+
+## Dynamic OVR, events, real world travel, season sim rework, loan cap
+
+Goal: effective OVR per player (form, morale, home or away with a personal offset, travel, injury return) drives
+every match in every league and the playable match; staff upgrades become real; a pool of 200 plus unexpected
+events with a per club news feed; a researched real world travel system with a fund, a planner and AI policies;
+sim to a chosen week removed in favour of week by week plus one Sim Season button; one loan in per week.
+Resume from the first unchecked box.
+
+Decisions:
+- New pure module floodlights/condition.js holds the maths (effective OVR, offsets, form and morale updates,
+  injury return, event rolls, travel distances, options and prices, AI travel policy). The server requires it,
+  and a new fast battery floodlights/test_condition.js checks it without booting a server.
+- Data files: floodlights/events_data.js (the event pool) and floodlights/travel_data.js (every club: city,
+  country, coordinates, main airport, three real hotels by name: budget, standard, luxury).
+- Storage: form (fm) and morale (mo) live on the player only when not zero. Injury return is ret (weeks left)
+  and retN (weeks total). The personal home or away offset is a hash of the player id and name, never stored.
+  Event effects with a duration sit on the club as a short list (fx) capped at 8. Club news is capped at 10
+  entries. Travel bookings are a small object on the club keyed by trip id.
+- The two byte identity checks in tests-site/test_site.js for the server rules body and the page script are
+  removed on purpose: this build changes both by request. The Classic sim and world data checks stay.
+- Server rules kept: one signing per week, one play per round, host simmed screen, settled stars, release to
+  AI only, Romano, cups. Loans get their own one per week cap.
+
+Checklist:
+- [x] C1 condition.js: effective OVR, offsets, form and morale updates, injury return, staff effects, tuning constants
+- [x] C2 events_data.js: 200 plus events, the roll function, per club news
+- [x] C3 travel_data.js: 320 clubs researched, distances, transport options, prices, AI policy, trip modifiers
+- [x] C4 server: strengths and simMatch use effective OVR, weekly updates, events, travel fund and bookings,
+      smart fill, cup prompts and policy fallback, sim season route, simto removed, loan cap, staff effects, state
+- [x] C5 page: squad form and morale columns, club news in the feed, sim buttons, advisor screen, travel planner
+- [x] C6 tests: test_condition.js battery, API battery sections, DOM and site checks updated, 3 clean runs
+- [x] C7 docs, upload, push
+
+Build result: all boxes done. npm run test:all passed three times in a row with 0 failed (typecheck, vitest 81,
+condition battery 58, API battery 207, DOM battery 110, 3D checks 180, site checks 156, build, boot test 48).
+Clicked through in Chrome on the production build: the advisor on season start, the planner with Smart fill,
+the squad form and morale arrows after four weeks, the club news block in the feed, the Sim season button and
+the nudge when a cup away trip appeared mid season.
+
+Tuning numbers (all in floodlights/condition.js, T):
+- Form: win +1, win by 3 or more +2, loss -1, loss by 3 or more -2, range -3 to +3, drifts one step toward 0
+  with a 35 percent chance each week when nothing happens.
+- Morale: win +0.3, loss -0.3, range -2 to +2, drifts 0.1 a week, new signing +1, transfer listed -1.
+- Home +1, away -1, personal offset -1 to +1 in half steps (seeded from the player id and name, never stored):
+  a strong traveller loses nothing away, a homebody loses two. Match analyst: an extra +1 at home.
+- Injury return: -5, healing +1 a week over 5 weeks, 3 weeks with a head physio.
+- Travel: bus -1, train -0.5, economy -1, premium 0, business +0.5; budget hotel -0.75, standard 0, luxury +0.5;
+  long haul (2500 km plus) an extra -0.5 unless business. Range about -2.25 to +1. AI clubs: base budget 100m
+  plus travel luxury, 35m plus standard, below that cheap.
+- Prices for the whole party: bus 3k plus 15 per km, train 5k plus 25 per km, economy 12k plus 11 per km,
+  premium 1.9x, business 3.2x; hotels 7k, 16k, 40k a night, two nights on a long haul. A Premier League season
+  of standard travel is about 500k to 600k.
+- Events: 15 percent chance of one event a week per club, 8 percent of those bring a second, about 6 a season.
+  Pool of 233 events. News kept for human clubs only, capped at 10 lines. Effects capped at 8 per club.
+- Scout: the selling club reads a human bid 10 percent higher, settles 8 percent lower, star refusals 30
+  percent instead of 45. Youth coach: academy kids gain a point in 30 percent of weeks (8 percent without).
+- Balance check over three seasons against the old server: top three per league and point spreads are in the
+  same range (the old sim already let Real Madrid and PSG run away), so the modifiers swing close games
+  without changing who the good teams are.
+- Save size: one game with 320 clubs tracked is about 1.6 MB, about the same as before.

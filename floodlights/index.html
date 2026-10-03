@@ -524,6 +524,36 @@ td[class^="pos-"]{font-family:var(--f-num);font-weight:600;font-size:12px;letter
 .ct-card input,.ct-card select{flex:1;min-width:0}
 .ct-note{color:var(--dim);font-size:12.5px;margin-top:12px;min-height:16px;line-height:1.5}
 
+/* ---------- condition and travel ---------- */
+.condchip{display:inline-block;min-width:34px;text-align:center;font-family:var(--f-num);font-size:11.5px;padding:1px 6px;border:1px solid var(--line2);border-radius:var(--r-tag);color:var(--dim)}
+.condchip.up{color:var(--grass);border-color:rgba(95,211,141,.45)}
+.condchip.down{color:var(--softred);border-color:rgba(255,90,90,.45)}
+.effv{font-family:var(--f-num);font-size:12.5px;color:var(--chalk)}
+.effv.up{color:var(--grass)}
+.effv.down{color:var(--softred)}
+.clubnews{border:1px solid var(--line2);padding:12px 14px 6px;margin-bottom:14px;background:var(--panel)}
+.clubnews p{margin:0 0 8px;font-size:13.5px;line-height:1.5}
+.travtop{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.travtop .tstat{border:1px solid var(--line2);padding:10px 12px;background:var(--panel)}
+.travtop .tstat b{display:block;font-family:var(--f-ui);font-weight:800;font-stretch:66%;font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
+.travtop .tstat small{display:block;margin-top:5px;font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--dim2)}
+.travtop .tstat.bulk{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.trip{display:grid;grid-template-columns:64px 1.3fr 1fr 1fr 110px;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line2);margin-bottom:6px;background:var(--panel)}
+.trip.done{opacity:.55}
+.trip.unbooked{border-color:var(--voltedge)}
+.trip .tw{font-family:var(--f-lbl);font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--volt)}
+.trip .tw small{display:block;font-size:9.5px;color:var(--dim2);letter-spacing:.1em}
+.trip .top{font-weight:700;font-size:14px}
+.trip .top small{display:block;font-weight:400;font-size:12px;color:var(--dim);margin-top:2px;line-height:1.4}
+.trip select{width:100%;font-size:12.5px}
+.trip .tp{text-align:right;font-family:var(--f-num);font-size:12.5px}
+.trip .tp small{display:block;font-size:10.5px;color:var(--dim2);margin-top:3px}
+.trip .tp .mod{font-weight:700}
+.trip .tp .mod.up{color:var(--grass)}
+.trip .tp .mod.down{color:var(--softred)}
+.travcard p.lead{font-size:13.5px}
+@media (max-width:860px){.trip{grid-template-columns:1fr 1fr}.trip .tw{grid-column:1/-1}.trip .top{grid-column:1/-1}}
+
 /* ---------- playable match: the cards over the pitch ---------- */
 #matchWrap{position:fixed;inset:0;z-index:200;background:#0a1410}
 #matchCanvas{display:block;width:100%;height:100%}
@@ -773,6 +803,16 @@ tbody tr:hover td{background:rgba(255,255,255,.03)}
 </style>
 </head>
 <body>
+<div id="travelModal" class="ct-modal hidden">
+  <div class="ct-card travcard">
+    <div class="mlab">FINANCIAL ADVISOR</div>
+    <h3>Set the travel fund</h3>
+    <p class="lead" id="tvAdvice"></p>
+    <div class="row"><label for="tvAmount">Fund (millions)</label><input id="tvAmount" type="number" step="0.1" min="0"></div>
+    <div class="ct-note" id="tvNote"></div>
+    <div class="row end"><button class="ghost" id="tvLater">Later</button><button class="gold" id="tvSet">Move it out of the budget</button></div>
+  </div>
+</div>
 <div id="ctModal" class="ct-modal hidden">
   <div class="ct-card">
     <h3 id="ctName">Contract terms</h3>
@@ -876,6 +916,7 @@ tbody tr:hover td{background:rgba(255,255,255,.03)}
       <button data-t="offers">Offers <span id="offerDot"></span></button>
       <button data-t="romano">Romano</button>
       <button data-t="matches">Matches</button>
+      <button data-t="travel">Travel <span id="travelDot"></span></button>
       <button data-t="calendar">Calendar</button>
       <button data-t="cups">Cups</button>
       <button data-t="table">Tables</button>
@@ -904,8 +945,9 @@ tbody tr:hover td{background:rgba(255,255,255,.03)}
           <option value="agedesc">Age: oldest first</option>
         </select>
       </div>
-      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rating</th><th class="num">Value</th><th></th></tr></thead>
+      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rating</th><th class="num" title="Form, minus 3 to plus 3. Moves with results.">Form</th><th class="num" title="Morale, minus 2 to plus 2. Moves with results, transfers and events.">Morale</th><th class="num" title="Effective rating before home or away and travel: rating plus form plus morale plus any injury knock.">Eff</th><th class="num">Value</th><th></th></tr></thead>
       <tbody id="squadBody"></tbody></table>
+      <p class="lead" style="margin-top:10px">Eff is what a player really brings this week: rating plus form plus morale, minus a knock when he is just back from injury. Home adds about one, away takes about one, and every player has his own travel streak on top. Away trips add the travel modifier from your booking.</p>
       <div id="loanOutBox"></div>
       <p class="lead" style="margin-top:16px">Transfer list a player to attract bids from abroad. You need at least 13 players to sell anyone.</p>
     </section>
@@ -975,22 +1017,29 @@ tbody tr:hover td{background:rgba(255,255,255,.03)}
     <section id="tab-matches" class="panel hidden">
       <div class="controls">
         <button id="simBtn" class="gold hidden">Play matchweek</button>
-        <button id="ffBtn18" class="ghost hidden">Winter window</button>
-        <button id="ffBtn37" class="ghost hidden">End of season</button>
-        <span id="simToWrap" class="hidden" style="display:inline-flex;gap:6px;align-items:center">
-          <input id="simToW" type="number" min="1" max="38" placeholder="Week" aria-label="Week to sim to" style="width:84px">
-          <button id="simToGo" class="ghost">Sim to week</button>
-        </span>
+        <button id="simSeasonBtn" class="ghost hidden">Sim season</button>
         <button id="nextSeasonBtn" class="gold hidden">Start next season</button>
         <span class="msub" style="align-self:center">Host controls &middot; the week advances for everyone</span>
       </div>
       <div class="msub" id="playStatus"></div>
+      <div class="msub" id="travelNudge"></div>
       <div class="grid2">
         <div class="subcard"><div class="mlab">This week &middot; fixtures</div><div id="thisWeek"></div></div>
         <div class="subcard"><div class="mlab">Last week &middot; results</div><div id="lastWeek"></div></div>
       </div>
       <div class="subcard gap"><div class="mlab">Your season</div>
       <div id="myFixtures"></div></div>
+    </section>
+
+    <section id="tab-travel" class="panel hidden">
+      <div class="controls">
+        <h3 style="margin-right:auto">Travel planner</h3>
+        <span class="msub" id="travelHome"></span>
+      </div>
+      <div id="travelTop" class="travtop"></div>
+      <p class="lead" style="margin:4px 0 12px">Every away trip of the season, with the real city, distance and airport, and three real hotels in town. Better transport and hotels mean better energy and morale for that match. Short trips go by bus or train, long ones fly. Anything you leave unbooked uses your default policy when the week is simmed, or the cheapest option if the fund is dry.</p>
+      <div id="travelList"></div>
+      <div class="msg" id="travelMsg"></div>
     </section>
 
     <section id="tab-cups" class="panel hidden">
@@ -1551,6 +1600,8 @@ function render() {
       return `
       <tr><td>${p.name} ${tags}</td>
       <td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${rchip(p.rating)}</td>
+      <td class="num">${condChip(p.cond && p.cond.form, 3)}</td><td class="num">${condChip(p.cond && p.cond.morale, 2)}</td>
+      <td class="num">${p.cond ? '<span class="effv ' + (p.cond.eff > p.rating + 0.5 ? "up" : p.cond.eff < p.rating - 0.5 ? "down" : "") + '">' + Math.round(p.cond.eff) + (p.cond.ret < 0 ? ' <span class="tag inj" title="Just back from injury, the knock heals week by week">KNOCK ' + Math.round(p.cond.ret) + '</span>' : '') + '</span>' : "-"}</td>
       <td class="num">${money(p.value)}</td>
       <td style="white-space:nowrap">${acts}</td></tr>`;
     }).join("");
@@ -1563,10 +1614,10 @@ function render() {
         <td><button class="small" onclick="recallLoan(${p.id},'${String(p.name).replace(/'/g,"")}',${p.fee})">Recall ${money(p.fee)}</button></td></tr>`).join("")}
       </tbody></table>`;
     const staffDefs = [
-      { key: "scout", name: "Chief scout", blurb: "Weekly report on the best young talent" },
-      { key: "youth", name: "Youth coach", blurb: "Better academy kids every intake" },
-      { key: "physio", name: "Head physio", blurb: "Injuries heal in half the time" },
-      { key: "analyst", name: "Match analyst", blurb: "A sharper game plan at home" }
+      { key: "scout", name: "Chief scout", blurb: "Clubs read your bids ten percent higher and settle lower, plus a weekly report on young talent" },
+      { key: "youth", name: "Youth coach", blurb: "Academy kids grow most weeks, not just in the summer, and better kids arrive" },
+      { key: "physio", name: "Head physio", blurb: "Injuries heal in half the time and a player back from injury is at full speed in 3 weeks, not 5" },
+      { key: "analyst", name: "Match analyst", blurb: "Every player gets an extra plus one at home on top of the normal home edge" }
     ];
     if ($("staffStrip")) $("staffStrip").innerHTML = staffDefs.map(d => {
       const owned = (s.myClub.staff || {})[d.key];
@@ -1603,9 +1654,12 @@ function render() {
   // matches
   const seasonDone = !!s.seasonOver;
   $("simBtn").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone));
-  $("ffBtn18").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone && s.round < 18));
-  $("simToWrap").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone));
-  $("ffBtn37").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone && s.round < 37));
+  $("simSeasonBtn").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone));
+  const unb = s.travel && s.travel.setup ? s.travel.unbooked : 0;
+  $("travelDot").textContent = s.travel && s.started && s.myClub ? (!s.travel.setup ? "(!)" : unb ? "(" + unb + ")" : "") : "";
+  $("travelNudge").textContent = s.travel && s.started && s.myClub
+    ? (!s.travel.setup ? "Set your travel fund in the Travel tab before the first away trip." : unb ? unb + " away trip" + (unb > 1 ? "s are" : " is") + " not booked yet. Unbooked trips use your default policy when the week is simmed, or the cheapest option if the fund is dry." : "")
+    : "";
   $("nextSeasonBtn").classList.toggle("hidden", !(s.you === s.host && s.started && seasonDone));
   if ($("seasonOverTag")) $("seasonOverTag").classList.toggle("hidden", !seasonDone);
   const myTeamName = s.myClub ? s.myClub.name : null;
@@ -1709,8 +1763,14 @@ function render() {
   // calendar
   renderCalendar(s);
 
-  // feed
-  $("feedInner").innerHTML = s.feed.map(f => {
+  // travel
+  renderTravel(s);
+
+  // feed: your club's own news first, then the world
+  const myNews = s.myClub && s.myClub.news && s.myClub.news.length
+    ? '<div class="clubnews"><div class="mlab sechead">Your club this season</div>' + s.myClub.news.map(x => '<p><span class="fchip warm">WEEK ' + x.w + '</span>' + x.t + '</p>').join("") + '</div>'
+    : "";
+  $("feedInner").innerHTML = myNews + s.feed.map(f => {
     const m = /^([A-Z][A-Z .]{2,18}):\s*(.*)$/.exec(f.text || "");
     const tagCls = m ? (/DERBY/.test(m[1]) ? "fchip red" : /INJUR|COLLAPS|OUT OF/.test(m[1]) ? "fchip soft" : /CONTRACT|RENEW|WONDER/.test(m[1]) ? "fchip warm" : "fchip") : "";
     const head = m ? `<span class="${tagCls}">${m[1]}</span>` : "";
@@ -1718,6 +1778,85 @@ function render() {
     return `<p>${head}<span class="ftime">${new Date(f.t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span><br>${body}</p>`;
   }).join("");
 }
+
+function condChip(v, max) {
+  if (v === undefined || v === null) return "-";
+  const r = Math.round(v * 10) / 10;
+  const arrows = r > 0 ? "\u25b2".repeat(Math.min(3, Math.ceil(r))) : r < 0 ? "\u25bc".repeat(Math.min(3, Math.ceil(-r))) : "0";
+  return '<span class="condchip ' + (r > 0 ? "up" : r < 0 ? "down" : "") + '" title="' + (r > 0 ? "+" : "") + r + ' of ' + max + '">' + (r === 0 ? "0" : arrows) + "</span>";
+}
+
+// ---- travel planner ----
+const TV = { pending: {}, sig: "", shownAdvisor: "" };
+function tripSig(t) { return t.id + (t.booked ? t.booked.t + t.booked.h : "") + (t.done ? "d" : ""); }
+function fmtK(v) { return v >= 1 ? "\u00a3" + (Math.round(v * 100) / 100) + "m" : "\u00a3" + Math.round(v * 1000) + "k"; }
+function renderTravel(s) {
+  const tv = s.travel;
+  const tab = $("tab-travel");
+  if (!tv || !s.myClub || !s.started) { if (tab) $("travelList").innerHTML = "<p style='color:var(--dim)'>The planner opens once the season starts.</p>"; return; }
+  $("travelHome").textContent = "HOME: " + (tv.home || "").toUpperCase();
+  // the advisor, once per season, before anything is booked
+  if (!tv.setup && TV.shownAdvisor !== s.season + "|" + s.myClub.name && $("matchWrap").classList.contains("hidden")) {
+    TV.shownAdvisor = s.season + "|" + s.myClub.name;
+    const a = tv.advice || {};
+    $("tvAdvice").textContent = "Your budget is " + money(s.myClub.budget) + ". Standard travel for every known away trip costs about " + fmtK(a.standard || 0) + ", the cheapest way is " + fmtK(a.cheap || 0) + " and luxury all season is " + fmtK(a.luxury || 0) + ". I would set aside " + fmtK(a.recommend || 0) + ". Whatever you choose leaves the transfer budget for real, so big spending on players means cheap travel.";
+    $("tvAmount").value = a.recommend || 0;
+    $("tvNote").textContent = "Cup trips show up as the draws are made and come out of the same fund.";
+    $("travelModal").classList.remove("hidden");
+  }
+  const open = tv.trips.filter(t => !t.done);
+  const bookedCost = open.reduce((x, t) => x + (t.price || 0), 0);
+  $("travelTop").innerHTML =
+    '<div class="tstat"><b>' + fmtK(tv.fund) + '</b><small>TRAVEL FUND LEFT</small></div>' +
+    '<div class="tstat"><b>' + open.filter(t => t.booked).length + '/' + open.length + '</b><small>TRIPS BOOKED</small></div>' +
+    '<div class="tstat"><b>' + fmtK(bookedCost) + '</b><small>SPENT ON TRIPS AHEAD</small></div>' +
+    '<div class="tstat"><label for="tvPolicy" class="msub">DEFAULT WHEN UNBOOKED</label><select id="tvPolicy"><option value="cheap">Cheap</option><option value="standard">Standard</option><option value="luxury">Luxury</option><option value="smart">Smart</option></select></div>' +
+    '<div class="tstat bulk"><span class="msub" style="width:100%">BOOK EVERYTHING</span>' +
+    '<button class="small ghost" onclick="travelBulk(\'cheap\')">All cheap</button><button class="small ghost" onclick="travelBulk(\'standard\')">All standard</button><button class="small ghost" onclick="travelBulk(\'luxury\')">All luxury</button><button class="small" onclick="travelBulk(\'smart\')">Smart fill</button></div>';
+  $("tvPolicy").value = tv.policy || "standard";
+  $("tvPolicy").onchange = async () => { try { await api("/api/travelbook", { policy: $("tvPolicy").value }); tick(); } catch (e) { alert(e.message); } };
+  if (!tv.setup) $("travelTop").insertAdjacentHTML("afterbegin", '<div class="tstat" style="grid-column:1/-1;border-color:var(--volt)"><b style="font-size:16px">Set the travel fund first</b><small><button class="small" onclick="openAdvisor()">OPEN THE ADVISOR</button></small></div>');
+  const sig = tv.trips.map(tripSig).join("|") + "|" + tv.fund;
+  const act = document.activeElement;
+  if (sig === TV.sig && act && act.tagName === "SELECT" && act.closest("#travelList")) return;
+  TV.sig = sig;
+  $("travelList").innerHTML = tv.trips.map(t => {
+    const pend = TV.pending[t.id] || {};
+    const curT = pend.t || (t.booked ? t.booked.t : t.transport[0].key);
+    const curH = pend.h || (t.booked ? t.booked.h : "budget");
+    const tr = t.transport.find(o => o.key === curT) || t.transport[0];
+    const ho = t.hotelOptions.find(o => o.key === curH) || t.hotelOptions[0];
+    const price = Math.round((tr.price + ho.price) * 1000) / 1000;
+    const mod = Math.round((tr.mod + ho.mod + (t.km >= 2500 && tr.key !== "biz" ? -0.5 : 0)) * 4) / 4;
+    const changed = t.booked ? (t.booked.t !== curT || t.booked.h !== curH) : true;
+    return '<div class="trip' + (t.done ? " done" : (!t.booked ? " unbooked" : "")) + '">' +
+      '<div class="tw">W' + t.week + '<small>' + (t.cup ? "CUP" : "LEAGUE") + '</small></div>' +
+      '<div class="top">' + t.opp + ' away<small>' + t.city + ', ' + t.country + ' \u00b7 ' + t.km + ' km' + (t.km >= 400 ? ' \u00b7 fly to ' + t.airport : ' \u00b7 road or rail') + (t.km >= 2500 ? ' \u00b7 long haul, two nights' : '') + '</small></div>' +
+      (t.done ? '<div class="msub">' + (t.booked ? "Travelled " + (t.transport.find(o => o.key === t.booked.t) || {}).label + ", " + (t.hotelOptions.find(o => o.key === t.booked.h) || {}).name : "Travelled on the default") + '</div><div></div>' :
+      '<div><select aria-label="Transport" onchange="travelPick(\'' + t.id + '\',\'t\',this.value)">' + t.transport.map(o => '<option value="' + o.key + '"' + (o.key === curT ? " selected" : "") + '>' + o.label + ' \u00b7 ' + fmtK(o.price) + '</option>').join("") + '</select></div>' +
+      '<div><select aria-label="Hotel" onchange="travelPick(\'' + t.id + '\',\'h\',this.value)">' + t.hotelOptions.map(o => '<option value="' + o.key + '"' + (o.key === curH ? " selected" : "") + '>' + o.name + ' \u00b7 ' + fmtK(o.price) + '</option>').join("") + '</select></div>') +
+      '<div class="tp">' + (t.done ? "" : fmtK(price) + '<small>match <span class="mod ' + (mod > 0 ? "up" : mod < 0 ? "down" : "") + '">' + (mod > 0 ? "+" : "") + mod + '</span> OVR</small>' +
+        (changed ? '<button class="small" style="margin-top:6px" onclick="travelBookOne(\'' + t.id + '\')">' + (t.booked ? "Rebook" : "Book") + '</button>' : '<span class="tag" style="margin-top:6px;border-color:var(--grass);color:var(--grass)">BOOKED</span>')) + '</div>' +
+      '</div>';
+  }).join("") || "<p style='color:var(--dim)'>No away trips known yet.</p>";
+}
+window.travelPick = (id, k, v) => { TV.pending[id] = TV.pending[id] || {}; TV.pending[id][k] = v; TV.sig = ""; if (STATE) render(); };
+window.travelBookOne = async id => {
+  const t = (STATE.travel.trips || []).find(x => x.id === id);
+  if (!t) return;
+  const pend = TV.pending[id] || {};
+  const bk = { t: pend.t || (t.booked ? t.booked.t : t.transport[0].key), h: pend.h || (t.booked ? t.booked.h : "budget") };
+  try { await api("/api/travelbook", { bookings: { [id]: bk } }); delete TV.pending[id]; TV.sig = ""; $("travelMsg").textContent = "Booked " + t.opp + " away."; await tick(); } catch (e) { $("travelMsg").textContent = e.message; }
+};
+window.travelBulk = async mode => {
+  try { await api("/api/travelbook", { bulk: mode }); TV.pending = {}; TV.sig = ""; $("travelMsg").textContent = mode === "smart" ? "Smart fill done: the hardest away games got the best trips the fund could stretch to." : "Every trip ahead is booked " + mode + "."; await tick(); } catch (e) { $("travelMsg").textContent = e.message; }
+};
+window.openAdvisor = () => { TV.shownAdvisor = ""; $("travelModal").classList.remove("hidden"); if (STATE) renderTravel(STATE); };
+$("tvLater").onclick = () => $("travelModal").classList.add("hidden");
+$("tvSet").onclick = async () => {
+  const amount = Number($("tvAmount").value);
+  try { await api("/api/travelfund", { amount }); $("travelModal").classList.add("hidden"); await tick(); } catch (e) { $("tvNote").textContent = e.message; }
+};
 
 let MANAGERS = {};
 function fixtureRow(m, s, extra) {
@@ -2391,19 +2530,21 @@ if ($("cupFilter")) $("cupFilter").onchange = () => { if (STATE) render(); };
 window.pick = async t => { try { await api("/api/pick",{team:t}); tick(); } catch(e){ $("pickMsg").textContent = e.message; } };
 $("startBtn").onclick = async () => { try { await api("/api/start",{}); tick(); } catch(e){ $("pickMsg").textContent = e.message; } };
 $("simBtn").onclick = async () => { $("simBtn").disabled = true; try { await api("/api/sim",{}); await tick(); } catch(e){ alert(e.message); } $("simBtn").disabled = false; };
-window.simTo = async n => {
-  if (!confirm("Fast forward to week " + n + "? Every week in between gets simmed, matches, transfers, injuries, the lot.")) return;
-  $("ffBtn18").disabled = true; $("ffBtn37").disabled = true;
-  try { await api("/api/simto", { week: n }); await tick(); } catch(e){ alert(e.message); }
-  $("ffBtn18").disabled = false; $("ffBtn37").disabled = false;
+// Sim season: two clicks, so a slip of the hand does not end the season
+let simSeasonArmed = 0;
+$("simSeasonBtn").onclick = async () => {
+  const b = $("simSeasonBtn");
+  if (Date.now() - simSeasonArmed > 6000) {
+    simSeasonArmed = Date.now();
+    b.textContent = "Click again to sim every week to the end";
+    setTimeout(() => { if (b.textContent.startsWith("Click again")) b.textContent = "Sim season"; }, 6000);
+    return;
+  }
+  simSeasonArmed = 0;
+  b.disabled = true; b.textContent = "Simming the season...";
+  try { await api("/api/simseason", {}); await tick(); } catch (e) { alert(e.message); }
+  b.disabled = false; b.textContent = "Sim season";
 };
-$("ffBtn18").onclick = () => simTo(18);
-$("simToGo").onclick = () => {
-  const w = Math.floor(Number($("simToW").value));
-  if (!Number.isFinite(w) || w < 1 || w > 38) { alert("Pick a week between 1 and 38."); return; }
-  simTo(w);
-};
-$("ffBtn37").onclick = () => simTo(37);
 
 $("nextSeasonBtn").onclick = async () => {
   $("nextSeasonBtn").disabled = true;

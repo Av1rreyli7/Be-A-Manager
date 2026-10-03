@@ -3,6 +3,9 @@ const fs = require("fs");
 const path = require("path");
 const { buildDatabase, marketValue } = require("./players");
 const { NATIONS, LEAGUES, DOMESTIC_CUPS, ACADEMY_NAMES } = require("./world_pack");
+const C = require("./condition");
+const { EVENTS } = require("./events_data");
+const { TRAVEL } = require("./travel_data");
 
 // Floodlights is a router so the combined site server can mount it next to Next.js.
 // The game page lives at /floodlights/ and the API stays at /api/...
@@ -390,9 +393,10 @@ function simCupsForWeek(game) {
     if (cup.weeks[cup.roundIdx] !== game.round) continue;
     const matches = cup.rounds[cup.roundIdx];
     for (const m of matches) {
-      simMatch(game, m);
+      const xis = simMatch(game, m, cup.key, game.round - 1);
       // the league week already moved the round on, so a played cup tie was stored one round back
       usePlayedScore(game, m, cup.key, game.round - 1);
+      afterResult(game, m, xis);
       if (humanInvolved(game, [m.home, m.away]) || matches.length === 1) cupEvents(game, m);
       if (m.hg === m.ag) {
         // level after ninety: human managers take the penalties themselves,
@@ -676,21 +680,125 @@ function nationXI(game, nationName) {
     .sort((a, b) => b.rating - a.rating).slice(0, 11);
 }
 
-function strengths(game, teamName) {
+// ---------- condition, travel and events ----------
+// Every match uses effective OVRs: base rating plus form, morale, home or away with the player's own offset,
+// the travel modifier for the away side and the injury return penalty. The maths lives in condition.js.
+function geo(name) {
+  const r = TRAVEL[name];
+  return r ? { city: r[0], country: r[1], lat: r[2], lon: r[3], airport: r[4] + " (" + r[5] + ")", code: r[5], hotels: [r[6], r[7], r[8]] } : null;
+}
+function tripKm(a, b) {
+  const A = geo(a), B = geo(b);
+  return A && B ? C.haversine(A, B) : 500;
+}
+function tripId(kind, week) { return String(kind) + String(week); }
+function clubTravel(club) {
+  if (!club.travel) club.travel = { fund: 0, setup: false, policy: "standard", trips: {} };
+  if (!club.travel.trips) club.travel.trips = {};
+  return club.travel;
+}
+// a human club with no booking for an away trip gets its default policy, then the cheapest option, never a block
+function autoBook(game, club, id, km, oppName, week) {
+  const tv = clubTravel(club);
+  let bk = C.policyBooking(km, tv.policy || "standard");
+  let price = C.tripPrice(km, bk);
+  let note = null;
+  if (price > tv.fund + 1e-9) {
+    bk = C.policyBooking(km, "cheap");
+    price = C.tripPrice(km, bk);
+    note = price > tv.fund + 1e-9
+      ? "TRAVEL: the travel fund is dry, so the trip to " + oppName + " goes on the cheapest option and the club picks up the bill."
+      : "TRAVEL: the fund could not stretch to the usual " + (tv.policy || "standard") + " trip to " + oppName + ", so the squad goes cheap.";
+  }
+  tv.fund = C.r3(Math.max(0, tv.fund - price));
+  tv.trips[id] = bk;
+  if (note) { C.addNews(club, week, note); log(game, note.replace("TRAVEL: the", "TRAVEL (" + club.name + "): the")); }
+  return bk;
+}
+// the away side's travel modifier for one match
+function travelMod(game, m, kind, week) {
+  const away = game.clubs[m.away];
+  if (!away || !game.clubs[m.home]) return 0;
+  const km = tripKm(m.home, m.away);
+  if (humanOf(game, m.away)) {
+    const tv = clubTravel(away);
+    const id = tripId(kind, week);
+    const bk = tv.trips[id] || autoBook(game, away, id, km, m.home, week);
+    return C.tripModifier(km, bk);
+  }
+  return C.aiTravelModifier(away.baseBudget !== undefined ? away.baseBudget : away.budget, km);
+}
+function effCtx(game, teamName, ctx) {
+  const club = game.clubs[teamName];
+  if (!club) return { neutral: true };
+  return {
+    home: !!ctx.home,
+    analyst: !!(club.staff || {}).analyst,
+    travel: ctx.home ? 0 : travelMod(game, ctx.m, ctx.kind, ctx.week),
+    club,
+    round: game.round
+  };
+}
+function effOf(game, p, teamName, ctx) {
+  return C.effOvr(p, ctx ? effCtx(game, teamName, ctx) : { neutral: true, club: game.clubs[teamName] || null, round: game.round });
+}
+
+// ctx: { home: bool, m: match, kind: "L" or a cup key, week: round index } or nothing for a neutral read
+function strengths(game, teamName, ctx) {
   const isNation = game.nations && game.nations[teamName];
   const xi = isNation ? nationXI(game, teamName) : chosenXI(game, teamName);
-  if (xi.length < 8) return { att: 55, def: 55 };
-  const avg = arr => arr.reduce((s, p) => s + p.rating, 0) / (arr.length || 1);
+  if (xi.length < 8) return { att: 55, def: 55, xi };
+  const ec = isNation || !ctx ? { neutral: true, club: isNation ? null : (game.clubs[teamName] || null), round: game.round } : effCtx(game, teamName, ctx);
+  const eff = p => C.effOvr(p, ec);
+  const avg = arr => arr.reduce((s, p) => s + eff(p), 0) / (arr.length || 1);
   const attackers = xi.filter(p => p.pos === "FW" || p.pos === "MF");
   const defenders = xi.filter(p => p.pos === "DF" || p.pos === "GK");
   const overall = avg(xi);
   const att = attackers.length ? avg(attackers) : overall;
   const def = defenders.length ? avg(defenders) : overall;
-  return { att: att * 0.7 + overall * 0.3, def: def * 0.7 + overall * 0.3 };
+  return { att: att * 0.7 + overall * 0.3, def: def * 0.7 + overall * 0.3, xi };
+}
+// form and morale move for the eleven who played, once the final score is known
+function afterResult(game, m, xis) {
+  if (!xis || m.hg === null || m.hg === undefined) return;
+  C.applyResult(xis.home || [], m.hg, m.ag);
+  C.applyResult(xis.away || [], m.ag, m.hg);
+}
+// the weekly pass over every player and club: drift, injury returns, academy growth, unexpected events
+function weeklyCondition(game) {
+  const week = game.round + 1;
+  for (const p of Object.values(game.players)) {
+    C.drift(p);
+    C.healInjuryReturn(p);
+  }
+  for (const [name, club] of Object.entries(game.clubs)) {
+    const human = humanOf(game, name);
+    if (!(LEAGUES[club.league] || {}).playable && !human) continue;
+    C.pruneFx(club, game.round);
+    // the youth coach makes the academy kids grow every week, not just at the summer intake
+    if (human && club.academy) {
+      const chance = (club.staff || {}).youth ? 0.3 : 0.08;
+      for (const id of club.academy) {
+        const kid = game.players[id];
+        if (kid && kid.rating < kid.pot && Math.random() < chance) { kid.rating++; kid.value = marketValue(kid.rating, kid.age, kid.pos); }
+      }
+    }
+    const count = C.rollEventCount();
+    if (!count) continue;
+    const seniors = club.squad.map(id => game.players[id]).filter(p => p && !p.academy);
+    for (let i = 0; i < count; i++) {
+      const ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+      const res = C.applyEvent(ev, club, seniors, game.round, Math.random);
+      if (!res) continue;
+      // the per club feed is only kept for clubs a person manages, AI clubs just take the effect
+      if (human) { C.addNews(club, week, res.text); log(game, "EVENT (" + name + "): " + res.text); }
+    }
+  }
 }
 
-function simMatch(game, m) {
-  const A = strengths(game, m.home), B = strengths(game, m.away);
+function simMatch(game, m, kind, week) {
+  const A = strengths(game, m.home, { home: true, m, kind: kind || "L", week: week === undefined ? game.round : week });
+  const B = strengths(game, m.away, { home: false, m, kind: kind || "L", week: week === undefined ? game.round : week });
   if (isDerby(m.home, m.away)) {
     const mAtt = (A.att + B.att) / 2, mDef = (A.def + B.def) / 2;
     A.att = A.att * 0.75 + mAtt * 0.25; B.att = B.att * 0.75 + mAtt * 0.25;
@@ -704,11 +812,10 @@ function simMatch(game, m) {
   if (tA === "defensive") { lh *= 0.85; la *= 0.78; }
   if (tB === "attacking") { la *= 1.18; lh *= 1.12; }
   if (tB === "defensive") { la *= 0.85; lh *= 0.78; }
-  if (((game.clubs[m.home] || {}).staff || {}).analyst) lh *= 1.05;
-  if (((game.clubs[m.away] || {}).staff || {}).analyst) la *= 1.05;
   if (isDerby(m.home, m.away)) { lh *= 1.06; la *= 1.06; }
   m.hg = poisson(Math.min(lh, 4.2));
   m.ag = poisson(Math.min(la, 4.2));
+  return { home: A.xi, away: B.xi };
 }
 
 function tableFor(game, league) {
@@ -931,6 +1038,8 @@ function doTransfer(game, offer) {
   }
   if (!humanOf(game, offer.toClub)) giveDefaultContract(p);
   if (sw && !humanOf(game, offer.sellerClub)) giveDefaultContract(sw);
+  C.bumpMorale(p, C.T.SIGN_MORALE);
+  if (sw) C.bumpMorale(sw, C.T.SIGN_MORALE * 0.5);
   log(game, `TRANSFER: ${p.name} joins ${offer.toClub} from ${from} for £${offer.fee}m${sw ? ` plus ${sw.name} going the other way` : ""}.`);
   romano(game, `🚨✅ HERE WE GO! ${p.name} to ${offer.toClub}, done deal! ${fmtFee(offer.fee)}${sw ? " plus " + sw.name + " in a swap" : " package"} agreed with ${from}. Medical booked, contract signed.`);
   return { ok: true };
@@ -983,11 +1092,14 @@ function resolveAiSellerOffer(game, offer) {
   }
   // AI clubs haggle: they start at the asking price but can be talked down to a
   // floor a fair way below it. Listed players go even cheaper.
-  const floor = Math.round(Math.max(0.5, p.listed ? p.value * 0.8 : Math.min(p.value, baseAsk * 0.8)) * 10) / 10;
+  // a chief scout knows the market: the selling club reads the bid about ten percent higher and settles lower
+  const hasScout = !!(humanOf(game, offer.toClub) && ((game.clubs[offer.toClub] || {}).staff || {}).scout);
+  const edge = hasScout ? 1.1 : 1;
+  const floor = Math.round(Math.max(0.5, (p.listed ? p.value * 0.8 : Math.min(p.value, baseAsk * 0.8)) * (hasScout ? 0.92 : 1)) * 10) / 10;
   if (offer.demand === undefined) offer.demand = baseAsk;
-  if (offer.fee >= offer.demand - 0.05) {
+  if (offer.fee * edge >= offer.demand - 0.05) {
     const buyerBig = BIG_CLUBS.includes(offer.toClub);
-    if (p.rating >= 85 && p.age > 22 && !buyerBig && Math.random() < 0.45) {
+    if (p.rating >= 85 && p.age > 22 && !buyerBig && Math.random() < (hasScout ? 0.3 : 0.45)) {
       offer.status = "player_declined";
       offer.note = `${p.club} accepted £${offer.fee}m but ${p.name} turned down the move. Bigger clubs are circling.`;
       romano(game, `❌ BREAKING: ${p.name} to ${offer.toClub} is OFF! Clubs had a full agreement at ${fmtFee(offer.fee)} but the player said no to the project. He is waiting for a bigger club.`);
@@ -997,8 +1109,8 @@ function resolveAiSellerOffer(game, offer) {
     const res = doTransfer(game, offer);
     offer.status = res.ok ? "accepted" : "failed";
     offer.note = res.ok ? `Deal completed at £${offer.fee}m.` : res.msg;
-  } else if (offer.fee >= baseAsk * 0.4) {
-    let newDemand = Math.round(((offer.demand + offer.fee) / 2) * 10) / 10;
+  } else if (offer.fee * edge >= baseAsk * 0.4) {
+    let newDemand = Math.round(((offer.demand + offer.fee * edge) / 2) * 10) / 10;
     if (newDemand < floor) newDemand = floor;
     if (newDemand <= offer.fee) {
       offer.demand = offer.fee;
@@ -1574,6 +1686,9 @@ function endOfSeason(game) {
   ensureRoles(game);
   log(game, `SEASON ${game.season} OVER. Budgets reset for everyone, title winners bank £10m and cup winners £5m each. New fixtures and cup draws are in.`);
   game.season++;
+  // form resets for the new season, morale settles halfway, injury knocks are gone, travel starts over
+  for (const p of Object.values(game.players)) { delete p.fm; if (p.mo) C.setMorale(p, p.mo / 2); delete p.ret; delete p.retN; }
+  for (const c of Object.values(game.clubs)) { delete c.fx; if (c.travel) c.travel = { fund: 0, setup: false, policy: c.travel.policy || "standard", smart: !!c.travel.smart, trips: {} }; }
   game.round = 0;
   game.stats = {};
 
@@ -1819,6 +1934,7 @@ app.post("/api/start", (req, res) => {
   if (user.name !== game.host) return res.status(403).json({ error: "Only the host can kick off." });
   if (!Object.values(game.users).every(u => u.team)) return res.status(400).json({ error: "Everyone needs to pick a club first." });
   game.started = true;
+  for (const u of Object.values(game.users)) if (u.team && game.clubs[u.team]) { const tv = clubTravel(game.clubs[u.team]); tv.setup = false; tv.fund = 0; tv.trips = {}; }
   log(game, `Season ${game.season} is underway across all leagues. Unpicked clubs run on AI.`);
   save();
   res.json({ ok: true });
@@ -2027,8 +2143,9 @@ function playMatchweek(game) {
       }
     }
     for (const m of round) {
-      simMatch(game, m);
+      const xis = simMatch(game, m, "L", game.round);
       usePlayedScore(game, m, "league", game.round);
+      afterResult(game, m, xis);
       recordScorers(game, m, league, humanLeagues.has(league));
     }
     if (humanLeagues.has(league)) {
@@ -2042,9 +2159,16 @@ function playMatchweek(game) {
     }
   }
   game.round++;
+  weeklyCondition(game);
   // players heal and bans get served, then the new knocks come in
   for (const p of Object.values(game.players)) {
-    if (p.inj > 0) { p.inj--; if (p.inj === 0 && humanOf(game, p.club)) log(game, `${p.name} (${p.club}) is back from injury and available again.`); }
+    if (p.inj > 0) {
+      p.inj--;
+      if (p.inj === 0) {
+        C.startInjuryReturn(p, !!((game.clubs[p.club] || {}).staff || {}).physio);
+        if (humanOf(game, p.club)) log(game, `${p.name} (${p.club}) is back from injury and available again. He carries a knock for a few weeks while he gets up to speed.`);
+      }
+    }
     if (p.ban > 0) p.ban--;
     if (p.prodigy && p.age <= 19 && p.rating < 90 && !(p.inj > 0) && (p.prodigyGains || 0) < 3) {
       const onDevLoan = p.loanOwner && p.loanOwner !== p.club;
@@ -2168,24 +2292,141 @@ app.post("/api/sim", (req, res) => {
   res.json({ ok: true });
 });
 
-app.post("/api/simto", (req, res) => {
+// Sim Season runs every remaining week in order through all the systems (form, morale, events, travel
+// bookings by each manager's policy), so the end state is the same as pressing Play matchweek each time.
+app.post("/api/simseason", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
-  if (user.name !== game.host) return res.status(403).json({ error: "Only the host can sim the matchweek." });
+  if (user.name !== game.host) return res.status(403).json({ error: "Only the host can sim the season." });
   if (!game.started) return res.status(400).json({ error: "Start the season first." });
   const total = game.totalRounds || 38;
   if (game.round >= total) return res.status(400).json({ error: "The season is over. Check the final tables and awards, then press Start next season." });
-  const target = Math.floor(Number(req.body.week));
-  if (!Number.isFinite(target) || target < 1 || target > total) return res.status(400).json({ error: "Pick a week between 1 and " + total + "." });
-  if (target <= game.round) return res.status(400).json({ error: "That week has already been played. You are on week " + (game.round + 1) + "." });
+  const from = game.round + 1;
   let guard = 0;
-  while (game.round < target && game.round < total && guard < 60) {
+  while (game.round < total && guard < 60) {
     playMatchweek(game);
     guard++;
   }
-  log(game, "FAST FORWARD: the host simmed ahead to week " + game.round + ".");
+  log(game, "SIM SEASON: the host simmed from week " + from + " to the end of the season.");
   save();
   res.json({ ok: true, round: game.round });
+});
+
+// ---------- travel: the fund, the planner and the bookings ----------
+function travelPlan(game, user) {
+  const club = user.team ? game.clubs[user.team] : null;
+  if (!club || !game.started) return null;
+  const tv = clubTravel(club);
+  const home = geo(club.name);
+  const trips = [];
+  const fixtures = (game.leagueFixtures || {})[club.league] || [];
+  fixtures.forEach((round, i) => {
+    const m = round.find(x => x.away === club.name);
+    if (m) trips.push({ id: tripId("L", i), kind: "league", week: i + 1, label: "League, week " + (i + 1), opp: m.home, done: i < game.round || m.hg !== null });
+  });
+  for (const cup of Object.values(game.cups || {})) {
+    if (cup.scope === "nation") continue;
+    cup.rounds.forEach((ms, ri) => {
+      const m = ms.find(x => x.away === club.name);
+      if (!m) return;
+      const wk = cup.weeks[ri];
+      trips.push({ id: tripId(cup.key, wk), kind: cup.key, week: wk + 1, label: cup.title + ", " + ((cup.roundNames && cup.roundNames[ri]) || nameForMatches(ms.length)), opp: m.home, done: wk < game.round || m.hg !== null, cup: true });
+    });
+  }
+  trips.sort((a, b) => a.week - b.week);
+  for (const t of trips) {
+    const g = geo(t.opp);
+    const km = tripKm(club.name, t.opp);
+    t.km = km;
+    t.city = g ? g.city : t.opp;
+    t.country = g ? g.country : "";
+    t.airport = g ? g.airport : "";
+    t.hotels = g ? g.hotels : ["budget", "standard", "luxury"];
+    t.transport = C.transportOptions(km);
+    t.hotelOptions = C.hotelOptions(km, t.hotels);
+    t.hard = Math.round(clubStrength(game, t.opp));
+    t.booked = tv.trips[t.id] || null;
+    if (t.booked) { t.price = C.tripPrice(km, t.booked); t.mod = C.tripModifier(km, t.booked); }
+  }
+  const open = trips.filter(t => !t.done);
+  return {
+    fund: tv.fund, setup: !!tv.setup, policy: tv.policy || "standard", home: home ? home.city + ", " + home.country : club.name,
+    advice: C.recommendFund(club.budget, open), unbooked: open.filter(t => !t.booked).length, trips
+  };
+}
+
+app.post("/api/travelfund", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  if (!game.started) return res.status(400).json({ error: "The travel fund is set once the season starts." });
+  const club = game.clubs[user.team];
+  const tv = clubTravel(club);
+  if (tv.setup) return res.status(400).json({ error: "The travel fund is already set for this season." });
+  const amount = Math.round(Number(req.body.amount) * 10) / 10;
+  if (!Number.isFinite(amount) || amount < 0) return res.status(400).json({ error: "Enter an amount in millions." });
+  if (amount > club.budget) return res.status(400).json({ error: "You only have " + club.budget + "m in the budget." });
+  club.budget = Math.round((club.budget - amount) * 10) / 10;
+  tv.fund = C.r3(amount);
+  tv.setup = true;
+  log(game, `TRAVEL: ${user.team} set aside £${amount}m for travel this season. It comes out of the transfer budget.`);
+  save();
+  res.json({ ok: true, fund: tv.fund, budget: club.budget });
+});
+
+// bookings: { tripId: { t: transport key, h: hotel key } }. Changing a booking refunds the old one first.
+// policy: cheap, standard, luxury or smart, used for trips the manager never booked when a week is simmed.
+app.post("/api/travelbook", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  const plan = travelPlan(game, user);
+  if (!plan) return res.status(400).json({ error: "The planner opens once the season starts." });
+  const club = game.clubs[user.team];
+  const tv = clubTravel(club);
+  if (req.body.policy !== undefined) {
+    if (!["cheap", "standard", "luxury", "smart"].includes(req.body.policy)) return res.status(400).json({ error: "Pick cheap, standard, luxury or smart." });
+    tv.policy = req.body.policy === "smart" ? "standard" : req.body.policy;
+    tv.smart = req.body.policy === "smart";
+  }
+  // bulk: cheap, standard, luxury or smart books every trip still to come in one go, refunding what was booked
+  const bookings = Object.assign({}, req.body.bookings || {});
+  let fund = tv.fund;
+  const next = Object.assign({}, tv.trips);
+  if (req.body.bulk) {
+    if (!["cheap", "standard", "luxury", "smart"].includes(req.body.bulk)) return res.status(400).json({ error: "Pick cheap, standard, luxury or smart." });
+    const open = plan.trips.filter(t => !t.done);
+    for (const t of open) { if (next[t.id]) { fund = C.r3(fund + C.tripPrice(t.km, next[t.id])); delete next[t.id]; } }
+    if (req.body.bulk === "smart") {
+      const sf = C.smartFill(open.map(t => ({ id: t.id, km: t.km, hard: t.hard })), fund);
+      for (const t of open) bookings[t.id] = sf.bookings[t.id];
+    } else {
+      // the plain policies drop the latest trips to cheap if the fund cannot cover them all
+      let left = fund;
+      const picks = open.map(t => ({ t, bk: C.policyBooking(t.km, req.body.bulk) }));
+      for (const p of picks) left -= C.tripPrice(p.t.km, p.bk);
+      for (let i = picks.length - 1; i >= 0 && left < -1e-9; i--) { const cheap = C.policyBooking(picks[i].t.km, "cheap"); left += C.tripPrice(picks[i].t.km, picks[i].bk) - C.tripPrice(picks[i].t.km, cheap); picks[i].bk = cheap; }
+      if (left < -1e-9) return res.status(400).json({ error: "The travel fund cannot cover even the cheapest trips. Top it up next season or let the cheapest option carry you." });
+      for (const p of picks) bookings[p.t.id] = p.bk;
+    }
+    tv.policy = req.body.bulk === "smart" ? "standard" : req.body.bulk;
+    tv.smart = req.body.bulk === "smart";
+  }
+  for (const [id, bk] of Object.entries(bookings)) {
+    const t = plan.trips.find(x => x.id === id);
+    if (!t) return res.status(400).json({ error: "No trip called " + id + "." });
+    if (t.done) return res.status(400).json({ error: "The trip to " + t.opp + " has already happened." });
+    if (!bk || !t.transport.some(o => o.key === bk.t) || !t.hotelOptions.some(o => o.key === bk.h)) return res.status(400).json({ error: "Pick a transport option and a hotel for " + t.opp + "." });
+    const old = next[id] ? C.tripPrice(t.km, next[id]) : 0;
+    const price = C.tripPrice(t.km, { t: bk.t, h: bk.h });
+    fund = C.r3(fund + old - price);
+    if (fund < -1e-9) return res.status(400).json({ error: "The travel fund cannot cover that. You have £" + tv.fund + "m left." });
+    next[id] = { t: bk.t, h: bk.h };
+  }
+  tv.trips = next;
+  tv.fund = C.r3(Math.max(0, fund));
+  save();
+  res.json({ ok: true, fund: tv.fund, policy: tv.smart ? "smart" : tv.policy });
 });
 
 app.post("/api/playstart", (req, res) => {
@@ -2211,13 +2452,16 @@ app.post("/api/playstart", (req, res) => {
     user: user.name, season: game.season, round: game.round, kind: fx.kind,
     home: fx.home, away: fx.away, status: "started", hg: null, ag: null, t: Date.now()
   };
-  const row = p => ({ n: p.name, pos: p.pos, role: p.role || p.pos, r: p.rating });
+  // the playable match uses the same effective OVRs as the sim would for this fixture
+  const cupKey = fx.kind === "league" ? "L" : fx.kind;
+  const mm = { home: fx.home, away: fx.away };
+  const rowFor = (team, home) => p => ({ n: p.name, pos: p.pos, role: p.role || p.pos, r: Math.round(effOf(game, p, team, { home, m: mm, kind: cupKey, week: game.round })), base: p.rating });
   save();
   res.json({
     ok: true, kind: fx.kind, label: fx.label, home: fx.home, away: fx.away, side: fx.side,
     homeRating: fx.homeRating, awayRating: fx.awayRating,
-    homeXI: chosenXI(game, fx.home).filter(Boolean).map(row),
-    awayXI: chosenXI(game, fx.away).filter(Boolean).map(row)
+    homeXI: chosenXI(game, fx.home).filter(Boolean).map(rowFor(fx.home, true)),
+    awayXI: chosenXI(game, fx.away).filter(Boolean).map(rowFor(fx.away, false))
   });
 });
 
@@ -2527,7 +2771,7 @@ app.post("/api/list", (req, res) => {
   if (!p || p.club !== user.team || p.academy) return res.status(400).json({ error: "Not your player." });
   if (p.loanOwner) return res.status(400).json({ error: "He is only here on loan, you can't list him." });
   p.listed = !p.listed;
-  if (p.listed) log(game, `${p.name} has been transfer listed by ${user.team}.`);
+  if (p.listed) { C.bumpMorale(p, C.T.LISTED_MORALE); log(game, `${p.name} has been transfer listed by ${user.team}.`); }
   save();
   res.json({ ok: true });
 });
@@ -2688,8 +2932,10 @@ app.post("/api/loanin", (req, res) => {
   if (club.squad.length >= 30) return res.status(400).json({ error: "Squad is full (30 max)." });
   const loansIn = club.squad.map(id => game.players[id]).filter(x => x && x.loanOwner && x.loanOwner !== user.team).length;
   if (loansIn >= 3) return res.status(400).json({ error: "Three loans in per season is the limit." });
+  if (user.loansIn && user.loansIn.week === game.round && user.loansIn.count >= 1) return res.status(400).json({ error: `You already took a loan in this week. One loan in per week, come back for ${p.name} after the matchweek.` });
   const fee = Math.max(1, Math.round(p.value * 0.1 * 10) / 10);
   if (club.budget < fee) return res.status(400).json({ error: `The loan fee is £${fee}m and you don't have it.` });
+  user.loansIn = { week: game.round, count: 1 };
   club.budget = Math.round((club.budget - fee) * 10) / 10;
   owner.budget = Math.round((owner.budget + fee) * 10) / 10;
   owner.squad = owner.squad.filter(id => id !== p.id);
@@ -2847,7 +3093,8 @@ app.get("/api/state", (req, res) => {
       budget: game.clubs[myTeam].budget,
       tactic: game.clubs[myTeam].tactic,
       lineup: game.clubs[myTeam].lineup || { xi: [], subs: [] },
-      squad: game.clubs[myTeam].squad.map(id => game.players[id]).filter(Boolean),
+      squad: game.clubs[myTeam].squad.map(id => game.players[id]).filter(Boolean).map(p => Object.assign({}, p, { cond: Object.assign(C.parts(p, game.clubs[myTeam], game.round), { eff: Math.round(effOf(game, p, myTeam) * 10) / 10 }) })),
+      news: game.clubs[myTeam].news || [],
       academy: (game.clubs[myTeam].academy || []).map(id => game.players[id]).filter(Boolean),
       staff: game.clubs[myTeam].staff || {},
       trainFocus: game.clubs[myTeam].trainFocus !== undefined ? game.clubs[myTeam].trainFocus : null,
@@ -2857,6 +3104,8 @@ app.get("/api/state", (req, res) => {
       }))
     } : null,
     sacked: !!user.sacked,
+    loansLeft: (user.loansIn && user.loansIn.week === game.round && user.loansIn.count >= 1) ? 0 : 1,
+    travel: travelPlan(game, user),
     staffPrices: { scout: 15, youth: 20, physio: 10, analyst: 10 },
     lastEvents: game.lastEvents || {},
     aiDeals: game.aiDeals || 0,

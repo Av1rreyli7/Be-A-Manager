@@ -19,14 +19,14 @@ ok("no basketball rendering left", !html.includes("renderHoops") && !html.includ
 // loans at any age
 ok("loan out button has no age condition", html.includes(`<button class="small ghost" onclick="loanOut(\${p.id})">Loan out</button>`) && !html.includes("p.age <= 23 ? `<button"), null);
 
-// sim to chosen week
-ok("sim to week wrapper exists", html.includes('id="simToWrap"'), null);
-ok("week input exists with 1 to 38 bounds", html.includes('id="simToW"') && html.includes('min="1"') && html.includes('max="38"'), null);
-ok("sim to week button exists", html.includes('id="simToGo"'), null);
-ok("sim to week button is wired", html.includes('$("simToGo").onclick'), null);
-ok("bad week input gets an alert", html.includes("Pick a week between 1 and 38"), null);
-ok("host only visibility toggle for sim to week", html.includes('$("simToWrap").classList.toggle("hidden"'), null);
-ok("winter and season end buttons still there", html.includes('id="ffBtn18"') && html.includes('id="ffBtn37"'), null);
+// sim: week by week or the whole season, no more sim to a chosen week
+ok("sim to week UI is gone", !html.includes("simToWrap") && !html.includes("simToW") && !html.includes("simToGo") && !html.includes("ffBtn18") && !html.includes("ffBtn37") && !html.includes("/api/simto"), null);
+ok("sim season button exists and is wired to the new route", html.includes('id="simSeasonBtn"') && html.includes('$("simSeasonBtn").onclick') && html.includes('api("/api/simseason", {})'), null);
+ok("sim season asks for a second click instead of a popup", html.includes("Click again to sim every week to the end") && !/simseason[\s\S]{0,200}confirm\(/.test(html), null);
+ok("host only visibility toggle for sim season", html.includes('$("simSeasonBtn").classList.toggle("hidden"'), null);
+ok("the squad table shows form, morale and effective rating", html.includes("<th class=\"num\" title=\"Form") && html.includes(">Morale</th>") && html.includes(">Eff</th>") && html.includes("condChip(p.cond && p.cond.form, 3)"), null);
+ok("the feed shows the club news first", html.includes("Your club this season") && html.includes("s.myClub.news"), null);
+ok("the travel tab, planner and advisor are on the page", html.includes('data-t="travel"') && html.includes('id="tab-travel"') && html.includes('id="travelModal"') && html.includes("/api/travelfund") && html.includes("/api/travelbook") && html.includes("travelBulk(") && html.includes("smart"), null);
 
 // offers: countered inbound keeps the old bid alive, loan asks tagged
 ok("seller can take the standing bid after countering", html.includes("Take their ${money(o.fee)}"), null);

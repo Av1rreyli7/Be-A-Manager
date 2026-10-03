@@ -22,6 +22,16 @@ async function api(route, body) {
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// week by week to a target week: the only way to move the season on besides Sim season
+async function simTo(code, name, target) {
+  for (let i = 0; i < 60; i++) {
+    const st = await api(`/api/state?code=${code}&name=${name}`);
+    if (st.j.round >= target) return { status: 200, j: { ok: true, round: st.j.round } };
+    const r = await api("/api/sim", { code, name });
+    if (r.status !== 200) return r;
+  }
+  return { status: 200, j: { ok: true } };
+}
 async function readSave(wantCode) {
   await sleep(650);
   for (let i = 0; i < 60; i++) {
@@ -197,7 +207,7 @@ console.log("b5");
   for (let w = 0; w < 8; w++) {
     saved = await readSave(code);
     g = Object.values(saved).find(x => x.code === code);
-    if (g.round === 4) { await api("/api/simto", { code, name: "Host", week: 19 }); }
+    if (g.round === 4) { await simTo(code, "Host", 19); }
     await api("/api/sim", { code, name: "Host" });
     saved = await readSave(code);
     g = Object.values(saved).find(x => x.code === code);
@@ -256,20 +266,19 @@ console.log("b5");
   const aiLoanCount = Object.values(g.players).filter(p => p.loanOwner && p.loanOwner !== "Arsenal" && p.loanOwner !== "Galatasaray").length;
   ok("AI to AI loans happened", aiLoanCount >= 1, aiLoanCount);
 
-  // ============ I) sim to a chosen week ============
+  // ============ I) no more sim to a chosen week, only week by week and Sim season ============
   console.log("section I", Date.now());
   saved = await readSave(code);
   g = Object.values(saved).find(x => x.code === code);
   const target = Math.min(30, g.round + 4);
-  r = await api("/api/simto", { code, name: "Turk", week: target });
-  ok("only the host can sim ahead", r.status === 400 || r.status === 403, r.status);
   r = await api("/api/simto", { code, name: "Host", week: target });
-  ok("sim to an arbitrary week works", r.status === 200, r.j);
+  ok("sim to an arbitrary week no longer exists", r.status === 404, r.status);
+  r = await api("/api/simseason", { code, name: "Turk" });
+  ok("only the host can sim the season", r.status === 403, r.status);
+  r = await simTo(code, "Host", target);
   saved = await readSave(code);
   g = Object.values(saved).find(x => x.code === code);
-  ok("the round landed on the chosen week", g.round === target, [g.round, target]);
-  r = await api("/api/simto", { code, name: "Host", week: 2 });
-  ok("simming backwards is refused", r.status === 400, r.j);
+  ok("week by week still lands on the wanted week", g.round === target, [g.round, target]);
 
   // ============ J) full season, contracts still frozen, injuries happened ============
   console.log("section J", Date.now());
@@ -277,7 +286,8 @@ console.log("b5");
   saved = await readSave(code);
   g = Object.values(saved).find(x => x.code === code);
   for (const [id, p] of Object.entries(g.players)) { if (p.contractYears !== undefined) { beforeYears[id] = p.contractYears; beforeClub[id] = p.club; if (Object.keys(beforeYears).length >= 20) break; } }
-  await api("/api/simto", { code, name: "Host", week: 38 });
+  r = await api("/api/simseason", { code, name: "Host" });
+  ok("Sim season runs to the end in one go", r.status === 200 && r.j.round === 38, r.j);
   saved = await readSave(code);
   g = Object.values(saved).find(x => x.code === code);
   ok("season reached the end", g.round >= 38 || g.seasonOver === true || g.round === 38, g.round);
@@ -318,7 +328,7 @@ console.log("b5");
 
   // ============ K) value cap holds after growth ============
   console.log("section K", Date.now());
-  await api("/api/simto", { code, name: "Host", week: 38 });
+  await api("/api/simseason", { code, name: "Host" });
   await api("/api/nextseason", { code, name: "Host" });
   saved = await readSave(code);
   g = Object.values(saved).find(x => x.code === code);
@@ -537,6 +547,101 @@ console.log("b5");
   ok("kick off against another manager is refused", r.status === 400 && (r.j.error || "").includes("another manager"), r.j);
   r = await api("/api/sim", { code: pc, name: "Boss" });
   ok("the week still sims fine after all that", r.status === 200, r.j);
+
+  // ============ N) condition, travel, loan cap ============
+  console.log("section N", Date.now());
+  r = await api("/api/create", { name: "Trav" });
+  const tc = r.j.code;
+  await api("/api/join", { code: tc, name: "Mate2" });
+  await api("/api/pick", { code: tc, name: "Trav", team: "Brighton" });
+  await api("/api/pick", { code: tc, name: "Mate2", team: "Celtic" });
+  r = await api("/api/travelfund", { code: tc, name: "Trav", amount: 1 });
+  ok("the travel fund waits for the season to start", r.status === 400, r.j);
+  await api("/api/start", { code: tc, name: "Trav" });
+  r = await api(`/api/state?code=${tc}&name=Trav`);
+  let tv = r.j.travel;
+  ok("the state carries a travel plan with every away trip, real cities and three hotels", tv && !tv.setup && tv.trips.length >= 19 && tv.trips.every(t => t.city && t.country && t.km > 0 && t.hotels.length === 3 && t.transport.length >= 2 && t.hotelOptions.length === 3), tv && tv.trips.slice(0, 1));
+  ok("short trips offer bus and train, long ones flights", tv.trips.some(t => t.km < 400 && t.transport[0].key === "bus") && tv.trips.some(t => t.km >= 400 && t.transport[0].key === "eco"), null);
+  ok("the advisor recommends an amount from the real trips", tv.advice && tv.advice.recommend > 0 && tv.advice.cheap < tv.advice.standard && tv.advice.standard < tv.advice.luxury, tv.advice);
+  const budget0 = r.j.myClub.budget;
+  r = await api("/api/travelfund", { code: tc, name: "Trav", amount: budget0 + 50 });
+  ok("the fund cannot be more than the budget", r.status === 400, r.j);
+  r = await api("/api/travelfund", { code: tc, name: "Trav", amount: 1.2 });
+  ok("the fund moves out of the transfer budget for real", r.status === 200 && Math.abs(r.j.budget - (budget0 - 1.2)) < 1e-6 && r.j.fund === 1.2, r.j);
+  r = await api("/api/travelfund", { code: tc, name: "Trav", amount: 1 });
+  ok("the fund is set once a season", r.status === 400, r.j);
+  r = await api(`/api/state?code=${tc}&name=Trav`);
+  tv = r.j.travel;
+  const open = tv.trips.filter(t => !t.done);
+  const first = open[0];
+  const bk = {}; bk[first.id] = { t: first.transport[first.transport.length - 1].key, h: "luxury" };
+  r = await api("/api/travelbook", { code: tc, name: "Trav", bookings: bk });
+  const lux = first.transport[first.transport.length - 1].price + first.hotelOptions[2].price;
+  ok("booking a trip drains the fund by its price", r.status === 200 && Math.abs(r.j.fund - (1.2 - lux)) < 1e-6, [r.j, lux]);
+  const cheapBk = {}; cheapBk[first.id] = { t: first.transport[0].key, h: "budget" };
+  r = await api("/api/travelbook", { code: tc, name: "Trav", bookings: cheapBk });
+  const cheap = first.transport[0].price + first.hotelOptions[0].price;
+  ok("rebooking refunds the old trip first", r.status === 200 && Math.abs(r.j.fund - (1.2 - cheap)) < 1e-6, [r.j, cheap]);
+  r = await api("/api/travelbook", { code: tc, name: "Trav", bookings: { [first.id]: { t: "spaceship", h: "luxury" } } });
+  ok("a made up transport option is refused", r.status === 400, r.j);
+  r = await api("/api/travelbook", { code: tc, name: "Trav", bulk: "luxury" });
+  ok("all luxury on a small fund does not block, the late trips drop to cheap or it says the fund is short", r.status === 200 || (r.status === 400 && /fund/.test(r.j.error)), r.j);
+  r = await api("/api/travelbook", { code: tc, name: "Trav", bulk: "smart" });
+  ok("smart fill books every trip ahead inside the fund", r.status === 200 && r.j.fund >= 0 && r.j.policy === "smart", r.j);
+  r = await api(`/api/state?code=${tc}&name=Trav`);
+  tv = r.j.travel;
+  ok("after smart fill nothing ahead is unbooked", tv.unbooked === 0 && tv.trips.filter(t => !t.done).every(t => t.booked && t.price >= 0), tv.unbooked);
+  r = await api("/api/travelbook", { code: tc, name: "Trav", policy: "cheap" });
+  ok("the default policy can be set on its own", r.status === 200 && r.j.policy === "cheap", r.j);
+  // the second manager never books: the sim books by policy and then drains the fund dry without blocking
+  r = await api("/api/travelfund", { code: tc, name: "Mate2", amount: 0.02 });
+  ok("a tiny fund is allowed", r.status === 200, r.j);
+  await api("/api/travelbook", { code: tc, name: "Mate2", policy: "luxury" });
+  // the playable match uses effective OVRs for this fixture
+  r = await api("/api/playstart", { code: tc, name: "Trav", kind: "league" });
+  ok("kick off sends effective ratings next to the base rating", r.status === 200 && r.j.homeXI.every(p => Number.isFinite(p.r) && Number.isFinite(p.base)) && r.j.homeXI.some(p => p.r !== p.base), r.j.homeXI && r.j.homeXI.slice(0, 2));
+  // one loan in per week, while the window is open at the start of the season
+  r = await api(`/api/market?code=${tc}&name=Trav&q=&league=Championship`);
+  const loanCands = (r.j.players || []).filter(p => p.rating <= 80 && p.rating >= 65 && !p.loanOwner && p.club !== "Brighton").slice(0, 6);
+  let loanOk = 0, capHit = false, capMsg = "";
+  for (const cand of loanCands) {
+    r = await api("/api/loanin", { code: tc, name: "Trav", playerId: cand.id });
+    if (r.status === 200) loanOk++;
+    else if (/One loan in per week/.test(r.j.error || "")) { capHit = true; capMsg = r.j.error; break; }
+  }
+  ok("the first loan in goes through and the second in the same week is refused with a clear message", loanOk === 1 && capHit && /come back/.test(capMsg), [loanOk, capHit, capMsg]);
+  r = await api(`/api/state?code=${tc}&name=Trav`);
+  ok("the state says no loans left this week", r.j.loansLeft === 0, r.j.loansLeft);
+  ok("signings and loans are separate caps", r.j.signingsLeft === 1, r.j.signingsLeft);
+  // play on: form, morale, news and the dry fund fallback
+  for (let w = 0; w < 8; w++) await api("/api/sim", { code: tc, name: "Trav" });
+  r = await api(`/api/state?code=${tc}&name=Trav`);
+  ok("loans left resets after the week moves on", r.j.loansLeft === 1, r.j.loansLeft);
+  const sq = r.j.myClub.squad;
+  ok("every squad player carries form, morale, knock and effective rating", sq.every(p => p.cond && Number.isFinite(p.cond.form) && Number.isFinite(p.cond.morale) && Number.isFinite(p.cond.eff) && [-1, -0.5, 0, 0.5, 1].includes(p.cond.traveller)), sq[0] && sq[0].cond);
+  ok("after eight weeks form and morale have moved for someone", sq.some(p => p.cond.form !== 0) && sq.some(p => p.cond.morale !== 0), null);
+  ok("form sits inside minus 3 to plus 3 and morale inside minus 2 to plus 2", sq.every(p => p.cond.form >= -3 && p.cond.form <= 3 && p.cond.morale >= -2 && p.cond.morale <= 2), null);
+  saved = await readSave(tc);
+  g = Object.values(saved).find(x => x.code === tc);
+  const human2 = ["Brighton", "Celtic"];
+  const newsTotal = human2.reduce((s2, c) => s2 + ((g.clubs[c].news || []).length), 0);
+  const aiNews = Object.values(g.clubs).filter(c => !human2.includes(c.name) && c.news).length;
+  ok("event news is kept per human club with the week number and nowhere else", newsTotal >= 1 && aiNews === 0 && human2.every(c => (g.clubs[c].news || []).every(x => Number.isInteger(x.w) && x.t.length > 10)), [newsTotal, aiNews]);
+  ok("club news is capped at ten entries", human2.every(c => (g.clubs[c].news || []).length <= 10), null);
+  ok("form and morale are only stored when they are not zero", Object.values(g.players).every(p => !("fm" in p) || p.fm !== 0) && Object.values(g.players).every(p => !("mo" in p) || p.mo !== 0), null);
+  const mateTv = g.clubs["Celtic"].travel;
+  ok("the manager who never booked had trips booked by the sim and the fund went dry without blocking", mateTv && Object.keys(mateTv.trips).length >= 3 && mateTv.fund >= 0 && mateTv.fund < 0.02, mateTv);
+  ok("the dry fund shows up in the club news", (g.clubs["Celtic"].news || []).some(x => /fund is dry|goes cheap/.test(x.t)), (g.clubs["Celtic"].news || []).slice(0, 3));
+  const hurt = Object.values(g.players).find(p => p.ret > 0);
+  ok("a player back from injury carries a healing knock", !hurt || (hurt.retN >= 3 && hurt.ret <= hurt.retN), hurt && [hurt.ret, hurt.retN]);
+  r = await api("/api/simseason", { code: tc, name: "Trav" });
+  ok("Sim season runs the rest of the season through every system", r.status === 200 && r.j.round === 38, r.j);
+  r = await api(`/api/state?code=${tc}&name=Trav`);
+  ok("after Sim season the club news still reads like a season", r.j.myClub.news.length >= 1 && r.j.myClub.news.length <= 10 && r.j.seasonOver === true, r.j.myClub.news.length);
+  saved = await readSave(tc);
+  g = Object.values(saved).find(x => x.code === tc);
+  const lenNow = JSON.stringify(g).length;
+  ok("the save for one game stays lean with 300 plus clubs tracked", lenNow < 2.6 * 1024 * 1024, Math.round(lenNow / 1024) + " KB");
 
   console.log(passed + " passed, " + failed + " failed");
   if (server) server.kill();

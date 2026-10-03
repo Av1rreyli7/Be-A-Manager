@@ -112,16 +112,11 @@ ok("Floodlights loads no fonts from other sites", !fl.includes("fonts.googleapis
 for (const f of ["inter.woff2", "chakra-petch-600.woff2", "chakra-petch-700.woff2", "instrument-serif-italic.woff2", "geist-mono.woff2"]) ok("font file present: " + f, has("floodlights/fonts/" + f), null);
 ok("Floodlights shares the look: frame, starfield, glow button, glass buttons", fl.includes("lobbyframe") && fl.includes('id="bamStars"') && fl.includes("button.gold,.card #createBtn") && fl.includes("button.ghost{background:linear-gradient(135deg"), null);
 ok("Floodlights has a way back to the landing page", fl.includes('class="homelink" href="/"') && fl.includes('class="chip homechip" href="/"'), null);
-for (const id of ["lobby", "app", "createBtn", "joinBtn", "nameIn", "codeIn", "startBtn", "simBtn", "simToWrap", "simToW", "simToGo", "ffBtn18", "ffBtn37", "tabs", "matchWrap", "matchCanvas", "matchPanel", "playStatus", "ctModal", "tickerBar", "leaveBtn"]) ok("Floodlights element still there: #" + id, fl.includes('id="' + id + '"'), null);
+for (const id of ["lobby", "app", "createBtn", "joinBtn", "nameIn", "codeIn", "startBtn", "simBtn", "tabs", "simSeasonBtn", "tab-travel", "travelModal", "matchWrap", "matchCanvas", "matchPanel", "playStatus", "ctModal", "tickerBar", "leaveBtn"]) ok("Floodlights element still there: #" + id, fl.includes('id="' + id + '"'), null);
 for (const tab of ["squad", "lineup", "market", "offers", "romano", "matches", "calendar", "cups", "table", "cabinet", "academy", "nations", "feed"]) ok("Floodlights tab still there: " + tab, fl.includes('data-t="' + tab + '"') && fl.includes('id="tab-' + tab + '"'), null);
 if (fs.existsSync(path.join(root, "..", "floodlights", "index.html"))) {
-  // the game code inside the page must be the original, byte for byte. Only styles and the lobby shell changed.
-  const origPage = fs.readFileSync(path.join(root, "..", "floodlights", "index.html"), "utf8");
-  const mainScript = s => { const m = /<script>([\s\S]*?)<\/script>/.exec(s); return m ? m[1] : ""; };
-  ok("the Floodlights game script is untouched", mainScript(fl) === mainScript(origPage) && mainScript(fl).length > 50000, mainScript(fl).length);
-  const origServer = fs.readFileSync(path.join(root, "..", "floodlights", "server.js"), "utf8");
-  const body = s => s.slice(s.indexOf("const SAVE_FILE"), s.lastIndexOf("app.get(\"/api/market\""));
-  ok("the Floodlights game rules on the server are untouched", body(flServer) === body(origServer) && body(flServer).length > 100000, body(flServer).length);
+  // The page script and the server rules now differ from the originals on purpose (dynamic OVR, events, travel,
+  // sim season, loan cap). The world data and the Classic match sim still have to be the originals.
   for (const f of ["players.js", "world_pack.js", "extra_clubs.js", "league_fill.js"]) ok("world data untouched: " + f, read("floodlights/" + f) === fs.readFileSync(path.join(root, "..", "floodlights", f), "utf8"), null);
   // the sim part of the match engine is the original too
   const origEngine = fs.readFileSync(path.join(root, "..", "floodlights", "match.js"), "utf8");
@@ -143,7 +138,7 @@ if (fs.existsSync(up)) {
   const upFiles = walk(up, new Set(), []).map(f => path.relative(up, f));
   const bad = upFiles.filter(f => /(^|\/)(node_modules|\.next)\//.test(f) || /games\.json$/.test(f) || /\.DS_Store$/.test(f) || /\.tsbuildinfo$/.test(f));
   ok("the upload folder has no node_modules, .next, games.json or junk", bad.length === 0, bad.slice(0, 8));
-  for (const f of ["package.json", "package-lock.json", "server.js", "next.config.ts", "tsconfig.json", "tsconfig.build.json", "postcss.config.mjs", ".gitignore", ".node-version", "render.yaml", "README.md", "DEPLOY.md", "floodlights/server.js", "floodlights/index.html", "floodlights/match.js", "floodlights/match3d.mjs", "floodlights/match_sim3d.mjs", "floodlights/players.js", "floodlights/world_pack.js", "floodlights/extra_clubs.js", "floodlights/league_fill.js", "floodlights/fonts/inter.woff2", "floodlights/test_sept.js", "floodlights/test_dom_sept.js", "src/app/page.tsx", "src/app/layout.tsx", "src/landing/Landing.tsx", "src/landing/Backdrop3D.tsx", "src/landing/landing.css", "public/games/hardwood-legends.html", "data/players.json", "tests/landing.test.tsx", "tests-site/test_boot.js"]) ok("upload has " + f, upFiles.includes(f), null);
+  for (const f of ["package.json", "package-lock.json", "server.js", "next.config.ts", "tsconfig.json", "tsconfig.build.json", "postcss.config.mjs", ".gitignore", ".node-version", "render.yaml", "README.md", "DEPLOY.md", "floodlights/server.js", "floodlights/index.html", "floodlights/match.js", "floodlights/match3d.mjs", "floodlights/match_sim3d.mjs", "floodlights/condition.js", "floodlights/events_data.js", "floodlights/travel_data.js", "floodlights/test_condition.js", "floodlights/players.js", "floodlights/world_pack.js", "floodlights/extra_clubs.js", "floodlights/league_fill.js", "floodlights/fonts/inter.woff2", "floodlights/test_sept.js", "floodlights/test_dom_sept.js", "src/app/page.tsx", "src/app/layout.tsx", "src/landing/Landing.tsx", "src/landing/Backdrop3D.tsx", "src/landing/landing.css", "public/games/hardwood-legends.html", "data/players.json", "tests/landing.test.tsx", "tests-site/test_boot.js"]) ok("upload has " + f, upFiles.includes(f), null);
   // the copy must match the working tree
   const stale = upFiles.filter(f => { const src = path.join(root, f); return !fs.existsSync(src) || !fs.readFileSync(src).equals(fs.readFileSync(path.join(up, f))); });
   ok("every file in upload matches the working tree", stale.length === 0, stale.slice(0, 8));
