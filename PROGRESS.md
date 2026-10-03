@@ -342,3 +342,66 @@ Night, lineup shirts, events teaser and popup, 3D match) are kept locally in sit
       now starts only after the intro layer is gone; the football kick and basketball bounce are unchanged.
 - [x] The BAM logo and mark in the header are removed (and from the first paint guard).
 - [x] Landing test: the welcome comes before the cards, whole sequence under 3.8 s (about 3.7 s).
+
+## Rating display rebuilt, transfer events, player interest, human 3D players, controls strip
+
+Goal: fix the lineup pitch and every rating column for good, add 200 transfer window events that point at a
+real target, give every player an interest level toward the player's club (FC27 style, gates deals), rebuild
+the 3D players as low poly humans with real motion, and replace the old match controls overlay with a slim
+key strip. Resume from the first unchecked box.
+
+Work split: lead (floodlights/index.html, test_dom_sept.js, screenshots), market worker (server.js,
+events_data.js, condition.js, new interest code, test_sept.js, the multi season transfer check), match3d
+worker (match3d.mjs, match_sim3d.mjs if needed, match.js controller part only, test_match3d.js).
+Ports: lead 3210, market 3204, match3d 3205, each with its own FL_SAVE_FILE.
+
+Interest contract (server to page): any player the club does not own carries
+`interest: { lv: 0..3, label: "Very Low" | "Low" | "Medium" | "High", why: [reason, reason] }` in /api/market,
+scout tips and offers. Reasons are short plain words ("Happy at his club", "Your league is a step down").
+
+Checklist:
+- [x] C0 plan, root cause of the broken rating display
+- [x] C1 rating display rebuilt: lineup pitch shirt cards, bench rows, one rating face for every table
+- [x] C2 player interest: server model, gates on acceptance with the scout, AI clubs use a light version
+- [x] C3 200 transfer window events: one per club per season, windows only, named realistic target, interest bump
+- [x] C4 interest chips in the market, scout tips and offers with a two reason tooltip
+- [x] C5 3D players as low poly humans: bodies, kit, skin and hair, run, idle, kick, slide, keeper dive
+- [x] C6 controls strip at the top of the 3D match, fades in play, back on pause, old overlay gone
+- [x] C7 multi season transfer volume check, all batteries 0 failed three times, screenshots, memory under 400 MB
+- [x] C8 docs, upload folder, push to GitHub
+
+Notes:
+- Rating root cause: three things fought in the same box. The rating chip was absolutely placed over the
+  bottom of each shirt, the breakdown tooltip lived inside every chip (so parent rules like .benchrow .bn span
+  restyled its insides and table cells clipped it), and two old .ovr rule sets disagreed (flex and grid). On the
+  bench the rating sat inline after the name and wrapped under it into the buttons. Rebuilt: one face (.rt) with
+  a fixed two digit box and a fixed arrow slot for every list, one floating tooltip (#ovrTip) for the page, a
+  shirt card per pitch spot (shirt, X, chip under it in normal flow) sized from the pitch width with container
+  units, bench rows with their own rating column. The squad table lost its second Eff number; form and morale
+  are quiet signed numbers now (the green pills full of arrows are gone).
+- New tests-site/test_layout.js: headless Chrome at 1440, 1280, 1024 and 390 px measures what is really drawn:
+  all 7 formations with no shirt card overlap, one clean number per chip, bench rating column, squad and market
+  rating columns right aligned to the pixel, interest chips aligned. LAYOUT_SHOTS=<dir> saves screenshots.
+- Interest (floodlights/interest.js): club standing from squad strength, league, money, big club, recent
+  trophies, table place, form and Europe; player score from the step up or down, minutes, happiness, contract,
+  age, Europe, coming home (nationality from the national squads), position need. Gate after the selling club
+  agrees: High as before, Medium 68 percent (78 with the scout), Low 30 (38), Very Low 6 (10), capped at 85.
+  A no holds until the window shuts. AI clubs skip Very Low targets and Low ones half the time.
+- Balance (6 worlds, 3 seasons, old server against new): AI deals and loans per window 81.4 before and after
+  (the weekly caps bind), stars moving to much smaller clubs 349 down to 80. Scripted managers per window:
+  Fulham 1.33 to 1.47, Burnley 1.61 to 1.75, Hibernian 1.36 to 1.31. Champions pull harder next season
+  (Rangers average level 1.93 to 2.57).
+- Transfer events (floodlights/transfer_events_data.js): 200 templates, human clubs, window weeks only, one per
+  club per season, target in one of the two thinnest positions within the rating and budget bands, interest
+  bump of one or two levels that lasts to the end of the next window, same teaser and lobby popup. The popup
+  shows the interest jump, the player and the asking price; Tipped to you sits at the top of the market.
+- 3D players: one skinned low poly body per player on an 18 bone skeleton, 7 skin tones, 7 hair colours,
+  7 hair styles, beards, kit with collar, sleeves, shorts, banded socks, boots, name and number printed on the
+  back, keepers with long sleeves and gloves. Two materials in total (one per team). Walk, jog, sprint, backward
+  runs, idle breathing, head tracking, kicks, slides, tackles, headers, keeper ready stance and dives.
+  Draw calls about 700 to about 150; view CPU about 2 ms a frame, 60 fps held.
+- Controls strip: top right in line with the score bug, kit chips, full at kick off, 0.3 after 4 s, full on
+  pause, labels drop under 940 px. The old 3D help overlay and the Classic hint line are gone.
+- Tests, three full npm run test:all runs, all 0 failed: typecheck, vitest 79, condition 138, API 257, DOM 167,
+  3D 280 (includes the headless match loop), layout 222 (new), site checks 166, build, boot 48. The server sat
+  at 203 to 204 MB after the boot checks. Proof screenshots are in site/.work/proof/oct4 (not uploaded).

@@ -778,7 +778,13 @@ console.log("b5");
       };
       rows.push(row);
       if (firstAvg === null) firstAvg = row;
-      if (season < 3) await api("/api/nextseason", { code: bc, name: "Bal" });
+      if (season < 3) {
+        await api("/api/nextseason", { code: bc, name: "Bal" });
+        // an idle manager can lose his job after a poor season (the board's call): he takes a new one and the
+        // world keeps going, which is all this section needs
+        const after = await api(`/api/state?code=${bc}&name=Bal`);
+        if (!after.j.myClub) for (const club of ["Fulham", "Brentford", "Everton", "Crystal Palace", "Wolves", "Bournemouth"]) { if ((await api("/api/pick", { code: bc, name: "Bal", team: club })).status === 200) break; }
+      }
     }
     console.log("OVR balance in the real world, effective minus base at the end of each season (all leagues):");
     console.table(rows);
@@ -791,6 +797,186 @@ console.log("b5");
     ok("three real seasons: only a few percent of players sit at the extremes", rows.every(rw => rw.atExtremes < 0.05), rows.map(rw => rw.atExtremes));
     ok("three real seasons: title winners' regulars end slightly up, not maxed", rows.every(rw => rw.champRegulars >= -0.3 && rw.champRegulars <= 2.5 && rw.champBest < 4.5), rows.map(rw => [rw.champRegulars, rw.champBest]));
     ok("three real seasons: one event every three to five weeks or so, never two in a week", perSeason >= 4 && perSeason <= 16 && oneAWeek, [perSeason, oneAWeek]);
+  }
+
+  // ============ player interest: the API shape, the gate on deals, the one deal a week cap ============
+  console.log("section interest", Date.now());
+  {
+    const I = require("./interest");
+    const LBL = ["Very Low", "Low", "Medium", "High"];
+    const BIGC = ["Man City", "Liverpool", "Arsenal", "Chelsea", "Man United", "Tottenham", "Newcastle", "Real Madrid", "Barcelona", "Atletico Madrid", "Bayern Munich", "Borussia Dortmund", "PSG", "Juventus", "Inter Milan", "AC Milan", "Napoli", "Al-Hilal", "Al-Nassr", "Al-Ittihad"];
+    const shape = it => !!it && Object.keys(it).sort().join(",") === "label,lv,why" && [0, 1, 2, 3].includes(it.lv) && it.label === LBL[it.lv] &&
+      Array.isArray(it.why) && it.why.length === 2 && it.why.every(w => typeof w === "string" && w.length > 3 && w.length < 40) && it.why[0] !== it.why[1];
+    r = await api("/api/create", { name: "Ina" });
+    const ic = r.j.code;
+    await api("/api/join", { code: ic, name: "Inb" });
+    await api("/api/join", { code: ic, name: "Inc" });
+    await api("/api/pick", { code: ic, name: "Ina", team: "Fulham" });
+    await api("/api/pick", { code: ic, name: "Inb", team: "Hibernian" });
+    await api("/api/pick", { code: ic, name: "Inc", team: "Real Madrid" });
+    await api("/api/start", { code: ic, name: "Ina" });
+    r = await api(`/api/market?code=${ic}&name=Ina`);
+    ok("every market row carries interest with the exact shape", r.j.players.length === 60 && r.j.players.every(p => shape(p.interest)), r.j.players[0] && r.j.players[0].interest);
+    r = await api(`/api/market?code=${ic}&name=Ina&league=Eredivisie&pos=DF`);
+    ok("a filtered market search carries it too", r.j.players.length > 10 && r.j.players.every(p => shape(p.interest)), r.j.players.length);
+    const mkSize = JSON.stringify(r.j).length;
+    ok("the market payload stays lean with interest on every row", mkSize < 120 * 1024, Math.round(mkSize / 1024) + " KB");
+    let st = await api(`/api/state?code=${ic}&name=Ina`);
+    ok("the manager's own squad carries no interest", st.j.myClub.squad.every(p => !("interest" in p)), null);
+    ok("the tipped list is there and empty before any transfer event", Array.isArray(st.j.tipped) && st.j.tipped.length === 0, st.j.tipped);
+    r = await api("/api/staff", { code: ic, name: "Inc", key: "scout" });
+    st = await api(`/api/state?code=${ic}&name=Inc`);
+    ok("scout tips carry the player id and his interest", Array.isArray(st.j.scoutTips) && st.j.scoutTips.length > 0 && st.j.scoutTips.every(p => Number.isInteger(p.id) && shape(p.interest)), st.j.scoutTips && st.j.scoutTips[0]);
+    // the balance the page will show: happy stars at big clubs are cold on a small club, lower rated players warm to a mid club
+    r = await api(`/api/market?code=${ic}&name=Inb`);
+    const bigStars = r.j.players.filter(p => p.rating >= 86 && BIGC.includes(p.club));
+    ok("happy stars at big clubs sit at very low for a small club", bigStars.length >= 10 && bigStars.filter(p => p.interest.lv === 0).length >= bigStars.length * 0.9, bigStars.map(p => p.interest.lv).join(""));
+    r = await api(`/api/market?code=${ic}&name=Ina&league=Championship`);
+    ok("lower rated players mostly sit at medium to high for a mid table club", r.j.players.filter(p => p.interest.lv >= 2).length >= r.j.players.length * 0.7, r.j.players.map(p => p.interest.lv).join(""));
+    r = await api(`/api/market?code=${ic}&name=Inc`);
+    ok("a giant pulls most of the top players at medium or better", r.j.players.filter(p => p.interest.lv >= 2).length >= r.j.players.length * 0.6, r.j.players.map(p => p.interest.lv).join(""));
+    // a deal with a very low player: the club agrees, the player says no in plain words, and he will not be asked again
+    let declined = null, accepted = 0, tries = 0;
+    for (let wk = 0; wk < 3 && !declined; wk++) {
+      let cold = [];
+      for (const lg of ["Serie A", "La Liga", "Bundesliga", "Premier League"]) {
+        const m = await api(`/api/market?code=${ic}&name=Ina&league=${encodeURIComponent(lg)}`);
+        st = await api(`/api/state?code=${ic}&name=Ina`);
+        cold = cold.concat(m.j.players.filter(p => p.interest.lv === 0 && p.asking <= st.j.myClub.budget && p.rating < 86 && !p.deal && !p.nego && !p.loanOwner && !(p.age <= 23 && p.rating >= 87)));
+      }
+      cold.sort((a, b) => a.asking - b.asking);
+      for (const p of cold.slice(0, 6)) {
+        if (st.j.signingsLeft < 1) break;
+        tries++;
+        r = await api("/api/offer", { code: ic, name: "Ina", playerId: p.id, fee: p.asking });
+        const o = r.j.offer || {};
+        if (o.status === "accepted") { accepted++; break; }
+        if (o.status === "player_declined") { declined = { p, o }; break; }
+      }
+      if (!declined) await api("/api/sim", { code: ic, name: "Ina" });
+    }
+    ok("a very low player turns down a deal his club agreed to", !!declined && accepted <= 1, [tries, accepted]);
+    if (declined) {
+      ok("the no comes in plain words with his reason", /does not want the move/.test(declined.o.note) && /He /.test(declined.o.note) && !/[\u2013\u2014]/.test(declined.o.note), declined.o.note);
+      r = await api("/api/offer", { code: ic, name: "Ina", playerId: declined.p.id, fee: declined.p.asking });
+      ok("he will not be asked again this window", r.status === 400 && /already told you no/.test(r.j.error || ""), r.j);
+      r = await api(`/api/market?code=${ic}&name=Ina&q=${encodeURIComponent(declined.p.name)}`);
+      const again = (r.j.players || []).find(p => p.id === declined.p.id);
+      ok("the market shows he already said no", again && again.interest.lv === 0 && again.interest.why[0] === "Already said no this window", again && again.interest);
+      st = await api(`/api/state?code=${ic}&name=Ina`);
+      const so = st.j.offers.find(o => o.id === declined.o.id);
+      ok("the offer in the state carries his interest", so && shape(so.interest) && so.interest.lv === 0, so && so.interest);
+    }
+    // the one deal a week cap still holds on top of interest: a keen player signs, the next keen one waits a week
+    st = await api(`/api/state?code=${ic}&name=Ina`);
+    if (st.j.round <= 3 && st.j.signingsLeft === 1) {
+      r = await api(`/api/market?code=${ic}&name=Ina&league=Championship`);
+      const keen = r.j.players.filter(p => p.interest.lv === 3 && p.asking <= st.j.myClub.budget / 3 && p.rating < 85 && !p.deal && !p.nego && !p.loanOwner);
+      let first = null;
+      for (const p of keen.slice(0, 4)) {
+        r = await api("/api/offer", { code: ic, name: "Ina", playerId: p.id, fee: p.asking });
+        if (r.j.offer && r.j.offer.status === "accepted") { first = p; break; }
+      }
+      ok("a high interest player signs at the club's price", !!first, keen.length);
+      const second = keen.find(p => !first || p.id !== first.id);
+      if (first && second) {
+        r = await api("/api/offer", { code: ic, name: "Ina", playerId: second.id, fee: second.asking });
+        ok("the one deal a week cap still applies on top of interest", r.j.offer && r.j.offer.status === "failed" && /One signing per week/.test(r.j.offer.note || ""), r.j.offer);
+        st = await api(`/api/state?code=${ic}&name=Ina`);
+        ok("an accepted player is yours and his offer no longer carries interest", !("interest" in (st.j.offers.find(o => o.playerId === first.id && o.status === "accepted") || { interest: 1 })), null);
+      }
+    } else ok("the cap check had a window week to use", false, st.j.round);
+    // on the real world: a very low star says no far more often than a high squad player (the player's own answer)
+    saved = await readSave(ic);
+    g = Object.values(saved).find(x => x.code === ic);
+    const club = "Hibernian";
+    const pool = Object.values(g.players).filter(p => p.club && !p.academy && g.clubs[p.club] && p.club !== club);
+    const vl = pool.filter(p => p.rating >= 85 && I.level(g, p, club, BIGC) === 0).slice(0, 25);
+    const hi = pool.filter(p => p.rating <= 72 && I.level(g, p, club, BIGC) === 3).slice(0, 25);
+    const rate = list => { let yes = 0, n = 0; for (const p of list) for (let i = 0; i < 20; i++) { delete g.interestNo; n++; if (!I.playerAnswer(g, p, club, BIGC)) yes++; } delete g.interestNo; return yes / (n || 1); };
+    const vlYes = rate(vl), hiYes = rate(hi);
+    ok("a very low star is refused far more often than a high squad player", vl.length >= 10 && hi.length >= 10 && vlYes < 0.15 && hiYes === 1, [vl.length, hi.length, vlYes, hiYes]);
+  }
+
+  // ============ transfer window events: windows only, one a season, a real target, interest up ============
+  console.log("section transfer events", Date.now());
+  {
+    const I = require("./interest");
+    r = await api("/api/create", { name: "Tra" });
+    const tc2 = r.j.code;
+    const humans = [["Tra", "Fulham"], ["Trb", "Hibernian"], ["Trc", "Real Madrid"], ["Trd", "Feyenoord"]];
+    for (const [n, team] of humans) { if (n !== "Tra") await api("/api/join", { code: tc2, name: n }); await api("/api/pick", { code: tc2, name: n, team }); }
+    await api("/api/start", { code: tc2, name: "Tra" });
+    const humanClubs = new Set(humans.map(h => h[1]));
+    const windowWeek = w => (w - 1 <= 3 && w - 1 >= 1) || (w - 1 >= 19 && w - 1 <= 22);
+    const seenIds = {};
+    const found = [];
+    const notes = [];
+    let allWindow = true, realOk = true, needOk = true, bandOk = true, budgetOk = true, upOk = true, marketOk = true, tippedOk = true, oneWeekOk = true;
+    const seasonFrom = {};
+    for (let season = 1; season <= 2; season++) {
+      // news ids this season start after the last one of the season before (week numbers repeat each season)
+      for (const [n, team] of humans) { const s0 = await api(`/api/state?code=${tc2}&name=${n}`); seasonFrom[team] = Math.max(0, ...s0.j.myClub.news.map(x => x.i)); }
+      for (let wk = 0; wk < 38; wk++) {
+        await api("/api/sim", { code: tc2, name: "Tra" });
+        for (const [n, team] of humans) {
+          const sx = await api(`/api/state?code=${tc2}&name=${n}`);
+          const fresh = sx.j.myClub.news.filter(x => x.e && x.e.k === "transfer" && !(seenIds[team] || new Set()).has(x.i));
+          if (!fresh.length) continue;
+          seenIds[team] = seenIds[team] || new Set();
+          for (const x of fresh) {
+            seenIds[team].add(x.i);
+            const tr = x.e.tr;
+            found.push({ team, season, w: x.w, round: sx.j.round, name: tr.name, pos: tr.pos, need: tr.need, from: tr.from, lv: tr.lv });
+            if (!windowWeek(x.w) || x.w !== sx.j.round + 1) allWindow = false;
+            if (sx.j.myClub.news.filter(y => y.e && y.w === x.w && y.i > seasonFrom[team]).length !== 1) oneWeekOk = false;
+            const sv = await readSave(tc2);
+            const gg = Object.values(sv).find(y => y.code === tc2);
+            const p = gg.players[tr.id];
+            if (!p || p.name !== tr.name || humanClubs.has(p.club) || p.club === team || p.club !== tr.club || !x.t.includes(tr.name) || !x.t.includes(tr.club)) { realOk = false; notes.push(["real", tr]); }
+            // the club's two thinnest positions, worked out the same way as the server, from the squad as it is
+            const seniors = gg.clubs[team].squad.map(id => gg.players[id]).filter(q => q && !q.academy);
+            const keeper = seniors.filter(q => q.pos === "GK").sort((a, b) => b.rating - a.rating)[0];
+            const xi = (keeper ? [keeper] : []).concat(seniors.filter(q => q.pos !== "GK").sort((a, b) => b.rating - a.rating).slice(0, 10));
+            const xiAvg = xi.reduce((s2, q) => s2 + q.rating, 0) / xi.length;
+            const needs = ["GK", "DF", "MF", "FW"].map(pos => {
+              const here = seniors.filter(q => q.pos === pos).sort((a, b) => b.rating - a.rating);
+              const top = here.slice(0, ({ GK: 1, DF: 4, MF: 3, FW: 3 })[pos]);
+              const topAvg = top.length ? top.reduce((s2, q) => s2 + q.rating, 0) / top.length : 50;
+              return { pos, score: Math.max(0, ({ GK: 2, DF: 6, MF: 6, FW: 4 })[pos] - here.length) * 3 + (xiAvg - topAvg) + (pos === "GK" ? -1.5 : 0), weakest: top.length ? top[top.length - 1].rating : 50 };
+            }).sort((a, b) => b.score - a.score);
+            const nd = needs.slice(0, 2).find(q => q.pos === tr.pos);
+            if (!nd || tr.need !== tr.pos) { needOk = false; notes.push(["need", tr.pos, needs.map(q => q.pos)]); }
+            if (!(tr.rating <= Math.round(xiAvg) + 4 && (!nd || tr.rating > nd.weakest))) { bandOk = false; notes.push(["band", tr.rating, xiAvg, nd]); }
+            if (!(tr.fee <= gg.clubs[team].budget * 0.8 + 0.05)) { budgetOk = false; notes.push(["budget", tr.fee, gg.clubs[team].budget]); }
+            const bump = ((gg.interestBumps || {})[team] || {})[tr.id];
+            if (!(tr.lv > tr.from && bump && bump.by >= 1 && x.t.includes(tr.name + " is keener on joining " + team + " now. Interest: " + tr.label + "."))) { upOk = false; notes.push(["up", tr, bump]); }
+            const mk = await api(`/api/market?code=${tc2}&name=${n}&q=${encodeURIComponent(tr.name)}`);
+            const row = (mk.j.players || []).find(q => q.id === tr.id);
+            // the rest of the week (AI deals at his club) can move his base level a step, the tip stays on top
+            if (!row || row.interest.lv < tr.lv - 1 || row.interest.lv < 1 || row.interest.why[0] !== "Keen on your club") { marketOk = false; notes.push(["market", row && row.interest, tr.lv]); }
+            if (!(sx.j.tipped || []).some(q => q.id === tr.id && q.interest && q.interest.why[0] === "Keen on your club" && q.club === tr.club)) { tippedOk = false; notes.push(["tipped", sx.j.tipped]); }
+            // the season's one is used: no AI club ever gets one
+            if (Object.values(gg.clubs).some(c => c.trEvS && !humanClubs.has(c.name))) { realOk = false; notes.push(["ai club"]); }
+          }
+        }
+      }
+      if (season < 2) await api("/api/nextseason", { code: tc2, name: "Tra" });
+    }
+    console.log("transfer events over two seasons with four managers: " + found.length + " " + JSON.stringify(found.map(f => [f.team, f.season, f.w, f.pos, f.from + ">" + f.lv])));
+    ok("transfer window events fired for the managers' clubs", found.length >= 3, found.length);
+    ok("a transfer event only fires in a week the window is open", allWindow, found.map(f => [f.w, f.round]));
+    const perSeason = {};
+    for (const f of found) perSeason[f.team + f.season] = (perSeason[f.team + f.season] || 0) + 1;
+    ok("at most one transfer event per club per season", Object.values(perSeason).every(v => v === 1), perSeason);
+    ok("a transfer event takes the week's event slot, never two events in a week", oneWeekOk, null);
+    ok("it names a real player who is not at a human club", realOk, notes.filter(x => x[0] === "real" || x[0] === "ai club").slice(0, 2));
+    ok("he plays in one of the two positions the squad is thinnest in", needOk, notes.filter(x => x[0] === "need").slice(0, 2));
+    ok("his rating fits the club: better than the weakest starter there, not far above the side", bandOk, notes.filter(x => x[0] === "band").slice(0, 2));
+    ok("his price fits the budget", budgetOk, notes.filter(x => x[0] === "budget").slice(0, 2));
+    ok("it raises his interest in the club, stored in the save, and the text says so", upOk, notes.filter(x => x[0] === "up").slice(0, 2));
+    ok("the market shows the raised interest with the event as the first reason", marketOk, notes.filter(x => x[0] === "market").slice(0, 2));
+    ok("the tipped player is easy to find in the state's tipped list", tippedOk, notes.filter(x => x[0] === "tipped").slice(0, 1));
   }
 
   console.log(passed + " passed, " + failed + " failed");

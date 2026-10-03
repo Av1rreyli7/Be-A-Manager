@@ -1271,15 +1271,6 @@ function makeView(canvas) {
       ctx.fillText(t1, w / 2 - 12, by + bh + 54);
       const axx = w / 2 + tw / 2 - 2, ayy = by + bh + 53;
       ctx.beginPath(); ctx.moveTo(axx, ayy - 7); ctx.lineTo(axx + 12, ayy); ctx.lineTo(axx, ayy + 7); ctx.closePath(); ctx.fill();
-      ctx.font = "600 14px " + FONT;
-      ctx.fillStyle = "rgba(232,240,244,.85)";
-      const t2 = "WASD MOVE  ·  SHIFT SPRINT  ·  Q PASS  ·  HOLD E SHOOT  ·  ESC PAUSE";
-      const t2w = ctx.measureText(t2).width;
-      if (t2w + 40 < w - 2 * (rw + 30) || h > 520) {
-        pill(w / 2 - t2w / 2 - 14, h - 40, t2w + 28, 26, 8, "rgba(8,14,20,.7)");
-        ctx.fillStyle = "rgba(232,240,244,.85)";
-        ctx.fillText(t2, w / 2, h - 27);
-      }
       ctx.globalAlpha = 1;
     }
     // commentary
@@ -1332,12 +1323,45 @@ function saveLook(v) {
   try { root.localStorage.setItem("fl_match_look", v); } catch (e) { /* the choice just will not be remembered */ }
 }
 
+// ---------- the controls strip: small key chips at the top right, in the site kit look (kit.css tokens) ----------
+// Full while the match settles in, then it fades right down so it never fights the play, and comes back to
+// full on pause. 3D shows every key, Classic only the keys it uses.
+const STRIP_KEYS = [["WASD", "Move"], ["E", "Shoot"], ["Q", "Pass"], ["T", "Through"], ["X", "Slide"], ["Space", "Tackle"], ["F", "Skill"], ["Shift", "Sprint"]];
+const STRIP_KEYS_CLASSIC = [["WASD", "Move"], ["E", "Shoot"], ["Q", "Pass"], ["Shift", "Sprint"]];
+const STRIP_FADE = 4;
+const STRIP_CSS = ".mx-keys{position:absolute;top:26px;right:18px;z-index:6;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:calc(100% - 380px);pointer-events:none;opacity:1;transition:opacity .7s ease}" +
+  ".mx-keys.classic{max-width:calc(50% - 240px)}" +
+  ".mx-keys.dim{opacity:.3}.mx-keys.off{display:none}" +
+  ".mx-keys .mx-k{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px 0 3px;border-radius:999px;background:rgba(4,6,10,.72);box-shadow:inset 0 0 0 1px var(--k-line,rgba(255,255,255,.12));font:700 10px/1 var(--k-f-lbl,'Chakra Petch',sans-serif);letter-spacing:.08em;text-transform:uppercase;color:var(--k-soft,#dbe1ea);white-space:nowrap}" +
+  ".mx-keys kbd{display:inline-grid;place-items:center;min-width:17px;height:16px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--k-accent,#d0e85c) 15%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--k-accent,#d0e85c) 42%,transparent);color:var(--k-accent,#d0e85c);font:600 10px/1 var(--k-f-num,'Geist Mono',ui-monospace,monospace);letter-spacing:0;text-transform:none}" +
+  ".mx-keys b{font-weight:700}" +
+  "@media (max-width:1180px){.mx-keys{gap:3px}.mx-keys .mx-k{gap:4px;padding:0 7px 0 3px;letter-spacing:.06em}.mx-keys.classic b{display:none}.mx-keys.classic .mx-k{padding:0 3px}}" +
+  "@media (max-width:940px){.mx-keys b{display:none}.mx-keys .mx-k{padding:0 3px}.mx-keys{top:18px;max-width:calc(100% - 370px)}}" +
+  "@media (prefers-reduced-motion:reduce){.mx-keys{transition:none}}";
+function keyStrip(doc, wrap, classic) {
+  if (!doc.getElementById("mxKeysStyle")) {
+    const st = doc.createElement("style");
+    st.id = "mxKeysStyle";
+    st.textContent = STRIP_CSS;
+    (doc.head || doc.body).appendChild(st);
+  }
+  const old = doc.getElementById("mxKeys");
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+  const el = doc.createElement("div");
+  el.id = "mxKeys";
+  el.className = "mx-keys" + (classic ? " classic" : "");
+  el.setAttribute("aria-label", "Controls");
+  el.innerHTML = (classic ? STRIP_KEYS_CLASSIC : STRIP_KEYS).map(k => '<span class="mx-k"><kbd>' + k[0] + "</kbd><b>" + k[1] + "</b></span>").join("");
+  wrap.appendChild(el);
+  return el;
+}
+
 function open(cfg) {
   if (active) return false;
   const doc = root.document;
   const wrap = doc.getElementById("matchWrap"), canvas = doc.getElementById("matchCanvas"), panel = doc.getElementById("matchPanel");
   if (!wrap || !canvas || !panel) return false;
-  const A = active = { cfg, wrap, canvas, panel, mode: "pre", sim: null, view: null, keys: {}, passQ: false, throughQ: false, slideQ: false, skillQ: false, crossQ: false, shootLatch: false, acc: 0, last: 0, raf: 0, checkT: 0, saving: false, saved: false, view3d: null, want3d: false, load3d: null };
+  const A = active = { cfg, wrap, canvas, panel, mode: "pre", sim: null, view: null, keys: {}, passQ: false, throughQ: false, slideQ: false, skillQ: false, crossQ: false, shootLatch: false, acc: 0, last: 0, raf: 0, checkT: 0, saving: false, saved: false, view3d: null, want3d: false, load3d: null, strip: null, stripT: 0, stripDim: false, stripOff: false };
   wrap.classList.remove("hidden");
   wrap.classList.remove("m3d");
   A.view = makeView(canvas);
@@ -1414,6 +1438,9 @@ function open(cfg) {
         }
         A.view3d = v3;
         wrap.classList.toggle("m3d", !!v3);
+        A.strip = keyStrip(doc, wrap, !v3);
+        A.stripT = 0;
+        A.stripDim = false;
         // the 3D view brings the deep sim with it (match_sim3d.mjs). Classic keeps the sim in this file.
         A.sim = (v3 && typeof v3.createSim === "function" ? v3.createSim : createSim)(setup, {});
         if (fell) { A.view.fx.toast = "3D could not start, so this match is in Classic."; A.view.fx.toastT = 3.4; }
@@ -1433,10 +1460,16 @@ function open(cfg) {
 
   function showPause() {
     A.mode = "paused";
+    A.stripT = 0;
     A.keys = {};
     show(
       '<div class="mk">Paused</div><h2>Take a breath</h2>' +
       "<p>The clock is stopped. Press Esc or hit Resume to carry on.</p>" +
+      '<div class="mkeys">' +
+      "<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move, <kbd>Shift</kbd> sprint. <kbd>Q</kbd> Pass. <kbd>E</kbd> Hold to shoot.</span>" +
+      (A.view3d ? "<span><kbd>T</kbd> Through ball. <kbd>F</kbd> Skill move. <kbd>Space</kbd> Close down and tackle. <kbd>X</kbd> Slide.</span>" +
+        "<span><kbd>C</kbd> Cross from wide. In the air, <kbd>E</kbd> heads at goal, <kbd>Q</kbd> to a mate.</span>" : "") +
+      "</div>" +
       '<div class="mbtns"><button class="red" id="mxQuit">Quit match</button><button class="gold" id="mxRes">Resume</button></div>'
     );
     on("mxRes", resume);
@@ -1453,6 +1486,7 @@ function open(cfg) {
   function resume() {
     if (A.mode !== "paused") return;
     hide();
+    A.stripT = STRIP_FADE - 2.5;
     A.keys = {};
     A.acc = 0;
     A.mode = "playing";
@@ -1587,6 +1621,12 @@ function open(cfg) {
     A.checkT += dtR;
     if (A.checkT > 0.5) { A.checkT = 0; checkSimmed(); }
     const dtV = A.mode === "paused" || A.mode === "simmed" ? 0 : dtR;
+    if (A.strip) {
+      if (A.mode === "playing") A.stripT += dtR;
+      const dim = A.mode === "playing" && A.stripT > STRIP_FADE, off = A.mode === "done" || A.mode === "simmed";
+      if (dim !== A.stripDim) { A.stripDim = dim; A.strip.classList.toggle("dim", dim); }
+      if (off !== A.stripOff) { A.stripOff = off; A.strip.classList.toggle("off", off); }
+    }
     if (A.view3d && A.sim) {
       // 3D: the view draws the scene and, when it owns its HUD, the scoreboard and labels too
       A.view3d.draw(A.sim, dtV, A.view.fx);
@@ -1611,6 +1651,8 @@ function close() {
   A.panel.classList.remove("msolid");
   A.panel.innerHTML = "";
   if (A.view3d) { try { A.view3d.dispose(); } catch (e) { /* nothing left to free */ } A.view3d = null; }
+  if (A.strip && A.strip.parentNode) A.strip.parentNode.removeChild(A.strip);
+  A.strip = null;
   A.wrap.classList.remove("m3d");
   A.wrap.classList.add("hidden");
   if (A.cfg.closed) A.cfg.closed();

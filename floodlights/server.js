@@ -6,6 +6,8 @@ const { NATIONS, LEAGUES, DOMESTIC_CUPS, ACADEMY_NAMES } = require("./world_pack
 const C = require("./condition");
 const { EVENTS } = require("./events_data");
 const { TRAVEL } = require("./travel_data");
+const I = require("./interest");
+const { TRANSFER_EVENTS } = require("./transfer_events_data");
 
 // Floodlights is a router so the combined site server can mount it next to Next.js.
 // The game page lives at /floodlights/ and the API stays at /api/...
@@ -527,6 +529,9 @@ function completeSigning(game, offer, p) {
     offer.note = `You already completed a signing this week. One signing per week, come back for ${p.name} after the matchweek.`;
     return;
   }
+  // the player has his own say once the clubs agree: his interest in the buying club (a second gate on top
+  // of the selling club's price). A no is final until the window shuts.
+  if (buyer && playerSaysNo(game, offer, p)) return;
   const r = doTransfer(game, offer);
   if (r.ok) {
     if (buyer) markSigning(game, buyer);
@@ -538,6 +543,31 @@ function completeSigning(game, offer, p) {
     offer.status = "failed";
     offer.note = r.msg;
   }
+}
+
+function hasScout(game, clubName) {
+  return !!(humanOf(game, clubName) && ((game.clubs[clubName] || {}).staff || {}).scout);
+}
+// asks the player himself; on a no the offer is closed with his reason in plain words
+function playerSaysNo(game, offer, p) {
+  const no = I.playerAnswer(game, p, offer.toClub, BIG_CLUBS, { scout: hasScout(game, offer.toClub) });
+  if (!no) return false;
+  offer.status = "player_declined";
+  offer.note = no.note;
+  log(game, `${p.name} turned down a move to ${offer.toClub}. ${no.line}`);
+  romano(game, `\u274c ${p.name} says no to ${offer.toClub}! ${offer.sellerClub} were ready to sell, but the player does not want the move.`);
+  return true;
+}
+// players a transfer event tipped to a manager: AI clubs leave them alone while the tip counts
+function tippedToHumans(game) {
+  const ids = new Set();
+  for (const [club, m] of Object.entries(game.interestBumps || {})) if (humanOf(game, club)) for (const id of Object.keys(m)) if (I.bumpFor(game, club, Number(id))) ids.add(Number(id));
+  return ids;
+}
+// what the page shows next to a player the manager does not own
+function interestFor(game, p, clubName) {
+  if (!p || !clubName || !game.clubs[clubName]) return null;
+  return I.interest(game, p, clubName, BIG_CLUBS);
 }
 
 const ROLE_LABELS = {
@@ -824,8 +854,23 @@ function weeklyCondition(game) {
 // club.pendEv = { s: season, w: week, x: event id or "" for none}), so the full time screen can tease it.
 // Every other club rolls when the week is simmed. One roll per club per week, so never two events.
 const EVENT_BY_ID = new Map(EVENTS.map(ev => [C.eventId(ev), ev]));
-function rollClubEvent() {
-  return C.rollEvent() ? EVENTS[Math.floor(Math.random() * EVENTS.length)] : null;
+// Transfer window events (transfer_events_data.js): only for clubs a person manages, only in a week the window
+// is open, and only one per club per season (club.trEvS holds the season it fired). They take the week's event
+// slot, so the one event a week rule still holds. The pending id for one is TR_PEND; the template and the
+// target player are picked when it lands, from the squad and the market as they are that week.
+const TR_PEND = "tr";
+// share of a window week's event roll that becomes the transfer event, so the overall event rate is unchanged
+const TR_SHARE = 0.85;
+function windowOpenAt(r) { return r <= 3 || (r >= 19 && r <= 22); }
+function transferEventDue(game, clubName, applyRound) {
+  const club = game.clubs[clubName];
+  return !!(club && humanOf(game, clubName) && windowOpenAt(applyRound) && club.trEvS !== game.season);
+}
+// what this club's roll gives: nothing, a normal event, or in a window week the transfer event (TR_PEND)
+function rollClubEvent(game, clubName, applyRound) {
+  if (!C.rollEvent()) return null;
+  if (game && transferEventDue(game, clubName, applyRound) && Math.random() < TR_SHARE) return TR_PEND;
+  return EVENTS[Math.floor(Math.random() * EVENTS.length)];
 }
 // called from /api/playresult: decides the next week's event for this club now, without applying it
 function preRollEvent(game, clubName) {
@@ -834,8 +879,9 @@ function preRollEvent(game, clubName) {
   const week = game.round + 2;
   if (week > (game.totalRounds || 38)) return null;
   if (club.pendEv && club.pendEv.s === game.season && club.pendEv.w === week) return club.pendEv.x ? club.pendEv : null;
-  const ev = rollClubEvent();
-  club.pendEv = { s: game.season, w: week, x: ev ? C.eventId(ev) : "" };
+  // the event lands after this week is simmed, when the round has moved on by one
+  const ev = rollClubEvent(game, clubName, game.round + 1);
+  club.pendEv = { s: game.season, w: week, x: ev === TR_PEND ? TR_PEND : ev ? C.eventId(ev) : "" };
   return ev ? club.pendEv : null;
 }
 // runs once a week right after the round moves on (and after injuries tick), so an off the pitch injury
@@ -848,9 +894,16 @@ function weeklyEvents(game) {
     if (!(LEAGUES[club.league] || {}).playable && !human) continue;
     let ev;
     const pend = club.pendEv;
-    if (pend && pend.s === game.season && pend.w === week) ev = pend.x ? (EVENT_BY_ID.get(pend.x) || null) : null;
-    else ev = rollClubEvent();
+    if (pend && pend.s === game.season && pend.w === week) ev = pend.x === TR_PEND ? TR_PEND : pend.x ? (EVENT_BY_ID.get(pend.x) || null) : null;
+    else ev = rollClubEvent(game, name, game.round);
     delete club.pendEv;
+    if (ev === TR_PEND) {
+      const tr = transferEventDue(game, name, game.round) ? applyTransferEvent(game, name, week) : null;
+      if (tr) continue;
+      // no sensible target this week (or the season's one is used): a normal event instead, never nothing
+      // after a tease
+      ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+    }
     if (!ev) continue;
     const seniors = club.squad.map(id => game.players[id]).filter(p => p && !p.academy);
     const res = C.applyEvent(ev, club, seniors, game.round, Math.random, { physio: !!(club.staff || {}).physio });
@@ -861,6 +914,127 @@ function weeklyEvents(game) {
       log(game, "EVENT (" + name + "): " + res.text);
     }
   }
+}
+
+// ---------- transfer window events ----------
+const POS_NEED_MIN = { GK: 2, DF: 6, MF: 6, FW: 4 };
+const POS_STARTERS = { GK: 1, DF: 4, MF: 3, FW: 3 };
+// where the squad is thin: fewest bodies against the usual count first, then the weakest starters
+function squadNeeds(game, clubName) {
+  const club = game.clubs[clubName];
+  const seniors = club.squad.map(id => game.players[id]).filter(p => p && !p.academy);
+  // the first choice eleven on paper (best keeper plus the ten best outfielders), injuries ignored
+  const keeper = seniors.filter(p => p.pos === "GK").sort((a, b) => b.rating - a.rating)[0];
+  const xi = (keeper ? [keeper] : []).concat(seniors.filter(p => p.pos !== "GK").sort((a, b) => b.rating - a.rating).slice(0, 10));
+  const xiAvg = xi.reduce((s2, p) => s2 + p.rating, 0) / (xi.length || 1);
+  const out = [];
+  for (const pos of ["GK", "DF", "MF", "FW"]) {
+    const here = seniors.filter(p => p.pos === pos).sort((a, b) => b.rating - a.rating);
+    const top = here.slice(0, POS_STARTERS[pos]);
+    const topAvg = top.length ? top.reduce((s2, p) => s2 + p.rating, 0) / top.length : 50;
+    const weakest = top.length ? top[top.length - 1].rating : 50;
+    const short = Math.max(0, POS_NEED_MIN[pos] - here.length);
+    out.push({ pos, score: short * 3 + (xiAvg - topAvg) + (pos === "GK" ? -1.5 : 0), weakest, count: here.length, short });
+  }
+  return { list: out.sort((a, b) => b.score - a.score), xiAvg };
+}
+// a real player who makes sense: in a thin position, a realistic rating for the club, a price the budget can
+// take, never at a human club or already here, open to a move, and not a settled star
+function pickTransferTarget(game, clubName) {
+  const club = game.clubs[clubName];
+  if (!club) return null;
+  const needs = squadNeeds(game, clubName);
+  const maxFee = Math.round(club.budget * 0.8 * 10) / 10;
+  if (maxFee < 0.5) return null;
+  const tipped = new Set(Object.keys((game.interestBumps || {})[clubName] || {}).map(Number));
+  const base = Object.values(game.players).filter(p =>
+    !p.academy && p.club && p.club !== clubName && game.clubs[p.club] && !humanOf(game, p.club) &&
+    !p.loanOwner && !p.pendingDeal && (game.leagueFixtures || {})[p.league] &&
+    game.clubs[p.club].squad.length > 16 && !tipped.has(p.id));
+  const avg = Math.round(needs.xiAvg);
+  // the two thinnest positions only; when nobody fits, the rating band widens a little, never the position
+  for (const widen of [0, 3, 6]) {
+    for (const need of needs.list.slice(0, 2)) {
+      const lo = Math.max(need.weakest + 1, avg - 3 - widen), hi = avg + 4;
+      const pool = base.filter(p => p.pos === need.pos && p.rating >= lo && p.rating <= hi &&
+        !isSettled(game, p) && !I.saidNo(game, clubName, p.id) && askingPrice(game, p, p.club) <= maxFee);
+      if (!pool.length) continue;
+      // keen already (high) gains nothing from a tip, so the tip goes to someone it can change
+      const open = pool.filter(p => I.level(game, p, clubName, BIG_CLUBS) <= 2);
+      if (!open.length) continue;
+      const list = open.sort((a, b) => b.rating - a.rating).slice(0, 14);
+      return { p: list[Math.floor(Math.random() * list.length)], need };
+    }
+  }
+  return null;
+}
+const AN = w => (/^[aeiou]/i.test(w) ? "an " : "a ") + w;
+function feeText(v) { return v < 1 ? "\u00a3" + (Math.round(v * 10) / 10) + "m" : "\u00a3" + Math.round(v) + "m"; }
+// fills a template; returns null when the template asks for someone this club does not have
+function fillTransferTemplate(game, clubName, tpl, p, ctx) {
+  if (tpl.need === "intl" && !ctx.mate) return null;
+  if (tpl.need === "home" && !ctx.home) return null;
+  if (tpl.need === "young" && p.age > 23) return null;
+  if (tpl.need === "vet" && p.age < 29) return null;
+  if (tpl.need === "bench" && !ctx.bench) return null;
+  if (tpl.need === "league" && p.league !== game.clubs[clubName].league) return null;
+  const pos = String(ROLE_LABELS[p.role] || ROLE_LABELS[p.pos] || "player").toLowerCase();
+  return tpl.t
+    .replace(/\{t\}/g, p.name).replace(/\{c\}/g, p.club).replace(/\{apos\}/g, AN(pos)).replace(/\{pos\}/g, pos)
+    .replace(/\{fee\}/g, ctx.fee).replace(/\{cap\}/g, ctx.cap).replace(/\{mate\}/g, ctx.mate || ctx.cap)
+    .replace(/\{nat\}/g, ctx.nat || "his country").replace(/\{pl\}/g, ctx.pl).replace(/\{you\}/g, clubName)
+    .replace(/\{age\}/g, String(p.age)).replace(/\{lg\}/g, p.league);
+}
+function applyTransferEvent(game, clubName, week) {
+  const club = game.clubs[clubName];
+  const pick = pickTransferTarget(game, clubName);
+  if (!pick) return null;
+  const p = pick.p;
+  const seniors = club.squad.map(id => game.players[id]).filter(x => x && !x.academy).sort((a, b) => b.rating - a.rating);
+  if (!seniors.length) return null;
+  // the captain is the best player in the squad; the team mate from the national side is a real squad player
+  const snap = I.snapshot(game);
+  const nat = I.nationOf(game, snap, p.id);
+  const mateP = nat ? seniors.find(x => I.nationOf(game, snap, x.id) === nat) : null;
+  const others = seniors.slice(1);
+  const ctx = {
+    cap: seniors[0].name, mate: mateP ? mateP.name : null, nat,
+    home: !!(nat && I.LEAGUE_COUNTRY[club.league] === nat && I.LEAGUE_COUNTRY[(game.clubs[p.club] || {}).league] !== nat),
+    bench: I.notPlaying(game, p), pl: (others.length ? others[Math.floor(Math.random() * others.length)] : seniors[0]).name,
+    fee: feeText(askingPrice(game, p, p.club))
+  };
+  const fits = [];
+  for (const tpl of TRANSFER_EVENTS) { const t = fillTransferTemplate(game, clubName, tpl, p, ctx); if (t) fits.push({ tpl, t }); }
+  // the special angles are rarer in the pool, so they get first call when they fit
+  const special = fits.filter(f => f.tpl.need);
+  if (!fits.length) return null;
+  const from = special.length && Math.random() < 0.45 ? special : fits;
+  const chosen = from[Math.floor(Math.random() * from.length)];
+  const before = I.level(game, p, clubName, BIG_CLUBS);
+  I.addBump(game, clubName, p.id, before <= 1 ? 2 : 1, I.bumpUntil(game));
+  const after = I.interest(game, p, clubName, BIG_CLUBS);
+  const text = chosen.t + ` ${p.name} is keener on joining ${clubName} now. Interest: ${after.label}.`;
+  club.trEvS = game.season;
+  club.tipped = [{ id: p.id, s: game.season, w: week, h: chosen.tpl.h }].concat((club.tipped || []).filter(x => x.id !== p.id)).slice(0, 5);
+  const pos = String(ROLE_LABELS[p.role] || ROLE_LABELS[p.pos] || "").toLowerCase();
+  const e = { k: "transfer", n: 1, p: [p.name], h: chosen.tpl.h,
+    tr: { id: p.id, name: p.name, club: p.club, pos: p.pos, role: p.role || p.pos, posLabel: pos, rating: p.rating, age: p.age, need: pick.need.pos,
+      fee: askingPrice(game, p, p.club), from: before, lv: after.lv, label: after.label } };
+  C.addNews(club, week, text, C.T.NEWS_CAP_HUMAN, { e });
+  log(game, "EVENT (" + clubName + "): " + text);
+  return { text, id: p.id };
+}
+// the players a transfer event tipped to this club, while the tip still counts, with their interest now
+function tippedList(game, clubName) {
+  const club = game.clubs[clubName];
+  const out = [];
+  for (const t of (club && club.tipped) || []) {
+    const p = game.players[t.id];
+    if (!p || p.club === clubName || p.loanOwner === clubName || !I.bumpFor(game, clubName, p.id)) continue;
+    out.push({ id: p.id, name: p.name, club: p.club, pos: p.pos, role: p.role || p.pos, age: p.age, rating: p.rating, value: p.value,
+      asking: game.clubs[p.club] ? askingPrice(game, p, p.club) : p.value, h: t.h, week: t.w, season: t.s, interest: interestFor(game, p, clubName) });
+  }
+  return out;
 }
 
 function simMatch(game, m, kind, week) {
@@ -1269,6 +1443,8 @@ function aiToAiTransfers(game) {
     .filter(o => ["pending_seller", "countered"].includes(o.status) && o.direction === "inbound")
     .map(o => o.fromClub));
   for (const pl of Object.values(game.players)) if (pl.pendingDeal) committed.add(pl.pendingDeal.toClub);
+  // a player a transfer event just tipped to a manager stays on the market for him this window
+  const tippedIds = tippedToHumans(game);
   const buyers = shuffle(aiClubs.filter(c => c.budget >= 5 && c.squad.length < 29 && !committed.has(c.name)));
   // richer clubs shop more often, everyone shops sometimes
   const frenzy = deadlineDay(game);
@@ -1285,13 +1461,20 @@ function aiToAiTransfers(game) {
       !humanOf(game, p.club) && game.clubs[p.club] &&
       (game.leagueFixtures || {})[p.league] &&
       game.clubs[p.club].squad.length > 16 &&
-      !isSettled(game, p) &&
+      !isSettled(game, p) && !tippedIds.has(p.id) &&
       (wantKid ? (p.age <= 21 && p.rating >= 76) : (p.pos === need.pos && p.rating >= need.floor + 3)) &&
       p.value <= buyer.budget * 0.9 && p.value >= 2);
     if (!pool.length) continue;
     pool.sort((a, b) => b.rating - a.rating);
     const reach = buyer.budget >= 120 ? 3 : 6;
-    const target = pool[Math.floor(Math.random() * Math.min(reach, pool.length))];
+    let target = pool[Math.floor(Math.random() * Math.min(reach, pool.length))];
+    // a light version of player interest: a player who sees the buyer as a big step down says no, and the
+    // club goes to the next name on its list, so the number of deals stays about the same
+    if (!I.aiWilling(game, target, buyer.name, BIG_CLUBS)) {
+      const first = target;
+      target = pool.slice(0, reach + 8).find(x => x !== first && I.aiWilling(game, x, buyer.name, BIG_CLUBS)) || null;
+      if (!target) continue;
+    }
     const seller = game.clubs[target.club];
     // clubs fight to keep their best player unless the money is silly
     const isCrown = seller.squad.map(id => game.players[id]).filter(Boolean)
@@ -1418,6 +1601,7 @@ function aiLoans(game) {
   const humanLeagues = new Set(Object.values(game.users).filter(u => u.team && game.clubs[u.team]).map(u => game.clubs[u.team].league));
   let done = 0, posts = 0;
   const cap = frenzy ? 6 : 3;
+  const tippedIds = tippedToHumans(game);
   for (const club of borrowers) {
     if (done >= cap) break;
     const needy = club.budget < 12;
@@ -1426,7 +1610,7 @@ function aiLoans(game) {
     if (loansIn >= 3) continue;
     const need = aiWeakestSpot(game, club);
     const pool = Object.values(game.players).filter(p =>
-      p.club !== club.name && !p.academy && !p.loanOwner && !p.listed &&
+      p.club !== club.name && !p.academy && !p.loanOwner && !p.listed && !tippedIds.has(p.id) &&
       !humanOf(game, p.club) && game.clubs[p.club] &&
       (game.leagueFixtures || {})[p.league] &&
       game.clubs[p.club].squad.length > 16 &&
@@ -2641,6 +2825,7 @@ app.post("/api/offer", (req, res) => {
   if (!(fee > 0)) return res.status(400).json({ error: "Enter a fee." });
   if (fee > game.clubs[user.team].budget) return res.status(400).json({ error: "That bid is over your budget." });
   if (game.clubs[p.club].squad.length <= 12) return res.status(400).json({ error: `${p.club} refuse to sell. Their squad is too thin.` });
+  if (I.saidNo(game, user.team, p.id)) return res.status(400).json({ error: `${p.name} already told you no this window. He will listen again when the next window opens.` });
   const offer = {
     id: game.offerSeq++, playerId: p.id, toClub: user.team, sellerClub: p.club,
     fee, week: game.round, direction: "outbound", buyerUser: user.name
@@ -2680,6 +2865,7 @@ app.post("/api/hijack", (req, res) => {
   if (p.academy || p.loanOwner || p.club === "") return res.status(400).json({ error: "That deal cannot be hijacked." });
   const price = hijackPrice(game, p, user.team);
   if (price === null) return res.status(400).json({ error: "Nobody is negotiating for him right now. Just make a normal bid." });
+  if (I.saidNo(game, user.team, p.id)) return res.status(400).json({ error: `${p.name} already told you no this window. He will listen again when the next window opens.` });
   const club = game.clubs[user.team];
   if (price > club.budget) return res.status(400).json({ error: `Hijacking this deal costs £${price}m and that is over your budget.` });
   if (club.squad.length >= 30) return res.status(400).json({ error: "Squad is full (30 max). Sell someone first." });
@@ -2699,7 +2885,7 @@ app.post("/api/hijack", (req, res) => {
       offer.status = "player_declined";
       offer.note = `You gazumped ${jilted} but ${p.name} said no to your project. The original deal is dead too. Expensive chaos.`;
       romano(game, `❌ Twist: ${p.name} has rejected the hijack from ${user.team}. And the ${jilted} deal is off as well. Everyone loses.`);
-    } else {
+    } else if (!playerSaysNo(game, offer, p)) {
       const r = doTransfer(game, offer);
       if (r.ok) markSigning(game, user);
       offer.status = r.ok ? "accepted" : "failed";
@@ -3162,9 +3348,15 @@ app.get("/api/state", (req, res) => {
   const myTeam = user.team;
   const myLeague = myTeam ? game.clubs[myTeam].league : "Premier League";
   const myFix = (game.leagueFixtures || {})[myLeague] || [];
+  // the player being bought carries his interest in your club, as long as he is not yours yet
   const relevantOffers = game.offers.filter(o =>
     o.buyerUser === user.name || o.sellerClub === myTeam || o.toClub === myTeam
-  ).slice(0, 40);
+  ).slice(0, 40).map(o => {
+    const op = game.players[o.playerId];
+    const buying = myTeam && o.direction !== "inbound" && (o.buyerUser === user.name || o.toClub === myTeam);
+    if (!buying || !op || op.club === myTeam || op.loanOwner === myTeam) return o;
+    return Object.assign({}, o, { interest: interestFor(game, op, myTeam) });
+  });
   const clubsByLeague = {};
   for (const league of PLAYABLE) {
     clubsByLeague[league] = leagueClubs(game, league).map(t => ({
@@ -3240,8 +3432,9 @@ app.get("/api/state", (req, res) => {
       ? Object.values(game.players)
           .filter(p => p.club !== myTeam && !p.academy && !p.loanOwner && p.age <= 21 && p.rating >= 79)
           .sort((a, b) => b.rating - a.rating).slice(0, 5)
-          .map(p => ({ name: p.name, club: p.club, pos: p.pos, role: p.role, age: p.age, rating: p.rating, value: p.value, cond: Object.assign(C.parts(p, game.clubs[p.club] || null, game.round), { eff: Math.round(effOf(game, p, p.club) * 10) / 10 }) }))
+          .map(p => ({ id: p.id, name: p.name, club: p.club, pos: p.pos, role: p.role, age: p.age, rating: p.rating, value: p.value, cond: Object.assign(C.parts(p, game.clubs[p.club] || null, game.round), { eff: Math.round(effOf(game, p, p.club) * 10) / 10 }), interest: interestFor(game, p, myTeam) }))
       : null,
+    tipped: myTeam ? tippedList(game, myTeam) : [],
     myNation: user.nation || null,
     nations: Object.values(game.nations || {}).map(n => {
       const xi = nationXI(game, n.name);
@@ -3326,9 +3519,11 @@ app.get("/api/market", (req, res) => {
   if (pos) list = list.filter(p => p.pos === pos);
   list.sort((a, b) => b.rating - a.rating);
   const free = Object.values(game.players).filter(p => p.club === "").sort((a, b) => b.rating - a.rating);
+  const mine = user.team || null;
   res.json({
     players: list.slice(0, 60).map(p => ({
       ...p,
+      interest: mine && p.loanOwner !== mine ? interestFor(game, p, mine) : undefined,
       cond: Object.assign(C.parts(p, game.clubs[p.club] || null, game.round), { eff: Math.round(effOf(game, p, p.club) * 10) / 10 }),
       asking: askingPrice(game, p, p.club),
       humanOwned: !!humanOf(game, p.club),
@@ -3336,6 +3531,7 @@ app.get("/api/market", (req, res) => {
       nego: (activeRivalOffers(game, p.id, user.team)[0] || null) && { club: activeRivalOffers(game, p.id, user.team)[0].toClub },
       hijackPrice: hijackPrice(game, p, user.team)
     })),
+    // free agents are switched off in this world (signing them is closed), so the list stays empty
     freeAgents: [],
     leagues: [...new Set(Object.values(game.players).map(p => p.league))].filter(l => l).sort()
   });

@@ -375,5 +375,125 @@ ok("AI clubs travel by budget: rich clubs go luxury, poor clubs go cheap", C.aiT
   ok("news items carry rising ids so a manager can be shown only what is new", club.news[0].i === 2 && club.news[1].i === 1 && club.news[0].t === "two", club.news);
 }
 
+// ---------- transfer window events: 200 templates ----------
+{
+  const { TRANSFER_EVENTS: TE } = require("./transfer_events_data");
+  for (const f of ["transfer_events_data.js", "interest.js"]) {
+    const t = fs.readFileSync(here(f), "utf8");
+    ok(f + " has no em or en dashes", !t.includes(EM) && !t.includes(EN), null);
+  }
+  ok("there are 200 transfer window events", TE.length === 200, TE.length);
+  ok("every transfer event has its own words and its own headline", new Set(TE.map(e => e.t)).size === TE.length && new Set(TE.map(e => e.h)).size === TE.length && TE.every(e => e.h.length >= 3 && e.h.length <= 26 && !/[{}]/.test(e.h)), null);
+  ok("every transfer event names the player, his club, his position and roughly his price", TE.every(e => e.t.includes("{t}") && e.t.includes("{c}") && e.t.includes("{fee}") && (e.t.includes("{pos}") || e.t.includes("{apos}"))), TE.filter(e => !e.t.includes("{fee}")).map(e => e.h).slice(0, 3));
+  ok("transfer events only use known conditions and fill ins", TE.every(e => [undefined, "intl", "home", "young", "vet", "bench", "league"].includes(e.need) && (e.t.match(/\{[a-z]+\}/g) || []).every(x => ["{t}", "{c}", "{pos}", "{apos}", "{fee}", "{cap}", "{mate}", "{nat}", "{pl}", "{you}", "{age}", "{lg}"].includes(x))), null);
+  ok("the national team mate events name the team mate and the country", TE.filter(e => e.need === "intl").length >= 10 && TE.filter(e => e.need === "intl").every(e => e.t.includes("{mate}") && e.t.includes("{nat}")), null);
+  ok("the captain, the agent, family, a boyhood fan and coming home are all in the pool", TE.some(e => e.t.includes("{cap}")) && TE.some(e => /agent/i.test(e.t)) && TE.some(e => /family/i.test(e.t)) && TE.some(e => /grew up supporting/.test(e.t)) && TE.some(e => e.need === "home"), null);
+  // no two feel copy pasted: no pair shares 80 percent of its words
+  const words = t => new Set(t.toLowerCase().replace(/\{[a-z]+\}/g, " ").split(/[^a-z']+/).filter(w => w.length > 3));
+  const W = TE.map(e => words(e.t));
+  let worst = 0;
+  for (let i = 0; i < W.length; i++) for (let j = i + 1; j < W.length; j++) {
+    const a = W[i], b = W[j];
+    let common = 0; for (const w of a) if (b.has(w)) common++;
+    worst = Math.max(worst, common / Math.max(1, Math.min(a.size, b.size)));
+  }
+  ok("no two transfer events read like copies", worst < 0.8, worst.toFixed(2));
+}
+
+// ---------- player interest (interest.js) on a small made up world ----------
+{
+  const I = require("./interest");
+  const BIGS = ["Giant"];
+  const mk = (name, league, budget, base, n) => ({ name, league, budget, baseBudget: budget, squad: [], n, base });
+  const clubs = { Giant: mk("Giant", "Premier League", 200, 86), Mid: mk("Mid", "Premier League", 50, 78), Small: mk("Small", "Scottish Premiership", 4, 67), Other: mk("Other", "Eredivisie", 20, 74) };
+  const players = {};
+  let pid = 1;
+  for (const c of Object.values(clubs)) {
+    const pos = ["GK", "GK", "DF", "DF", "DF", "DF", "DF", "DF", "MF", "MF", "MF", "MF", "MF", "MF", "FW", "FW", "FW", "FW"];
+    pos.forEach((ps, i) => {
+      const p = { id: pid++, name: c.name + " player " + i, pos: ps, age: 22 + (i % 10), rating: c.base + 3 - (i % 7), club: c.name, league: c.league, contractYears: 2 };
+      players[p.id] = p; c.squad.push(p.id);
+    });
+  }
+  const game = { code: "TINT", season: 1, round: 0, clubs, players, leagueFixtures: {}, cups: {}, history: [], nations: {} };
+  const L = I.LABELS;
+  const shapeOk = it => it && [0, 1, 2, 3].includes(it.lv) && it.label === L[it.lv] && Array.isArray(it.why) && it.why.length === 2 && it.why.every(w => typeof w === "string" && w.length > 3) && it.why[0] !== it.why[1];
+  const all = Object.values(players);
+  ok("interest has the shape the page reads: lv 0 to 3, the label and two reasons", all.every(p => ["Giant", "Mid", "Small"].filter(c => c !== p.club).every(c => shapeOk(I.interest(game, p, c, BIGS)))), I.interest(game, all[0], "Small", BIGS));
+  ok("the four labels are Very Low, Low, Medium and High", L.join("|") === "Very Low|Low|Medium|High", L);
+  const star = players[clubs.Giant.squad[2]];
+  star.rating = 89; star.age = 27; star.mo = 1;
+  const lowly = players[clubs.Small.squad[9]];
+  ok("a happy star at a big club sits at very low for a small club", I.interest(game, star, "Small", BIGS).lv === 0, I.interest(game, star, "Small", BIGS));
+  ok("and is not keen on a mid club either", I.interest(game, star, "Mid", BIGS).lv <= 1, I.interest(game, star, "Mid", BIGS));
+  ok("a squad player at a small club is high for a big club", I.interest(game, lowly, "Giant", BIGS).lv === 3, I.interest(game, lowly, "Giant", BIGS));
+  const keenForMid = Object.values(players).filter(p => p.club === "Other" || p.club === "Small").map(p => I.level(game, p, "Mid", BIGS));
+  ok("lower rated players mostly sit at medium to high for a mid club", keenForMid.filter(v => v >= 2).length / keenForMid.length >= 0.7, keenForMid);
+  const coldReason = I.interest(game, star, "Small", BIGS).why;
+  ok("a cold player's reasons say why he is cold, in plain words", coldReason.some(w => /step down|bigger stage|Happy|Loves life|league/.test(w)), coldReason);
+  // a bench player and a transfer listed player are more open than the same player happy in the side
+  const mover = players[clubs.Mid.squad[5]];
+  const before = I.rawScore(game, mover, "Other", BIGS).score;
+  mover.bn = 6; mover.mo = -1.2;
+  const after = I.rawScore(game, mover, "Other", BIGS).score;
+  ok("a player stuck on the bench and low on morale is more open to a move", after > before + 1, [before, after]);
+  mover.listed = true;
+  ok("a transfer listed player is more open still", I.rawScore(game, mover, "Other", BIGS).score > after + 2, null);
+  delete mover.bn; delete mover.mo; delete mover.listed;
+  // contract length
+  const cp = players[clubs.Other.squad[8]];
+  cp.contractYears = 1; const shortC = I.rawScore(game, cp, "Mid", BIGS).score;
+  cp.contractYears = 4; const longC = I.rawScore(game, cp, "Mid", BIGS).score;
+  ok("a short contract makes him more open than a long one", shortC > longC + 1, [shortC, longC]);
+  cp.contractYears = 2;
+  // coming home: a player in a national squad whose country is the club's country
+  const homeP = players[clubs.Other.squad[10]];
+  game.nations = { England: { name: "England", playerIds: [homeP.id] } };
+  game.code = "TINT2";
+  ok("a player in the England squad abroad would be coming home to a Premier League club", I.rawScore(game, homeP, "Mid", BIGS).parts.some(x => x.k === "home" && x.v > 0) && I.interest(game, homeP, "Mid", BIGS).why.includes("Would be coming home") === (I.interest(game, homeP, "Mid", BIGS).why.indexOf("Would be coming home") >= 0), I.interest(game, homeP, "Mid", BIGS));
+  ok("a player with no known nation simply skips the home factor", !I.rawScore(game, cp, "Mid", BIGS).parts.some(x => x.k === "home" || x.k === "homeNow"), null);
+  // bumps from transfer events: up one or two levels, gone when the time is up
+  const bp = players[clubs.Other.squad[0]];
+  bp.rating = 82;
+  const base = I.level(game, bp, "Small", BIGS);
+  I.addBump(game, "Small", bp.id, 2, I.bumpUntil(game));
+  ok("a transfer event bump raises interest by two levels", I.level(game, bp, "Small", BIGS) === Math.min(3, base + 2) && I.interest(game, bp, "Small", BIGS).why[0] === "Keen on your club", [base, I.level(game, bp, "Small", BIGS)]);
+  ok("a summer bump lasts to the end of the January window", I.bumpUntil(game) === 122, I.bumpUntil(game));
+  game.round = 20; game.code = "TINT3";
+  ok("a January bump lasts to the end of next summer's window", I.bumpUntil(game) === 203, I.bumpUntil(game));
+  game.round = 23; game.code = "TINT4";
+  ok("the summer bump is gone after the January window shuts", I.bumpFor(game, "Small", bp.id) === 0 && !I.interest(game, bp, "Small", BIGS).why.includes("Keen on your club"), I.bumpFor(game, "Small", bp.id));
+  game.round = 0; game.code = "TINT5";
+  // the player's answer: a very low player almost always says no, a high one never, and a no sticks
+  const rng = seeded(41);
+  const askMany = (p, club, scout) => { let yes = 0; for (let i = 0; i < 400; i++) { delete game.interestNo; if (!I.playerAnswer(game, p, club, BIGS, { rng, scout })) yes++; } delete game.interestNo; return yes / 400; };
+  const vlYes = askMany(star, "Small", false), hiYes = askMany(lowly, "Giant", false);
+  ok("a very low star says yes far less often than a high squad player", vlYes < 0.15 && hiYes === 1, [vlYes, hiYes]);
+  const midP = Object.values(players).find(p => p.club !== "Mid" && I.level(game, p, "Mid", BIGS) === 2);
+  const lowP = Object.values(players).find(p => p.club !== "Mid" && I.level(game, p, "Mid", BIGS) === 1);
+  if (midP && lowP) {
+    const m = askMany(midP, "Mid", false), l = askMany(lowP, "Mid", false);
+    ok("medium is noticeably harder than high, low fails most of the time", m > 0.5 && m < 0.85 && l > 0.15 && l < 0.45, [m, l]);
+  }
+  ok("a chief scout helps but nothing below high becomes automatic", I.T.ACCEPT_SCOUT.slice(0, 3).every((v, i) => v >= I.T.ACCEPT[i] && Math.min(v, I.T.ACCEPT_CAP) < 0.9) && askMany(star, "Small", true) < 0.2, I.T.ACCEPT_SCOUT);
+  delete game.interestNo;
+  const no = I.playerAnswer(game, star, "Small", BIGS, { rng: () => 0.99 });
+  ok("a no comes with a plain reason and sticks for the rest of the window", no && /does not want the move/.test(no.note) && I.saidNo(game, "Small", star.id) && I.interest(game, star, "Small", BIGS).why[0] === "Already said no this window", no);
+  game.round = 4; game.code = "TINT6";
+  ok("after the window shuts he will listen again next time", !I.saidNo(game, "Small", star.id), null);
+  game.round = 0; game.code = "TINT7";
+  // AI clubs: a very low player never drops down, a high one always goes
+  ok("AI clubs use the light version: a very low star never drops to a small club", [...Array(50)].every(() => !I.aiWilling(game, star, "Small", BIGS)) && [...Array(50)].every(() => I.aiWilling(game, lowly, "Giant", BIGS)), null);
+  // a title: the club's pull goes up on the same group of players
+  const group = Object.values(players).filter(p => p.club === "Other" || p.club === "Giant");
+  const pullOf = () => group.reduce((s2, p) => s2 + I.rawScore(game, p, "Mid", BIGS).score, 0) / group.length;
+  const pre = pullOf(), lvPre = I.clubLevel(game, "Mid", BIGS).level;
+  game.history = [{ season: 1, champions: { "Premier League": "Mid" }, cupWinners: {} }];
+  game.lastTables = { "Premier League": ["Mid", "Giant"] };
+  game.cups = { ucl: { rounds: [[{ home: "Mid", away: "Giant" }]], byes: [] } };
+  game.season = 2; game.code = "TINT8";
+  ok("winning the league lifts the club's standing and its pull on players", I.clubLevel(game, "Mid", BIGS).level > lvPre + 3 && pullOf() > pre + 1, [lvPre, I.clubLevel(game, "Mid", BIGS).level, pre, pullOf()]);
+}
+
 console.log(passed + " passed, " + failed + " failed");
 process.exit(failed ? 1 : 0);

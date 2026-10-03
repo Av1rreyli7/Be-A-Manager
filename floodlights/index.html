@@ -316,7 +316,7 @@ td[class^="pos-"]{font-family:var(--f-num);font-weight:600;font-size:12px;letter
 .ftime{float:right;font-family:var(--f-num);color:var(--faint);font-size:11px}
 
 /* ---------- lineup ---------- */
-.lugrid{display:grid;grid-template-columns:1fr 340px;gap:0;border:1px solid var(--line2);border-radius:var(--r-panel);overflow:hidden;background:var(--screen);margin-bottom:16px}
+.lugrid{display:grid;grid-template-columns:1fr 372px;gap:0;border:1px solid var(--line2);border-radius:var(--r-panel);overflow:hidden;background:var(--screen);margin-bottom:16px}
 @media(max-width:980px){.lugrid{grid-template-columns:1fr}}
 .furail{grid-column:1/-1;display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;border-bottom:1px solid var(--line2);padding:14px 18px}
 #formList{display:flex;flex-wrap:wrap;gap:6px}
@@ -331,35 +331,17 @@ td[class^="pos-"]{font-family:var(--f-num);font-weight:600;font-size:12px;letter
 .fuact .msg:empty{display:none}
 .pitchwrap{display:grid;place-items:start center;padding:26px 14px;background:var(--panel);border-right:1px solid var(--line2)}
 @media(max-width:980px){.pitchwrap{border-right:none;border-bottom:1px solid var(--line2)}}
-#pitch{position:sticky;top:66px;width:100%;max-width:420px;aspect-ratio:10/13;border:1px solid var(--pline);border-radius:var(--r-tag);background:repeating-linear-gradient(180deg,#143122 0 8.333%,#102a1d 8.333% 16.666%)}
+#pitch{position:sticky;top:66px;width:100%;max-width:440px;aspect-ratio:10/13;container-type:inline-size;border:1px solid var(--pline);border-radius:var(--r-tag);background:repeating-linear-gradient(180deg,#143122 0 8.333%,#102a1d 8.333% 16.666%)}
 #pitch::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--pline);pointer-events:none}
 #pitch::after{content:"";position:absolute;left:50%;top:50%;width:26%;aspect-ratio:1;border:1px solid var(--pline);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0}
 .pbox{position:absolute;left:50%;width:52%;height:12%;border:1px solid var(--pline);transform:translateX(-50%);pointer-events:none}
 .pbox.top{top:0;border-top:none}
 .pbox.bot{bottom:0;border-bottom:none}
-.luslot{position:absolute;z-index:1;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;user-select:none}
-.luball{width:42px;height:42px;border-radius:50%;background:rgba(10,13,11,.5);border:1px dashed var(--pline);color:var(--dim);display:grid;place-items:center;font-family:var(--f-num);font-weight:600;font-size:13px;position:relative}
-.luslot.lufilled .luball{background:var(--chalk);border:1px solid var(--chalk);color:var(--voltink)}
-.luslot.lufilled.gk .luball{background:var(--warm);border-color:var(--warm)}
-.luslot.luSel .luball{background:var(--volt);color:var(--voltink);border-color:var(--volt);box-shadow:0 0 0 4px rgba(208,232,92,.28)}
-.luplate{font-weight:700;font-size:12px;letter-spacing:.01em;background:rgba(10,13,11,.88);border-radius:var(--r-tag);padding:2px 7px;max-width:92px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.luslot:not(.lufilled) .luplate{font-size:9.5px;letter-spacing:.1em;color:var(--dim);background:transparent}
-.luage{font-family:var(--f-num);font-size:9.5px;color:rgba(240,242,234,.72)}
-.luX{position:absolute;top:-6px;right:-6px;width:16px;height:16px;line-height:15px;border-radius:50%;background:var(--red);color:#1c0707;font-family:var(--f-ui);font-size:11px;font-weight:700;cursor:pointer;text-align:center}
-.lucount{position:absolute;top:8px;right:10px;background:rgba(10,13,11,.8);border-radius:var(--r-tag);padding:3px 8px;color:var(--volt);font-family:var(--f-num);font-weight:600;font-size:12px}
+.lucount{position:absolute;top:8px;right:10px;z-index:2;background:rgba(10,13,11,.8);border-radius:var(--r-tag);padding:3px 8px;color:var(--volt);font-family:var(--f-num);font-weight:600;font-size:12px}
 .benchcol{padding:18px 0 14px}
 .benchhead{display:flex;justify-content:space-between;align-items:baseline;padding:0 18px 10px}
 .benchcol .mlab.plain{padding:18px 18px 10px;color:var(--dim2)}
 #subCount{font-family:var(--f-num);color:var(--volt)}
-.benchrow{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:8px;padding:9px 18px;border-top:1px solid var(--hair)}
-.benchrow[onclick]{cursor:pointer}
-.benchrow:hover{background:rgba(240,242,234,.025)}
-.benchrow.sel{background:var(--voltwash);box-shadow:inset 3px 0 0 var(--volt)}
-.benchrow .bp{font-family:var(--f-num);font-size:10.5px;font-weight:600}
-.benchrow .bn{font-weight:600;font-size:14px;display:flex;align-items:baseline;gap:8px;min-width:0}
-.benchrow .bn span{font-family:var(--f-num);font-size:11px;font-weight:400;color:var(--dim2);flex:none}
-.benchrow .bn b{font-family:var(--f-num);font-size:12.5px;color:var(--chalk);font-weight:600;flex:none}
-.benchrow .ba{display:flex;gap:5px}
 .dragghint{margin:16px 18px 4px;border:1px dashed var(--line);border-radius:var(--r);padding:11px 13px;font-size:10.5px;font-weight:600;letter-spacing:.07em;color:var(--dim2);text-transform:uppercase;line-height:1.7}
 
 /* ---------- cups ---------- */
@@ -520,44 +502,57 @@ td[class^="pos-"]{font-family:var(--f-num);font-weight:600;font-size:12px;letter
 .ct-card input,.ct-card select{flex:1;min-width:0}
 .ct-note{color:var(--dim);font-size:12.5px;margin-top:12px;min-height:16px;line-height:1.5}
 
-/* ---------- the OVR chip: base, arrow, effective, with the breakdown popover ---------- */
-.ovr{position:relative;display:inline-flex;align-items:center;gap:3px;font-family:var(--f-num);font-weight:600;font-size:13px;cursor:help;animation:ovrin .35s var(--ease) backwards;outline:none}
-.ovr.sm{font-size:12px;gap:2px}
-.ovr .ova{font-size:8px;line-height:1}
-.luball{position:relative}
-.luball .lua{position:absolute;left:-4px;top:-3px;font-style:normal;font-size:8px;line-height:1;background:#0a0d0b;border-radius:50%;padding:2px 3px}
-.luball .lua.up{color:var(--grass)}
-.luball .lua.down{color:var(--softred)}
-.ovr.up .ova{color:var(--grass)}
-.ovr.down .ova{color:var(--softred)}
-.ovr.flat .ova{color:var(--ghost)}
-.ovr.up .ove{text-shadow:0 0 8px rgba(95,211,141,.35)}
-.ovr.pulse .ova,.ovr.pulse .ove{animation:ovrpulse .9s var(--ease) 1}
-.ovr .ovtip{display:none;position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);z-index:40;min-width:220px;padding:10px 12px;background:#000000;box-shadow:0 0 0 1px var(--line),0 18px 40px rgba(0,0,0,.7);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));font-family:var(--f-ui);font-weight:400;font-size:12px;text-align:left;color:var(--soft);cursor:default;white-space:normal}
-.ovr:hover .ovtip,.ovr:focus .ovtip,.ovr:focus-within .ovtip{display:grid;grid-template-columns:1fr auto;gap:4px 14px}
-.ovr .ovt{grid-column:1/-1;font-family:var(--f-lbl);font-weight:700;font-size:10px;letter-spacing:.14em;color:var(--volt);margin-bottom:4px}
-.ovr .ovk{color:var(--dim)}
-.ovr .ovv{font-family:var(--f-num);color:var(--chalk);text-align:right}
-.ovr .ovv.up{color:var(--grass)}
-.ovr .ovv.down{color:var(--softred)}
-.ovr .ovn{grid-column:1/-1;margin-top:6px;font-size:11px;color:var(--dim2);line-height:1.4}
-td .ovr .ovtip{left:auto;right:0;transform:none}
+/* ---------- the rating face (.rt): one number in a fixed two digit box, its arrow in a fixed slot ----------
+   Every list and the pitch use this one face. All of its own sizes are set here and nothing outside may
+   style its parts, so a parent (a bench row, a table cell, a shirt) can never stretch, stack or clip it.
+   The breakdown lives in one floating tooltip (#ovrTip), never inside the chip. */
+.rt{display:inline-grid;grid-template-columns:2.1ch 7px;column-gap:2px;align-items:center;vertical-align:baseline;white-space:nowrap;font-family:var(--f-num);font-weight:600;font-size:13px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:0;outline:none}
+.rt .rtn{display:block;text-align:right;font:inherit;letter-spacing:0}
+.rt .rta{display:block;width:7px;font-family:var(--f-ui);font-size:7.5px;line-height:1;text-align:left}
+.rt.up .rta{color:var(--k-good)}
+.rt.down .rta{color:var(--k-bad)}
+.rt[data-ot]{cursor:help}
+.rt[data-ot]:focus-visible{box-shadow:0 0 0 1px var(--k-volt);border-radius:3px}
+.rt.sm{font-size:12px}
+.rt.pulse .rtn{animation:rtpulse .9s var(--ease) 1}
+@keyframes rtpulse{0%{opacity:1}30%{opacity:.35}100%{opacity:1}}
+td.num .rt{margin-left:auto}
+#ovrTip{position:fixed;left:0;top:0;z-index:9500;display:none;grid-template-columns:1fr auto;gap:4px 14px;min-width:220px;max-width:280px;padding:10px 12px;background:#070a10;border-radius:6px;box-shadow:0 0 0 1px var(--k-line),0 18px 40px rgba(0,0,0,.7),inset 0 2px 0 rgba(208,232,92,.6);font-family:var(--f-ui);font-weight:400;font-size:12px;line-height:1.35;text-align:left;color:var(--soft);pointer-events:none}
+#ovrTip.on{display:grid}
+#ovrTip .ovt{grid-column:1/-1;font-family:var(--f-lbl);font-weight:700;font-size:10px;letter-spacing:.14em;margin-bottom:4px;background:var(--k-grad-pitch);-webkit-background-clip:text;background-clip:text;color:transparent}
+#ovrTip .ovk{color:var(--dim)}
+#ovrTip .ovv{font-family:var(--f-num);color:var(--chalk);text-align:right}
+#ovrTip .ovv.up{color:var(--k-good)}
+#ovrTip .ovv.down{color:var(--k-bad)}
+#ovrTip .ovn{grid-column:1/-1;margin-top:6px;font-size:11px;color:var(--dim2);line-height:1.4}
+/* ---------- player interest: how keen he is to join your club. Four bars and a word, the reasons in the tooltip ---------- */
+.ichip{--ic:var(--k-dim);display:inline-flex;align-items:center;gap:6px;height:20px;min-width:86px;padding:0 9px 0 8px;border-radius:999px;font-family:var(--f-lbl);font-weight:700;font-size:9.5px;line-height:1;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;vertical-align:middle;color:var(--ic);background:color-mix(in srgb,var(--ic) 11%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ic) 34%,transparent);cursor:help;outline:none}
+.ichip:focus-visible{box-shadow:inset 0 0 0 1px var(--ic),0 0 0 1px var(--k-volt)}
+.ichip .ibars{display:inline-grid;grid-auto-flow:column;align-items:end;gap:1.5px;height:9px;flex:none}
+.ichip .ibars i{display:block;width:2.5px;border-radius:1px;background:currentColor;opacity:.22}
+.ichip .ibars i:nth-child(1){height:3px}.ichip .ibars i:nth-child(2){height:5px}.ichip .ibars i:nth-child(3){height:7px}.ichip .ibars i:nth-child(4){height:9px}
+.ichip.l0 .ibars i:nth-child(-n+1),.ichip.l1 .ibars i:nth-child(-n+2),.ichip.l2 .ibars i:nth-child(-n+3),.ichip.l3 .ibars i{opacity:1}
+.ichip.l0{--ic:var(--k-bad)}.ichip.l1{--ic:var(--k-orange)}.ichip.l2{--ic:var(--k-amber)}.ichip.l3{--ic:var(--k-good)}
+.ichip.none{min-width:0;padding:0;background:none;box-shadow:none;color:var(--k-dim-2,var(--dim2));cursor:default}
+.ichip.bump{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ic) 34%,transparent),0 0 12px -4px var(--ic)}
+#ovrTip .iwhy{grid-column:1/-1;display:flex;gap:7px;align-items:baseline;color:var(--soft)}
+#ovrTip .iwhy::before{content:"";flex:none;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.6;transform:translateY(-1px)}
+#ovrTip .iwhy.up{color:var(--k-good)}#ovrTip .iwhy.down{color:var(--k-bad)}
+.offer .ohead .ichip{margin-left:8px}
+.tipped{margin:0 0 18px;padding:12px 14px 6px;border:1px solid rgba(78,224,143,.32);border-radius:var(--r);background:linear-gradient(135deg,rgba(78,224,143,.08),transparent 60%),var(--panel);box-shadow:inset 3px 0 0 var(--k-good)}
+.tipped .mlab{margin-bottom:4px}
+.tipped .mlab .msub{margin-left:8px;color:var(--dim2);letter-spacing:.04em;text-transform:none;font-family:var(--f-ui);font-weight:500}
 .apps{font-family:var(--f-num);font-size:12.5px;color:var(--soft)}
 .apps small{display:block;font-size:10px;color:var(--dim2)}
 .apps.dim{color:var(--ghost)}
 .apps.stale{color:var(--softred)}
 .mdsubs{display:block;margin-top:4px;font-size:11.5px;letter-spacing:.05em;color:var(--dim);font-weight:500}
-@keyframes ovrin{from{opacity:0;translate:0 4px}to{opacity:1;translate:0 0}}
-@keyframes ovrpulse{0%{scale:1}35%{scale:1.35}100%{scale:1}}
-@media (prefers-reduced-motion: reduce){.ovr,.ovr.pulse .ova,.ovr.pulse .ove{animation:none}}
+@media (prefers-reduced-motion: reduce){.rt.pulse .rtn{animation:none}}
 
 /* ---------- condition and travel ---------- */
-.condchip{display:inline-block;min-width:34px;text-align:center;font-family:var(--f-num);font-size:11.5px;padding:1px 6px;border:1px solid var(--line2);border-radius:var(--r-tag);color:var(--dim)}
-.condchip.up{color:var(--grass);border-color:rgba(95,211,141,.45)}
-.condchip.down{color:var(--softred);border-color:rgba(255,90,90,.45)}
-.effv{font-family:var(--f-num);font-size:12.5px;color:var(--chalk)}
-.effv.up{color:var(--grass)}
-.effv.down{color:var(--softred)}
+.condchip{display:inline-block;min-width:3.2ch;text-align:right;font-family:var(--f-num);font-size:12px;font-variant-numeric:tabular-nums;color:var(--dim)}
+.condchip.up{color:var(--k-good)}
+.condchip.down{color:var(--k-bad)}
 .clubnews{border:1px solid var(--line2);padding:12px 14px 6px;margin-bottom:14px;background:var(--panel)}
 .clubnews p{margin:0 0 8px;font-size:13.5px;line-height:1.5}
 .travtop{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
@@ -873,20 +868,6 @@ td[class^="pos-"] .k-pos{min-width:38px}
 tr.shim td{padding:7px 10px;border-bottom:none}
 tr.shim .k-shimmer{height:26px;border-radius:4px}
 
-/* ---------- the rating: one number, its arrow in a fixed slot, so a column always lines up ---------- */
-.ovr{display:inline-grid;grid-template-columns:auto 9px;align-items:center;justify-items:end;column-gap:3px;vertical-align:middle}
-.ovr .ova{justify-self:start;font-size:9px}
-.ovr.up .ove{text-shadow:none}
-.ovr.up .ova{color:var(--k-good)}.ovr.down .ova{color:var(--k-bad)}
-td.rat{min-width:58px}
-.ovr .ovtip{background:#070a10;box-shadow:0 0 0 1px var(--k-line),0 18px 40px rgba(0,0,0,.7),inset 0 2px 0 rgba(208,232,92,.6)}
-.ovr .ovt{background:var(--k-grad-pitch);-webkit-background-clip:text;background-clip:text;color:transparent}
-.ovr .ovv.up{color:var(--k-good)}.ovr .ovv.down{color:var(--k-bad)}
-.condchip{border-radius:999px;padding:1px 7px}
-.condchip.up{color:var(--k-good);border-color:rgba(78,224,143,.4);background:rgba(78,224,143,.09)}
-.condchip.down{color:var(--k-bad);border-color:rgba(255,93,93,.42);background:rgba(255,93,93,.09)}
-.condchip.moved{box-shadow:0 0 12px -3px currentColor}
-.effv.up{color:var(--k-good)}.effv.down{color:var(--k-bad)}
 .apps{color:var(--k-soft)}.apps.stale{color:var(--k-bad)}
 
 /* ---------- tags and chips: the kit's colours ---------- */
@@ -928,31 +909,42 @@ td.rat{min-width:58px}
 /* ---------- lineup: a lit pitch and real shirts ---------- */
 #pitch{background:radial-gradient(110% 55% at 50% -12%,rgba(255,255,236,.12),transparent 62%),radial-gradient(90% 50% at 50% 112%,rgba(0,0,0,.35),transparent 70%),repeating-linear-gradient(180deg,#184a2e 0 8.333%,#133d25 8.333% 16.666%);border-color:rgba(240,242,234,.24);box-shadow:inset 0 0 70px rgba(0,0,0,.5),0 24px 60px -24px rgba(0,0,0,.85),0 0 60px -30px rgba(47,210,122,.5)}
 .pitchwrap{background:radial-gradient(70% 60% at 50% 40%,rgba(47,210,122,.08),transparent 70%),var(--panel)}
-.luslot{gap:2px}
-.luslot:hover,.luslot:focus-within{z-index:8}
-.lushirt{position:relative;display:block;width:56px;height:60px;transition:transform .22s var(--k-ease)}
-.lushirt svg.shirt{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 5px 4px rgba(0,0,0,.5))}
+/* a shirt card per spot: the shirt (club kit, surname and number), the remove X on its shoulder and one
+   rating chip under it in normal flow. The card is sized from the pitch width (cqw), so cards never overlap
+   at any screen width, and it is centred on its spot by the slot transform alone. */
+.luslot{--lu-w:clamp(38px,12.4cqw,56px);position:absolute;z-index:1;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;width:calc(var(--lu-w) + 14px);cursor:pointer;user-select:none;-webkit-user-select:none}
+.luslot:hover,.luslot:focus-within,.luslot.luSel{z-index:8}
+.lushirt{position:relative;display:block;width:var(--lu-w);height:calc(var(--lu-w) * 64 / 60);flex:none;transition:transform .22s var(--k-ease)}
+.lushirt svg.shirt{position:absolute;inset:0;display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 5px 4px rgba(0,0,0,.5))}
 .luslot.lufilled:hover .lushirt{transform:translateY(-3px)}
 .luslot.lufilled:hover .lushirt svg.shirt{filter:drop-shadow(0 10px 8px rgba(0,0,0,.55))}
 .luslot.luSel .lushirt svg.shirt{filter:drop-shadow(0 0 2px var(--k-volt)) drop-shadow(0 0 9px rgba(208,232,92,.85))}
 .shirt .shn{font-family:var(--f-lbl);font-weight:700;font-size:7.2px;letter-spacing:.04em}
 .shirt .shnum{font-family:var(--f-lbl);font-weight:700;font-size:23px;letter-spacing:-.02em}
 .shirt .shnum.big{font-size:30px}
-.lushirt .luX{top:-5px;right:-7px;z-index:3;background:linear-gradient(135deg,#ff6b5b,#ff3d5a);box-shadow:0 2px 6px rgba(0,0,0,.5);opacity:.9}
-.lushirt .luchip{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);z-index:2}
-.luchip .ovr{background:rgba(6,9,14,.94);padding:2px 4px 2px 6px;border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,.18),0 4px 10px rgba(0,0,0,.55);font-size:11.5px}
-.luchip .ovr .ovtip{top:calc(100% + 6px)}
-.luage{margin-top:9px;display:flex;align-items:center;gap:4px;font-size:9px;color:rgba(240,242,234,.8);text-shadow:0 1px 2px rgba(0,0,0,.8)}
-.luage .k-pos{height:14px;min-width:0;padding:0 4px;font-size:8.5px;background:rgba(6,9,14,.75)}
+.luX{position:absolute;top:-5px;right:-7px;z-index:3;width:16px;height:16px;line-height:15px;border-radius:50%;background:linear-gradient(135deg,#ff6b5b,#ff3d5a);box-shadow:0 2px 6px rgba(0,0,0,.5);color:#1c0707;font-family:var(--f-ui);font-size:11px;font-weight:700;text-align:center;cursor:pointer;opacity:.9}
+.lutag{display:flex;align-items:center;justify-content:center;height:18px;padding:0 5px 0 6px;border-radius:5px;background:rgba(6,9,14,.92);box-shadow:0 0 0 1px rgba(255,255,255,.16),0 3px 8px rgba(0,0,0,.5)}
+.lutag .rt{font-size:11.5px}
+.lutag .rt.flat{grid-template-columns:2.1ch;column-gap:0}
+.lutag .rt.flat .rta{display:none}
+.lutag:has(.rt.flat){padding:0 6px}
+.luplate{font-family:var(--f-lbl);font-weight:700;font-size:9.5px;letter-spacing:.1em;line-height:18px;color:var(--dim)}
 .lushirt.empty svg path{fill:rgba(6,10,8,.32);stroke:rgba(240,242,234,.38);stroke-width:1.2;stroke-dasharray:3 3}
 .lushirt.empty svg text{fill:rgba(240,242,234,.55);font-family:var(--f-lbl);font-weight:700;font-size:20px}
 .luslot:not(.lufilled):hover .lushirt.empty svg path{stroke:var(--k-volt)}
 .lucount{color:var(--k-volt);box-shadow:0 0 0 1px rgba(208,232,92,.3)}
+/* bench and reserve rows: mini shirt, name over position and age, the rating in its own column, buttons */
+.benchrow{display:grid;grid-template-columns:28px minmax(0,1fr) 36px auto;align-items:center;column-gap:10px;padding:8px 18px;border-top:1px solid var(--hair)}
+.benchrow[onclick]{cursor:pointer}
+.benchrow:hover{background:rgba(240,242,234,.025)}
 .benchrow .bp{display:grid;place-items:center}
 .benchrow .bp svg.shirt.mini{width:26px;height:28px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
-.benchrow .bn{flex-wrap:wrap;align-items:center;row-gap:3px;column-gap:7px}
-.benchrow .bn .k-pos{height:16px;min-width:0;padding:0 5px;font-size:9px;flex:none}
-.benchrow .ba{flex:none}
+.benchrow .bn{display:flex;flex-direction:column;gap:3px;min-width:0}
+.benchrow .bnm{font-weight:600;font-size:13.5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.benchrow .bmeta{display:flex;align-items:center;gap:6px;font-family:var(--f-num);font-size:11px;line-height:1;color:var(--dim2)}
+.benchrow .bmeta .k-pos{height:15px;min-width:0;padding:0 4px;font-size:8.5px}
+.benchrow .brt{justify-self:end;display:flex;align-items:center;line-height:1}
+.benchrow .ba{display:flex;justify-content:flex-end;gap:5px;width:118px}
 .benchrow.sel{background:linear-gradient(90deg,rgba(208,232,92,.14),transparent);box-shadow:inset 3px 0 0 var(--k-volt)}
 .furow.on{background:linear-gradient(135deg,rgba(208,232,92,.16),rgba(47,210,122,.08));border-color:var(--k-volt)}
 
@@ -1018,8 +1010,7 @@ td.rat{min-width:58px}
 #hwg .hwg-s{font-weight:600;font-size:clamp(14px,2vw,19px);line-height:1.45;color:#ffffff;max-width:640px;margin:0 auto}
 
 @media (max-width:720px){
-  .lushirt{width:46px;height:50px}
-  .luchip .ovr{font-size:10.5px}
+  .lutag .rt{font-size:10.5px}
   .chip{white-space:normal}
 }
 @media (prefers-reduced-motion: reduce){
@@ -1039,6 +1030,7 @@ td.rat{min-width:58px}
     <stop offset=".7" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity=".3"/>
   </linearGradient>
 </defs></svg>
+<div id="ovrTip" role="tooltip"></div>
 <div id="eventModal" class="ct-modal hidden">
   <div class="ct-card evcard">
     <div class="mlab" id="evKicker">UNEXPECTED EVENT</div>
@@ -1191,9 +1183,9 @@ td.rat{min-width:58px}
           <option value="agedesc">Age: oldest first</option>
         </select>
       </div>
-      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num" title="Base rating, then the effective rating this week. Hover for the breakdown.">OVR</th><th class="num" title="Starts plus sub appearances, and minutes, this season. A player who sits for weeks loses morale.">Apps</th><th class="num" title="Form, minus 3 to plus 3. Moves with results.">Form</th><th class="num" title="Morale, minus 2 to plus 2. Moves with results, transfers and events.">Morale</th><th class="num" title="Effective rating before home or away and travel: rating plus form plus morale plus any injury knock.">Eff</th><th class="num">Value</th><th></th></tr></thead>
+      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num" title="What he brings this week. An arrow means he is off his base rating. Hover it for the breakdown.">OVR</th><th class="num" title="Starts plus sub appearances, and minutes, this season. A player who sits for weeks loses morale.">Apps</th><th class="num" title="Form, minus 3 to plus 3. Moves with results.">Form</th><th class="num" title="Morale, minus 2 to plus 2. Moves with results, transfers and events.">Morale</th><th class="num">Value</th><th></th></tr></thead>
       <tbody id="squadBody"></tbody></table>
-      <p class="lead" style="margin-top:10px">OVR is what he brings this week. An arrow means form, morale or an event has moved him off his base. Hover it for the full story. Eff is the same number before home, away and travel. Home adds about one, away takes about one, and your travel booking counts on away trips.</p>
+      <p class="lead" style="margin-top:10px">OVR is what he brings this week. An arrow means form, morale or an event has moved him off his base. Hover it for the full story. Home adds about one, away takes about one, and your travel booking counts on away trips.</p>
       <div id="loanOutBox"></div>
       <p class="lead" style="margin-top:16px">List a player to pull in bids from abroad. You need at least 13 players to sell anyone.</p>
     </section>
@@ -1231,6 +1223,7 @@ td.rat{min-width:58px}
     </section>
 
     <section id="tab-market" class="panel hidden">
+      <div id="tipBox"></div>
       <div id="dlBanner" class="hidden dlbanner"><span class="pulse red"></span>DEADLINE DAY &middot; THE WINDOW SLAMS SHUT AFTER THIS WEEK</div>
       <div class="controls">
         <input id="mq" placeholder="Search player or club" aria-label="Search player or club">
@@ -1247,8 +1240,9 @@ td.rat{min-width:58px}
         <button id="mgo" class="ghost">Search</button>
         <div class="msg chipmsg" id="marketMsg"></div>
       </div>
-      <table><thead><tr><th>Player</th><th>Club</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th class="num">Value</th><th class="num">Asking</th><th></th></tr></thead>
+      <table><thead><tr><th>Player</th><th>Club</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th title="How keen he is to join you. Hover a chip for the reasons.">Interest</th><th class="num">Value</th><th class="num">Asking</th><th></th></tr></thead>
       <tbody id="marketBody"></tbody></table>
+      <p class="lead" style="margin-top:10px">Interest is how keen a player is to join you. High means the deal is about the fee and his terms. Medium can still happen, but he may walk away. Low and Very Low mostly end in a no. It moves with your results, your league place, Europe and your club's name. Hover a chip to see why.</p>
       <div id="freeBox"></div>
     </section>
 
@@ -1785,37 +1779,91 @@ async function tick() {
 
 function rcol(r) { return r >= 85 ? "#d0e85c" : r >= 78 ? "#7ad97a" : r >= 70 ? "#e8c052" : "#9aa7b4"; }
 function rchip(r) { return `<span class="rchip" style="color:${rcol(r)}">${r}</span>`; }
-// a plain rating with no condition data, drawn in the same face and slot as ovrChip so columns stay aligned
-function ratFace(r) { return '<span class="ovr flat bare"><span class="ove" style="color:' + rcol(r) + '">' + r + '</span><span class="ova"></span></span>'; }
-// one number: the effective OVR when it differs from the base (with a small arrow), else just the base.
-// The base and the whole breakdown live in the tooltip. Pulses once when the number changes.
-const OVR_SEEN = {};
+
+// ---------- the rating: one face for every list and the pitch ----------
+// One number: the effective OVR when it differs from the base (with a small arrow), else just the base.
+// The number sits in a fixed two digit box and the arrow in its own fixed slot, so a column always lines up
+// whether a row has an arrow or not. The breakdown is not inside the chip: one floating tooltip (#ovrTip)
+// reads it from OVR_TIPS when the chip is hovered or focused, so no table cell, bench row or shirt can
+// squeeze, clip or restyle it. Pulses once when the number changes.
+const OVR_SEEN = {}, OVR_TIPS = {};
 function ovrFace(base, eff) {
   // guard: the shown number is always a real rating. A missing or odd effective value (for example a
   // modifier delta passed by mistake) falls back to the base rating, never a two digit delta like 02.
+  base = Math.round(Number(base));
+  if (!Number.isFinite(base)) base = 0;
+  eff = Math.round(Number(eff));
   if (!Number.isFinite(eff) || eff < 1 || Math.abs(eff - base) > 20) eff = base;
   const dir = eff > base ? "up" : eff < base ? "down" : "flat";
-  return { dir, text: String(dir === "flat" ? base : eff), arrow: dir === "up" ? "\u25b2" : dir === "down" ? "\u25bc" : "" };
+  return { dir, n: dir === "flat" ? base : eff, text: String(dir === "flat" ? base : eff), arrow: dir === "up" ? "\u25b2" : dir === "down" ? "\u25bc" : "" };
 }
-function ovrChip(p, small) {
-  if (!p || !p.cond) return p ? ratFace(p.rating) : "-";
-  const base = p.rating, eff = Math.round(p.cond.eff);
+// the markup of the face; where = "" (tables), "sm" (bench rows) or "pitch" (the chip under a shirt)
+function rtFace(face, where, key, pulse) {
+  return '<span class="rt ' + face.dir + (where ? " " + where : "") + (pulse ? " pulse" : "") + '"' + (key !== undefined ? ' data-ot="' + key + '" tabindex="0"' : "") +
+    '><span class="rtn" style="color:' + rcol(face.n) + '">' + face.text + '</span><span class="rta">' + face.arrow + "</span></span>";
+}
+// a plain rating with no condition data, drawn in the same face and slot as ovrChip so columns stay aligned
+function ratFace(r, where) { return rtFace(ovrFace(r, r), where); }
+function ovrChip(p, where) {
+  if (!p) return "-";
+  if (where === true) where = "sm";
+  if (!p.cond) return ratFace(p.rating, where);
+  const base = Math.round(p.rating), eff = Math.round(p.cond.eff);
   const face = ovrFace(base, eff);
-  const key = p.id !== undefined ? p.id : p.name;
-  const pulse = OVR_SEEN[key] !== undefined && OVR_SEEN[key] !== eff;
-  OVR_SEEN[key] = eff;
+  const key = p.id !== undefined ? String(p.id) : String(p.name);
+  const pulse = OVR_SEEN[key] !== undefined && OVR_SEEN[key] !== face.n;
+  OVR_SEEN[key] = face.n;
   const c = p.cond;
   const line = (label, v, unit) => '<span class="ovk">' + label + '</span><span class="ovv ' + (v > 0 ? "up" : v < 0 ? "down" : "") + '">' + (v > 0 ? "+" : "") + (Math.round(v * 10) / 10) + (unit || "") + "</span>";
   const causes = (c.causes || []).map(x => '<span class="ovk">Event</span><span class="ovv ' + ((x.f + x.m) > 0 ? "up" : (x.f + x.m) < 0 ? "down" : "") + '">' + x.s + '</span>').join("");
-  const tip = '<span class="ovtip" role="tooltip"><span class="ovt">BASE ' + base + (face.dir === "flat" ? "" : ' \u00b7 NOW ' + eff) + '</span>' +
+  OVR_TIPS[key] = '<span class="ovt">' + (p.name ? escSvg(p.name).toUpperCase() + " \u00b7 " : "") + "BASE " + base + (face.dir === "flat" ? "" : " \u00b7 NOW " + face.n) + "</span>" +
     line("Form", c.form) + line("Morale", c.morale) + (c.ret < 0 ? line("Back from injury", c.ret) : "") + causes +
-    (c.bench >= 3 ? '<span class="ovk">Not played</span><span class="ovv down">' + c.bench + ' weeks</span>' : "") +
+    (c.bench >= 3 ? '<span class="ovk">Not played</span><span class="ovv down">' + c.bench + " weeks</span>" : "") +
     '<span class="ovk">Travel streak</span><span class="ovv">' + (c.traveller > 0 ? "strong traveller" : c.traveller < 0 ? "homebody" : "average") + "</span>" +
     (p.ap ? '<span class="ovk">This season</span><span class="ovv">' + p.ap[0] + " starts, " + p.ap[1] + " sub, " + p.ap[2] + " min</span>" : "") +
-    '<span class="ovn">Home adds about one, away takes about one. Away trips add the travel booking.</span></span>';
-  // the arrow always gets its own slot (empty when flat) so every number in a column lines up
-  return '<span class="ovr ' + face.dir + (pulse ? " pulse" : "") + (small ? " sm" : "") + '" tabindex="0"><span class="ove" style="color:' + rcol(Number(face.text)) + '">' + face.text + '</span><span class="ova">' + face.arrow + "</span>" + tip + "</span>";
+    '<span class="ovn">Home adds about one, away takes about one. Away trips add the travel booking.</span>';
+  return rtFace(face, where, key, pulse);
 }
+// ---------- player interest: how keen a player is to join your club (FC style), with the top two reasons ----------
+// The server sends interest: { lv: 0..3, label, why: [two short reasons] } on every player you do not own.
+const INT_CLS = ["l0", "l1", "l2", "l3"];
+function interestChip(p) {
+  const it = p && p.interest;
+  if (!it || !(it.lv >= 0 && it.lv <= 3)) return '<span class="ichip none">-</span>';
+  const key = "i" + (p.id !== undefined ? p.id : p.name);
+  const label = String(it.label || ["Very Low", "Low", "Medium", "High"][it.lv]);
+  const bumped = !!it.bump;
+  OVR_TIPS[key] = '<span class="ovt">' + escSvg(label).toUpperCase() + " INTEREST" + (p.name ? " \u00b7 " + escSvg(p.name).toUpperCase() : "") + "</span>" +
+    (it.why || []).slice(0, 2).map(w => '<span class="iwhy">' + escSvg(w) + "</span>").join("") +
+    (bumped ? '<span class="iwhy up">Keen after a tip off this window</span>' : "") +
+    '<span class="ovn">' + (it.lv >= 3 ? "He would listen. The deal comes down to the fee and his terms." : it.lv === 2 ? "Possible, but he may walk away from the talks." : it.lv === 1 ? "Most moves for him fall through." : "Almost certainly a dead end this window.") + "</span>";
+  return '<span class="ichip ' + INT_CLS[it.lv] + (bumped ? " bump" : "") + '" data-ot="' + key + '" tabindex="0"><span class="ibars"><i></i><i></i><i></i><i></i></span>' + escSvg(label) + "</span>";
+}
+// the one floating tooltip for every rating and interest chip: placed under the chip, kept inside the window
+function ovrTipShow(el) {
+  const tip = $("ovrTip"), html = el && OVR_TIPS[el.dataset.ot];
+  if (!tip || !html) return;
+  tip.innerHTML = html;
+  tip.classList.add("on");
+  const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = r.left + r.width / 2 - w / 2, y = r.bottom + 8;
+  x = Math.max(8, Math.min(window.innerWidth - w - 8, x));
+  if (y + h > window.innerHeight - 8) y = Math.max(8, r.top - h - 8);
+  tip.style.left = Math.round(x) + "px";
+  tip.style.top = Math.round(y) + "px";
+}
+function ovrTipHide() { const tip = $("ovrTip"); if (tip) tip.classList.remove("on"); TIP_EL = null; }
+// pointermove (not just pointerover) so a table that repaints under a still mouse never leaves the tip on a row
+// that is gone; it only does work when the chip under the pointer changes
+let TIP_EL = null;
+document.addEventListener("pointermove", e => {
+  const el = (e.target.closest && e.target.closest("[data-ot]")) || null;
+  if (el === TIP_EL && (!el || el.isConnected)) return;
+  TIP_EL = el;
+  if (el) ovrTipShow(el); else ovrTipHide();
+}, { passive: true });
+document.addEventListener("focusin", e => { const el = e.target.closest && e.target.closest("[data-ot]"); if (el) ovrTipShow(el); else ovrTipHide(); });
+document.addEventListener("scroll", ovrTipHide, true);
 function appsText(p) {
   if (!p || !p.ap) return '<span class="apps dim" title="No minutes yet this season">0</span>';
   const [st, sb, mn] = p.ap;
@@ -1917,6 +1965,7 @@ function paint(el, html, rows) {
   if (el._fxHtml === html) return false;
   el._fxHtml = html;
   el.innerHTML = html;
+  if (TIP_EL && !TIP_EL.isConnected) ovrTipHide();
   if (rows === false) return true;
   const list = [...(rows ? el.querySelectorAll(rows) : el.children)];
   const now = list.map(r => r.outerHTML), before = el._fxRows;
@@ -2096,7 +2145,8 @@ function render() {
         p.inj > 0 ? `<span class="tag inj">INJ ${p.inj}W</span>` : '',
         p.ban > 0 ? '<span class="tag inj">BAN</span>' : '',
         onLoanHere ? `<span class="tag loan">LOAN \u00b7 ${p.loanOwner}</span>` : '',
-        s.myClub.trainFocus === p.id ? '<span class="tag train">TRAINING</span>' : ''
+        s.myClub.trainFocus === p.id ? '<span class="tag train">TRAINING</span>' : '',
+        p.cond && p.cond.ret < 0 ? '<span class="tag inj" title="Just back from injury, the knock heals week by week">KNOCK ' + Math.round(p.cond.ret) + '</span>' : ''
       ].join(" ");
       const acts = onLoanHere
         ? `<button class="small" onclick="buyLoan(${p.id})" title="Make it permanent at his value">Buy ${money(p.value)}</button>`
@@ -2108,7 +2158,6 @@ function render() {
       <tr data-pid="${p.id}"><td>${p.name} ${tags}</td>
       ${posTd(p)}<td class="num">${p.age}</td><td class="num">${ovrChip(p)}</td><td class="num">${appsText(p)}</td>
       <td class="num">${condChip(p.cond && p.cond.form, 3)}</td><td class="num">${condChip(p.cond && p.cond.morale, 2)}</td>
-      <td class="num">${p.cond ? '<span class="effv ' + (p.cond.eff > p.rating + 0.5 ? "up" : p.cond.eff < p.rating - 0.5 ? "down" : "") + '">' + Math.round(p.cond.eff) + (p.cond.ret < 0 ? ' <span class="tag inj" title="Just back from injury, the knock heals week by week">KNOCK ' + Math.round(p.cond.ret) + '</span>' : '') + '</span>' : "-"}</td>
       <td class="num">${money(p.value)}</td>
       <td style="white-space:nowrap">${acts}</td></tr>`;
     }).join(""));
@@ -2165,6 +2214,7 @@ function render() {
 
   // offers
   renderOffers(s);
+  renderTipped(s);
 
   // matches
   const seasonDone = !!s.seasonOver;
@@ -2265,8 +2315,8 @@ function render() {
     if ($("scoutBox")) {
       if (s.scoutTips) {
         paint("scoutBox", `<div class="mlab">SCOUT REPORT \u00b7 BEST YOUNG TALENT ON THE MARKET</div>
-          <table style="margin-top:8px"><thead><tr><th>Player</th><th>Club</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th class="num">Value</th></tr></thead><tbody>` +
-          s.scoutTips.map(p => `<tr><td>${p.name}</td><td>${p.club}</td>${posTd(p)}<td class="num">${p.age}</td><td class="num">${ovrChip(p)}</td><td class="num">${money(p.value)}</td></tr>`).join("") +
+          <table style="margin-top:8px"><thead><tr><th>Player</th><th>Club</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th>Interest</th><th class="num">Value</th></tr></thead><tbody>` +
+          s.scoutTips.map(p => `<tr><td>${p.name}</td><td>${p.club}</td>${posTd(p)}<td class="num">${p.age}</td><td class="num rat">${ovrChip(p)}</td><td>${interestChip(p)}</td><td class="num">${money(p.value)}</td></tr>`).join("") +
           `</tbody></table>`, "tbody > tr");
       } else {
         paint("scoutBox", `<p style="color:var(--faint);font-size:12.5px">Hire a chief scout in the Squad tab and a weekly report on the best young talent lands here.</p>`);
@@ -2321,8 +2371,7 @@ function render() {
 function condChip(v, max) {
   if (v === undefined || v === null) return "-";
   const r = Math.round(v * 10) / 10;
-  const arrows = r > 0 ? "\u25b2".repeat(Math.min(3, Math.ceil(r))) : r < 0 ? "\u25bc".repeat(Math.min(3, Math.ceil(-r))) : "0";
-  return '<span class="condchip ' + (r > 0 ? "up" : r < 0 ? "down" : "") + '" title="' + (r > 0 ? "+" : "") + r + ' of ' + max + '">' + (r === 0 ? "0" : arrows) + "</span>";
+  return '<span class="condchip ' + (r > 0 ? "up" : r < 0 ? "down" : "") + '" title="' + (r > 0 ? "+" : "") + r + " of " + max + '">' + (r > 0 ? "+" : "") + r.toFixed(1) + "</span>";
 }
 
 // ---- unexpected events ----
@@ -2374,7 +2423,14 @@ function evChips(e) {
   if (e.f) out.push('<span class="k-chip ' + (e.f > 0 ? "good" : "bad") + '">FORM ' + num(e.f) + "</span>");
   if (e.m) out.push('<span class="k-chip ' + (e.m > 0 ? "good" : "bad") + '">MORALE ' + num(e.m) + "</span>");
   if (e.f || e.m) out.push('<span class="k-chip info">' + (e.w === 1 ? "THIS MATCH" : e.w > 1 ? "NEXT " + e.w + " MATCHES" : "LASTING") + "</span>");
-  if (!e.j && !e.f && !e.m) out.push('<span class="k-chip">NO REAL EFFECT</span>');
+  if (e.tr) {
+    // a transfer tip: who he is, what he would cost, and how much keener he is now
+    const t = e.tr;
+    if (t.from && t.label && t.from !== t.label) out.push('<span class="k-chip good">INTEREST ' + evEsc(String(t.from).toUpperCase()) + " TO " + evEsc(String(t.label).toUpperCase()) + "</span>");
+    else if (t.label) out.push('<span class="k-chip good">INTEREST ' + evEsc(String(t.label).toUpperCase()) + "</span>");
+    out.push('<span class="k-chip info">' + evEsc([t.club, t.role, t.age ? t.age + "Y" : "", t.rating ? "RATED " + t.rating : ""].filter(Boolean).join(" \u00b7 ").toUpperCase()) + "</span>");
+    if (t.fee) out.push('<span class="k-chip warn">ASKING ABOUT ' + evEsc(money(t.fee)) + "</span>");
+  } else if (!e.j && !e.f && !e.m) out.push('<span class="k-chip">NO REAL EFFECT</span>');
   const who = e.k === "squad" ? "WHOLE SQUAD" : (e.p || []).join(", ").toUpperCase() + (e.n > (e.p || []).length ? " AND MORE" : "");
   if (who) out.push('<span class="k-chip violet">' + evEsc(who) + "</span>");
   return out.join(" ");
@@ -2406,11 +2462,13 @@ function showNextEvent() {
   } else {
     const travel = !evIsEvent(x);
     const thisWeek = STATE && x.w === (STATE.round || 0) + 1;
-    $("evKicker").textContent = (travel ? "TRAVEL" : "UNEXPECTED EVENT") + " · WEEK " + x.w;
+    const tip = !travel && x.e && x.e.tr;
+    $("evKicker").textContent = (travel ? "TRAVEL" : tip ? "TRANSFER TIP" : "UNEXPECTED EVENT") + " · WEEK " + x.w;
     $("evTitle").textContent = travel ? "Travel news" : ((x.e && x.e.h) || evHeadline(x.t, x.e));
     $("evText").textContent = x.t.replace(/^TRAVEL: /, "");
     $("evFx").innerHTML = travel ? "" : evChips(x.e);
     $("evNote").textContent = travel ? "It is in the Travel tab and your News feed."
+      : tip ? "He is waiting in Tipped to you at the top of the Transfer market. The tip lasts until the end of the next window."
       : (thisWeek ? "This counts for this week's match. " : "") + "Hover a player's OVR in the squad to see what it did to him. Every event stays in your News feed.";
   }
   $("evCount").textContent = EV.queue.length ? EV.queue.length + " more after this" : "";
@@ -2574,6 +2632,21 @@ window.playMatch = kind => {
   });
 };
 
+// players a transfer event tipped to you, while the tip still counts: easy to find, one click to bid
+function renderTipped(s) {
+  const box = $("tipBox");
+  if (!box) return;
+  const list = s.tipped || [];
+  const open = s.window ? s.window.open : true;
+  list.forEach(p => PLAYER_NAMES[p.id] = p.name);
+  paint(box, !list.length ? "" : `<div class="tipped"><div class="mlab">TIPPED TO YOU <span class="msub">A tip off made these players keener on joining you</span></div>
+    <table><thead><tr><th>Player</th><th>Club</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th>Interest</th><th class="num">Asking</th><th></th></tr></thead><tbody>` +
+    list.map(p => `<tr><td>${evEsc(p.name)}${p.h ? ' <span class="tag">' + evEsc(p.h) + "</span>" : ""}</td><td><span class="tdot" style="--c:${clubKit(p.club)[0]}"></span>${evEsc(p.club)}</td>${posTd(p)}<td class="num">${p.age}</td>
+      <td class="num rat">${ovrChip(p)}</td><td>${interestChip(p)}</td><td class="num">${p.asking ? money(p.asking) : "-"}</td>
+      <td style="white-space:nowrap">${open ? `<button class="small" onclick="bid(${p.id}, ${p.asking || p.value || 0}, false)">Bid</button>` : '<span class="tag">Window shut</span>'}</td></tr>`).join("") +
+    "</tbody></table></div>", "tbody > tr");
+}
+
 function renderOffers(s) {
   const mine = s.offers.filter(o => o.buyerUser === s.you);
   const incoming = s.offers.filter(o => o.sellerClub === (s.myClub||{}).name && o.buyerUser !== s.you);
@@ -2623,7 +2696,8 @@ function offerCard(o, role) {
     : `${o.toClub} → ${p.toUpperCase()} (${o.sellerClub})`) + (o.kind === "loan" ? ' <span class="tag loan">LOAN ASK</span>' : '');
   const shownFee = (o.status === "countered" && o.counterFee) ? o.counterFee : o.fee;
   const feeTag = (o.status === "countered" && o.counterFee) ? "THEIR COUNTER" : "BID";
-  return `<div class="offer" data-oid="${o.id}"><div class="ohead"><span class="who">${who}</span>
+  const keen = role === "buyer" && o.direction !== "inbound" && o.interest ? interestChip({ id: "o" + o.id, name: p, interest: o.interest }) : "";
+  return `<div class="offer" data-oid="${o.id}"><div class="ohead"><span class="who">${who}${keen}</span>
     <span class="msub status-${o.status}">${o.status.replace(/_/g," ").toUpperCase()}</span></div>
     <div class="fee">${money(shownFee)} <small>${feeTag}${o.swapName ? " + " + o.swapName.toUpperCase() + " (" + o.swapRating + ")" : ""}${o.status === "countered" && o.counterFee ? " · YOUR BID " + money(o.fee) : ""}</small></div>
     ${o.note?`<div class="note">"${o.note}"</div>`:""}
@@ -2638,13 +2712,13 @@ function playerName(id){
 
 // ---- lineup editor: formations and a pitch you place players on ----
 const FORMATIONS = {
-  "4-3-3":   [{x:50,y:88,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:73,l:"CB"},{x:62,y:73,l:"CB"},{x:86,y:70,l:"RB"},{x:28,y:50,l:"CM"},{x:50,y:55,l:"CM"},{x:72,y:50,l:"CM"},{x:16,y:28,l:"LW"},{x:50,y:23,l:"ST"},{x:84,y:28,l:"RW"}],
-  "4-4-2":   [{x:50,y:88,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:73,l:"CB"},{x:62,y:73,l:"CB"},{x:86,y:70,l:"RB"},{x:14,y:47,l:"LM"},{x:38,y:52,l:"CM"},{x:62,y:52,l:"CM"},{x:86,y:47,l:"RM"},{x:38,y:26,l:"ST"},{x:62,y:26,l:"ST"}],
-  "4-2-3-1": [{x:50,y:88,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:73,l:"CB"},{x:62,y:73,l:"CB"},{x:86,y:70,l:"RB"},{x:38,y:56,l:"DM"},{x:62,y:56,l:"DM"},{x:18,y:38,l:"LW"},{x:50,y:40,l:"AM"},{x:82,y:38,l:"RW"},{x:50,y:21,l:"ST"}],
-  "3-5-2":   [{x:50,y:88,l:"GK",gk:1},{x:26,y:72,l:"CB"},{x:50,y:75,l:"CB"},{x:74,y:72,l:"CB"},{x:10,y:50,l:"LWB"},{x:32,y:54,l:"CM"},{x:50,y:57,l:"CM"},{x:68,y:54,l:"CM"},{x:90,y:50,l:"RWB"},{x:38,y:26,l:"ST"},{x:62,y:26,l:"ST"}],
-  "5-3-2":   [{x:50,y:88,l:"GK",gk:1},{x:10,y:65,l:"LWB"},{x:30,y:72,l:"CB"},{x:50,y:75,l:"CB"},{x:70,y:72,l:"CB"},{x:90,y:65,l:"RWB"},{x:30,y:49,l:"CM"},{x:50,y:54,l:"CM"},{x:70,y:49,l:"CM"},{x:38,y:26,l:"ST"},{x:62,y:26,l:"ST"}],
-  "4-1-4-1": [{x:50,y:88,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:73,l:"CB"},{x:62,y:73,l:"CB"},{x:86,y:70,l:"RB"},{x:50,y:58,l:"DM"},{x:14,y:43,l:"LM"},{x:38,y:45,l:"CM"},{x:62,y:45,l:"CM"},{x:86,y:43,l:"RM"},{x:50,y:23,l:"ST"}],
-  "3-4-3":   [{x:50,y:88,l:"GK",gk:1},{x:26,y:72,l:"CB"},{x:50,y:75,l:"CB"},{x:74,y:72,l:"CB"},{x:14,y:50,l:"LM"},{x:38,y:54,l:"CM"},{x:62,y:54,l:"CM"},{x:86,y:50,l:"RM"},{x:16,y:27,l:"LW"},{x:50,y:22,l:"ST"},{x:84,y:27,l:"RW"}]
+  "4-3-3":   [{x:50,y:89,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:74,l:"CB"},{x:62,y:74,l:"CB"},{x:86,y:70,l:"RB"},{x:28,y:50,l:"CM"},{x:50,y:55,l:"CM"},{x:72,y:50,l:"CM"},{x:16,y:28,l:"LW"},{x:50,y:23,l:"ST"},{x:84,y:28,l:"RW"}],
+  "4-4-2":   [{x:50,y:89,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:74,l:"CB"},{x:62,y:74,l:"CB"},{x:86,y:70,l:"RB"},{x:14,y:47,l:"LM"},{x:38,y:52,l:"CM"},{x:62,y:52,l:"CM"},{x:86,y:47,l:"RM"},{x:38,y:26,l:"ST"},{x:62,y:26,l:"ST"}],
+  "4-2-3-1": [{x:50,y:89,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:74,l:"CB"},{x:62,y:74,l:"CB"},{x:86,y:70,l:"RB"},{x:36,y:57,l:"DM"},{x:64,y:57,l:"DM"},{x:16,y:38,l:"LW"},{x:50,y:40,l:"AM"},{x:84,y:38,l:"RW"},{x:50,y:21,l:"ST"}],
+  "3-5-2":   [{x:50,y:89,l:"GK",gk:1},{x:26,y:71,l:"CB"},{x:50,y:73,l:"CB"},{x:74,y:71,l:"CB"},{x:10,y:50,l:"LWB"},{x:31,y:53,l:"CM"},{x:50,y:56,l:"CM"},{x:69,y:53,l:"CM"},{x:90,y:50,l:"RWB"},{x:38,y:26,l:"ST"},{x:62,y:26,l:"ST"}],
+  "5-3-2":   [{x:50,y:89,l:"GK",gk:1},{x:10,y:64,l:"LWB"},{x:30,y:71,l:"CB"},{x:50,y:73,l:"CB"},{x:70,y:71,l:"CB"},{x:90,y:64,l:"RWB"},{x:30,y:48,l:"CM"},{x:50,y:53,l:"CM"},{x:70,y:48,l:"CM"},{x:38,y:26,l:"ST"},{x:62,y:26,l:"ST"}],
+  "4-1-4-1": [{x:50,y:89,l:"GK",gk:1},{x:14,y:70,l:"LB"},{x:38,y:73,l:"CB"},{x:62,y:73,l:"CB"},{x:86,y:70,l:"RB"},{x:50,y:57,l:"DM"},{x:14,y:41,l:"LM"},{x:34,y:42,l:"CM"},{x:66,y:42,l:"CM"},{x:86,y:41,l:"RM"},{x:50,y:22,l:"ST"}],
+  "3-4-3":   [{x:50,y:89,l:"GK",gk:1},{x:26,y:71,l:"CB"},{x:50,y:73,l:"CB"},{x:74,y:71,l:"CB"},{x:14,y:50,l:"LM"},{x:38,y:54,l:"CM"},{x:62,y:54,l:"CM"},{x:86,y:50,l:"RM"},{x:16,y:27,l:"LW"},{x:50,y:22,l:"ST"},{x:84,y:27,l:"RW"}]
 };
 let LB = { xi: Array(11).fill(null), subs: [], formation: "4-3-3", dirty: false, sel: null, selFrom: null };
 
@@ -2739,7 +2813,7 @@ function renderLineup() {
     const p = id !== null ? luPlayer(id) : null;
     const selCls = (p && LB.sel === id) ? " luSel" : "";
     const inner = p
-      ? `<span class="lushirt">${shirtSvg(kitOf(p), nums[p.id] || "", luShort(p.name))}<span class="luX" onclick="luSlotClear(${i},event)" title="Send him back">\u00d7</span><span class="luchip">${p.cond ? ovrChip(p, true) : ratFace(p.rating)}</span></span><span class="luage">${p.age}Y \u00b7 ${posBadge(p)}</span>`
+      ? `<span class="lushirt" title="${escSvg(p.name).replace(/"/g, "&quot;")}, ${p.age}, ${p.role || p.pos}">${shirtSvg(kitOf(p), nums[p.id] || "", luShort(p.name))}<span class="luX" onclick="luSlotClear(${i},event)" title="Send him back">\u00d7</span></span><span class="lutag">${ovrChip(p, "pitch")}</span>`
       : `<span class="lushirt empty">${ghost}</span><span class="luplate">${slot.l}</span>`;
     return `<div class="luslot${p ? " lufilled" : ""}${slot.gk ? " gk" : ""}${selCls}" style="left:${slot.x}%;top:${slot.y}%"
       data-slot="${i}" onclick="luSlotTap(${i})" ondragover="event.preventDefault()"
@@ -2767,7 +2841,7 @@ function renderLineup() {
       : `<button class="small" onclick="luQuickStart(${p.id},event)">Start</button><button class="small ghost" onclick="luBench(${p.id},event)">Sub</button>`;
     return `<div class="benchrow${LB.sel === p.id ? " sel" : ""}${out ? "" : ""}" ${out ? "" : 'draggable="true"'} ondragstart="luDrag(event,${p.id})"
       onclick="${out ? "" : "luPoolTap(" + p.id + ")"}" style="${out ? "opacity:.5" : ""}"><span class="bp">${miniShirt(kitOf(p), nums[p.id] || "")}</span>
-      <span class="bn">${p.name} ${posBadge(p)} <span>${p.age}Y</span> <b>${p.cond ? ovrChip(p, true) : ratFace(p.rating)}</b></span>
+      <span class="bn"><span class="bnm">${p.name}</span><span class="bmeta">${posBadge(p)}<span>${p.age}Y</span></span></span><span class="brt">${ovrChip(p, "sm")}</span>
       <span class="ba">${acts}</span></div>`;
   }).join("") ||
     "<p style='color:var(--dim);font-size:13px;padding:6px 18px'>Everyone is in the matchday squad.</p>", false);
@@ -2775,7 +2849,7 @@ function renderLineup() {
   paint("subList", LB.subs.map(id => {
     const p = luPlayer(id); if (!p) return "";
     return `<div class="benchrow" onclick="luUnbench(${p.id})" title="Tap to pull him off the bench"><span class="bp">${miniShirt(kitOf(p), nums[p.id] || "")}</span>
-      <span class="bn">${p.name} ${posBadge(p)} <span>${p.age}Y</span> <b>${p.cond ? ovrChip(p, true) : ratFace(p.rating)}</b></span>
+      <span class="bn"><span class="bnm">${p.name}</span><span class="bmeta">${posBadge(p)}<span>${p.age}Y</span></span></span><span class="brt">${ovrChip(p, "sm")}</span>
       <span class="ba"><button class="small red">\u00d7</button></span></div>`;
   }).join("") || "<p style='color:var(--dim);font-size:13px;padding:4px 18px'>No subs yet.</p>", false);
 }
@@ -3300,7 +3374,7 @@ window.bid = async (id, asking, humanSeller) => {
 // ---- market ----
 async function loadMarket() {
   // first visit: shimmer rows hold the table while the market loads
-  if (!$("marketBody").children.length) $("marketBody").innerHTML = Array.from({ length: 8 }, () => '<tr class="shim"><td colspan="8"><div class="k-shimmer"></div></td></tr>').join("");
+  if (!$("marketBody").children.length) $("marketBody").innerHTML = Array.from({ length: 8 }, () => '<tr class="shim"><td colspan="9"><div class="k-shimmer"></div></td></tr>').join("");
   fxHot(2000);
   try {
     const j = await api("/api/market?q=" + encodeURIComponent($("mq").value) + "&league=" + encodeURIComponent($("mleague").value) + "&pos=" + $("mpos").value + "&wonder=" + ($("mwonder").checked ? "1" : "0"));
@@ -3327,15 +3401,15 @@ async function loadMarket() {
         (p.nego ? (p.nego.club === myTeam ? '<span class="tag nego">IN TALKS WITH YOU</span>' : `<span class="tag nego">IN TALKS: ${p.nego.club}</span>`) : "");
       return `
       <tr><td>${p.name} ${p.humanOwned?'<span class="tag human">Human club</span>':''} ${p.listed?'<span class="tag listed">Listed</span>':''} ${onLoan?'<span class="tag loan">Loan</span>':''} ${negoTag}</td>
-      <td><span class="tdot" style="--c:${clubKit(p.club)[0]}"></span>${p.club}</td>${posTd(p)}<td class="num">${p.age}</td><td class="num rat">${ovrChip(p)}</td>
+      <td><span class="tdot" style="--c:${clubKit(p.club)[0]}"></span>${p.club}</td>${posTd(p)}<td class="num">${p.age}</td><td class="num rat">${ovrChip(p)}</td><td>${p.humanOwned ? '<span class="ichip none">-</span>' : interestChip(p)}</td>
       <td class="num">${money(p.value)}</td><td class="num">${money(p.asking)}</td>
       <td style="white-space:nowrap">${acts}</td></tr>`;
     }).join(""));
     const fa = j.freeAgents || [];
     paint("freeBox", !fa.length ? "" : `
       <div class="controls" style="margin-top:14px"><h3 style="margin-right:auto">Free agents</h3><span class="tag">No fee, sign any week</span></div>
-      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th></th></tr></thead><tbody>
-      ${fa.map(p => `<tr><td>${p.name}</td>${posTd(p)}<td class="num">${p.age}</td><td class="num rat">${ratFace(p.rating)}</td>
+      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th>Interest</th><th></th></tr></thead><tbody>
+      ${fa.map(p => `<tr><td>${p.name}</td>${posTd(p)}<td class="num">${p.age}</td><td class="num rat">${ratFace(p.rating)}</td><td>${interestChip(p)}</td>
       <td><button class="small" onclick="signFree(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Sign free</button></td></tr>`).join("")}
       </tbody></table>`, "tbody > tr");
     $("marketMsg").textContent = "Signings left this week: " + (STATE && STATE.signingsLeft !== undefined ? STATE.signingsLeft : 1) + " of 1. Talk to anyone you like, but only one deal can go through each week." + (!open ? " " + STATE.window.label + ". You can look, but you cannot bid." : "");

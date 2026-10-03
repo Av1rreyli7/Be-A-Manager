@@ -38,6 +38,11 @@ async function main() {
   for (const key of ["KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyQ", "ShiftLeft", "Escape", "KeyT", "KeyX", "KeyF", "Space"]) ok("the controls listen for " + key, engine.includes('"' + key + '"'), null);
   ok("the controls pass the new actions to the sim", engine.includes("through: A.throughQ") && engine.includes("slide: A.slideQ") && engine.includes("skill: A.skillQ") && engine.includes("tackle: !!k.Space"), null);
   for (const w of ["<kbd>T</kbd> Through ball", "<kbd>X</kbd> Slide tackle", "<kbd>F</kbd> Skill move", "<kbd>Space</kbd> Hold when defending", "Esc</kbd> Pause"]) ok("the help screen teaches: " + w.slice(0, 24), engine.includes(w), null);
+  // the controls strip replaces the old hint lines in both looks
+  ok("the 3D view has no old help overlay left", !view3dText.includes("m3-help") && !view3dText.includes("YOU ATTACK TO THE RIGHT") && !view3dText.includes("WASD move"), null);
+  ok("the Classic canvas no longer paints the long key hint line", !engine.includes("SHIFT SPRINT  ·  Q PASS") && !engine.includes("const t2 ="), null);
+  ok("the controls strip lists exactly the keys asked for, in order", engine.includes('const STRIP_KEYS = [["WASD", "Move"], ["E", "Shoot"], ["Q", "Pass"], ["T", "Through"], ["X", "Slide"], ["Space", "Tackle"], ["F", "Skill"], ["Shift", "Sprint"]];'), null);
+  ok("the strip uses the site kit look (kit tokens, Chakra Petch labels, Geist Mono keys) and fades to about a third", engine.includes("var(--k-f-lbl") && engine.includes("var(--k-f-num") && engine.includes("var(--k-accent") && engine.includes(".mx-keys.dim{opacity:.3}"), null);
   ok("the Classic sim in match.js is the deep sim's starting point but was not edited", engine.indexOf("function createSim") > 0 && !engine.slice(engine.indexOf("function createSim"), engine.indexOf("// LOOK")).includes("startSkill"), null);
 
   // ---------- the deep sim: attributes ----------
@@ -691,15 +696,120 @@ async function main() {
   const mine = view.figures.get(sim.m.teams[0].players.find(p => !p.gk).id);
   ok("my team is in its real shirt colour and every figure knows its number", mine.kit[0] === FL.pickKits("Arsenal", "Wolves")[0][0] && [...view.figures.values()].every(f => f.num >= 1), mine.kit);
   ok("numbers are unique inside each team", [0, 1].every(t => new Set(sim.m.teams[t].players.map(p => view.figures.get(p.id).num)).size === 11), null);
-  let bodies = 0; view.scene.traverse(o => { if (o.isMesh && o.castShadow) bodies++; });
-  ok("players cast shadows", bodies > 22 * 8, bodies);
+  let bodies = 0; view.scene.traverse(o => { if (o.isSkinnedMesh && o.castShadow) bodies++; });
+  ok("every player casts a shadow (one skinned body each)", bodies === 22, bodies);
+  // the players are people: one skinned body each, built from human parts on a human skeleton
+  const PARTS = ["head", "face", "ears", "neck", "torso", "print", "shorts", "armR", "armL", "handR", "handL", "legR", "legL", "bootR", "bootL"];
+  const BONES = ["body", "pelvis", "spine", "chest", "neck", "head", "shoulderR", "shoulderL", "elbowR", "elbowL", "handR", "handL", "hipR", "hipL", "kneeR", "kneeL", "ankleR", "ankleL"];
+  const figs = [...view.figures.values()];
+  ok("every player is one skinned body on an 18 bone human skeleton", figs.every(f => f.mesh && f.mesh.isSkinnedMesh && f.mesh.skeleton.bones.length === 18 && BONES.every(n => f.mesh.skeleton.bones.some(b => b.name === n))), null);
+  ok("every body has a head, face, ears, neck, torso, shorts, two arms, two hands, two legs, two boots and the print", figs.every(f => PARTS.every(k => f.parts[k] > 0)), figs[0].parts);
+  const bb = new THREE.Box3().setFromBufferAttribute(figs[3].mesh.geometry.attributes.position);
+  // the head runs from the chin ring to the crown cap (the HEAD profile in match3d.mjs)
+  const headH = 1.842 - 1.588;
+  ok("human proportions: about 1.83 m tall in the model and about 7.3 heads", bb.max.y > 1.8 && bb.max.y < 1.95 && bb.min.y >= -0.01 && bb.max.y / headH > 6.8 && bb.max.y / headH < 7.8, [bb.max.y, bb.max.y / headH]);
+  ok("players stand at a readable size for the TV camera, taller players taller", figs.every(f => f.scale > 1.35 && f.scale < 1.7) && new Set(figs.map(f => f.scale.toFixed(3))).size > 3, figs.map(f => f.scale.toFixed(2)).join(" "));
+  const kMats = new Set(figs.map(f => f.mesh.material));
+  ok("one shared material per team, not one per player", kMats.size === 2 && [0, 1].every(t => new Set(figs.filter(f => f.team === t).map(f => f.mesh.material)).size === 1) && [...kMats].every(mm => mm.vertexColors), kMats.size);
+  const allMats = new Set(); view.scene.traverse(o => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(mm => allMats.add(mm)); });
+  ok("the whole scene keeps its material count small", allMats.size < 60, allMats.size);
+  ok("skin tones and hair styles vary across the players", new Set(figs.map(f => f.skin)).size >= 3 && new Set(figs.map(f => f.hairStyle)).size >= 3, [new Set(figs.map(f => f.skin)).size, [...new Set(figs.map(f => f.hairStyle))]]);
+  ok("keepers wear their own kit and gloves", figs.filter(f => f.gk).length === 2 && figs.filter(f => f.gk).every(f => f.kit[0] !== FL.pickKits("Arsenal", "Wolves")[f.team][0]), null);
+  ok("each body stays low poly", figs.every(f => f.tris < 2300), Math.max(...figs.map(f => f.tris)));
   const tris = (() => { let n = 0; view.scene.traverse(o => { if (o.isMesh && o.geometry) { const g = o.geometry; n += (g.index ? g.index.count : g.getAttribute("position").count) / 3 * (o.isInstancedMesh ? o.count : 1); } }); return Math.round(n); })();
-  ok("the whole scene stays light on geometry (crowd is two instanced draws)", tris < 75000, tris);
+  ok("the whole scene stays light on geometry (crowd is two instanced draws, players about 2k triangles each)", tris < 115000, tris);
   const seatsFull = view.crowd.count;
   view.setQuality(0);
   ok("the quality guard can drop shadows and halve the crowd", view.quality() === 0 && view.crowd.count < seatsFull, [view.quality(), view.crowd.count, seatsFull]);
   view.dispose();
   ok("dispose empties the figures and leaves a borrowed renderer alone", view.figures.size === 0 && !stubRenderer.gone, null);
+
+  // ---------- motion: run cycle, idle, kick, slide, keeper dive, all from the sim fields ----------
+  {
+    const pv = createView3D(THREE, { FL, renderer: stubRenderer, width: 1280, height: 720, document: null });
+    const ps = createSim3D({ home: "Arsenal", away: "Wolves", side: "home", homeXI: testXI(84, "H"), awayXI: testXI(78, "A") }, { rng: seeded(9) });
+    const pm = ps.m;
+    pm.phase = "play"; pm.auto = true;
+    for (const p of pm.players) { p.x = 30; p.y = 25; p.vx = 0; p.vy = 0; p.face = 0; }
+    pm.ball.owner = null; pm.ball.x = 45; pm.ball.y = 30; pm.ball.vx = 0; pm.ball.vy = 0;
+    pv.draw(ps, 1 / 60);
+    const fig = p => pv.figures.get(p.id);
+    const bone = (f, n) => f.mesh.skeleton.bones.find(b => b.name === n);
+    const jog = pm.teams[0].players[6], spr = pm.teams[0].players[7], still = pm.teams[0].players[5];
+    jog.x = -6; jog.y = 0; spr.x = 0; spr.y = 0; still.x = 6; still.y = 0;
+    const rec = { jogHip: [9, -9], jogKnee: 0, sprHip: [9, -9], sprKnee: 0, sprArm: [9, -9], stillHip: [9, -9], chest: [9, -9], jogLean: 0, sprLean: 0 };
+    for (let i = 0; i < 120; i++) {
+      jog.vx = 4.2; spr.vx = 8.4; still.vx = 0;
+      pv.draw(ps, 1 / 60);
+      if (i < 40) continue;
+      const fj = fig(jog), fs = fig(spr), fz = fig(still);
+      const hj = bone(fj, "hipR").rotation.z, hs = bone(fs, "hipR").rotation.z, hz = bone(fz, "hipR").rotation.z;
+      rec.jogHip = [Math.min(rec.jogHip[0], hj), Math.max(rec.jogHip[1], hj)];
+      rec.sprHip = [Math.min(rec.sprHip[0], hs), Math.max(rec.sprHip[1], hs)];
+      rec.stillHip = [Math.min(rec.stillHip[0], hz), Math.max(rec.stillHip[1], hz)];
+      const as = bone(fs, "shoulderL").rotation.z;
+      rec.sprArm = [Math.min(rec.sprArm[0], as), Math.max(rec.sprArm[1], as)];
+      rec.jogKnee = Math.max(rec.jogKnee, -bone(fj, "kneeR").rotation.z);
+      rec.sprKnee = Math.max(rec.sprKnee, -bone(fs, "kneeR").rotation.z);
+      const cs = bone(fz, "chest").scale.x;
+      rec.chest = [Math.min(rec.chest[0], cs), Math.max(rec.chest[1], cs)];
+      rec.jogLean = fj.body.rotation.z; rec.sprLean = fs.body.rotation.z;
+    }
+    const span = r => r[1] - r[0];
+    ok("the run cycle swings the legs and arms over time", span(rec.jogHip) > 0.8 && span(rec.sprHip) > 1.2 && span(rec.sprArm) > 1.0 && rec.jogKnee > 0.9, rec);
+    ok("a sprint looks different from a jog: longer stride, higher heel, more lean", span(rec.sprHip) > span(rec.jogHip) + 0.2 && rec.sprKnee > rec.jogKnee + 0.3 && rec.sprLean < rec.jogLean - 0.1, rec);
+    ok("a player standing still breathes but his legs stay put", span(rec.stillHip) < 0.15 && span(rec.chest) > 0.005, rec);
+    ok("the stride frequency follows the speed (no skating)", fig(spr).phase !== fig(jog).phase, null);
+    // a kick: the kicking leg swings through, the other plants
+    const kk = pm.teams[0].players[9];
+    kk.x = 12; kk.y = 0; kk.face = 0; kk.vx = 0;
+    pm.ball.x = 12.6; pm.ball.y = 0.1; pm.ball.vx = 26; pm.ball.vy = 0; pm.ball.vz = 1;
+    let kickMax = 0, kickBack = 0;
+    for (let i = 0; i < 24; i++) {
+      kk.kickAnim = Math.max(0, 0.35 - i / 60);
+      pv.draw(ps, 1 / 60);
+      const f = fig(kk), h0 = bone(f, "hipR").rotation.z, h1 = bone(f, "hipL").rotation.z;
+      kickMax = Math.max(kickMax, h0, h1); kickBack = Math.min(kickBack, h0, h1);
+    }
+    ok("a shot swings the kicking leg through the ball and high in the follow through", kickMax > 1.0 && kickBack < -0.05, [kickMax, kickBack]);
+    // a slide: down on the grass, leaning back, one leg out
+    const sl = pm.teams[0].players[3];
+    sl.x = 18; sl.y = 0; sl.face = 0;
+    for (let i = 0; i < 20; i++) { sl.slide = { t: i / 60, dur: 0.65 }; pv.draw(ps, 1 / 60); }
+    const fsl = fig(sl);
+    ok("a slide tackle pose: body down and back, the lead leg out along the grass", fsl.body.position.y < -0.3 && fsl.body.rotation.z > 0.8 && Math.max(bone(fsl, "hipR").rotation.z, bone(fsl, "hipL").rotation.z) > 0.3, [fsl.body.position.y, fsl.body.rotation.z]);
+    sl.slide = null;
+    // a keeper dive: to the side of the save, in the air, arms up past the head, then a landing
+    const gk = pm.teams[1].players[0];
+    gk.x = 24; gk.y = 0; gk.face = Math.PI; gk.vx = 0; gk.vy = 0;
+    let rollMax = 0, liftMax = 0, armUp = 0;
+    for (let i = 0; i < 30; i++) {
+      gk.diving = true; gk.tx = gk.x; gk.ty = gk.y + 3; gk.vy = 4;
+      pv.draw(ps, 1 / 60);
+      const f = fig(gk);
+      rollMax = Math.max(rollMax, Math.abs(f.body.rotation.x)); liftMax = Math.max(liftMax, f.lift); armUp = Math.max(armUp, bone(f, "shoulderR").rotation.z);
+    }
+    // with the keeper facing back down the pitch, diving toward +y is to his local minus z side
+    const diveSide = Math.sign(fig(gk).body.rotation.x);
+    ok("a keeper dive: stretched out sideways, off the ground, arms past the head", rollMax > 1.1 && liftMax > 0.3 && armUp > 2.3, [rollMax, liftMax, armUp]);
+    ok("the keeper dives the way the save is", diveSide === -1, diveSide);
+    gk.diving = false; gk.vy = 0;
+    for (let i = 0; i < 10; i++) pv.draw(ps, 1 / 60);
+    ok("after the dive he lands on his side before getting up", Math.abs(fig(gk).body.rotation.x) > 1.0 && fig(gk).diveAfter > 0, fig(gk).body.rotation.x);
+    for (let i = 0; i < 90; i++) pv.draw(ps, 1 / 60);
+    ok("and then he is back on his feet", Math.abs(fig(gk).body.rotation.x) < 0.2, fig(gk).body.rotation.x);
+    // the same names give the same faces in every match (seeded per player)
+    const pv2 = createView3D(THREE, { FL, renderer: stubRenderer, width: 1280, height: 720, document: null });
+    const ps2 = createSim3D({ home: "Arsenal", away: "Wolves", side: "home", homeXI: testXI(84, "H"), awayXI: testXI(78, "A") }, { rng: seeded(10) });
+    pv2.draw(ps2, 1 / 60);
+    ok("skin and hair are seeded per player, so they stay the same", ps2.m.players.every(p => { const a = pv2.figures.get(p.id), b = pv.figures.get(p.id); return a.skin === b.skin && a.hairStyle === b.hairStyle; }), null);
+    // no allocations piling up: a long run keeps the same objects
+    const before = fig(spr).mesh.geometry;
+    for (let i = 0; i < 300; i++) { spr.vx = 8; pv.draw(ps, 1 / 60); }
+    ok("figures are built once and reused every frame", fig(spr).mesh.geometry === before && pv.figures.size === 22, null);
+    pv.dispose(); pv2.dispose();
+    ok("dispose frees the bodies", pv.figures.size === 0, null);
+  }
 
   // a second match with other clubs rebuilds the figures in the new colours, with the Classic sim too
   const view2 = createView3D(THREE, { FL, renderer: stubRenderer, width: 800, height: 900, document: null });
@@ -746,7 +856,10 @@ async function main() {
   B.pump(200);
   ok("Classic runs with no 3D view", B.M.isOpen() && !B.M.look3d() && !B.wrap.classList.contains("m3d") && B.panel.classList.contains("hidden"), null);
   ok("Classic paints the pitch itself", B.calls.includes("fillRect") && !B.calls.includes("clearRect"), null);
+  const chips = () => { const st = B.doc.getElementById("mxKeys"); return st ? [...st.querySelectorAll("kbd")].map(k => k.textContent) : null; };
+  ok("Classic shows the same key strip with only its own keys", JSON.stringify(chips()) === JSON.stringify(["WASD", "E", "Q", "Shift"]) && B.doc.getElementById("mxKeys").classList.contains("classic"), chips());
   B.M.close();
+  ok("closing the match removes the key strip", !B.doc.getElementById("mxKeys"), null);
 
   // 2) 3D available: it is the default, the view is built at kick off with the deep sim, drawn every frame, owning the HUD
   B = boot(); c = { finish: [], closed: 0, simVal: null };
@@ -770,6 +883,12 @@ async function main() {
   ok("kick off in 3D runs the deep sim that came with the view", deepCalls.length === 1 && made[0].sim && made[0].sim.deep === true && made[0].sim.m.players.every(p => p.a && p.num), deepCalls.length);
   ok("the 3D view gets the wrap, the HUD canvas and the engine", made.opts && made.opts.wrap === B.wrap && made.opts.canvas === B.doc.getElementById("matchCanvas") && made.opts.FL === B.M, null);
   ok("the 3D view is drawn every frame", made[0].draws >= 100, made[0].draws);
+  const strip = () => B.doc.getElementById("mxKeys");
+  ok("3D shows the controls strip with exactly the asked keys", strip() && JSON.stringify([...strip().querySelectorAll("kbd")].map(k => k.textContent)) === JSON.stringify(["WASD", "E", "Q", "T", "X", "Space", "F", "Shift"]) && [...strip().querySelectorAll("b")].map(x => x.textContent).join(" ") === "Move Shoot Pass Through Slide Tackle Skill Sprint", strip() && strip().textContent);
+  ok("the strip sits in the match wrap above the HUD and is styled from the site kit", strip().parentNode === B.wrap && !!B.doc.getElementById("mxKeysStyle") && B.doc.getElementById("mxKeysStyle").textContent.includes("top:26px;right:18px"), null);
+  ok("the strip is at full strength while the match settles in", !strip().classList.contains("dim"), strip().className);
+  B.pump(150);
+  ok("after a few seconds of play the strip fades down", strip().classList.contains("dim"), strip().className);
   ok("when the 3D view owns the HUD the Classic canvas is left alone", B.calls.length === callsBefore, B.calls.length - callsBefore);
   for (const code of ["KeyT", "KeyX", "KeyF", "Space"]) { B.win.dispatchEvent(new B.win.KeyboardEvent("keydown", { code })); B.pump(2); B.win.dispatchEvent(new B.win.KeyboardEvent("keyup", { code })); }
   ok("T, X, F and Space reach the deep sim as through, slide, skill and tackle", stepInputs.some(i => i.through) && stepInputs.some(i => i.slide) && stepInputs.some(i => i.skill) && stepInputs.some(i => i.tackle), stepInputs.length);
@@ -778,7 +897,13 @@ async function main() {
   B.win.dispatchEvent(new B.win.KeyboardEvent("keydown", { code: "Escape" }));
   B.pump(30);
   ok("Esc still pauses in 3D and the scene holds still", B.panel.textContent.includes("Paused") && made[0].draws > d0 && made[0].lastDt === 0, [made[0].draws, made[0].lastDt]);
+  ok("on pause the strip comes back to full", !strip().classList.contains("dim") && !strip().classList.contains("off"), strip().className);
+  ok("the pause card keeps a tidy key list with the cross and headers", B.panel.querySelector(".mkeys") && B.panel.textContent.includes("Cross from wide") && B.panel.querySelectorAll(".mkeys span").length === 3, null);
   B.doc.getElementById("mxRes").click();
+  B.pump(10);
+  ok("back in play the strip stays full for a moment", !strip().classList.contains("dim"), strip().className);
+  B.pump(200);
+  ok("then fades again", strip().classList.contains("dim"), strip().className);
   // the host sims mid match: the 3D match stops on the spot exactly like the classic one
   c.simVal = { home: "Home FC", away: "Away FC", hg: 2, ag: 0, note: "" };
   B.pump(40);
@@ -799,6 +924,7 @@ async function main() {
   ok("the score sent is the deep sim's score", made[0].sim.m.done && c.finish[0][0] === made[0].sim.result().home && c.finish[0][1] === made[0].sim.result().away, [c.finish, made[0].sim.result()]);
   ok("the full time screen shows after a 3D match", B.panel.textContent.includes("Full time") && B.panel.textContent.includes("Saved for the test."), B.panel.textContent.slice(0, 80));
   ok("the 3D view heard the match events", made[0].events.includes("full") && made[0].events.includes("half"), made[0].events.slice(0, 6));
+  ok("the strip steps aside on the full time screen", B.doc.getElementById("mxKeys") && B.doc.getElementById("mxKeys").classList.contains("off"), null);
   B.doc.getElementById("mxDone").click();
 
   // 4) picking Classic on the start screen wins over 3D, and Classic runs the Classic sim
@@ -836,6 +962,7 @@ async function main() {
     for (let i = 0; i < 200; i++) { s.step({ mx: 1 }); for (const ev of s.m.events.splice(0)) v.onEvent(ev); v.draw(s, 1 / 60); }
     const hudEl = doc.getElementById("m3dHud");
     ok("the real view builds the DOM HUD inside the match wrap", !!hudEl && hudEl.parentNode === wrap && v.stats().hud, null);
+    ok("the old help overlay is gone from the 3D HUD", !hudEl.querySelector(".m3-help") && !hudEl.textContent.includes("WASD") && !hudEl.textContent.includes("ATTACK TO THE RIGHT"), null);
     const bugText = hudEl.querySelector(".m3-bug").textContent;
     const digits = [...hudEl.querySelectorAll(".m3-sc .m3-d")].map(d => d.textContent).join(" ");
     ok("the TV scorebug sits top left with both club codes, the score and a running clock", bugText.includes("HOM") && bugText.includes("AWA") && digits === "0 0" && /^\d\d:\d\d$/.test(hudEl.querySelector(".m3-clk").textContent) && hudEl.querySelector(".m3-tm").title === "Home FC", [bugText, digits]);
@@ -859,8 +986,8 @@ async function main() {
     s.m.aim = null; s.m.setPiece = null; jumper.air = 0; jumper.headerAnim = 0;
     v.draw(s, 1 / 60);
     ok("clearing the hooks hides the aim marker", !v.aimRing.visible, null);
-    ok("the shirt textures draw the number on the back and the chest", view3dText.includes("strokeText(num, 192, 76)") && view3dText.includes("strokeText(num, 46, 44)"), null);
-    ok("the figures carry skin, hair and boot variety", view3dText.includes("SKIN = [") && view3dText.includes("HAIR = [") && view3dText.includes("hairKind") && view3dText.includes("bootMats"), null);
+    ok("each team has one print sheet with every name and number, laid on the back and the chest", view3dText.includes("function teamSheet(") && view3dText.includes('patch(B, "print"') && v.figures.size === 22, null);
+    ok("the figures carry skin, hair and boot variety", view3dText.includes("SKIN = [") && view3dText.includes("HAIR = [") && view3dText.includes("HAIR_STYLES") && view3dText.includes("BOOTS = ["), null);
     v.dispose();
     ok("dispose removes the DOM HUD", !doc.getElementById("m3dHud"), null);
   }

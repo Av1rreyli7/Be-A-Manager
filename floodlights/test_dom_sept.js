@@ -24,19 +24,22 @@ ok("sim to week UI is gone", !html.includes("simToWrap") && !html.includes("simT
 ok("sim season button exists and is wired to the new route", html.includes('id="simSeasonBtn"') && html.includes('$("simSeasonBtn").onclick') && html.includes('api("/api/simseason", {})'), null);
 ok("sim season asks for a second click instead of a popup", html.includes("Click again to sim every week to the end") && !/simseason[\s\S]{0,200}confirm\(/.test(html), null);
 ok("host only visibility toggle for sim season", html.includes('$("simSeasonBtn").classList.toggle("hidden"'), null);
-ok("the squad table shows form, morale and effective rating", html.includes("<th class=\"num\" title=\"Form") && html.includes(">Morale</th>") && html.includes(">Eff</th>") && html.includes("condChip(p.cond && p.cond.form, 3)"), null);
+ok("the squad table shows form and morale and only one rating column (no second Eff number)", html.includes("<th class=\"num\" title=\"Form") && html.includes(">Morale</th>") && !html.includes(">Eff</th>") && !html.includes('class="effv') && html.includes("condChip(p.cond && p.cond.form, 3)"), null);
+ok("form and morale are quiet signed numbers, no pills and no rows of arrows", /\.condchip\{[^}]*\}/.test(html) && !/\.condchip\{[^}]*(border-radius|background)/.test(html) && !html.includes('"\\u25b2".repeat'), null);
 ok("the feed shows the club news first", html.includes("Your club this season") && html.includes("s.myClub.news"), null);
 ok("every list shows one number, with an arrow only when effective differs from base", html.includes("function ovrFace(base, eff)") && html.includes('dir === "flat" ? base : eff') && (html.match(/ovrChip\(/g) || []).length >= 8 && !html.includes('class="ovb"') && html.includes("\\u25b2") && html.includes("\\u25bc"), (html.match(/ovrChip\(/g) || []).length);
-ok("the lineup pitch shows shirts with the rating chip attached, the remove X and age and position under", html.includes('<span class="lushirt">${shirtSvg(kitOf(p), nums[p.id] || "", luShort(p.name))}') && html.includes('<span class="luX" onclick="luSlotClear(${i},event)"') && html.includes('<span class="luchip">${p.cond ? ovrChip(p, true) : ratFace(p.rating)}</span>') && html.includes('<span class="luage">${p.age}Y \\u00b7 ${posBadge(p)}</span>'), null);
-ok("the tooltip holds the base and the event cause", html.includes("BASE ' + base") && html.includes("c.causes || []") && html.includes("Not played"), null);
+ok("the lineup pitch shows a shirt card per spot: the shirt with surname and number, the remove X, one rating chip under it in normal flow", html.includes('${shirtSvg(kitOf(p), nums[p.id] || "", luShort(p.name))}<span class="luX" onclick="luSlotClear(${i},event)"') && html.includes('<span class="lutag">${ovrChip(p, "pitch")}</span>') && !html.includes("luchip") && !html.includes("luage"), null);
+ok("shirt cards are sized from the pitch width so they never overlap at any width", html.includes("container-type:inline-size") && html.includes("--lu-w:clamp(38px,12.4cqw,56px)") && html.includes(".lushirt{position:relative;display:block;width:var(--lu-w)"), null);
+ok("the tooltip holds the base and the event cause", html.includes('"BASE " + base') && html.includes("c.causes || []") && html.includes("Not played"), null);
 ok("events pop up after a sim, one after another, and get marked seen on the server", html.includes('id="eventModal"') && html.includes("function queueEvents(s)") && html.includes("function showNextEvent()") && html.includes('api("/api/newsseen", { id: x.i })') && html.includes("EV.queue.shift()") && html.includes("more after this"), null);
 ok("the popups are delivered from the state's unseen list and the News feed keeps the archive", html.includes("s.myClub.unseenNews") && html.includes("Your club this season"), null);
 ok("on the results screen the event is only teased; the popup waits for the lobby", html.includes('id="mdTeaser"') && html.includes("function evTeaser(s)") && html.includes("evTeaser(s);") && html.includes("!evOnResults(s)") && html.includes("brewing at "), null);
 ok("playing your match, Play matchweek, Sim season and Sim next week all wait behind the event gate", html.includes("function evGate(fn)") && html.includes("if (evGate(() => window.playMatch(kind))) return;") && html.includes('if (evGate(() => $("simBtn").onclick())) return;') && html.includes("if (evGate(() => {})) return;") && html.includes("evGate(sim.onclick)"), null);
 ok("the popup shows what the event did (injury, form, morale, how long, who) and many at once become one summary", html.includes("function evChips(e)") && html.includes("OUT FOR ") && html.includes('id="evFx"') && html.includes("WHILE THE WEEKS FLEW BY") && html.includes("Got it, let's play"), null);
-ok("the OVR chip carries a breakdown popover with form, morale and injury return", html.includes('class="ovtip"') && html.includes('line("Form", c.form)') && html.includes('line("Morale", c.morale)') && html.includes('line("Back from injury", c.ret)') && html.includes(".ovr:hover .ovtip,.ovr:focus .ovtip"), null);
-ok("arrows animate in with the rows and pulse once when a value changes", html.includes("@keyframes ovrin") && html.includes("@keyframes ovrpulse") && html.includes("OVR_SEEN[key] !== eff") && html.includes("prefers-reduced-motion"), null);
-ok("squad, lineup, market, academy, loans out and scout tips all use the chip", html.includes("<td class=\"num\">${ovrChip(p)}</td><td class=\"num\">${appsText(p)}</td>") && (html.match(/ovrChip\(p, true\)/g) || []).length === 3 && html.includes("<td class=\"num\">${ovrChip(p)}</td><td class=\"num\">${p.pot || \"?\"}</td>"), (html.match(/ovrChip\(p, true\)/g) || []).length);
+ok("the breakdown lives in one floating tooltip, never inside a chip, a cell or a shirt", html.includes('<div id="ovrTip" role="tooltip"></div>') && html.includes("function ovrTipShow(el)") && html.includes('line("Form", c.form)') && html.includes('line("Morale", c.morale)') && html.includes('line("Back from injury", c.ret)') && !html.includes('class="ovtip"') && !html.includes(".ovr{") && html.includes("#ovrTip{position:fixed"), null);
+ok("a changed number pulses once and reduced motion keeps it still", html.includes("@keyframes rtpulse") && html.includes("OVR_SEEN[key] !== face.n") && html.includes("@media (prefers-reduced-motion: reduce){.rt.pulse .rtn{animation:none}}"), null);
+ok("squad, lineup, bench, market, academy, loans out and scout tips all use the one face", html.includes("<td class=\"num\">${ovrChip(p)}</td><td class=\"num\">${appsText(p)}</td>") && (html.match(/ovrChip\(p, "sm"\)/g) || []).length === 2 && html.includes('ovrChip(p, "pitch")') && html.includes("<td class=\"num\">${ovrChip(p)}</td><td class=\"num\">${p.pot || \"?\"}</td>"), (html.match(/ovrChip\(p, "sm"\)/g) || []).length);
+ok("bench rows give the rating its own column, apart from the name and the buttons", html.includes(".benchrow{display:grid;grid-template-columns:28px minmax(0,1fr) 36px auto") && (html.match(/<span class="brt">\$\{ovrChip\(p, "sm"\)\}<\/span>/g) || []).length === 2, null);
 ok("appearances show compactly in the squad table and stale players are flagged", html.includes(">Apps</th>") && html.includes("function appsText(p)") && html.includes("p.bn >= 3 ? \" stale\""), null);
 ok("the match detail lists the subs who came on", html.includes("class=\"mdsubs\">SUBS: ") && html.includes("evd.subs"), null);
 ok("the travel tab, planner and advisor are on the page", html.includes('data-t="travel"') && html.includes('id="tab-travel"') && html.includes('id="travelModal"') && html.includes("/api/travelfund") && html.includes("/api/travelbook") && html.includes("travelBulk(") && html.includes("smart"), null);
@@ -49,12 +52,12 @@ ok("the travel tab, planner and advisor are on the page", html.includes('data-t=
     if (one) return one[0];
     const m = new RegExp("function " + name + "\\([^)]*\\) \\{[\\s\\S]*?\\n\\}").exec(html); return m ? m[0] : "";
   };
-  const src = ["const OVR_SEEN = {};", grab("rcol"), grab("rchip"), grab("ratFace"), grab("ovrFace"), grab("ovrChip")].join("\n");
+  const src = ["const OVR_SEEN = {}, OVR_TIPS = {};", grab("escSvg"), grab("rcol"), grab("rchip"), grab("rtFace"), grab("ratFace"), grab("ovrFace"), grab("ovrChip")].join("\n");
   let chip = null;
-  try { chip = new Function(src + "\nreturn { ovrChip, ovrFace, ratFace };")(); } catch (e) { chip = null; }
+  try { chip = new Function(src + "\nreturn { ovrChip, ovrFace, ratFace, tips: OVR_TIPS };")(); } catch (e) { chip = null; }
   ok("the rating helpers can be read out of the page", !!chip, null);
   if (chip) {
-    const face = h => { const m = /class="ove"[^>]*>([^<]*)<\/span><span class="ova">([^<]*)<\/span>/.exec(h); return m ? { n: m[1], a: m[2] } : null; };
+    const face = h => { const m = /class="rtn"[^>]*>([^<]*)<\/span><span class="rta">([^<]*)<\/span>/.exec(h); const all = h.match(/class="rtn"/g) || []; return m && all.length === 1 && !/ovtip|class="ovt"/.test(h) ? { n: m[1], a: m[2], dir: (/class="rt (up|down|flat)/.exec(h) || [])[1] } : null; };
     const cond = (eff, extra) => Object.assign({ form: 0, morale: 0, ret: 0, traveller: 0, causes: [], bench: 0, eff }, extra || {});
     const up = face(chip.ovrChip({ id: 1, name: "A", rating: 91, cond: cond(93.9, { form: 2.9 }) }));
     const down = face(chip.ovrChip({ id: 2, name: "B", rating: 80, cond: cond(77.6, { form: -2.4 }) }));
@@ -72,11 +75,37 @@ ok("the travel tab, planner and advisor are on the page", html.includes('data-t=
       if (!f || f.n !== want || f.n.length < 2 || /^0/.test(f.n)) bad.push([r, d, f && f.n]);
     }
     ok("every shown rating is the effective OVR, two digits, no leading zero", bad.length === 0, bad.slice(0, 5));
+    ok("the face class matches the arrow, so a flat number never gets an arrow", up.dir === "up" && down.dir === "down" && flat.dir === "flat" && bare.dir === "flat", [up.dir, down.dir, flat.dir, bare.dir]);
+    const odd = face(chip.ovrChip({ id: 9, name: "Odd", rating: 83, cond: cond(2) })), nan = face(chip.ovrChip({ id: 10, name: "Nan", rating: 83, cond: cond(NaN) }));
+    ok("a modifier passed by mistake or a missing value falls back to the base", odd && odd.n === "83" && odd.a === "" && nan && nan.n === "83", [odd, nan]);
+    ok("the breakdown for a chip is kept apart for the floating tooltip", typeof chip.tips["1"] === "string" && chip.tips["1"].includes("BASE 91") && chip.tips["1"].includes("NOW 94") && chip.tips["1"].includes("Form"), null);
+    ok("chips on the pitch and bench carry their place, tables stay plain", /class="rt up pitch"/.test(chip.ovrChip({ id: 11, name: "P", rating: 80, cond: cond(82) }, "pitch")) && /class="rt down sm"/.test(chip.ovrChip({ id: 12, name: "S", rating: 80, cond: cond(78) }, "sm")) && /class="rt flat"/.test(chip.ratFace(70)), null);
   }
   ok("the market RAT cell is the chip on the player's own rating and condition", html.includes('<td class="num rat">${ovrChip(p)}</td>') && /api\("\/api\/market\?q=/.test(html), null);
-  ok("the arrow slot is always drawn so a column lines up", html.includes("'</span><span class=\"ova\">' + face.arrow + \"</span>\"") && html.includes(".ovr{display:inline-grid;grid-template-columns:auto 9px"), null);
+  ok("the arrow slot is always drawn so a column lines up", html.includes("'</span><span class=\"rta\">' + face.arrow + \"</span></span>\"") && html.includes(".rt{display:inline-grid;grid-template-columns:2.1ch 7px"), null);
   ok("the out on loan table has its number headers right aligned like the cells", html.includes('<th class="num">Age</th><th class="num">Rat</th><th>At</th>'), null);
-  ok("free agents and nation squads use the same rating face", html.includes('<td class="num rat">${ratFace(p.rating)}</td>') && (html.match(/ratFace\(p\.rating\)/g) || []).length >= 4, (html.match(/ratFace\(p\.rating\)/g) || []).length);
+  ok("free agents and nation squads use the same rating face", html.includes('<td class="num rat">${ratFace(p.rating)}</td>') && (html.match(/ratFace\(p\.rating\)/g) || []).length >= 2, (html.match(/ratFace\(p\.rating\)/g) || []).length);
+}
+
+// ---- player interest on the page ----
+{
+  ok("interest has one chip: four bars and a word, coloured by level, reasons in the floating tooltip", html.includes("function interestChip(p)") && html.includes('<span class="ibars"><i></i><i></i><i></i><i></i></span>') && html.includes(".ichip.l0{--ic:var(--k-bad)}.ichip.l1{--ic:var(--k-orange)}.ichip.l2{--ic:var(--k-amber)}.ichip.l3{--ic:var(--k-good)}") && html.includes("(it.why || []).slice(0, 2)"), null);
+  ok("the market, free agents, scout tips, tipped players and your bids all show the interest chip", html.includes('<th title="How keen he is to join you. Hover a chip for the reasons.">Interest</th>') && html.includes("<td>${p.humanOwned ? '<span class=\"ichip none\">-</span>' : interestChip(p)}</td>") && (html.match(/<td>\$\{interestChip\(p\)\}<\/td>/g) || []).length >= 3 && html.includes('interestChip({ id: "o" + o.id, name: p, interest: o.interest })'), (html.match(/<td>\$\{interestChip\(p\)\}<\/td>/g) || []).length);
+  ok("one tooltip serves ratings and interest", html.includes('e.target.closest("[data-ot]")') && html.includes("#ovrTip .iwhy{grid-column:1/-1"), null);
+  const grab = name => { const m = new RegExp("function " + name + "\\([^)]*\\) \\{[\\s\\S]*?\\n\\}").exec(html); return m ? m[0] : ""; };
+  let ic = null;
+  try { ic = new Function("const OVR_TIPS = {}; const INT_CLS = [\"l0\", \"l1\", \"l2\", \"l3\"];\n" + grab("escSvg") + "\n" + grab("interestChip") + "\nreturn { interestChip, tips: OVR_TIPS };")(); } catch (e) { ic = null; }
+  ok("the interest chip can be read out of the page", !!ic && !!grab("interestChip"), null);
+  if (ic) {
+    const hi = ic.interestChip({ id: 5, name: "Kid", interest: { lv: 3, label: "High", why: ["Wants more minutes", "Your club is a step up"] } });
+    const vl = ic.interestChip({ id: 6, name: "Star", interest: { lv: 0, label: "Very Low", why: ["Happy at his club", "Your league is a step down"] } });
+    ok("a High player gets a green four bar chip, a Very Low star a red one bar chip", /class="ichip l3"/.test(hi) && />High<\/span>$/.test(hi) && /class="ichip l0"/.test(vl) && />Very Low<\/span>$/.test(vl), [hi, vl]);
+    ok("the tooltip lists the top two reasons in plain words", ic.tips.i6.includes("Happy at his club") && ic.tips.i6.includes("Your league is a step down") && ic.tips.i6.includes("VERY LOW INTEREST"), ic.tips.i6);
+    ok("no interest data draws a quiet dash, never a broken chip", ic.interestChip({ id: 7, name: "X" }) === '<span class="ichip none">-</span>' && ic.interestChip({ id: 8, interest: { lv: 9 } }) === '<span class="ichip none">-</span>', null);
+  }
+  ok("a transfer tip event shows the interest jump, the player and the asking price, and points to the market", html.includes("if (e.tr) {") && html.includes("INTEREST ' + evEsc(String(t.from).toUpperCase()) + \" TO \"") && html.includes("ASKING ABOUT ") && html.includes('"TRANSFER TIP"') && html.includes("Tipped to you at the top of the Transfer market"), null);
+  ok("tipped players sit at the top of the market with a bid button while the window is open", html.includes('<div id="tipBox"></div>') && html.includes("function renderTipped(s)") && html.includes("renderTipped(s);") && html.includes("TIPPED TO YOU"), null);
+  ok("a player who turns you down shows as a refused bid in red", html.includes(".offer:has(.status-player_declined)") && html.includes(".status-player_declined"), null);
 }
 
 // ---- lineup shirts ----
