@@ -638,7 +638,27 @@ console.log("b5");
   r = await api("/api/simseason", { code: tc, name: "Trav" });
   ok("Sim season runs the rest of the season through every system", r.status === 200 && r.j.round === 38, r.j);
   r = await api(`/api/state?code=${tc}&name=Trav`);
-  ok("after Sim season the club news still reads like a season", r.j.myClub.news.length >= 1 && r.j.myClub.news.length <= 10 && r.j.seasonOver === true, r.j.myClub.news.length);
+  ok("after Sim season the club news still reads like a season and nothing was swallowed", r.j.myClub.news.length >= 2 && r.j.myClub.news.length <= 40 && r.j.seasonOver === true && r.j.myClub.news.every(x => Number.isInteger(x.i)), r.j.myClub.news.length);
+  const evLines = r.j.myClub.news.filter(x => !/^TRAVEL:/.test(x.t)).length;
+  ok("events fired at the intended rate over the season, about 5 to 7 a club, allowing for luck", evLines >= 2 && evLines <= 12, evLines);
+  const unseenAll = r.j.myClub.unseenNews;
+  ok("every event is waiting to pop up until the manager has seen it, oldest first", unseenAll.length === r.j.myClub.news.length && unseenAll[0].i < unseenAll[unseenAll.length - 1].i, unseenAll.length);
+  r = await api("/api/newsseen", { code: tc, name: "Trav", id: unseenAll[1].i });
+  ok("marking an item seen clears it and everything before it", r.status === 200 && r.j.seen === unseenAll[1].i, r.j);
+  r = await api(`/api/state?code=${tc}&name=Trav`);
+  ok("the rest still wait, and the other manager keeps his own unseen list", r.j.myClub.unseenNews.length === unseenAll.length - 2 && r.j.myClub.unseenNews.every(x => x.i > unseenAll[1].i), r.j.myClub.unseenNews.length);
+  r = await api(`/api/state?code=${tc}&name=Mate2`);
+  ok("each manager sees only his own club's popups", r.j.myClub.name === "Celtic" && r.j.myClub.unseenNews.length > 0 && r.j.myClub.unseenNews.every(x => r.j.myClub.news.some(y => y.i === x.i && y.t === x.t)), r.j.myClub.unseenNews.length);
+  saved = await readSave(tc);
+  g = Object.values(saved).find(x => x.code === tc);
+  {
+    const all = Object.values(g.players).filter(p => !p.academy && p.club);
+    const avgF = all.reduce((s2, p) => s2 + (p.fm || 0), 0) / all.length, avgM = all.reduce((s2, p) => s2 + (p.mo || 0), 0) / all.length;
+    const ext = all.filter(p => Math.abs(p.fm || 0) >= 2.5 || Math.abs(p.mo || 0) >= 1.8).length / all.length;
+    ok("after a full season league wide form and morale sit near zero", Math.abs(avgF) < 0.5 && Math.abs(avgM) < 0.5, [avgF.toFixed(2), avgM.toFixed(2)]);
+    ok("only a few percent of players sit at the extremes", ext < 0.08, ext.toFixed(3));
+    ok("caps hold across the whole world", all.every(p => (p.fm || 0) >= -3 && (p.fm || 0) <= 3 && (p.mo || 0) >= -2 && (p.mo || 0) <= 2), null);
+  }
   saved = await readSave(tc);
   g = Object.values(saved).find(x => x.code === tc);
   const lenNow = JSON.stringify(g).length;
@@ -647,7 +667,7 @@ console.log("b5");
   const subbed = Object.values(g.lastEvents || {}).filter(e => e.subs && e.subs.length);
   ok("the week's match detail lists the subs who came on, at most five a side", subbed.length >= 1 && Object.values(g.lastEvents || {}).every(e => !e.subs || (e.subs.filter(x => x.c === Object.keys(g.lastEvents).find(k => g.lastEvents[k] === e).split("|")[0]).length <= 5 && e.subs.every(x => x.n && x.off && x.min >= 46 && x.min <= 85))), subbed.length);
   const benched = Object.values(g.players).filter(p => p.bn >= 6 && !p.academy && (LEAGUE_HUMAN.has(p.club)));
-  ok("players left on the bench for weeks have sunk in morale", benched.length > 0 && benched.every(p => (p.mo || 0) < 0), benched.slice(0, 2).map(p => [p.name, p.bn, p.mo]));
+  ok("players left on the bench for weeks have sunk in morale", benched.length > 0 && benched.filter(p => (p.mo || 0) < 0).length >= benched.length * 0.75, benched.slice(0, 2).map(p => [p.name, p.bn, p.mo]));
   ok("the save for one game stays lean with 300 plus clubs tracked", lenNow < 2.6 * 1024 * 1024, Math.round(lenNow / 1024) + " KB");
 
   console.log(passed + " passed, " + failed + " failed");

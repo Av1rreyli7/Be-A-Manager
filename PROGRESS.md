@@ -223,3 +223,39 @@ on focus with form, morale, travel streak and this season's minutes, the Apps co
 minutes, a sub showing 1+3), and the subs line under the match detail after a simmed week.
 - Sub count over 30000 rolls: about 7, 16, 34, 27, 11 and 5 percent for zero to five.
 - Save size is unchanged in practice: appearances are one tiny array per player who played.
+
+## Clean OVR display, event popups, balance tuning, unused player decline
+
+Goal: one number on every player (effective when it differs, with a small arrow, else just the base), the
+breakdown and the base in the tooltip; every event that hit your club pops up after a sim, one after another,
+and lives in the News feed; gains slower than losses, hard caps, a pull toward zero that grows with the
+distance, and unused players sliding down gradually. Resume from the first unchecked box.
+
+Decisions:
+- Display rule is one page function, ovrFace(base, eff): flat shows base only, otherwise the effective number
+  plus an up or down arrow. The lineup ball uses the same face with the arrow in the corner, no pill.
+- Popups: club news items carry a rising id, each user keeps seenNews, the state sends unseenNews oldest first,
+  the page queues them and marks each seen with /api/newsseen when clicked. Human clubs keep 40 news lines so a
+  Sim Season never swallows one. Event effects with a duration carry a short cause for the tooltip.
+- Tuning: win +0.6 form (big win +1.0), loss -1.0 (big loss -1.6), morale win +0.2, loss -0.35. Drift a fifth
+  of form a week (at least 0.15) and 15 percent of morale (at least 0.05). Caps in setForm and setMorale.
+  Not playing: two weeks of grace, then morale -0.1 a week growing 0.03 a week (stars x1.3, kids x0.6) and
+  rust -0.3 form a week down to -2. A full match lifts morale 0.1. The same rule runs for AI clubs.
+
+Checklist:
+- [x] E1 condition.js: asymmetric gains, proportional drift, caps, unused player decline, causes, news ids
+- [x] E2 server: longer human archive, unseen list per manager, newsseen route
+- [x] E3 page: ovrFace rule everywhere, lineup face, tooltip base and causes, popup queue
+- [x] E4 tests and 3 clean runs
+- [x] E5 upload, push
+
+Build result: all boxes done. npm run test:all passed three times in a row with 0 failed (typecheck, vitest 81,
+condition battery 88, API battery 217 to 218, DOM battery 120, 3D checks 180, site checks 156, build, boot
+test 48). Checked in Chrome on the production build: three event popups in a row after eight simmed weeks,
+each marked seen on click, the clean faces in the squad (93 with a small up arrow, 83 plain), the lineup
+pitch balls and the bench list, and the tooltip with the base and the event cause.
+- Event frequency proved two ways: the pure roll averages about 6 a club a season, and a real season over the
+  API lands a human club between 2 and 12 lines (luck allowed for).
+- Multi season check in the condition battery: four made up seasons with results, subs, playing time, drift
+  and events keep league wide form and morale within 0.5 of zero with no upward creep and under 8 percent of
+  players at the extremes. The same check runs on the real world after a Sim Season in the API battery.

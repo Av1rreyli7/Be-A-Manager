@@ -10,12 +10,18 @@ const T = {
   FORM_MAX: 3, MORALE_MAX: 2,
   HOME: 1, AWAY: -1, ANALYST_HOME: 1, PERSONAL_STEP: 0.5,
   RET_PENALTY: 5, RET_WEEKS: 5, RET_WEEKS_PHYSIO: 3,
-  WIN_FORM: 1, BIG_WIN_FORM: 2, LOSS_FORM: -1, BIG_LOSS_FORM: -2, BIG_MARGIN: 3, FORM_DRIFT_P: 0.35,
-  WIN_MORALE: 0.3, LOSS_MORALE: -0.3, MORALE_DRIFT: 0.1, SIGN_MORALE: 1, LISTED_MORALE: -1, LOAN_OUT_MORALE: -0.5,
-  EVENT_P1: 0.15, EVENT_P2: 0.08, NEWS_CAP: 10, FX_CAP: 8,
+  // gains are slow, losses bite: a hot streak takes weeks to build and one bad day dents it
+  WIN_FORM: 0.6, BIG_WIN_FORM: 1.0, LOSS_FORM: -1.0, BIG_LOSS_FORM: -1.6, BIG_MARGIN: 3,
+  WIN_MORALE: 0.2, LOSS_MORALE: -0.35, SIGN_MORALE: 1, LISTED_MORALE: -1, LOAN_OUT_MORALE: -0.5,
+  // the pull back toward zero grows with the distance: form loses a fifth of itself a week (at least 0.15),
+  // morale loses 15 percent (at least 0.05). Holding +3 form means winning nearly every week.
+  FORM_DRIFT_RATE: 0.2, FORM_DRIFT_MIN: 0.15, MORALE_DRIFT_RATE: 0.15, MORALE_DRIFT_MIN: 0.05,
+  // not playing: two weeks are barely felt, a month plus is clearly negative, rust on form and gloom on morale
+  RUST_FORM: -0.3, RUST_FORM_FLOOR: -2, BENCH_RAMP: 0.03, BENCH_RAMP_CAP: 6,
+  EVENT_P1: 0.15, EVENT_P2: 0.08, NEWS_CAP: 10, NEWS_CAP_HUMAN: 40, FX_CAP: 8,
   LONG_HAUL_KM: 2500, LONG_HAUL: -0.5, SHORT_TRIP_KM: 400,
   SUB_WEIGHTS: [0.07, 0.16, 0.34, 0.27, 0.11, 0.05], SUB_EARLIEST: 46, SUB_LATEST: 85,
-  BENCH_GRACE: 1, BENCH_MORALE: -0.25, BENCH_STAR: -0.4, BENCH_KID: -0.15, STAR_RATING: 84, KID_AGE: 20, PLAYED_MORALE: 0.05, FULL_MINUTES: 60,
+  BENCH_GRACE: 2, BENCH_MORALE: -0.1, STAR_MULT: 1.3, KID_MULT: 0.6, STAR_RATING: 84, KID_AGE: 20, PLAYED_MORALE: 0.1, FULL_MINUTES: 60,
   OVR_MIN: 30, OVR_MAX: 99
 };
 
@@ -54,6 +60,20 @@ function healInjuryReturn(p) {
 }
 
 // ---------- event effects with a duration ----------
+// the first few words of an event, for the tooltip: "Left at the hotel before the game"
+function shortCause(text) {
+  const first = String(text).split(/[.!?]/)[0].trim();
+  return first.length > 70 ? first.slice(0, 67).trim() + "..." : first;
+}
+function activeCauses(club, p, round) {
+  const out = [];
+  for (const e of (club && club.fx) || []) {
+    if (e.until < round) continue;
+    if (e.ids !== "all" && !e.ids.includes(p.id)) continue;
+    if (e.s) out.push({ s: e.s, f: e.f || 0, m: e.m || 0 });
+  }
+  return out;
+}
 function activeFx(club, p, round) {
   let f = 0, m = 0;
   for (const e of (club && club.fx) || []) {
@@ -86,7 +106,9 @@ function parts(p, club, round) {
     form: clamp((p.fm || 0) + fx.f, -T.FORM_MAX, T.FORM_MAX),
     morale: r1(clamp((p.mo || 0) + fx.m, -T.MORALE_MAX, T.MORALE_MAX)),
     ret: injuryReturn(p),
-    traveller: personalOffset(p)
+    traveller: personalOffset(p),
+    causes: club ? activeCauses(club, p, round || 0) : [],
+    bench: p.bn || 0
   };
 }
 
@@ -170,6 +192,10 @@ function recordAppearance(p, start, min) {
 }
 // playing time and morale after a match: starters who played hold or rise, subs stay level, those left
 // out start sinking after a week on the bench, stars sink fastest, kids barely notice
+// one rule for playing time: minutes reset the bench count and a full match lifts morale a little (the slow
+// gain rate). No minutes counts a week on the bench. After the grace weeks the player slides: rust takes a
+// little form each week (down to a floor) and morale sinks a bit more each week he sits, stars feel it most,
+// kids least. Playing again stops it at once and recovery runs at the normal slow rate.
 function playingTime(p, minutes) {
   if (minutes > 0) {
     delete p.bn;
@@ -178,16 +204,22 @@ function playingTime(p, minutes) {
   }
   p.bn = (p.bn || 0) + 1;
   if (p.bn <= T.BENCH_GRACE) return 0;
-  const d = p.age <= T.KID_AGE ? T.BENCH_KID : p.rating >= T.STAR_RATING ? T.BENCH_STAR : T.BENCH_MORALE;
+  const weeksOut = p.bn - T.BENCH_GRACE;
+  const mult = p.age <= T.KID_AGE ? T.KID_MULT : p.rating >= T.STAR_RATING ? T.STAR_MULT : 1;
+  const d = (T.BENCH_MORALE - T.BENCH_RAMP * Math.min(weeksOut, T.BENCH_RAMP_CAP)) * mult;
   bumpMorale(p, d);
+  if ((p.fm || 0) > T.RUST_FORM_FLOOR) bumpForm(p, T.RUST_FORM);
   return d;
 }
-// everyone drifts back toward zero when nothing happens: form fast and a little random, morale slow and steady
-function drift(p, rng) {
-  if (p.fm && (rng || Math.random)() < T.FORM_DRIFT_P) setForm(p, p.fm - Math.sign(p.fm));
+// everyone drifts back toward zero every week, and the further out he is the harder the pull
+function drift(p) {
+  if (p.fm) {
+    const step = Math.max(T.FORM_DRIFT_MIN, Math.abs(p.fm) * T.FORM_DRIFT_RATE);
+    setForm(p, Math.abs(p.fm) <= step ? 0 : p.fm - Math.sign(p.fm) * step);
+  }
   if (p.mo) {
-    const next = Math.abs(p.mo) <= T.MORALE_DRIFT ? 0 : p.mo - Math.sign(p.mo) * T.MORALE_DRIFT;
-    setMorale(p, next);
+    const step = Math.max(T.MORALE_DRIFT_MIN, Math.abs(p.mo) * T.MORALE_DRIFT_RATE);
+    setMorale(p, Math.abs(p.mo) <= step ? 0 : p.mo - Math.sign(p.mo) * step);
   }
 }
 
@@ -219,17 +251,19 @@ function applyEvent(ev, club, squad, round, rng) {
     .replace(/\{n\}/g, String(names.length));
   if (ev.w > 0) {
     club.fx = club.fx || [];
-    club.fx.push({ ids: ev.who === "squad" ? "all" : targets.map(p => p.id), f: ev.f || 0, m: ev.m || 0, until: round + ev.w - 1 });
+    club.fx.push({ ids: ev.who === "squad" ? "all" : targets.map(p => p.id), f: ev.f || 0, m: ev.m || 0, until: round + ev.w - 1, s: shortCause(text) });
     club.fx = club.fx.slice(-T.FX_CAP);
   } else {
     for (const p of targets) { if (ev.f) bumpForm(p, ev.f); if (ev.m) bumpMorale(p, ev.m); }
   }
   return { text, ids: targets.map(p => p.id), f: ev.f || 0, m: ev.m || 0, w: ev.w || 0 };
 }
-function addNews(club, round, text) {
+// news gets an id per club so each manager can be shown what he has not seen yet
+function addNews(club, round, text, cap) {
   club.news = club.news || [];
-  club.news.unshift({ w: round, t: text });
-  club.news = club.news.slice(0, T.NEWS_CAP);
+  club.newsSeq = (club.newsSeq || 0) + 1;
+  club.news.unshift({ i: club.newsSeq, w: round, t: text });
+  club.news = club.news.slice(0, cap || T.NEWS_CAP);
 }
 
 // ---------- travel ----------
@@ -323,6 +357,6 @@ module.exports = {
   T, clamp, r1, r3, hashStr, personalOffset, homeAway, injuryReturn, startInjuryReturn, healInjuryReturn,
   activeFx, pruneFx, effOvr, parts, setForm, setMorale, bumpForm, bumpMorale, applyResult, drift,
   rollSubCount, pickSubs, participants, recordAppearance, playingTime,
-  rollEventCount, applyEvent, addNews,
+  rollEventCount, applyEvent, addNews, shortCause, activeCauses,
   haversine, transportOptions, hotelOptions, longHaul, tripModifier, tripPrice, policyBooking, aiTravelModifier, smartFill, bulkCost, recommendFund
 };

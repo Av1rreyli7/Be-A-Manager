@@ -712,7 +712,7 @@ function autoBook(game, club, id, km, oppName, week) {
   }
   tv.fund = C.r3(Math.max(0, tv.fund - price));
   tv.trips[id] = bk;
-  if (note) { C.addNews(club, week, note); log(game, note.replace("TRAVEL: the", "TRAVEL (" + club.name + "): the")); }
+  if (note) { C.addNews(club, week, note, C.T.NEWS_CAP_HUMAN); log(game, note.replace("TRAVEL: the", "TRAVEL (" + club.name + "): the")); }
   return bk;
 }
 // the away side's travel modifier for one match
@@ -815,7 +815,7 @@ function weeklyCondition(game) {
       const res = C.applyEvent(ev, club, seniors, game.round, Math.random);
       if (!res) continue;
       // the per club feed is only kept for clubs a person manages, AI clubs just take the effect
-      if (human) { C.addNews(club, week, res.text); log(game, "EVENT (" + name + "): " + res.text); }
+      if (human) { C.addNews(club, week, res.text, C.T.NEWS_CAP_HUMAN); log(game, "EVENT (" + name + "): " + res.text); }
     }
   }
 }
@@ -2382,6 +2382,16 @@ function travelPlan(game, user) {
   };
 }
 
+app.post("/api/newsseen", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  const id = Math.floor(Number(req.body.id));
+  if (!Number.isFinite(id) || id < 0) return res.status(400).json({ error: "Which news item?" });
+  user.seenNews = Math.max(user.seenNews || 0, id);
+  save();
+  res.json({ ok: true, seen: user.seenNews });
+});
+
 app.post("/api/travelfund", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
@@ -3122,6 +3132,7 @@ app.get("/api/state", (req, res) => {
       lineup: game.clubs[myTeam].lineup || { xi: [], subs: [] },
       squad: game.clubs[myTeam].squad.map(id => game.players[id]).filter(Boolean).map(p => Object.assign({}, p, { cond: Object.assign(C.parts(p, game.clubs[myTeam], game.round), { eff: Math.round(effOf(game, p, myTeam) * 10) / 10 }) })),
       news: game.clubs[myTeam].news || [],
+      unseenNews: (game.clubs[myTeam].news || []).filter(x => x.i > (user.seenNews || 0)).slice().reverse(),
       academy: (game.clubs[myTeam].academy || []).map(id => game.players[id]).filter(Boolean).map(p => Object.assign({}, p, { cond: Object.assign(C.parts(p, game.clubs[myTeam], game.round), { eff: Math.round(effOf(game, p, myTeam) * 10) / 10 }) })),
       staff: game.clubs[myTeam].staff || {},
       trainFocus: game.clubs[myTeam].trainFocus !== undefined ? game.clubs[myTeam].trainFocus : null,

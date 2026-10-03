@@ -80,17 +80,34 @@ ok("the full formula: base plus form plus morale plus home plus travel plus inju
 {
   const xi = []; for (let i = 0; i < 11; i++) xi.push(P(i, 75));
   C.applyResult(xi, 2, 1);
-  ok("a win puts form up one and morale up a little", xi.every(p => p.fm === 1 && p.mo === 0.3), xi[0]);
+  ok("a win nudges form up a little and morale a touch", xi.every(p => p.fm === 0.6 && p.mo === 0.2), xi[0]);
   C.applyResult(xi, 5, 0);
-  ok("a thrashing puts form up two", xi.every(p => p.fm === 3), xi[0].fm);
+  ok("a thrashing gives a bigger nudge", xi.every(p => p.fm === 1.6), xi[0].fm);
   C.applyResult(xi, 0, 4);
-  ok("a heavy loss drops form by two and morale down", xi.every(p => p.fm === 1 && Math.abs(p.mo - 0.3) < 1e-9), [xi[0].fm, xi[0].mo]);
-  const rng = seeded(3);
+  ok("a heavy loss bites harder than a win helps: form drops more than it rose", xi.every(p => !p.fm && Math.abs(p.mo - 0.05) < 1e-9), [xi[0].fm, xi[0].mo]);
+  ok("losing is sharper than winning in the numbers themselves", -C.T.LOSS_FORM > C.T.WIN_FORM && -C.T.BIG_LOSS_FORM > C.T.BIG_WIN_FORM && -C.T.LOSS_MORALE > C.T.WIN_MORALE, null);
+  {
+    const hot = P(97, 75);
+    const steps = [];
+    for (let w = 0; w < 10; w++) { C.applyResult([hot], 2, 0); C.drift(hot); steps.push(hot.fm); }
+    ok("a hot streak takes several good weeks to build and never quite reaches the cap by itself", steps[0] < 1 && steps[4] > steps[0] && steps[9] >= 2 && steps[9] <= 3, steps);
+    C.applyResult([hot], 0, 2);
+    ok("one bad day dents the streak quickly", hot.fm <= steps[9] - 0.9, [steps[9], hot.fm]);
+    const held = P(96, 75, { fm: 3 });
+    C.applyResult([held], 1, 0); C.drift(held);
+    ok("holding +3 needs a win every week: a win keeps him at the top end", held.fm >= 2.4, held.fm);
+    C.drift(held);
+    ok("a week without a win pulls him off the top", held.fm < 2.4, held.fm);
+  }
   const q = P(99, 75, { fm: 3, mo: 2 });
-  for (let w = 0; w < 40; w++) C.drift(q, rng);
+  const far = [];
+  for (let w = 0; w < 40; w++) { const before = q.fm || 0; C.drift(q); far.push(before - (q.fm || 0)); }
   ok("with nothing happening form and morale drift back to zero", !q.fm && !q.mo, q);
-  const slow = P(98, 75, { mo: 2 }); C.drift(slow, seeded(1));
-  ok("morale drifts slower than form", slow.mo === 1.9, slow.mo);
+  ok("the pull back is stronger the further out he is", far[0] > far[3] && far[3] >= far[6], far.slice(0, 8));
+  const slow = P(98, 75, { mo: 2 }); C.drift(slow);
+  const fastF = P(95, 75, { fm: 2 }); C.drift(fastF);
+  ok("morale drifts slower than form", (2 - slow.mo) < (2 - fastF.fm), [slow.mo, fastF.fm]);
+  ok("hard caps hold at the formula level whatever is stacked on", (() => { const z = P(94, 75); C.bumpForm(z, 99); C.bumpMorale(z, 99); const hi = z.fm === 3 && z.mo === 2; C.bumpForm(z, -99); C.bumpMorale(z, -99); return hi && z.fm === -3 && z.mo === -2 && C.effOvr(P(93, 80, { fm: 50, mo: 50 }), neutral) === 85; })(), null);
 }
 
 // ---------- events ----------
@@ -194,20 +211,81 @@ ok("AI clubs travel by budget: rich clubs go luxury, poor clubs go cheap", C.aiT
   for (const e of parts) { delete e.p.fm; delete e.p.mo; }
   C.applyResult(parts, 2, 0);
   const full = parts.find(e => e.p.id === 0).p, sub10 = parts.find(e => e.p.id === 14).p, sub30 = parts.find(e => e.p.id === 13).p, off60 = parts.find(e => e.p.id === 6).p;
-  ok("form swings scale with minutes: a full match gets the whole swing, a late sub a sliver", full.fm === 1 && sub30.fm === 0.3 && Math.abs(sub10.fm - 0.1) < 1e-9 && Math.abs(off60.fm - 0.7) < 1e-9, [full.fm, sub30.fm, sub10.fm, off60.fm]);
+  ok("form swings scale with minutes: a full match gets the whole swing, a late sub a sliver", full.fm === 0.6 && sub30.fm === 0.2 && Math.abs(sub10.fm - 0.1) < 1e-9 && Math.abs(off60.fm - 0.4) < 1e-9, [full.fm, sub30.fm, sub10.fm, off60.fm]);
   for (const e of parts) C.recordAppearance(e.p, e.start, e.min);
   ok("appearances are kept as a tiny array: starts, sub games, minutes", full.ap.join() === "1,0,90" && sub30.ap.join() === "0,1,30" && off60.ap.join() === "1,0,60", null);
   const star = mk(50, "MF", 88), kid = mk(51, "MF", 70); kid.age = 19; const reg = mk(52, "MF", 78);
-  for (let w = 0; w < 10; w++) { C.playingTime(star, 0); C.playingTime(kid, 0); C.playingTime(reg, 0); C.drift(star, () => 0.99); C.drift(kid, () => 0.99); C.drift(reg, () => 0.99); }
-  ok("ten weeks on the bench sinks morale, stars fastest, kids least", star.mo <= -1.5 && reg.mo < -0.8 && kid.mo < 0 && kid.mo > reg.mo && reg.mo > star.mo, [star.mo, reg.mo, kid.mo]);
+  const regTrail = [];
+  for (let w = 0; w < 10; w++) { C.playingTime(star, 0); C.playingTime(kid, 0); C.playingTime(reg, 0); C.drift(star); C.drift(kid); C.drift(reg); regTrail.push((reg.mo || 0) + "|" + (reg.fm || 0)); }
+  ok("not playing is gradual: two weeks barely felt, a month plus clearly negative, in both morale and form", regTrail[1] === "0|0" && (reg.mo || 0) <= -0.5 && (reg.fm || 0) <= -0.4, regTrail);
+  ok("ten weeks on the bench sinks morale, stars fastest, kids least", star.mo < reg.mo && reg.mo < kid.mo && kid.mo < 0, [star.mo, reg.mo, kid.mo]);
+  ok("rust on form has a floor", (() => { const r2 = mk(56, "MF", 80); for (let w = 0; w < 60; w++) { C.playingTime(r2, 0); } return r2.fm >= C.T.RUST_FORM_FLOOR - 0.3; })(), null);
   const rot = mk(53, "MF", 80);
-  for (let w = 0; w < 10; w++) { C.playingTime(rot, 25); C.drift(rot, () => 0.99); }
+  for (let w = 0; w < 10; w++) { C.playingTime(rot, 25); C.drift(rot); }
   ok("a rotation player who keeps coming on stays level", !rot.mo && !rot.bn, [rot.mo, rot.bn]);
   const starter = mk(54, "MF", 80);
-  for (let w = 0; w < 10; w++) { C.playingTime(starter, 90); C.drift(starter, () => 0.99); }
-  ok("a regular starter holds steady or rises", (starter.mo || 0) >= 0, starter.mo);
-  const back = mk(55, "MF", 80); for (let w = 0; w < 5; w++) C.playingTime(back, 0); C.playingTime(back, 70);
-  ok("one match back wipes the bench count", !back.bn, back.bn);
+  for (let w = 0; w < 10; w++) { C.playingTime(starter, 90); C.drift(starter); }
+  ok("a regular starter holds steady or rises slowly", (starter.mo || 0) >= 0 && (starter.mo || 0) < 1, starter.mo);
+  const back = mk(55, "MF", 80); for (let w = 0; w < 7; w++) { C.playingTime(back, 0); C.drift(back); }
+  const low = back.mo;
+  for (let w = 0; w < 8; w++) { C.playingTime(back, 90); C.applyResult([back], 1, 1); C.drift(back); }
+  ok("playing again stops the slide at once and recovers at the normal slow rate", !back.bn && low < -0.3 && back.mo > low && back.mo <= 0.6, [low, back.mo]);
+  // several seasons of a made up league: averages stay near zero, only a few at the extremes
+  {
+    const rng = seeded(77);
+    const teams = [];
+    for (let t = 0; t < 20; t++) { const sq = []; for (let i = 0; i < 22; i++) sq.push(Object.assign(mk(t * 100 + i, i === 0 || i === 11 ? "GK" : i % 11 < 5 ? "DF" : i % 11 < 8 ? "MF" : "FW", 60 + t + Math.floor(rng() * 12)), { age: 18 + Math.floor(rng() * 16) })); teams.push({ sq, str: 60 + t }); }
+    const pool = EVENTS;
+    let creep = [];
+    for (let season = 0; season < 4; season++) {
+      for (let w = 0; w < 38; w++) {
+        for (let t = 0; t < 20; t += 2) {
+          const A = teams[t], B = teams[t + 1];
+          const xiOf = T2 => T2.sq.slice().sort((a, b) => C.effOvr(b, { neutral: true }) - C.effOvr(a, { neutral: true })).filter((p, i, arr) => arr.indexOf(arr.find(x => x.pos === "GK")) === i || p.pos !== "GK").slice(0, 11);
+          const xa = xiOf(A), xb = xiOf(B);
+          const pa = C.participants(xa, C.pickSubs(xa, A.sq.filter(p => !xa.includes(p)), rng)), pb = C.participants(xb, C.pickSubs(xb, B.sq.filter(p => !xb.includes(p)), rng));
+          const ga = Math.floor(rng() * 3 + (A.str - B.str) / 10 + 0.5), gb = Math.floor(rng() * 3);
+          C.applyResult(pa, ga, gb); C.applyResult(pb, gb, ga);
+          for (const T2 of [[A, pa], [B, pb]]) for (const p of T2[0].sq) { const e = T2[1].find(x => x.p === p); C.playingTime(p, e ? e.min : 0); }
+        }
+        for (const T2 of teams) {
+          for (const p of T2.sq) C.drift(p);
+          const club = {};
+          const cnt = C.rollEventCount(rng);
+          for (let i = 0; i < cnt; i++) C.applyEvent(pool[Math.floor(rng() * pool.length)], club, T2.sq, w, rng);
+        }
+        teams.forEach((T2, ti) => { [T2, teams[(ti + 7) % 20]] = [teams[(ti + 7) % 20], T2]; });
+      }
+      const all = teams.flatMap(T2 => T2.sq);
+      const avgF = all.reduce((s2, p) => s2 + (p.fm || 0), 0) / all.length, avgM = all.reduce((s2, p) => s2 + (p.mo || 0), 0) / all.length;
+      const ext = all.filter(p => Math.abs(p.fm || 0) >= 2.5 || Math.abs(p.mo || 0) >= 1.8).length / all.length;
+      creep.push({ avgF: +avgF.toFixed(2), avgM: +avgM.toFixed(2), ext: +ext.toFixed(3) });
+    }
+    ok("over four seasons league wide form and morale sit near zero with no upward creep", creep.every(c => Math.abs(c.avgF) < 0.5 && Math.abs(c.avgM) < 0.5) && creep[3].avgF <= creep[0].avgF + 0.25 && creep[3].avgM <= creep[0].avgM + 0.25, creep);
+    ok("only a few percent of players sit at the extremes at any moment", creep.every(c => c.ext < 0.08), creep.map(c => c.ext));
+  }
+}
+
+// ---------- the display rule (same logic as the page's ovrFace) ----------
+{
+  const page = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const src = /function ovrFace\(base, eff\) \{[\s\S]*?\n\}/.exec(page);
+  ok("the page has the one number plus arrow rule", !!src, null);
+  if (src) {
+    const ovrFace = new Function(src[0] + "; return ovrFace;")();
+    ok("effective equal to base shows one number and no arrow", ovrFace(91, 91).text === "91" && ovrFace(91, 91).arrow === "" && ovrFace(91, 91).dir === "flat", ovrFace(91, 91));
+    ok("above base shows the effective number with an up arrow", ovrFace(82, 84).text === "84" && ovrFace(82, 84).dir === "up" && ovrFace(82, 84).arrow === String.fromCharCode(9650), ovrFace(82, 84));
+    ok("below base shows the effective number with a down arrow", ovrFace(82, 79).text === "79" && ovrFace(82, 79).dir === "down" && ovrFace(82, 79).arrow === String.fromCharCode(9660), ovrFace(82, 79));
+  }
+  ok("the face never shows two numbers side by side", !page.includes('class="ovb"') && !page.includes("' . '"), null);
+  ok("the event cause reaches the tooltip", C.shortCause("Away fans let off firecrackers outside the team hotel all night. Players are shattered.") === "Away fans let off firecrackers outside the team hotel all night" && C.shortCause("x".repeat(90)).length <= 70, null);
+  const club = {}; const sq = []; for (let i = 0; i < 12; i++) sq.push(P(300 + i, 70));
+  const ev = EVENTS.find(e => e.who === "squad" && e.w > 0 && e.m);
+  C.applyEvent(ev, club, sq, 5, seeded(8));
+  const parts2 = C.parts(sq[0], club, 5);
+  ok("the breakdown names the event behind an active modifier", parts2.causes.length === 1 && parts2.causes[0].s.length > 10 && !parts2.causes[0].s.includes("{p}") && parts2.causes[0].m === ev.m, parts2.causes);
+  C.addNews(club, 5, "one", 40); C.addNews(club, 6, "two", 40);
+  ok("news items carry rising ids so a manager can be shown only what is new", club.news[0].i === 2 && club.news[1].i === 1 && club.news[0].t === "two", club.news);
 }
 
 console.log(passed + " passed, " + failed + " failed");
