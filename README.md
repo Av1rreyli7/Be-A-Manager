@@ -20,7 +20,7 @@ Then open http://localhost:3000. For live reload while you work on it, use `npm 
 
 One Node process serves everything (`server.js`):
 
-- **Express** owns Floodlights: the game page at `/floodlights/`, its files (`match.js`, `match3d.mjs`, three.js, fonts) and its API at `/api/...`.
+- **Express** owns Floodlights: the game page at `/floodlights/`, its files (`match.js`, `match3d.mjs`, `match_sim3d.mjs`, three.js, fonts) and its API at `/api/...`.
 - **Next.js** serves everything else: the landing page and all of Front Office.
 
 Why a custom server and not a static export: Front Office has pages with ids in the address (`/game/player/[id]`, `/game/team/[id]`, `/game/box/[id]`) and one API route. A static export would have meant changing Front Office itself. With the custom server Front Office needs no changes to how it works. The whole thing idles at about 170 MB of memory, well inside the 512 MB of a free Render instance.
@@ -32,7 +32,7 @@ Where things live:
 | Folder | What is in it |
 | --- | --- |
 | `server.js` | the combined server |
-| `floodlights/` | the Floodlights server (`server.js`), client (`index.html`), match engine (`match.js`), 3D match look (`match3d.mjs`), world data, fonts and its two test batteries |
+| `floodlights/` | the Floodlights server (`server.js`), client (`index.html`), match engine (`match.js`), 3D match look (`match3d.mjs`) with its deep sim (`match_sim3d.mjs`), world data, fonts and its two test batteries |
 | `src/app/page.tsx`, `src/landing/` | the landing page (React, Motion, three.js with React Three Fiber) |
 | `src/app/front-office/` | the Game Night picker with Front Office and Hardwood Legends (it used to be the home page of Front Office) |
 | `src/app/game`, `src/app/gm`, `src/app/online`, `src/engine`, `src/lib`, `src/components`, `src/worker` | Front Office. The game works as before; its look now matches the rest of the site (`src/app/globals.css`, `src/lib/theme.ts`, `src/components/ui.tsx`) |

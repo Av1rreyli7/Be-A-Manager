@@ -556,6 +556,37 @@ td[class^="pos-"]{font-family:var(--f-num);font-weight:600;font-size:12px;letter
 #matchCanvas3d{position:absolute;inset:0;display:block;width:100%;height:100%}
 #matchWrap.m3d #matchCanvas{position:absolute;inset:0;background:transparent}
 #matchWrap.m3d{background:#04060b}
+/* the 3D match HUD: site design language, black panels, hairlines, cut corners, Chakra Petch labels, volt accent */
+#m3dHud{position:absolute;inset:0;pointer-events:none;z-index:3;font-family:var(--f-ui);color:var(--chalk)}
+#m3dHud .m3-score{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:0;background:rgba(0,0,0,.84);box-shadow:0 0 0 1px var(--line),0 10px 30px rgba(0,0,0,.6);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+#m3dHud .m3-bar{display:block;width:6px;align-self:stretch;background:#888}
+#m3dHud .m3-team{font-family:var(--f-lbl);font-weight:700;font-size:15px;letter-spacing:.08em;padding:0 14px;white-space:nowrap}
+#m3dHud .m3-num{font-family:var(--f-lbl);font-weight:700;font-size:26px;line-height:1;padding:8px 14px 7px;background:#000000;color:#ffffff;white-space:pre;font-variant-numeric:tabular-nums;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+#m3dHud .m3-clock{position:absolute;top:60px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;font-family:var(--f-lbl);font-weight:700;font-size:12px;letter-spacing:.14em;background:rgba(0,0,0,.8);padding:4px 12px;box-shadow:0 0 0 1px var(--line)}
+#m3dHud .m3-half{color:var(--dim)}
+#m3dHud .m3-min{color:var(--volt);font-size:15px}
+#m3dHud .m3-help{position:absolute;top:98px;left:50%;transform:translateX(-50%);text-align:center;transition:opacity .6s;opacity:0;max-width:92vw}
+#m3dHud .m3-help1{display:inline-block;font-family:var(--f-lbl);font-weight:700;font-size:17px;letter-spacing:.1em;color:var(--volt);background:rgba(0,0,0,.8);padding:6px 16px;box-shadow:0 0 0 1px var(--line)}
+#m3dHud .m3-help2{margin-top:8px;display:inline-block;font-size:12.5px;color:var(--soft);background:rgba(0,0,0,.7);padding:5px 12px;box-shadow:0 0 0 1px var(--line2)}
+#m3dHud .m3-card{position:absolute;left:18px;bottom:18px;display:flex;align-items:stretch;background:rgba(0,0,0,.86);box-shadow:0 0 0 1px var(--line);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));min-width:210px}
+#m3dHud.m3-nocard .m3-card{display:none}
+#m3dHud .m3-cnum{font-family:var(--f-lbl);font-weight:700;font-size:30px;min-width:56px;display:grid;place-items:center;background:#333;color:#fff}
+#m3dHud .m3-cinfo{padding:9px 14px 10px 12px;min-width:150px}
+#m3dHud .m3-cname{font-weight:700;font-size:14px;letter-spacing:.03em}
+#m3dHud .m3-cmeta{font-family:var(--f-lbl);font-weight:700;font-size:10px;letter-spacing:.12em;color:var(--dim);margin-top:3px;white-space:pre}
+#m3dHud .m3-stam{height:4px;background:#222422;margin-top:8px}
+#m3dHud .m3-stam div{height:100%;width:100%;background:linear-gradient(90deg,#5fd38d,var(--volt));transition:width .2s}
+#m3dHud .m3-ticker{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);max-width:88vw;opacity:0;transition:opacity .2s}
+#m3dHud .m3-ticker div{font-weight:600;font-size:clamp(14px,2.2vw,20px);letter-spacing:.02em;background:rgba(0,0,0,.84);border-left:3px solid var(--volt);padding:8px 18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#m3dHud .m3-ticker.in div{animation:m3in .28s var(--ease)}
+#m3dHud .m3-goal{position:absolute;top:34%;left:0;right:0;text-align:center;opacity:0}
+#m3dHud .m3-goal1{font-family:var(--f-ui);font-weight:900;font-stretch:108%;font-size:clamp(54px,13vw,150px);line-height:1;letter-spacing:-.02em;text-transform:uppercase;color:var(--volt);text-shadow:0 0 24px rgba(208,232,92,.55),0 8px 24px rgba(0,0,0,.8)}
+#m3dHud .m3-goal2{margin-top:10px;font-family:var(--f-lbl);font-weight:700;font-size:clamp(14px,2.6vw,24px);letter-spacing:.18em;text-transform:uppercase;text-shadow:0 2px 0 #000,0 0 12px rgba(0,0,0,.8)}
+#m3dHud .m3-goal.in .m3-goal1{animation:m3pop .5s var(--ease)}
+#m3dHud .m3-flash{position:absolute;inset:0;background:#ffffff;opacity:0;pointer-events:none}
+@keyframes m3in{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
+@keyframes m3pop{from{scale:1.6;opacity:0}to{scale:1;opacity:1}}
+@media (max-width:760px){#m3dHud .m3-team{font-size:12px;padding:0 8px}#m3dHud .m3-num{font-size:20px}#m3dHud .m3-card{min-width:0}#m3dHud .m3-cinfo{min-width:110px}#m3dHud .m3-help2{display:none}}
 
 /* ---------- people who ask for less motion get a still page ---------- */
 @media (prefers-reduced-motion: reduce){
@@ -2505,8 +2536,14 @@ $("nameIn").value = ME.name;
   // picks 3D on the kick off screen, so the page itself stays light.
   if (window.FLMatch) {
     window.FLMatch.load3D = function () {
-      return Promise.all([import("./vendor/three.module.js"), import("./match3d.mjs")]).then(function (mods) {
-        return function (opts) { return mods[1].createView3D(mods[0], opts); };
+      // three.js, the 3D view and the deep sim (match_sim3d.mjs). The view carries the sim maker so the
+      // engine can pick it at kick off. Classic keeps the sim inside match.js.
+      return Promise.all([import("./vendor/three.module.js"), import("./match3d.mjs"), import("./match_sim3d.mjs")]).then(function (mods) {
+        return function (opts) {
+          var view = mods[1].createView3D(mods[0], opts);
+          view.createSim = mods[2].createSim3D;
+          return view;
+        };
       });
     };
   }

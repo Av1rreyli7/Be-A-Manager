@@ -127,6 +127,8 @@ if (fs.existsSync(path.join(root, "..", "floodlights", "index.html"))) {
   const origEngine = fs.readFileSync(path.join(root, "..", "floodlights", "match.js"), "utf8");
   const simPart = s => s.slice(s.indexOf("function createSim"), s.indexOf("// LOOK"));
   ok("the match sim (rules, AI, controls) is untouched", simPart(read("floodlights/match.js")) === simPart(origEngine) && simPart(origEngine).length > 30000, null);
+  // the 3D look has its own deep sim next to it, so Classic can stay exactly as it was
+  ok("the deep sim for 3D is a separate file and Classic does not use it", has("floodlights/match_sim3d.mjs") && !simPart(read("floodlights/match.js")).includes("match_sim3d"), null);
 }
 
 // ---------- docs ----------
@@ -141,7 +143,7 @@ if (fs.existsSync(up)) {
   const upFiles = walk(up, new Set(), []).map(f => path.relative(up, f));
   const bad = upFiles.filter(f => /(^|\/)(node_modules|\.next)\//.test(f) || /games\.json$/.test(f) || /\.DS_Store$/.test(f) || /\.tsbuildinfo$/.test(f));
   ok("the upload folder has no node_modules, .next, games.json or junk", bad.length === 0, bad.slice(0, 8));
-  for (const f of ["package.json", "package-lock.json", "server.js", "next.config.ts", "tsconfig.json", "tsconfig.build.json", "postcss.config.mjs", ".gitignore", ".node-version", "render.yaml", "README.md", "DEPLOY.md", "floodlights/server.js", "floodlights/index.html", "floodlights/match.js", "floodlights/match3d.mjs", "floodlights/players.js", "floodlights/world_pack.js", "floodlights/extra_clubs.js", "floodlights/league_fill.js", "floodlights/fonts/inter.woff2", "floodlights/test_sept.js", "floodlights/test_dom_sept.js", "src/app/page.tsx", "src/app/layout.tsx", "src/landing/Landing.tsx", "src/landing/Backdrop3D.tsx", "src/landing/landing.css", "public/games/hardwood-legends.html", "data/players.json", "tests/landing.test.tsx", "tests-site/test_boot.js"]) ok("upload has " + f, upFiles.includes(f), null);
+  for (const f of ["package.json", "package-lock.json", "server.js", "next.config.ts", "tsconfig.json", "tsconfig.build.json", "postcss.config.mjs", ".gitignore", ".node-version", "render.yaml", "README.md", "DEPLOY.md", "floodlights/server.js", "floodlights/index.html", "floodlights/match.js", "floodlights/match3d.mjs", "floodlights/match_sim3d.mjs", "floodlights/players.js", "floodlights/world_pack.js", "floodlights/extra_clubs.js", "floodlights/league_fill.js", "floodlights/fonts/inter.woff2", "floodlights/test_sept.js", "floodlights/test_dom_sept.js", "src/app/page.tsx", "src/app/layout.tsx", "src/landing/Landing.tsx", "src/landing/Backdrop3D.tsx", "src/landing/landing.css", "public/games/hardwood-legends.html", "data/players.json", "tests/landing.test.tsx", "tests-site/test_boot.js"]) ok("upload has " + f, upFiles.includes(f), null);
   // the copy must match the working tree
   const stale = upFiles.filter(f => { const src = path.join(root, f); return !fs.existsSync(src) || !fs.readFileSync(src).equals(fs.readFileSync(path.join(up, f))); });
   ok("every file in upload matches the working tree", stale.length === 0, stale.slice(0, 8));

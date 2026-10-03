@@ -1305,7 +1305,7 @@ function makeView(canvas) {
 // CONTROLLER
 // =====================================================================
 let active = null;
-const KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyQ", "ShiftLeft", "ShiftRight", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyQ", "KeyT", "KeyX", "KeyF", "Space", "ShiftLeft", "ShiftRight", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 const esc = s => String(s === undefined || s === null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 function diffLine(mine, theirs) {
@@ -1337,7 +1337,7 @@ function open(cfg) {
   const doc = root.document;
   const wrap = doc.getElementById("matchWrap"), canvas = doc.getElementById("matchCanvas"), panel = doc.getElementById("matchPanel");
   if (!wrap || !canvas || !panel) return false;
-  const A = active = { cfg, wrap, canvas, panel, mode: "pre", sim: null, view: null, keys: {}, passQ: false, shootLatch: false, acc: 0, last: 0, raf: 0, checkT: 0, saving: false, saved: false, view3d: null, want3d: false, load3d: null };
+  const A = active = { cfg, wrap, canvas, panel, mode: "pre", sim: null, view: null, keys: {}, passQ: false, throughQ: false, slideQ: false, skillQ: false, shootLatch: false, acc: 0, last: 0, raf: 0, checkT: 0, saving: false, saved: false, view3d: null, want3d: false, load3d: null };
   wrap.classList.remove("hidden");
   wrap.classList.remove("m3d");
   A.view = makeView(canvas);
@@ -1367,16 +1367,20 @@ function open(cfg) {
       '<p class="mdiff">' + esc(diffLine(myR, opR)) + "</p>" +
       '<div class="mkeys">' +
       "<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move</span>" +
-      "<span><kbd>Shift</kbd> Sprint</span>" +
-      "<span><kbd>Q</kbd> Pass, or switch player when you do not have the ball</span>" +
+      "<span><kbd>Shift</kbd> Sprint. It drains stamina, fit players last longer.</span>" +
+      "<span><kbd>Q</kbd> Pass to the team mate you are facing, or switch player when you do not have the ball</span>" +
+      "<span><kbd>T</kbd> Through ball: a pass into the space ahead of a running team mate</span>" +
       "<span><kbd>E</kbd> Hold to power up a shot, let go to shoot. Hold W or S to pick a corner. Too much power and it flies over.</span>" +
+      "<span><kbd>F</kbd> Skill move when you have the ball: stepover, feint, drag back or roulette. Good dribblers beat their man, poor ones lose the ball.</span>" +
+      "<span><kbd>Space</kbd> Hold when defending to close the ball carrier down and make a standing tackle</span>" +
+      "<span><kbd>X</kbd> Slide tackle: a big lunge. Time it right and you win the ball clean, get it wrong and you are on the ground and beaten.</span>" +
       "<span><kbd>Esc</kbd> Pause</span></div>" +
       "<p>You play as " + esc(mineName) + " and attack to the right. The game picks your player nearest the ball. The match takes about 6 minutes and you need a keyboard.</p>" +
       '<p class="mwarn">You get one go. Once you kick off, the final score is what counts for this week. If you leave before full time, the match is simmed like normal.</p>' +
       '<div class="mlook"><span class="mk">How it looks</span><div class="mseg">' +
       '<button class="small ghost' + (A.want3d ? " on" : "") + '" id="mxLook3d"' + (can3d ? "" : " disabled") + ">3D</button>" +
       '<button class="small ghost' + (A.want3d ? "" : " on") + '" id="mxLookClassic">Classic</button></div>' +
-      '<small id="mxLookNote">' + (can3d ? "3D is the broadcast view. If it runs slowly on your laptop, pick Classic. The game plays the same in both." : "3D is not available in this browser, so the match plays in Classic.") + "</small></div>" +
+      '<small id="mxLookNote">' + (can3d ? "3D is the full game: real player attributes, skill moves, slide tackles and through balls. Classic is the simple top down match as before, with the first five keys only. If 3D runs slowly on your laptop, pick Classic." : "3D is not available in this browser, so the match plays in Classic.") + "</small></div>" +
       (err ? '<p class="merr">' + esc(err) + "</p>" : "") +
       '<div class="mbtns"><button class="ghost" id="mxBack">Not now</button><button class="gold" id="mxGo">Kick off</button></div>'
     );
@@ -1409,7 +1413,8 @@ function open(cfg) {
         }
         A.view3d = v3;
         wrap.classList.toggle("m3d", !!v3);
-        A.sim = createSim(setup, {});
+        // the 3D view brings the deep sim with it (match_sim3d.mjs). Classic keeps the sim in this file.
+        A.sim = (v3 && typeof v3.createSim === "function" ? v3.createSim : createSim)(setup, {});
         if (fell) { A.view.fx.toast = "3D could not start, so this match is in Classic."; A.view.fx.toastT = 3.4; }
         A.view.fx.snap = true;
         A.acc = 0;
@@ -1526,7 +1531,11 @@ function open(cfg) {
       my: (k.KeyS || k.ArrowDown ? 1 : 0) - (k.KeyW || k.ArrowUp ? 1 : 0),
       sprint: !!(k.ShiftLeft || k.ShiftRight),
       shoot: !!k.KeyE || A.shootLatch,
-      pass: A.passQ
+      pass: A.passQ,
+      through: A.throughQ,
+      slide: A.slideQ,
+      skill: A.skillQ,
+      tackle: !!k.Space
     };
   }
   A.onKey = e => {
@@ -1543,6 +1552,9 @@ function open(cfg) {
     if (down && !e.repeat) {
       if (e.code === "KeyQ") A.passQ = true;
       if (e.code === "KeyE") A.shootLatch = true;
+      if (e.code === "KeyT") A.throughQ = true;
+      if (e.code === "KeyX") A.slideQ = true;
+      if (e.code === "KeyF") A.skillQ = true;
     }
   };
   A.onBlur = () => { A.keys = {}; if (A.mode === "playing") showPause(); };
@@ -1559,7 +1571,7 @@ function open(cfg) {
       let n = 0;
       while (A.acc >= STEP && n < 6) {
         A.sim.step(input());
-        A.passQ = false; A.shootLatch = false;
+        A.passQ = false; A.shootLatch = false; A.throughQ = false; A.slideQ = false; A.skillQ = false;
         A.acc -= STEP; n++;
       }
       if (n === 6) A.acc = 0;
@@ -1573,9 +1585,9 @@ function open(cfg) {
     if (A.checkT > 0.5) { A.checkT = 0; checkSimmed(); }
     const dtV = A.mode === "paused" || A.mode === "simmed" ? 0 : dtR;
     if (A.view3d && A.sim) {
-      // 3D: the scene first, then the scoreboard and labels on the canvas above it
+      // 3D: the view draws the scene and, when it owns its HUD, the scoreboard and labels too
       A.view3d.draw(A.sim, dtV, A.view.fx);
-      A.view.draw(A.sim, dtV, { overlay: A.view3d });
+      if (!A.view3d.ownHud) A.view.draw(A.sim, dtV, { overlay: A.view3d });
     } else A.view.draw(A.sim, dtV, {});
     A.raf = root.requestAnimationFrame(frame);
   }
@@ -1603,7 +1615,7 @@ function close() {
 
 const DIMS = { HALF_L, HALF_W, GOAL_HALF, BAR_H, GOAL_DEPTH, BOX_D, BOX_HALF, SIX_D, SIX_HALF, SPOT_D, CIRCLE_R };
 // load3D is filled in by the page. It resolves to a function that builds the 3D view (see match3d.mjs).
-const FLMatch = { createSim, open, close, isOpen: () => !!active, MAX_GOALS, MATCH_SECONDS, STEP, DIMS, pickKits, load3D: null, look3d: () => !!(active && active.view3d) };
+const FLMatch = { createSim, open, close, isOpen: () => !!active, MAX_GOALS, MATCH_SECONDS, STEP, DIMS, pickKits, load3D: null, look3d: () => !!(active && active.view3d), view3d: () => (active && active.view3d) || null };
 root.FLMatch = FLMatch;
 if (typeof module !== "undefined" && module.exports) module.exports = FLMatch;
 })(typeof window !== "undefined" ? window : globalThis);

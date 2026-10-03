@@ -30,6 +30,11 @@ app.get("/floodlights/match3d.mjs", (req, res) => {
   res.type("text/javascript");
   res.sendFile(path.join(__dirname, "match3d.mjs"));
 });
+// the deep sim behind the 3D look, fetched together with the view
+app.get("/floodlights/match_sim3d.mjs", (req, res) => {
+  res.type("text/javascript");
+  res.sendFile(path.join(__dirname, "match_sim3d.mjs"));
+});
 // three.js for the 3D match, straight from the installed package
 const THREE_BUILD = path.dirname(require.resolve("three"));
 for (const f of ["three.module.js", "three.core.js"]) {

@@ -86,3 +86,45 @@ day played in Hardwood Legends from Front Office, and a Hardwood Legends quick p
   full screen Hardwood Legends game inside the page column when started from Front Office. It now fills the
   whole window. This was already so before the restyle.
 - Not clicked through with two real players: the online friends league (only its screens were checked).
+
+## Floodlights 3D match overhaul (looks and gameplay depth)
+
+Goal: the 3D playable match gets player identity, Hardwood Legends level presentation, a proper HUD, and
+ratings driven gameplay with skill moves, slide tackles, standing tackles and through balls. Classic stays
+available and untouched. Server rules unchanged. Resume from the first unchecked box.
+
+Decisions:
+- The squad data has no per skill attributes and no shirt numbers (players are name, position, age, rating,
+  role). So the 3D match derives pace, dribbling, shooting, passing, defending and physical from rating, role
+  and a name hash (the same way Hardwood Legends derives its attributes from overall and archetype), and shirt
+  numbers from position and role, unique inside the XI. Everything is deterministic for a given squad.
+- The 3D match has its own sim, floodlights/match_sim3d.mjs, forked from the one in match.js and then grown.
+  The Classic sim in match.js stays byte for byte as it was (tests-site/test_site.js checks that), so Classic
+  plays exactly as before. The controller in match.js picks the deep sim when the 3D view is on.
+- The 3D view owns its HUD (DOM, site design language) and the name tags. In 3D the Classic canvas is not drawn.
+- Frame rate guard: the view measures its own frame times and steps quality down (shadow map, pixel ratio,
+  crowd) if a normal laptop cannot hold the rate.
+
+Checklist:
+- [x] F1 deep sim: attributes, movement, shooting, passing, keeping, stamina all driven by attributes
+- [x] F2 new controls in the deep sim: T through ball, X slide tackle, Space standing tackle and pressure, F skill move
+- [x] F3 AI uses the same toolkit by rating: skill moves, through balls, slides, timed tackles
+- [x] F4 commentary pools with personality, no instant repeats
+- [x] F5 3D view: lighting with shadows, mow lines, numbered shirts, skin and hair variants, jointed figures
+- [x] F6 3D view: markers and name tags, reacting nets, stadium bowl, broadcast camera with goal zoom
+- [x] F7 HUD in the site design language: scorebug, clock, player card, power meter, ticker, goal banner
+- [x] F8 controller and page: new keys, sim pick, help screen, loader, server route, styles
+- [x] F9 tests: 3D battery extended (attribute scaling, fast v slow, tackles, through balls, skill moves), site and boot checks
+- [x] F10 all batteries 0 failed run 3 times, vitest, typecheck, boot test; upload folder; push
+
+Overhaul result: all boxes done. npm run test:all passed three times in a row with 0 failed (typecheck, vitest 81,
+API battery 175, DOM battery 110, 3D checks 180, site checks 156, build, boot test 48), then the view got three
+small fixes from a real browser look (ad board text fit, darker crowd, the frame rate guard) and the batteries
+were run again. Played in Chrome on the production build: Arsenal v Wolves, Liverpool away and Man City away,
+all in 3D, with no console errors beyond a three.js note about the shadow map type (now fixed).
+- The frame rate guard measures the CPU work per frame (over 11 ms) or a floor of 24 frames a second before it
+  drops a quality level. The first version used the raw frame interval, which also trips on a 30 Hz display or a
+  throttled tab, so a match that drew in 6 ms a frame was losing its shadows for nothing.
+- Measured on this Mac at full quality: about 6 ms of CPU work per frame, 1933 crowd seats, about 60k triangles.
+- Shirt textures use the Chakra Petch font when the page has it loaded, with an Arial Black fallback.
+- FLMatch.view3d() returns the live 3D view while a 3D match is open (quality(), setQuality(q), stats()).
