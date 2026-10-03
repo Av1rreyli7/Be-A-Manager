@@ -52,11 +52,11 @@ async function main() {
   ok("the landing has the title", r.text.includes("<title>Be-A-Manager</title>") && /<h1[^>]*>[\s\S]*Be-A-Manager[\s\S]*<\/h1>/.test(r.text), null);
   ok("the landing links to both games", r.text.includes('href="/floodlights/"') && r.text.includes('href="/front-office"'), null);
   ok("the landing has both enter buttons", r.text.includes("ENTER FLOODLIGHTS") && r.text.includes("ENTER GAME NIGHT") && !r.text.includes("ENTER FRONT OFFICE"), null);
-  ok("the landing has the credit line", r.text.includes("By Avir &amp; Ayanssh"), null);
+  ok("the landing is the light version: no footer, stats, chips or long copy", !r.text.includes("bam-foot") && !r.text.includes("bam-stats") && !r.text.includes("k-chip") && !r.text.includes("bam-blurb") && !r.text.includes("BASKETBALL BUNDLE"), null);
   ok("the landing forces a black page from the first byte", r.text.includes("html,body{background:#000000 !important") && r.text.includes("background:#000"), null);
   ok("the starfield is in the first HTML, before any script runs", r.text.includes("bam-stars") && (r.text.match(/vw [0-9.]+vh/g) || []).length >= 168, null);
-  ok("both game variants are in the first HTML", (r.text.match(/bam-variant/g) || []).length >= 2 && r.text.includes("BASKETBALL BUNDLE") && r.text.includes("FOOTBALL MANAGER"), null);
-  ok("Game Night explains the two games inside it", r.text.includes("Two basketball games in one.") && r.text.includes("The matches play out on their own.") && r.text.includes("play the season yourself in 5v5."), null);
+  ok("both games are in the first HTML with their glass enter buttons", r.text.includes('data-game="floodlights"') && r.text.includes('data-game="frontoffice"') && (r.text.match(/k-btn-primary/g) || []).length >= 2, null);
+  ok("each game has its one short line", r.text.includes("Run a football club with your mates.") && r.text.includes("Run the team, or play it yourself."), null);
   ok("no em or en dashes in the landing HTML", !r.text.includes(String.fromCharCode(8212)) && !r.text.includes(String.fromCharCode(8211)), null);
   ok("three.js is not in the first HTML", !r.text.includes("WebGLRenderer"), null);
   ok("the landing has no side preview card", !r.text.includes("bam-side-cap") && !r.text.includes("bam-mock") && !r.text.includes("ALSO HERE"), null);

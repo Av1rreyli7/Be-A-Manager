@@ -53,8 +53,6 @@ button:hover{background:var(--volthi);border-color:var(--volthi)}
 button:active{transform:translateY(1px)}
 button:disabled{opacity:.45;cursor:not-allowed}
 button:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
-button.gold{background:var(--volt);color:var(--voltink);border-color:var(--volt)}
-button.gold:hover{background:var(--volthi);border-color:var(--volthi)}
 button.ghost{background:transparent;color:var(--soft);border-color:var(--line)}
 button.ghost:hover{background:var(--raise);color:var(--chalk);border-color:var(--bline)}
 button.red{background:transparent;color:var(--softred);border-color:rgba(242,92,92,.42)}
@@ -62,9 +60,6 @@ button.red:hover{background:rgba(242,92,92,.12);border-color:var(--red)}
 button.red.hj{background:var(--red);color:#1c0707;border-color:var(--red)}
 button.red.hj:hover{background:var(--softred);border-color:var(--softred)}
 button.small{padding:7px 10px;font-size:11px}
-/* small buttons inside rows are quiet, so the solid volt stays for the main action */
-button.small:not(.ghost):not(.red):not(.gold){background:var(--voltwash);color:var(--volt);border-color:var(--voltedge)}
-button.small:not(.ghost):not(.red):not(.gold):hover{background:rgba(208,232,92,.18);border-color:var(--volt)}
 
 /* ---------- form controls ---------- */
 input:not([type=checkbox]),select{background:var(--panel);border:1px solid var(--line);color:var(--chalk);border-radius:var(--r);padding:10px 12px;font-size:14px;font-weight:500;font-family:var(--f-ui);transition:border-color .15s,box-shadow .15s}
@@ -642,7 +637,7 @@ td .ovr .ovtip{left:auto;right:0;transform:none}
    Floodlights now wears the same look as the landing page:
    pure black, hairlines at 13% white, chamfered corners,
    Inter for reading, Chakra Petch for every label and big
-   number, liquid glass buttons, and the glow button for the
+   number, liquid glass buttons, and the tinted glass button for the
    main action on each screen. The one accent stays volt.
    Everything below only restyles. No behavior lives here.
    ========================================================== */
@@ -690,29 +685,11 @@ button.red:hover{background:linear-gradient(135deg,rgba(242,92,92,.24),rgba(0,0,
 button.red.hj{background:var(--red);color:#1c0707;border-color:var(--red)}
 button.red.hj:hover{background:var(--softred);border-color:var(--softred)}
 button.small{padding:8px 11px;font-size:10.5px;letter-spacing:.08em}
-button.small:not(.ghost):not(.red):not(.gold){background:var(--voltwash);color:var(--volt);border-color:var(--voltedge);box-shadow:none!important}
-button.small:not(.ghost):not(.red):not(.gold):hover{background:rgba(208,232,92,.18);border-color:var(--volt);box-shadow:none!important}
-button.small:not(.ghost):not(.red):not(.gold)::after{display:none}
 
-/* ---------- the glow button: the main action on a screen ----------
-   Near black, with a bank of volt light pooled at its foot and clipped by the
-   button's own rounded rect. The same button the landing page uses to enter a game. */
-button.gold,.card #createBtn{color:#ffffff;border:0;border-radius:12px;padding:14px 22px;text-shadow:0 1px 2px rgba(10,16,0,.5);
-  background:linear-gradient(to top,#eef7b0 1px,#e8f59a 2px,#e1f486 3px,#d9ee6e 4px,#d0e85c 5px,#b4cc3c 6px,#a0b82e 7px,#93aa28 8px,#80961f 9px,#6b7e17 10px,#566613 12px,#4f5d16 13px,#465311 14px,#374210 16px,#2a3210 18px,#202710 20px,#171c0f 24px,#10140c 30px,#0e120b 34px,#0e120b 100%);
-  box-shadow:inset 0 3px 3px -2px rgba(236,246,190,.1),inset 1px 0 0 rgba(255,255,255,.09),inset -1px 0 0 rgba(255,255,255,.09),0 1px 0 rgba(214,234,140,.38),1px 0 0 rgba(214,234,140,.17),-1px 0 0 rgba(214,234,140,.17),0 0 8px rgba(208,232,92,.1),0 2px 5px -3px rgba(208,232,92,.45)!important}
-button.gold::before,.card #createBtn::before{content:"";position:absolute;left:22%;right:38%;top:.8px;height:1.9px;z-index:1;filter:blur(.55px);background:linear-gradient(90deg,rgba(225,244,134,0) 0%,rgba(225,244,134,.58) 34%,rgba(240,250,190,.74) 50%,rgba(225,244,134,.58) 66%,rgba(225,244,134,0) 100%)}
-button.gold::after,.card #createBtn::after{content:"";position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;transform:none!important;transition:none;
-  background:linear-gradient(90deg,rgba(240,250,190,.7),rgba(240,250,190,0) 13px),linear-gradient(270deg,rgba(240,250,190,.7),rgba(240,250,190,0) 13px);
-  -webkit-mask:linear-gradient(to top,#000 0,#000 6px,rgba(0,0,0,.4) 12px,rgba(0,0,0,.15) 18px,rgba(0,0,0,.09) 24px,rgba(0,0,0,.02) 30px,rgba(0,0,0,.02) 100%);
-  mask:linear-gradient(to top,#000 0,#000 6px,rgba(0,0,0,.4) 12px,rgba(0,0,0,.15) 18px,rgba(0,0,0,.09) 24px,rgba(0,0,0,.02) 30px,rgba(0,0,0,.02) 100%)}
-button.gold:hover,.card #createBtn:hover{filter:brightness(1.12);
-  background:linear-gradient(to top,#eef7b0 1px,#e8f59a 2px,#e1f486 3px,#d9ee6e 4px,#d0e85c 5px,#b4cc3c 6px,#a0b82e 7px,#93aa28 8px,#80961f 9px,#6b7e17 10px,#566613 12px,#4f5d16 13px,#465311 14px,#374210 16px,#2a3210 18px,#202710 20px,#171c0f 24px,#10140c 30px,#0e120b 34px,#0e120b 100%);
-  box-shadow:inset 0 1px 0 rgba(240,250,190,.6),inset 1px 0 0 rgba(225,244,134,.35),inset -1px 0 0 rgba(225,244,134,.35),0 6px 22px rgba(160,190,50,.42)!important}
-/* the small one keeps the same light on a shorter bank */
-button.small.gold{padding:9px 13px;border-radius:9px;
-  background:linear-gradient(to top,#e8f59a 1px,#d9ee6e 2px,#d0e85c 3px,#a0b82e 4px,#80961f 5px,#566613 7px,#465311 8px,#2a3210 10px,#202710 12px,#171c0f 15px,#0e120b 20px,#0e120b 100%)}
-button.small.gold:hover{background:linear-gradient(to top,#e8f59a 1px,#d9ee6e 2px,#d0e85c 3px,#a0b82e 4px,#80961f 5px,#566613 7px,#465311 8px,#2a3210 10px,#202710 12px,#171c0f 15px,#0e120b 20px,#0e120b 100%)}
-button.small.gold::after{-webkit-mask:linear-gradient(to top,#000 0,#000 4px,rgba(0,0,0,.3) 8px,rgba(0,0,0,.08) 14px,rgba(0,0,0,.02) 20px,rgba(0,0,0,.02) 100%);mask:linear-gradient(to top,#000 0,#000 4px,rgba(0,0,0,.3) 8px,rgba(0,0,0,.08) 14px,rgba(0,0,0,.02) 20px,rgba(0,0,0,.02) 100%)}
+/* ---------- the main action: the kit glass button (public/kit.css), tinted with the club colours ----------
+   Only the sizes live here; the look is shared with Game Night and the landing. */
+button.gold{border-radius:10px;padding:13px 22px}
+button.small.gold{padding:9px 13px;border-radius:9px}
 
 /* buttons that are really rows, tabs or tiles keep their own plain look */
 nav.tabs button,.teampick>button,.reactbar button{overflow:visible}
@@ -864,13 +841,12 @@ nav.tabs button{transition:color .2s ease}
 #offerDot{color:var(--k-volt)}
 #travelDot{color:var(--k-warn);font-family:var(--f-num)}
 
-/* ---------- buttons: glass for the everyday ones, glow for the main action ---------- */
+/* ---------- buttons: glass for the everyday ones, tinted glass for the main action ---------- */
 button:not(nav.tabs *):not(.teampick > *):not(.reactbar *):not(.gold):not(.ghost):not(.red):not(.small):not(#createBtn){background:var(--k-glass);color:#ffffff;border:1px solid var(--k-glass-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
 button:not(nav.tabs *):not(.teampick > *):not(.reactbar *):not(.gold):not(.ghost):not(.red):not(.small):not(#createBtn):hover{background:var(--k-glass-hover);border-color:var(--k-glass-edge-hover);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 0 18px rgba(170,200,255,.16)}
 button:active:not(:disabled){transform:translateY(1px) scale(.97)}
-button.gold,.card #createBtn{box-shadow:inset 0 3px 3px -2px rgba(236,246,190,.1),inset 1px 0 0 rgba(255,255,255,.09),inset -1px 0 0 rgba(255,255,255,.09),0 1px 0 rgba(214,234,140,.38),0 0 22px -6px rgba(208,232,92,.55),0 2px 5px -3px rgba(208,232,92,.45)!important}
-button.small:not(.ghost):not(.red):not(.gold){background:linear-gradient(135deg,rgba(208,232,92,.16),rgba(47,210,122,.08));color:var(--k-volt-hi);border-color:var(--k-volt-edge)}
-button.small:not(.ghost):not(.red):not(.gold):hover{background:linear-gradient(135deg,rgba(208,232,92,.26),rgba(47,210,122,.14));border-color:var(--k-volt);box-shadow:0 0 14px -4px rgba(208,232,92,.6)!important}
+button.small:not(.ghost):not(.red):not(.gold){color:#ffffff;border-color:rgba(var(--k-tint-edge,var(--k-tint,var(--k-accent-rgb))),.4);background:linear-gradient(180deg,rgba(var(--k-tint,var(--k-accent-rgb)),.13),rgba(var(--k-tint-2,var(--k-tint,var(--k-accent-rgb))),.04)),rgba(8,11,16,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 10px rgba(var(--k-tint,var(--k-accent-rgb)),.1);text-shadow:0 1px 1px rgba(0,0,0,.4);transition:transform .18s var(--k-ease),background .25s,border-color .25s,box-shadow .25s}
+button.small:not(.ghost):not(.red):not(.gold):hover{background:linear-gradient(180deg,rgba(var(--k-tint,var(--k-accent-rgb)),.22),rgba(var(--k-tint-2,var(--k-tint,var(--k-accent-rgb))),.08)),rgba(8,11,16,.36);border-color:rgba(var(--k-tint-edge,var(--k-tint,var(--k-accent-rgb))),.72);transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 6px 16px -10px rgba(var(--k-tint,var(--k-accent-rgb)),.6)!important}
 button.red.hj{background:linear-gradient(135deg,#ff6b4a,#ff3d5a);color:#1c0707;border-color:#ff6b4a}
 
 /* ---------- inputs ---------- */
@@ -1120,7 +1096,7 @@ td.rat{min-width:58px}
     <div class="card">
       <label class="flab" for="nameIn">Your manager name</label>
       <div class="row"><input id="nameIn" maxlength="20" placeholder="e.g. Fergie2"></div>
-      <div class="row"><button id="createBtn">Create a game</button></div>
+      <div class="row"><button id="createBtn" class="gold">Create a game</button></div>
       <div class="cardsplit"></div>
       <label class="flab" for="codeIn">Or join with a code</label>
       <div class="row"><input id="codeIn" maxlength="4" placeholder="CODE" style="text-transform:uppercase"><button id="joinBtn">Join</button></div>
@@ -1477,6 +1453,7 @@ function leave(){
   $("lobbyMsg").textContent = "";
   $("app").classList.add("hidden");
   $("lobby").classList.remove("hidden");
+  clubTint(null);
   location.reload();
 }
 $("leaveBtn").onclick = leave;
@@ -1875,6 +1852,31 @@ function shirtNumbers(squad) {
 function hexRgbP(h) { const n = parseInt(String(h).slice(1), 16) || 0; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 function hexDist(a, b) { const x = hexRgbP(a), y = hexRgbP(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); }
 function hexLum(h) { const c = hexRgbP(h); return (c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114) / 255; }
+// the glass buttons take the club's colours once a save is loaded (kit.css reads --k-tint, --k-tint-2 and
+// --k-tint-edge as "r, g, b"). A very dark first colour swaps with the second, a colour that is still too
+// dark is lifted toward white, and the edge is kept bright, so every club gets a visible, crisp tint while
+// the fill stays faint enough for white text. Fulham: faint white over black; City: sky blue.
+const TINT = { key: "" };
+function liftRgb(c, minLum) {
+  let out = c.slice();
+  for (let i = 0; i < 12 && (out[0] * 0.299 + out[1] * 0.587 + out[2] * 0.114) / 255 < minLum; i++) out = out.map(v => Math.round(v + (255 - v) * 0.18));
+  return out;
+}
+function clubTint(kit) {
+  const root = document.documentElement.style;
+  const key = kit ? kit.join("|") : "";
+  if (key === TINT.key) return;
+  TINT.key = key;
+  if (!kit) { ["--k-tint", "--k-tint-2", "--k-tint-edge"].forEach(v => root.removeProperty(v)); return; }
+  let a = hexRgbP(kit[0]), b = hexRgbP(kit[1]);
+  const lum = c => (c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114) / 255;
+  if (lum(a) < 0.14 && lum(b) > lum(a)) { const t = a; a = b; b = t; }
+  a = liftRgb(a, 0.28);
+  const edge = liftRgb(a, 0.5);
+  root.setProperty("--k-tint", a.join(", "));
+  root.setProperty("--k-tint-2", b.join(", "));
+  root.setProperty("--k-tint-edge", edge.join(", "));
+}
 // the club's real kit colours, the same ones the playable match uses
 function clubKit(name) {
   try { if (window.FLMatch && FLMatch.pickKits) return FLMatch.pickKits(name || "", "~")[0]; } catch (e) { /* fall through */ }
@@ -1990,6 +1992,7 @@ function render() {
   // the club's own colours tint the header, your rows and the lineup
   const kit = s.myClub ? clubKit(s.myClub.name) : null;
   if (kit) { const ap = $("app"); ap.style.setProperty("--team", kit[0]); ap.style.setProperty("--team-2", kit[1]); }
+  clubTint(kit);
   $("hCode").textContent = s.code;
   $("hSeason").textContent = s.season;
   $("hRound").textContent = s.round;

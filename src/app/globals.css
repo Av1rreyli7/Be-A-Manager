@@ -412,50 +412,10 @@ body {
     background: linear-gradient(180deg, #ffffff 0%, #f3f6ff 42%, #d5def2 100%);
     box-shadow: inset 0 1px 0 #ffffff, 0 0 22px rgba(186, 208, 255, 0.35);
   }
-  /* the glow button: the main action on a screen. Near black with a bank of light in the mode colour at its
-     foot (orange in court mode), the same button the landing page uses to enter a game. */
-  .btn-glow {
-    color: #ffffff;
-    border: 0;
-    border-radius: 10px;
-    text-shadow: 0 1px 2px rgba(10, 10, 0, 0.5);
-    background: var(--k-glow-bank);
-    box-shadow: var(--k-glow-shadow);
-  }
-  .btn-glow::before {
-    content: "";
-    position: absolute;
-    left: 22%;
-    right: 38%;
-    top: 0.8px;
-    height: 1.9px;
-    z-index: 1;
-    filter: blur(0.55px);
-    background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--k-accent-hi) 62%, transparent) 34%, color-mix(in srgb, var(--k-accent-hi) 80%, white) 50%, color-mix(in srgb, var(--k-accent-hi) 62%, transparent) 66%, transparent 100%);
-  }
-  .btn-glow::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    pointer-events: none;
-    background: linear-gradient(90deg, rgba(var(--k-accent-rgb), 0.7), rgba(var(--k-accent-rgb), 0) 13px), linear-gradient(270deg, rgba(var(--k-accent-rgb), 0.7), rgba(var(--k-accent-rgb), 0) 13px);
-    -webkit-mask: linear-gradient(to top, #000 0, #000 6px, rgba(0, 0, 0, 0.4) 12px, rgba(0, 0, 0, 0.15) 18px, rgba(0, 0, 0, 0.09) 24px, rgba(0, 0, 0, 0.02) 30px, rgba(0, 0, 0, 0.02) 100%);
-    mask: linear-gradient(to top, #000 0, #000 6px, rgba(0, 0, 0, 0.4) 12px, rgba(0, 0, 0, 0.15) 18px, rgba(0, 0, 0, 0.09) 24px, rgba(0, 0, 0, 0.02) 30px, rgba(0, 0, 0, 0.02) 100%);
-  }
-  .btn-glow:hover {
-    filter: brightness(1.12);
-    box-shadow: var(--k-glow-shadow-hover);
-  }
-  /* the small one keeps the same light on a shorter bank */
+  /* the main action: .btn-glow is the kit glass button (public/kit.css), tinted with the mode accent
+     (orange in court mode). Only the small size lives here. */
   .btn-glow.btn-sm {
     border-radius: 8px;
-    background: linear-gradient(to top, var(--k-accent-hi) 1px, var(--k-accent) 3px, color-mix(in srgb, var(--k-accent) 62%, #000) 5px, color-mix(in srgb, var(--k-accent) 34%, #000) 8px, color-mix(in srgb, var(--k-accent) 18%, #000) 12px, color-mix(in srgb, var(--k-accent) 8%, #000) 20px, color-mix(in srgb, var(--k-accent) 8%, #000) 100%);
-  }
-  .btn-glow.btn-sm::after {
-    -webkit-mask: linear-gradient(to top, #000 0, #000 4px, rgba(0, 0, 0, 0.3) 8px, rgba(0, 0, 0, 0.08) 14px, rgba(0, 0, 0, 0.02) 20px, rgba(0, 0, 0, 0.02) 100%);
-    mask: linear-gradient(to top, #000 0, #000 4px, rgba(0, 0, 0, 0.3) 8px, rgba(0, 0, 0, 0.08) 14px, rgba(0, 0, 0, 0.02) 20px, rgba(0, 0, 0, 0.02) 100%);
   }
   /* quiet text button */
   .btn-ghost {

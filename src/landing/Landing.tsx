@@ -1,8 +1,9 @@
 "use client";
 /**
  * Be-A-Manager landing page: a short cinematic intro, then the two games side by side.
+ * Mostly motion and colour, barely any reading: each game is its animated title, one short line and a way in.
  *
- * One GSAP timeline runs the whole show (about 3.2 seconds):
+ * One GSAP timeline runs the whole show (about 2.9 seconds):
  *   1. lights: the frame draws, the floodlight lamps flicker on, the beams come up
  *   2. WELCOME TO BE-A-MANAGER: the letters rise and flip in from the middle out, a colour wave runs
  *      across them, then the word flies up and lands as the brand in the header
@@ -15,7 +16,7 @@
  * The first paint is kept dark by a tiny script in src/app/page.tsx, so the page never flashes the
  * end state before the intro starts.
  */
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -23,47 +24,14 @@ import { GAMES, ORDER, type GameId } from "./games";
 import { STARS_A, STARS_B } from "./starfield";
 import { Basketball, Football } from "./Balls";
 import { km } from "@/lib/motion";
-import type { Drift } from "./Backdrop3D";
 import "./landing.css";
 
 gsap.registerPlugin(useGSAP);
 
-// three.js and the scene live in their own chunk and only load after the intro, when the browser is idle
-const Backdrop3D = lazy(() => import("./Backdrop3D"));
-
-type ThreeState = "off" | "loading" | "on";
 type Phase = "intro" | "done";
-interface SiteStats {
-  clubs: number;
-  leagues: number;
-  rooms: number;
-  seasons: number;
-}
 
-const PREF_KEY = "bam:3d";
 export const SEEN_KEY = "bam:intro";
 const BRAND = "BE-A-MANAGER";
-
-function hasWebGL(): boolean {
-  try {
-    const c = document.createElement("canvas");
-    return !!(c.getContext("webgl2") || c.getContext("webgl"));
-  } catch {
-    return false;
-  }
-}
-
-function weakDevice(): boolean {
-  const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
-  if (nav.connection?.saveData) return true;
-  if (typeof nav.deviceMemory === "number" && nav.deviceMemory <= 2) return true;
-  if (typeof nav.hardwareConcurrency === "number" && nav.hardwareConcurrency <= 2) return true;
-  return false;
-}
-
-function reducedMotion(): boolean {
-  return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-}
 
 function readSeen(): boolean {
   try {
@@ -78,18 +46,6 @@ function markSeen() {
   } catch {
     /* fine without storage: the full intro plays again next time */
   }
-}
-
-/** a pointer drift value for the 3D camera, eased every time the scene reads it */
-function makeDrift(): Drift & { target: number } {
-  let cur = 0;
-  return {
-    target: 0,
-    get() {
-      cur += (this.target - cur) * 0.05;
-      return cur;
-    },
-  };
 }
 
 /** splits a word into letter spans for the choreography; the readable text sits next to it for screen readers */
@@ -182,31 +138,27 @@ function buildIntro(root: HTMLElement): gsap.core.Timeline {
   tl.fromTo(q(".bam-brand"), { opacity: 0 }, { opacity: 1, duration: 0.16, ease: "none" }, "fly+=0.5");
   tl.to(intro, { opacity: 0, duration: 0.16, ease: "none" }, "fly+=0.52");
   tl.set(intro, { display: "none" }, "fly+=0.7");
-  tl.fromTo(q(".bam-lede"), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, "fly+=0.5");
 
   /* 3 and 4. the two games */
-  tl.addLabel("cards", 1.78);
+  tl.addLabel("cards", 1.66);
   const [fl, gn] = ORDER.map((id) => root.querySelector<HTMLElement>(`.bam-card[data-game="${id}"]`));
   if (fl) {
     cardIn(tl, fl, "cards");
     kick(tl, fl, "cards+=0.08");
   }
   if (gn) {
-    cardIn(tl, gn, "cards+=0.5");
-    bounce(tl, gn, "cards+=0.56");
+    cardIn(tl, gn, "cards+=0.36");
+    bounce(tl, gn, "cards+=0.4");
   }
-  tl.fromTo(q(".bam-foot"), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4 }, "cards+=1.1");
   return tl;
 }
 
 function cardIn(tl: gsap.core.Timeline, card: HTMLElement, at: string) {
   const q = gsap.utils.selector(card);
-  tl.fromTo(card, { opacity: 0, y: 30, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.5 }, at);
-  tl.fromTo(q(".bam-card-glow"), { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.7, ease: "power2.out" }, `${at}+=0.1`);
-  tl.fromTo(q(".bam-kind"), { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.32 }, `${at}+=0.12`);
-  tl.fromTo(q(".bam-copy > *"), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.36, stagger: 0.05 }, `${at}+=0.55`);
-  tl.fromTo(q(".bam-glowbtn"), { opacity: 0, scale: 0.9, y: 8 }, { opacity: 1, scale: 1, y: 0, duration: 0.42, ease: "back.out(1.8)" }, `${at}+=0.72`);
-  tl.fromTo(q(".bam-btnflash"), { opacity: 0, xPercent: -120 }, { keyframes: { opacity: [0, 1, 0] }, xPercent: 120, duration: 0.6, ease: "power1.inOut" }, `${at}+=0.95`);
+  tl.fromTo(card, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none" }, at);
+  tl.fromTo(q(".bam-card-glow"), { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.7, ease: "power2.out" }, `${at}+=0.05`);
+  tl.fromTo(q(".bam-line"), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.34 }, `${at}+=0.5`);
+  tl.fromTo(q(".bam-enter"), { opacity: 0, scale: 0.92, y: 8 }, { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: "back.out(1.8)", clearProps: "transform" }, `${at}+=0.6`);
 }
 
 /** Floodlights: the ball is kicked in from off screen left, the title letters chase it */
@@ -249,18 +201,9 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const [phase, setPhase] = useState<Phase>("done");
-  // true once the intro timeline exists (never for reduced motion), so the replay button can show
-  const [animated, setAnimated] = useState(false);
-  const [featured, setFeatured] = useState<GameId>("floodlights");
-  const [warmed, setWarmed] = useState<GameId[]>(["floodlights"]);
-  const [three, setThree] = useState<ThreeState>("off");
-  const [hidden, setHidden] = useState(false);
-  const [stats, setStats] = useState<SiteStats | null>(null);
-  const drift = useMemo(() => ({ x: makeDrift(), y: makeDrift() }), []);
 
   /** Warm on intent: start loading a game before the click lands. */
   const warm = useCallback((id: GameId) => {
-    setWarmed((w) => (w.includes(id) ? w : [...w, id]));
     try {
       const href = GAMES[id].href;
       if (!document.head.querySelector(`link[data-bam-warm="${id}"]`)) {
@@ -287,13 +230,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
     finish();
   }, [finish]);
 
-  const replay = useCallback(() => {
-    const tl = tlRef.current;
-    if (!tl) return;
-    setPhase("intro");
-    tl.timeScale(1).restart();
-  }, []);
-
   // the intro timeline, built once the page is laid out; reduced motion skips it entirely
   useGSAP(
     () => {
@@ -306,7 +242,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
           tlRef.current = null;
           document.getElementById("bam-prehide")?.remove();
           setPhase("done");
-          setAnimated(false);
           return;
         }
         const tl = buildIntro(root);
@@ -322,7 +257,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
           gsap.set(root.querySelector(".bam-intro"), { display: "none" });
         }
         setPhase("intro");
-        setAnimated(true);
         return () => {
           tl.kill();
           tlRef.current = null;
@@ -350,45 +284,9 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
     };
   }, [phase, skip]);
 
-  // pointer drift for the 3D camera (mouse only, off for reduced motion); refs only, no React renders
-  useEffect(() => {
-    if (reducedMotion()) return;
-    const move = (e: PointerEvent) => {
-      if (e.pointerType === "touch") return;
-      drift.x.target = (e.clientX / window.innerWidth) * 2 - 1;
-      drift.y.target = (e.clientY / window.innerHeight) * 2 - 1;
-    };
-    const leave = () => {
-      drift.x.target = 0;
-      drift.y.target = 0;
-    };
-    window.addEventListener("pointermove", move, { passive: true });
-    document.addEventListener("pointerleave", leave);
-    return () => {
-      window.removeEventListener("pointermove", move);
-      document.removeEventListener("pointerleave", leave);
-    };
-  }, [drift]);
-
-  // the 3D scene stops drawing when the tab is hidden
-  useEffect(() => {
-    const vis = () => setHidden(document.hidden);
-    document.addEventListener("visibilitychange", vis);
-    return () => document.removeEventListener("visibilitychange", vis);
-  }, []);
-
-  // after the intro, when the browser is idle: decide on 3D, warm both games, fetch the live numbers
+  // after the intro, when the browser is idle: warm both games so the click lands fast
   useEffect(() => {
     if (phase !== "done") return;
-    const reduced = reducedMotion();
-    let pref: string | null = null;
-    try {
-      pref = localStorage.getItem(PREF_KEY);
-    } catch {
-      /* storage blocked: use the defaults */
-    }
-    // phones get the still backdrop unless asked: the cards stack there and the scene would only peek out behind them
-    const wants = pref === "on" || (pref !== "off" && !reduced && !weakDevice() && window.innerWidth > 760);
     type Idle = (cb: () => void, o?: { timeout: number }) => number;
     const ric = (window as unknown as { requestIdleCallback?: Idle }).requestIdleCallback;
     const idle = (fn: () => void, timeout: number, fallback: number) => {
@@ -399,16 +297,7 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
     idle(
       () => {
         if (dead) return;
-        if (wants && hasWebGL()) setThree((s) => (s === "off" ? "loading" : s));
         ORDER.forEach(warm);
-        fetch("/floodlights/stats.json")
-          .then((r) => (r.ok ? r.json() : null))
-          .then((j) => {
-            if (!dead && j && typeof j.clubs === "number") setStats(j as SiteStats);
-          })
-          .catch(() => {
-            /* the static numbers stay */
-          });
       },
       1500,
       400,
@@ -418,34 +307,8 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
     };
   }, [phase, warm]);
 
-  // live numbers count up from what the page showed
-  const clubsRef = useRef<HTMLElement>(null);
-  const leaguesRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    if (!stats) return;
-    km.count(clubsRef.current, stats.clubs, { from: Number(clubsRef.current?.textContent) || 0 });
-    km.count(leaguesRef.current, stats.leagues, { from: Number(leaguesRef.current?.textContent) || 0 });
-  }, [stats]);
-
-  const toggle3D = () => {
-    const turnOn = three === "off";
-    try {
-      localStorage.setItem(PREF_KEY, turnOn ? "on" : "off");
-    } catch {
-      /* fine without storage */
-    }
-    if (turnOn) {
-      if (hasWebGL()) setThree("loading");
-    } else setThree("off");
-  };
-  const onReady = useCallback(() => setThree((s) => (s === "loading" ? "on" : s)), []);
-  // the scene could not hold a steady frame rate: fall back to the still backdrop
-  const onSlow = useCallback(() => setThree("off"), []);
-
-  const rooms = stats?.rooms ?? 0;
-
   return (
-    <div ref={rootRef} className={clsx("bam", fontVars)} data-phase={phase} data-3d={three} data-featured={featured} style={{ background: "#000", color: "#fff" }}>
+    <div ref={rootRef} className={clsx("bam", fontVars)} data-phase={phase} style={{ background: "#000", color: "#fff" }}>
       {/* black from the very first byte, so the page can never flash white */}
       <style>{"html,body{background:#000000 !important;color:#ffffff}"}</style>
 
@@ -455,13 +318,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
           <i style={{ boxShadow: STARS_A }} />
           <i style={{ boxShadow: STARS_B }} />
         </div>
-        {three !== "off" && (
-          <div className="bam-canvas">
-            <Suspense fallback={null}>
-              <Backdrop3D featured={featured} sx={drift.x} sy={drift.y} warmed={warmed} still={false} paused={hidden || phase === "intro"} onReady={onReady} onSlow={onSlow} />
-            </Suspense>
-          </div>
-        )}
         <div className="bam-scrim" />
         <div className="bam-dim" />
         <div className="bam-beam is-l" />
@@ -496,14 +352,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
             <span className="bam-mark" aria-hidden="true" />
             <span>BAM</span>
           </a>
-          <nav className="bam-nav" aria-label="Games">
-            {ORDER.map((id) => (
-              <a key={id} className="bam-pill" data-kmode={GAMES[id].mode} href={GAMES[id].href} data-game={id} data-lp="" onPointerEnter={() => warm(id)} onFocus={() => warm(id)}>
-                <span className="dot" aria-hidden="true" />
-                {GAMES[id].name.toUpperCase()}
-              </a>
-            ))}
-          </nav>
           <button type="button" className="bam-skip" onClick={skip} hidden={phase !== "intro"}>
             Skip intro
           </button>
@@ -516,9 +364,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
               <Letters text={BRAND} />
             </span>
           </h1>
-          <p className="bam-lede">
-            Two games. Pick one and run the <em>whole</em> show.
-          </p>
         </section>
 
         <section className="bam-games" aria-label="Pick a game">
@@ -531,26 +376,13 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
                 className={clsx("bam-card bam-variant", `is-${id}`)}
                 data-game={id}
                 data-kmode={g.mode}
-                onPointerEnter={() => {
-                  warm(id);
-                  setFeatured(id);
-                }}
-                onFocus={() => {
-                  warm(id);
-                  setFeatured(id);
-                }}
+                onPointerEnter={() => warm(id)}
+                onFocus={() => warm(id)}
               >
                 <div className="bam-card-glow" aria-hidden="true" />
                 <div className="bam-card-lift">
-                  <div className="bam-card-bg" aria-hidden="true">
-                    <div className="bam-card-art" />
-                  </div>
-                  {/* the whole card is a way in; the real, focusable link is the enter button */}
+                  {/* the whole area is a way in; the real, focusable link is the enter button */}
                   <a className="bam-hit" href={g.href} tabIndex={-1} aria-hidden="true" />
-                  <div className="bam-kind">
-                    <span className="dot" aria-hidden="true" />
-                    {g.kind}
-                  </div>
                   <h2 className="bam-title">
                     <span className="sr-only">{g.name}</span>
                     <span className="bam-title-word" aria-hidden="true">
@@ -568,28 +400,8 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
                       </span>
                     </span>
                   </h2>
-                  <div className="bam-copy">
-                    <p className="bam-blurb">{g.blurb}</p>
-                    {g.inside && (
-                      <ul className="bam-inside">
-                        {g.inside.map((x) => (
-                          <li key={x.name}>
-                            <b>{x.name}</b>
-                            <span>{x.text}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <ul className="bam-chips" aria-label="At a glance">
-                      {g.chips.map((c) => (
-                        <li key={c} className="k-chip">
-                          {c}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <a className="bam-glowbtn k-btn k-btn-glow" href={g.href} data-enter={id} onPointerDown={(e) => km.press(e.currentTarget)}>
-                    <span className="bam-btnflash" aria-hidden="true" />
+                  <p className="bam-line">{g.line}</p>
+                  <a className="bam-enter k-btn k-btn-primary" href={g.href} data-enter={id} onPointerDown={(e) => km.press(e.currentTarget)}>
                     {g.enter}
                     <svg className="arr" viewBox="0 0 16 16" aria-hidden="true">
                       <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -600,37 +412,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
             );
           })}
         </section>
-
-        <footer className="bam-foot">
-          <ul className="bam-stats">
-            <li className="bam-stat">
-              <b ref={clubsRef}>320</b> clubs
-            </li>
-            <li className="bam-stat">
-              <b ref={leaguesRef}>15</b> leagues
-            </li>
-            <li className="bam-stat">
-              <b>2</b> basketball games
-            </li>
-            {rooms > 0 && (
-              <li className="bam-stat bam-live">
-                <span className="bam-pulse" aria-hidden="true" />
-                <b>{rooms}</b> {rooms === 1 ? "room open" : "rooms open"}
-              </li>
-            )}
-          </ul>
-          <div className="bam-foot-r">
-            <button type="button" className="bam-mini" aria-pressed={three !== "off"} onClick={toggle3D}>
-              {three === "off" ? "3D OFF" : "3D ON"}
-            </button>
-            {animated && phase === "done" && (
-              <button type="button" className="bam-mini" onClick={replay}>
-                Replay intro
-              </button>
-            )}
-            <p className="bam-credit">By Avir &amp; Ayanssh</p>
-          </div>
-        </footer>
       </div>
 
       {/* the intro layer: shown only while the intro plays, never takes a click */}

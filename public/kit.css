@@ -103,9 +103,6 @@
   --k-glass-hover: linear-gradient(135deg, rgba(210, 225, 255, 0.18), rgba(0, 0, 0, 0.35) 48%, rgba(180, 195, 240, 0.18));
   --k-glass-edge: rgba(198, 205, 220, 0.4);
   --k-glass-edge-hover: rgba(220, 230, 255, 0.78);
-  --k-glow-bank: linear-gradient(to top, #eef7b0 1px, #e8f59a 2px, #e1f486 3px, #d9ee6e 4px, #d0e85c 5px, #b4cc3c 6px, #a0b82e 7px, #93aa28 8px, #80961f 9px, #6b7e17 10px, #566613 12px, #4f5d16 13px, #465311 14px, #374210 16px, #2a3210 18px, #202710 20px, #171c0f 24px, #10140c 30px, #0e120b 34px, #0e120b 100%);
-  --k-glow-shadow: inset 0 3px 3px -2px rgba(236, 246, 190, 0.1), inset 1px 0 0 rgba(255, 255, 255, 0.09), inset -1px 0 0 rgba(255, 255, 255, 0.09), 0 1px 0 rgba(214, 234, 140, 0.38), 1px 0 0 rgba(214, 234, 140, 0.17), -1px 0 0 rgba(214, 234, 140, 0.17), 0 0 8px rgba(208, 232, 92, 0.12), 0 2px 5px -3px rgba(208, 232, 92, 0.45);
-  --k-glow-shadow-hover: inset 0 1px 0 rgba(240, 250, 190, 0.6), inset 1px 0 0 rgba(225, 244, 134, 0.35), inset -1px 0 0 rgba(225, 244, 134, 0.35), 0 6px 22px rgba(160, 190, 50, 0.45);
   color-scheme: dark;
 }
 
@@ -119,9 +116,6 @@
   --k-accent-edge: var(--k-orange-edge);
   --k-accent-rgb: 255, 138, 61;
   --k-grad: var(--k-grad-court);
-  --k-glow-bank: linear-gradient(to top, #ffe2bf 1px, #ffd0a0 2px, #ffbd82 3px, #ffa766 4px, #ff8a3d 5px, #ec7430 6px, #d86427 7px, #c25822 8px, #a8491c 9px, #8c3c17 10px, #723113 12px, #662c12 13px, #5a2710 14px, #47200e 16px, #37190c 18px, #2b150b 20px, #1f1009 24px, #160c07 30px, #130a06 34px, #130a06 100%);
-  --k-glow-shadow: inset 0 3px 3px -2px rgba(255, 220, 190, 0.12), inset 1px 0 0 rgba(255, 255, 255, 0.09), inset -1px 0 0 rgba(255, 255, 255, 0.09), 0 1px 0 rgba(255, 176, 114, 0.4), 1px 0 0 rgba(255, 176, 114, 0.18), -1px 0 0 rgba(255, 176, 114, 0.18), 0 0 8px rgba(255, 138, 61, 0.14), 0 2px 5px -3px rgba(255, 138, 61, 0.5);
-  --k-glow-shadow-hover: inset 0 1px 0 rgba(255, 226, 191, 0.6), inset 1px 0 0 rgba(255, 176, 114, 0.35), inset -1px 0 0 rgba(255, 176, 114, 0.35), 0 6px 22px rgba(230, 110, 40, 0.48);
 }
 
 /* the aurora: a soft colour field behind a page, painted once, never animated */
@@ -165,9 +159,36 @@
 .k-btn-glass::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.4) 48%, transparent 76%); transform: translateX(-130%); transition: transform 0.65s ease; pointer-events: none; }
 .k-btn-glass:hover::after { transform: translateX(130%); }
 .k-btn-glass:hover { background: var(--k-glass-hover); border-color: var(--k-glass-edge-hover); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 18px rgba(170, 200, 255, 0.16); }
-.k-btn-glow { border: 0; border-radius: 10px; text-shadow: 0 1px 2px rgba(10, 10, 0, 0.5); background: var(--k-glow-bank); box-shadow: var(--k-glow-shadow); }
-.k-btn-glow::before { content: ""; position: absolute; left: 22%; right: 38%; top: 0.8px; height: 1.9px; z-index: 1; filter: blur(0.55px); background: linear-gradient(90deg, rgba(225, 244, 134, 0) 0%, rgba(225, 244, 134, 0.58) 34%, rgba(240, 250, 190, 0.74) 50%, rgba(225, 244, 134, 0.58) 66%, rgba(225, 244, 134, 0) 100%); }
-.k-btn-glow:hover { filter: brightness(1.12); box-shadow: var(--k-glow-shadow-hover); }
+/* the primary button: clear glass with a faint tint, a thin clean edge and a soft inner glow.
+   The tint follows the mode accent (volt on the pitch, orange on the court). Floodlights sets --k-tint,
+   --k-tint-2 and --k-tint-edge (rgb triplets) from the club's kit once a save is loaded, so every club gets
+   its own colours. The fill stays under a third opaque over the dark ground, so the white text reads on any
+   club colour. The other names are the same button in each app: .btn-glow (Game Night), .btn.primary
+   (Hardwood Legends) and button.gold (Floodlights). */
+:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold) {
+  --t1: var(--k-tint, var(--k-accent-rgb));
+  --t2: var(--k-tint-2, var(--k-tint, var(--k-accent-rgb)));
+  --te: var(--k-tint-edge, var(--k-tint, var(--k-accent-rgb)));
+  position: relative; isolation: isolate; overflow: hidden;
+  border: 1px solid rgba(var(--te), 0.5); border-radius: 10px;
+  color: #ffffff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(180deg, rgba(var(--t1), 0.2) 0%, rgba(var(--t2), 0.07) 100%), rgba(8, 11, 16, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13), inset 0 0 14px rgba(var(--t1), 0.13), 0 1px 2px rgba(0, 0, 0, 0.35);
+  filter: none;
+  transition: transform 0.18s var(--k-ease), background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, color 0.2s ease;
+}
+:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold)::before,
+:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold)::after { content: none; display: none; }
+:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold):hover {
+  background: linear-gradient(180deg, rgba(var(--t1), 0.3) 0%, rgba(var(--t2), 0.12) 100%), rgba(8, 11, 16, 0.36);
+  border-color: rgba(var(--te), 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 18px rgba(var(--t1), 0.18), 0 8px 20px -12px rgba(var(--t1), 0.6);
+  transform: translateY(-1px);
+  filter: none;
+}
+:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold):active { transform: translateY(0) scale(0.97); }
+:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold):focus-visible { outline: 2px solid rgba(var(--te), 0.9); outline-offset: 2px; }
+:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold):disabled { opacity: 0.4; pointer-events: none; }
 .k-btn-ghost { color: var(--k-dim); background: transparent; }
 .k-btn-ghost:hover { color: var(--k-ink); background: rgba(255, 255, 255, 0.06); }
 
@@ -213,7 +234,7 @@
 @keyframes k-drawx { from { scale: 0 1; } to { scale: 1 1; } }
 @keyframes k-drawy { from { scale: 1 0; } to { scale: 1 1; } }
 @keyframes k-shimmer { to { transform: translateX(100%); } }
-@keyframes k-pulse-glow { 0%, 100% { box-shadow: var(--k-glow-shadow); } 50% { box-shadow: var(--k-glow-shadow), 0 0 26px rgba(var(--k-accent-rgb), 0.3); } }
+@keyframes k-pulse-glow { 0%, 100% { border-color: rgba(var(--k-tint, var(--k-accent-rgb)), 0.5); } 50% { border-color: rgba(var(--k-tint, var(--k-accent-rgb)), 0.9); } }
 @keyframes k-pulse-once { 0% { scale: 1; } 35% { scale: 1.3; } 100% { scale: 1; } }
 @keyframes k-count { from { opacity: 0.4; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
 @keyframes k-sweep { from { background-position: -140% 0; } to { background-position: 240% 0; } }
@@ -271,7 +292,7 @@
 /* reduced motion: everything lands at once, nothing moves on its own */
 @media (prefers-reduced-motion: reduce) {
   .k-mask > *, .k-soft, .k-rise, .k-pop, .k-drawx, .k-drawy, .k-pulse, .k-glow-pulse, .k-stagger > *, .k-shimmer::after, .k-burst::before, .k-sweep, .k-scrim, .k-modal, .k-toast { animation: none !important; }
-  .k-lift:hover, .k-press:active, .k-btn:active { transform: none; }
+  .k-lift:hover, .k-press:active, .k-btn:active, :is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold):is(:hover, :active) { transform: none; }
   .k-sweep { background: none; -webkit-background-clip: initial; background-clip: initial; }
 }
 

@@ -23,7 +23,7 @@ export const viewport: Viewport = {
  * over and removes it; if the scripts never arrive it lifts itself after 4.5 seconds. Reduced motion users
  * never get it, and a second visit in the same tab skips the welcome layer.
  */
-const PREHIDE = `(function(){try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;var seen=false;try{seen=sessionStorage.getItem("bam:intro")==="seen"}catch(e){}var s=document.createElement("style");s.id="bam-prehide";s.textContent=".bam-card,.bam-brand,.bam-lede,.bam-foot,.bam-top [data-lp],.bam-beam,.bam-lamps i,.bam-frame .ln,.bam-frame .cn{opacity:0}.bam-dim{opacity:1}"+(seen?"":".bam-intro{display:flex}.bam-big .L,.bam-welcome .ch,.bam-welcome .rule{opacity:0}");document.head.appendChild(s);setTimeout(function(){if(!window.__bamIntro){var x=document.getElementById("bam-prehide");if(x)x.remove()}},4500)}catch(e){}})();`;
+const PREHIDE = `(function(){try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;var seen=false;try{seen=sessionStorage.getItem("bam:intro")==="seen"}catch(e){}var s=document.createElement("style");s.id="bam-prehide";s.textContent=".bam-card,.bam-brand,.bam-top [data-lp],.bam-beam,.bam-lamps i,.bam-frame .ln,.bam-frame .cn{opacity:0}.bam-dim{opacity:1}"+(seen?"":".bam-intro{display:flex}.bam-big .L,.bam-welcome .ch,.bam-welcome .rule{opacity:0}");document.head.appendChild(s);setTimeout(function(){if(!window.__bamIntro){var x=document.getElementById("bam-prehide");if(x)x.remove()}},4500)}catch(e){}})();`;
 
 export default function Page() {
   return (

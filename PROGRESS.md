@@ -317,3 +317,19 @@ Night, lineup shirts, events teaser and popup, 3D match) are kept locally in sit
 - Frame rate: workers measured 60 fps on mains power (landing intro, screen entrances, lineup stagger, 3D match at
   1.6 to 5.6 ms CPU a frame). The final proof run was on battery, where Chrome caps every page (even a blank one)
   at 30 fps, so those numbers say nothing about the pages.
+
+## Sleek glass buttons with club tint, lighter landing (visual only)
+
+- [x] One primary button for the whole site in public/kit.css: clear glass, faint tint, thin edge, soft inner
+      glow, lift on hover, small press. The old glow light bank is gone everywhere. The kit rule also styles the
+      app names for the same button: .btn-glow (Game Night), .btn.primary (Hardwood Legends), button.gold
+      (Floodlights, including Create a game and the match screens).
+- [x] Floodlights tints the buttons with the club kit once a save is loaded (clubTint in index.html sets
+      --k-tint, --k-tint-2, --k-tint-edge on the page; dark colours swap or lift so the tint always shows) and
+      clears it in the lobby. Small row buttons use the same glass, quieter.
+- [x] Landing cut to the intro, the two animated titles, one line each and the glass enter buttons. Gone: nav
+      pills, lede, kind labels, blurbs, inside list, chips, card panels, footer (stats, 3D toggle, replay,
+      credit), the stats fetch and the 3D backdrop (src/landing/Backdrop3D.tsx deleted).
+- [x] Tests: typecheck, vitest 79, condition 106, API 228, DOM 150, 3D 242, site checks, build, boot 48.
+      The API battery's loan ask check now plays the January window again in fresh worlds when the first one
+      sees no ask by chance (about one run in eleven failed on luck; the game is unchanged).

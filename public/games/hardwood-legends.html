@@ -24,8 +24,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#05070c;color:var(--
 .mm{display:flex;flex-direction:column;gap:12px;max-width:340px}
 .btn{pointer-events:auto;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);padding:13px 22px;font-weight:800;font-size:15px;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;text-align:left;transition:all .15s;font-family:inherit}
 .btn:hover{background:var(--accent);color:#111;border-color:var(--accent);transform:translateX(6px)}
-.btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#111;border:none}
-.btn.primary:hover{filter:brightness(1.1)}
 .btn.sm{padding:8px 14px;font-size:12px}
 .btn.center{text-align:center}
 .btn.sel{background:var(--accent);color:#111}
@@ -187,14 +185,6 @@ html,body{background:var(--k-bg);font-family:var(--f-ui);letter-spacing:-.005em;
 .btn.center:hover,.btn.sm:hover,.foot .btn:hover{transform:none}
 .btn:focus-visible{outline:2px solid var(--volt);outline-offset:3px}
 .btn.sm{padding:9px 13px;font-size:10.5px;letter-spacing:.09em;border-radius:5px}
-.btn.primary{color:#ffffff;border:0;border-radius:11px;text-shadow:0 1px 2px rgba(10,10,0,.5);background:var(--k-glow-bank);box-shadow:var(--k-glow-shadow)}
-.btn.primary::before{content:"";position:absolute;left:22%;right:38%;top:.8px;height:1.9px;z-index:1;filter:blur(.55px);background:linear-gradient(90deg,transparent 0%,color-mix(in srgb,var(--k-accent-hi) 62%,transparent) 34%,color-mix(in srgb,var(--k-accent-hi) 80%,white) 50%,color-mix(in srgb,var(--k-accent-hi) 62%,transparent) 66%,transparent 100%)}
-.btn.primary::after{inset:0;z-index:-1;border-radius:inherit;transform:none;transition:none;
-  background:linear-gradient(90deg,rgba(var(--k-accent-rgb),.7),rgba(var(--k-accent-rgb),0) 13px),linear-gradient(270deg,rgba(var(--k-accent-rgb),.7),rgba(var(--k-accent-rgb),0) 13px);
-  -webkit-mask:linear-gradient(to top,#000 0,#000 6px,rgba(0,0,0,.4) 12px,rgba(0,0,0,.15) 18px,rgba(0,0,0,.09) 24px,rgba(0,0,0,.02) 30px,rgba(0,0,0,.02) 100%);
-  mask:linear-gradient(to top,#000 0,#000 6px,rgba(0,0,0,.4) 12px,rgba(0,0,0,.15) 18px,rgba(0,0,0,.09) 24px,rgba(0,0,0,.02) 30px,rgba(0,0,0,.02) 100%)}
-.btn.primary:hover::after{transform:none}
-.btn.primary:hover{filter:brightness(1.12);color:#ffffff;background:var(--k-glow-bank);box-shadow:var(--k-glow-shadow-hover)}
 .btn:active{transform:scale(.97)}
 /* a picked option: volt wash, like the picked tabs in the other games */
 .btn.sel,.btn.sel:hover{background:rgba(var(--k-accent-rgb),.1);color:var(--volt);border-color:var(--volt);box-shadow:none}

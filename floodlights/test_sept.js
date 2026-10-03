@@ -219,7 +219,24 @@ console.log("b5");
     if (g.round >= 22) break;
   }
   ok("an AI club bid on a human player", !!inbound, g.offers.filter(o => o.direction === "inbound").length);
-  ok("an AI club asked a human for a loan", !!loanAsk, g.offers.filter(o => o.kind === "loan").length);
+  // A loan ask is a 45 percent roll in each open window week, and the January window only has a few weeks, so
+  // about one world in eleven sees none by chance. When that happens, play the window again in fresh worlds
+  // (test only, the game is not changed) so the check proves the feature instead of the luck of one window.
+  let loanTries = 0;
+  for (; !loanAsk && loanTries < 3; loanTries++) {
+    const lr = await api("/api/create", { name: "Lend" });
+    const lc = lr.j.code;
+    await api("/api/pick", { code: lc, name: "Lend", team: "Chelsea" });
+    await api("/api/start", { code: lc, name: "Lend" });
+    await simTo(lc, "Lend", 19);
+    for (let w = 0; w < 4 && !loanAsk; w++) {
+      await api("/api/sim", { code: lc, name: "Lend" });
+      const ls = await readSave(lc);
+      const lg = Object.values(ls).find(x => x.code === lc);
+      loanAsk = lg.offers.find(o => o.direction === "inbound" && o.kind === "loan" && ["pending_seller", "countered", "accepted"].includes(o.status));
+    }
+  }
+  ok("an AI club asked a human for a loan", !!loanAsk, { worldsTried: 1 + loanTries, loanOffers: g.offers.filter(o => o.kind === "loan").length });
   if (inbound) {
     const crazy = Math.round(inbound.fee * 4 * 10) / 10;
     r = await api("/api/respond", { code, name: "Host", offerId: inbound.id, action: "counter", counterFee: crazy });
