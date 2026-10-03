@@ -396,7 +396,7 @@ function simCupsForWeek(game) {
       const xis = simMatch(game, m, cup.key, game.round - 1);
       // the league week already moved the round on, so a played cup tie was stored one round back
       usePlayedScore(game, m, cup.key, game.round - 1);
-      afterResult(game, m, xis);
+      afterResult(game, m, xis, cup.key);
       if (humanInvolved(game, [m.home, m.away]) || matches.length === 1) cupEvents(game, m);
       if (m.hg === m.ag) {
         // level after ninety: human managers take the penalties themselves,
@@ -743,26 +743,50 @@ function effOf(game, p, teamName, ctx) {
   return C.effOvr(p, ctx ? effCtx(game, teamName, ctx) : { neutral: true, club: game.clubs[teamName] || null, round: game.round });
 }
 
-// ctx: { home: bool, m: match, kind: "L" or a cup key, week: round index } or nothing for a neutral read
+// the bench a club can bring on: fit senior players who are not starting
+function benchFor(game, teamName, xi) {
+  const club = game.clubs[teamName];
+  if (!club) return [];
+  const starting = new Set(xi.map(p => p.id));
+  return club.squad.map(id => game.players[id]).filter(p => p && !p.academy && avail(p) && !starting.has(p.id));
+}
+// ctx: { home: bool, m: match, kind: "L" or a cup key, week: round index } or nothing for a neutral read.
+// A simmed match uses the starting eleven plus up to five subs, everyone weighed by the minutes he plays.
 function strengths(game, teamName, ctx) {
   const isNation = game.nations && game.nations[teamName];
   const xi = isNation ? nationXI(game, teamName) : chosenXI(game, teamName);
-  if (xi.length < 8) return { att: 55, def: 55, xi };
+  if (xi.length < 8) return { att: 55, def: 55, xi, parts: xi.map(p => ({ p, min: 90, start: true })), subs: [] };
   const ec = isNation || !ctx ? { neutral: true, club: isNation ? null : (game.clubs[teamName] || null), round: game.round } : effCtx(game, teamName, ctx);
   const eff = p => C.effOvr(p, ec);
-  const avg = arr => arr.reduce((s, p) => s + eff(p), 0) / (arr.length || 1);
-  const attackers = xi.filter(p => p.pos === "FW" || p.pos === "MF");
-  const defenders = xi.filter(p => p.pos === "DF" || p.pos === "GK");
-  const overall = avg(xi);
+  const subs = ctx && !isNation ? C.pickSubs(xi, benchFor(game, teamName, xi), Math.random, eff) : [];
+  const parts = C.participants(xi, subs);
+  const avg = arr => { let w = 0, t = 0; for (const e of arr) { w += e.min; t += eff(e.p) * e.min; } return w ? t / w : 0; };
+  const attackers = parts.filter(e => e.p.pos === "FW" || e.p.pos === "MF");
+  const defenders = parts.filter(e => e.p.pos === "DF" || e.p.pos === "GK");
+  const overall = avg(parts);
   const att = attackers.length ? avg(attackers) : overall;
   const def = defenders.length ? avg(defenders) : overall;
-  return { att: att * 0.7 + overall * 0.3, def: def * 0.7 + overall * 0.3, xi };
+  return { att: att * 0.7 + overall * 0.3, def: def * 0.7 + overall * 0.3, xi, parts, subs };
 }
-// form and morale move for the eleven who played, once the final score is known
-function afterResult(game, m, xis) {
+// once the final score is known: everyone who played moves with the result by his minutes, appearances
+// are counted, and the players left on the bench start to sink in morale (league matches only)
+function afterResult(game, m, xis, kind) {
   if (!xis || m.hg === null || m.hg === undefined) return;
-  C.applyResult(xis.home || [], m.hg, m.ag);
-  C.applyResult(xis.away || [], m.ag, m.hg);
+  for (const side of ["home", "away"]) {
+    const parts = xis[side] || [];
+    const gf = side === "home" ? m.hg : m.ag, ga = side === "home" ? m.ag : m.hg;
+    C.applyResult(parts, gf, ga);
+    const played = new Set();
+    for (const e of parts) { if (e.p) { C.recordAppearance(e.p, e.start, e.min); played.add(e.p.id); } }
+    const club = game.clubs[m[side]];
+    if (!club || (kind && kind !== "L")) continue;
+    for (const id of club.squad) {
+      const p = game.players[id];
+      if (!p || p.academy || !avail(p)) continue;
+      const e = parts.find(x => x.p && x.p.id === id);
+      C.playingTime(p, e ? e.min : 0);
+    }
+  }
 }
 // the weekly pass over every player and club: drift, injury returns, academy growth, unexpected events
 function weeklyCondition(game) {
@@ -815,7 +839,7 @@ function simMatch(game, m, kind, week) {
   if (isDerby(m.home, m.away)) { lh *= 1.06; la *= 1.06; }
   m.hg = poisson(Math.min(lh, 4.2));
   m.ag = poisson(Math.min(la, 4.2));
-  return { home: A.xi, away: B.xi };
+  return { home: A.parts, away: B.parts, subs: { home: A.subs, away: B.subs } };
 }
 
 function tableFor(game, league) {
@@ -1687,7 +1711,7 @@ function endOfSeason(game) {
   log(game, `SEASON ${game.season} OVER. Budgets reset for everyone, title winners bank £10m and cup winners £5m each. New fixtures and cup draws are in.`);
   game.season++;
   // form resets for the new season, morale settles halfway, injury knocks are gone, travel starts over
-  for (const p of Object.values(game.players)) { delete p.fm; if (p.mo) C.setMorale(p, p.mo / 2); delete p.ret; delete p.retN; }
+  for (const p of Object.values(game.players)) { delete p.fm; if (p.mo) C.setMorale(p, p.mo / 2); delete p.ret; delete p.retN; delete p.ap; delete p.bn; }
   for (const c of Object.values(game.clubs)) { delete c.fx; if (c.travel) c.travel = { fund: 0, setup: false, policy: c.travel.policy || "standard", smart: !!c.travel.smart, trips: {} }; }
   game.round = 0;
   game.stats = {};
@@ -1997,7 +2021,7 @@ function pickWeighted(list, weights) {
   return list[list.length - 1];
 }
 
-function recordScorers(game, match, league, keepEvents) {
+function recordScorers(game, match, league, keepEvents, xis) {
   game.stats = game.stats || {};
   const scoreW = { FW: 6, MF: 3, DF: 1, GK: 0.05 };
   const assistW = { FW: 3, MF: 5, DF: 1.5, GK: 0.2 };
@@ -2040,7 +2064,10 @@ function recordScorers(game, match, league, keepEvents) {
       const gk = xi.find(p => p.pos === "GK") || xi[0];
       if (gk) potm = { n: gk.name, c: winName };
     }
-    game.lastEvents[match.home + "|" + match.away] = { ev, potm };
+    const subs = [];
+    for (const side of ["home", "away"]) for (const sb of ((xis && xis.subs && xis.subs[side]) || [])) subs.push({ n: sb.on.name, off: sb.off.name, c: match[side], min: sb.min });
+    subs.sort((a, b) => a.min - b.min);
+    game.lastEvents[match.home + "|" + match.away] = { ev, potm, subs };
   }
 }
 
@@ -2145,8 +2172,8 @@ function playMatchweek(game) {
     for (const m of round) {
       const xis = simMatch(game, m, "L", game.round);
       usePlayedScore(game, m, "league", game.round);
-      afterResult(game, m, xis);
-      recordScorers(game, m, league, humanLeagues.has(league));
+      afterResult(game, m, xis, "L");
+      recordScorers(game, m, league, humanLeagues.has(league), xis);
     }
     if (humanLeagues.has(league)) {
       log(game, `${league.toUpperCase()} WEEK ${game.round + 1}: ` + round.map(m => `${m.home} ${m.hg}-${m.ag} ${m.away}`).join(" | "));
@@ -3095,12 +3122,13 @@ app.get("/api/state", (req, res) => {
       lineup: game.clubs[myTeam].lineup || { xi: [], subs: [] },
       squad: game.clubs[myTeam].squad.map(id => game.players[id]).filter(Boolean).map(p => Object.assign({}, p, { cond: Object.assign(C.parts(p, game.clubs[myTeam], game.round), { eff: Math.round(effOf(game, p, myTeam) * 10) / 10 }) })),
       news: game.clubs[myTeam].news || [],
-      academy: (game.clubs[myTeam].academy || []).map(id => game.players[id]).filter(Boolean),
+      academy: (game.clubs[myTeam].academy || []).map(id => game.players[id]).filter(Boolean).map(p => Object.assign({}, p, { cond: Object.assign(C.parts(p, game.clubs[myTeam], game.round), { eff: Math.round(effOf(game, p, myTeam) * 10) / 10 }) })),
       staff: game.clubs[myTeam].staff || {},
       trainFocus: game.clubs[myTeam].trainFocus !== undefined ? game.clubs[myTeam].trainFocus : null,
       conf: game.clubs[myTeam].conf !== undefined ? game.clubs[myTeam].conf : 60,
       loanedOut: Object.values(game.players).filter(p => p.loanOwner === myTeam && p.club !== myTeam).map(p => ({
-        id: p.id, name: p.name, age: p.age, rating: p.rating, role: p.role || p.pos, club: p.club, fee: recallFee(p)
+        id: p.id, name: p.name, age: p.age, rating: p.rating, role: p.role || p.pos, club: p.club, fee: recallFee(p),
+        cond: Object.assign(C.parts(p, game.clubs[p.club] || null, game.round), { eff: Math.round(effOf(game, p, p.club) * 10) / 10 })
       }))
     } : null,
     sacked: !!user.sacked,
@@ -3129,7 +3157,7 @@ app.get("/api/state", (req, res) => {
       ? Object.values(game.players)
           .filter(p => p.club !== myTeam && !p.academy && !p.loanOwner && p.age <= 21 && p.rating >= 79)
           .sort((a, b) => b.rating - a.rating).slice(0, 5)
-          .map(p => ({ name: p.name, club: p.club, pos: p.pos, role: p.role, age: p.age, rating: p.rating, value: p.value }))
+          .map(p => ({ name: p.name, club: p.club, pos: p.pos, role: p.role, age: p.age, rating: p.rating, value: p.value, cond: Object.assign(C.parts(p, game.clubs[p.club] || null, game.round), { eff: Math.round(effOf(game, p, p.club) * 10) / 10 }) }))
       : null,
     myNation: user.nation || null,
     nations: Object.values(game.nations || {}).map(n => {
@@ -3218,6 +3246,7 @@ app.get("/api/market", (req, res) => {
   res.json({
     players: list.slice(0, 60).map(p => ({
       ...p,
+      cond: Object.assign(C.parts(p, game.clubs[p.club] || null, game.round), { eff: Math.round(effOf(game, p, p.club) * 10) / 10 }),
       asking: askingPrice(game, p, p.club),
       humanOwned: !!humanOf(game, p.club),
       deal: p.pendingDeal ? { club: p.pendingDeal.toClub, fee: p.pendingDeal.fee } : null,

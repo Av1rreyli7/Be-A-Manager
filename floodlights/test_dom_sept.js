@@ -26,6 +26,12 @@ ok("sim season asks for a second click instead of a popup", html.includes("Click
 ok("host only visibility toggle for sim season", html.includes('$("simSeasonBtn").classList.toggle("hidden"'), null);
 ok("the squad table shows form, morale and effective rating", html.includes("<th class=\"num\" title=\"Form") && html.includes(">Morale</th>") && html.includes(">Eff</th>") && html.includes("condChip(p.cond && p.cond.form, 3)"), null);
 ok("the feed shows the club news first", html.includes("Your club this season") && html.includes("s.myClub.news"), null);
+ok("every list shows base OVR, an arrow and the effective OVR", html.includes("function ovrChip(p, small)") && (html.match(/ovrChip\(/g) || []).length >= 8 && html.includes('class="ova"') && html.includes("\\u25b2") && html.includes("\\u25bc"), (html.match(/ovrChip\(/g) || []).length);
+ok("the OVR chip carries a breakdown popover with form, morale and injury return", html.includes('class="ovtip"') && html.includes('line("Form", c.form)') && html.includes('line("Morale", c.morale)') && html.includes('line("Back from injury", c.ret)') && html.includes(".ovr:hover .ovtip,.ovr:focus .ovtip"), null);
+ok("arrows animate in with the rows and pulse once when a value changes", html.includes("@keyframes ovrin") && html.includes("@keyframes ovrpulse") && html.includes("OVR_SEEN[key] !== eff") && html.includes("prefers-reduced-motion"), null);
+ok("squad, lineup, market, academy, loans out and scout tips all use the chip", html.includes("<td class=\"num\">${ovrChip(p)}</td><td class=\"num\">${appsText(p)}</td>") && html.includes("luball\">${p.cond ? ovrChip(p, true) : p.rating}") && (html.match(/ovrChip\(p, true\)/g) || []).length === 3 && html.includes("<td class=\"num\">${ovrChip(p)}</td><td class=\"num\">${p.pot || \"?\"}</td>"), null);
+ok("appearances show compactly in the squad table and stale players are flagged", html.includes(">Apps</th>") && html.includes("function appsText(p)") && html.includes("p.bn >= 3 ? \" stale\""), null);
+ok("the match detail lists the subs who came on", html.includes("class=\"mdsubs\">SUBS: ") && html.includes("evd.subs"), null);
 ok("the travel tab, planner and advisor are on the page", html.includes('data-t="travel"') && html.includes('id="tab-travel"') && html.includes('id="travelModal"') && html.includes("/api/travelfund") && html.includes("/api/travelbook") && html.includes("travelBulk(") && html.includes("smart"), null);
 
 // offers: countered inbound keeps the old bid alive, loan asks tagged

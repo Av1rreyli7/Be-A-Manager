@@ -189,3 +189,37 @@ Tuning numbers (all in floodlights/condition.js, T):
   same range (the old sim already let Real Madrid and PSG run away), so the modifiers swing close games
   without changing who the good teams are.
 - Save size: one game with 320 clubs tracked is about 1.6 MB, about the same as before.
+
+## Dynamic OVR display, auto subs and playing time morale
+
+Goal: every player list shows base OVR, an arrow and the effective OVR with a breakdown popover; simmed
+matches use the eleven plus zero to five automatic subs; everyone who played moves with the result by his
+minutes; playing time drives morale; appearances show in the squad table; subs show in the match detail.
+Playable 3D and Classic matches are unchanged. Resume from the first unchecked box.
+
+Decisions:
+- Subs and playing time maths live in condition.js (rollSubCount, pickSubs, participants, recordAppearance,
+  playingTime). Weights for sub counts: 7, 16, 34, 27, 11, 5 percent for zero to five. Poor form and below
+  average starters come off, position matched bench players come on, changes between the 46th and 85th minute.
+- Team strength weighs everyone by minutes, so a weak bench costs real goals.
+- Form now moves in tenths so a late sub gets a sliver of the swing. Appearances are one small array on the
+  player (starts, sub games, minutes), bench weeks one small number, both reset at the new season.
+- Bench morale: after one week of grace, minus 0.25 a week (stars minus 0.4, kids minus 0.15), which outruns
+  the 0.1 drift, so a star who never plays sinks about 1.5 in ten weeks. Playing 60 plus minutes adds 0.05.
+- The page chip is one helper, ovrChip, used by the squad, lineup pitch and lists, market, academy, loans out
+  and scout tips. The popover is hover or keyboard focus, in the site design language.
+
+Checklist:
+- [x] D1 condition.js: subs, participants, minutes based form, appearances, playing time morale
+- [x] D2 server: strengths with subs and minutes, afterResult, subs in match detail, cond on every list
+- [x] D3 page: ovrChip with popover and pulse, Apps column, subs in match detail
+- [x] D4 tests: condition, API and DOM checks, 3 clean runs
+- [x] D5 docs, upload, push
+
+Build result: all boxes done. npm run test:all passed three times in a row with 0 failed (typecheck, vitest 81,
+condition battery 69, API battery 209 to 210, DOM battery 116, 3D checks 180, site checks 156, build, boot
+test 48). Checked in Chrome on the production build: the OVR chips with arrows in the squad table, the popover
+on focus with form, morale, travel streak and this season's minutes, the Apps column (starts plus sub games,
+minutes, a sub showing 1+3), and the subs line under the match detail after a simmed week.
+- Sub count over 30000 rolls: about 7, 16, 34, 27, 11 and 5 percent for zero to five.
+- Save size is unchanged in practice: appearances are one tiny array per player who played.

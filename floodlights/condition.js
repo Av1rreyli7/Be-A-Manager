@@ -14,6 +14,8 @@ const T = {
   WIN_MORALE: 0.3, LOSS_MORALE: -0.3, MORALE_DRIFT: 0.1, SIGN_MORALE: 1, LISTED_MORALE: -1, LOAN_OUT_MORALE: -0.5,
   EVENT_P1: 0.15, EVENT_P2: 0.08, NEWS_CAP: 10, FX_CAP: 8,
   LONG_HAUL_KM: 2500, LONG_HAUL: -0.5, SHORT_TRIP_KM: 400,
+  SUB_WEIGHTS: [0.07, 0.16, 0.34, 0.27, 0.11, 0.05], SUB_EARLIEST: 46, SUB_LATEST: 85,
+  BENCH_GRACE: 1, BENCH_MORALE: -0.25, BENCH_STAR: -0.4, BENCH_KID: -0.15, STAR_RATING: 84, KID_AGE: 20, PLAYED_MORALE: 0.05, FULL_MINUTES: 60,
   OVR_MIN: 30, OVR_MAX: 99
 };
 
@@ -89,17 +91,96 @@ function parts(p, club, round) {
 }
 
 // ---------- form and morale after results ----------
-function setForm(p, v) { v = clamp(Math.round(v), -T.FORM_MAX, T.FORM_MAX); if (v) p.fm = v; else delete p.fm; }
-function setMorale(p, v) { v = r1(clamp(v, -T.MORALE_MAX, T.MORALE_MAX)); if (v) p.mo = v; else delete p.mo; }
+function setForm(p, v) { v = r1(clamp(v, -T.FORM_MAX, T.FORM_MAX)); if (v) p.fm = v; else delete p.fm; }
+function setMorale(p, v) { v = Math.round(clamp(v, -T.MORALE_MAX, T.MORALE_MAX) * 100) / 100; if (v) p.mo = v; else delete p.mo; }
 function bumpMorale(p, d) { setMorale(p, (p.mo || 0) + d); }
 function bumpForm(p, d) { setForm(p, (p.fm || 0) + d); }
-// the eleven who played: up on a win, more on a big one, down on a loss, more on a thrashing
-function applyResult(xi, gf, ga) {
+// everyone who played: up on a win, more on a big one, down on a loss, more on a thrashing.
+// Entries are players (a full match) or { p, min } so a sub who came on late gets a smaller swing.
+function applyResult(list, gf, ga) {
   const margin = gf - ga;
   let f = 0, m = 0;
   if (margin > 0) { f = margin >= T.BIG_MARGIN ? T.BIG_WIN_FORM : T.WIN_FORM; m = T.WIN_MORALE; }
   else if (margin < 0) { f = -margin >= T.BIG_MARGIN ? T.BIG_LOSS_FORM : T.LOSS_FORM; m = T.LOSS_MORALE; }
-  for (const p of xi) { if (!p) continue; if (f) bumpForm(p, f); if (m) bumpMorale(p, m); }
+  for (const e of list) {
+    if (!e) continue;
+    const p = e.p || e;
+    const share = e.p ? clamp((e.min || 0) / 90, 0.1, 1) : 1;
+    if (f) bumpForm(p, f * share);
+    if (m) bumpMorale(p, m * share);
+  }
+}
+
+// ---------- subs and playing time ----------
+// how many subs a match brings: zero to five, mostly two or three
+function rollSubCount(rng) {
+  const r = (rng || Math.random)();
+  let acc = 0;
+  for (let i = 0; i < T.SUB_WEIGHTS.length; i++) { acc += T.SUB_WEIGHTS[i]; if (r < acc) return i; }
+  return T.SUB_WEIGHTS.length - 1;
+}
+const LINE = p => (p.pos === "GK" ? "GK" : p.pos === "DF" ? "DF" : p.pos === "FW" ? "FW" : "MF");
+// picks who comes off and who comes on. xi and bench are player objects, eff gives a player's number today.
+// returns [{ off, on, min }] where min is the minute the change happens
+function pickSubs(xi, bench, rng, eff) {
+  const r = rng || Math.random;
+  const val = eff || (p => p.rating);
+  const want = rollSubCount(r);
+  const out = [];
+  if (!want || !bench.length) return out;
+  const avg = xi.reduce((s, p) => s + p.rating, 0) / (xi.length || 1);
+  const offPool = xi.filter(p => p.pos !== "GK");
+  const onPool = bench.filter(p => p.pos !== "GK");
+  const used = new Set();
+  for (let i = 0; i < want && offPool.length && onPool.length; i++) {
+    // tired or out of form starters are the likely ones to come off
+    const scored = offPool.map(p => ({ p, w: 1 + Math.max(0, -(p.fm || 0)) * 0.6 + (p.rating < avg ? 0.5 : 0) + r() * 1.2 }));
+    scored.sort((a, b) => b.w - a.w);
+    const off = scored[0].p;
+    const line = LINE(off);
+    let cands = onPool.filter(p => !used.has(p.id) && LINE(p) === line);
+    if (!cands.length) cands = onPool.filter(p => !used.has(p.id));
+    if (!cands.length) break;
+    cands.sort((a, b) => (val(b) + r() * 3) - (val(a) + r() * 3));
+    const on = cands[0];
+    used.add(on.id);
+    offPool.splice(offPool.indexOf(off), 1);
+    out.push({ off, on, min: T.SUB_EARLIEST + Math.floor(r() * (T.SUB_LATEST - T.SUB_EARLIEST + 1)) });
+  }
+  out.sort((a, b) => a.min - b.min);
+  return out;
+}
+// the eleven plus the subs as { p, min, start } so strength and form can weigh minutes
+function participants(xi, subs) {
+  const mins = new Map();
+  for (const p of xi) mins.set(p.id, { p, min: 90, start: true });
+  for (const sb of subs || []) {
+    const off = mins.get(sb.off.id);
+    if (off) off.min = sb.min;
+    mins.set(sb.on.id, { p: sb.on, min: 90 - sb.min, start: false });
+  }
+  return [...mins.values()];
+}
+// appearances, kept as a tiny array on the player: starts, sub appearances, minutes
+function recordAppearance(p, start, min) {
+  const a = p.ap || [0, 0, 0];
+  if (start) a[0]++; else a[1]++;
+  a[2] += min;
+  p.ap = a;
+}
+// playing time and morale after a match: starters who played hold or rise, subs stay level, those left
+// out start sinking after a week on the bench, stars sink fastest, kids barely notice
+function playingTime(p, minutes) {
+  if (minutes > 0) {
+    delete p.bn;
+    if (minutes >= T.FULL_MINUTES) bumpMorale(p, T.PLAYED_MORALE);
+    return 0;
+  }
+  p.bn = (p.bn || 0) + 1;
+  if (p.bn <= T.BENCH_GRACE) return 0;
+  const d = p.age <= T.KID_AGE ? T.BENCH_KID : p.rating >= T.STAR_RATING ? T.BENCH_STAR : T.BENCH_MORALE;
+  bumpMorale(p, d);
+  return d;
 }
 // everyone drifts back toward zero when nothing happens: form fast and a little random, morale slow and steady
 function drift(p, rng) {
@@ -241,6 +322,7 @@ function recommendFund(budget, trips) {
 module.exports = {
   T, clamp, r1, r3, hashStr, personalOffset, homeAway, injuryReturn, startInjuryReturn, healInjuryReturn,
   activeFx, pruneFx, effOvr, parts, setForm, setMorale, bumpForm, bumpMorale, applyResult, drift,
+  rollSubCount, pickSubs, participants, recordAppearance, playingTime,
   rollEventCount, applyEvent, addNews,
   haversine, transportOptions, hotelOptions, longHaul, tripModifier, tripPrice, policyBooking, aiTravelModifier, smartFill, bulkCost, recommendFund
 };

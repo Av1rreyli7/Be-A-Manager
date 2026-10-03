@@ -163,5 +163,52 @@ ok("AI clubs travel by budget: rich clubs go luxury, poor clubs go cheap", C.aiT
   ok("a poor club is told to set aside at least the cheapest way round", poor.recommend >= Math.min(cheap, 2 * 0.12), poor);
 }
 
+// ---------- subs and playing time ----------
+{
+  const rng = seeded(21);
+  const cnt = [0, 0, 0, 0, 0, 0];
+  for (let i = 0; i < 30000; i++) cnt[C.rollSubCount(rng)]++;
+  const share = cnt.map(c => c / 30000);
+  ok("a match brings zero to five subs, mostly two or three", share[2] + share[3] >= 0.55 && share[2] > share[1] && share[3] > share[4] && share[0] > 0.03 && share[5] > 0.02 && share[5] < 0.08, share.map(x => x.toFixed(3)));
+  const mk = (id, pos, r, fm) => ({ id, name: "P" + id, pos, rating: r, fm });
+  const xi = [mk(0, "GK", 80), mk(1, "DF", 80), mk(2, "DF", 78), mk(3, "DF", 75, -3), mk(4, "DF", 80), mk(5, "MF", 82), mk(6, "MF", 70, -3), mk(7, "MF", 80), mk(8, "FW", 85), mk(9, "FW", 79), mk(10, "FW", 74, -2)];
+  const bench = [mk(11, "GK", 70), mk(12, "DF", 76), mk(13, "MF", 77), mk(14, "FW", 78), mk(15, "MF", 72), mk(16, "FW", 70)];
+  let posOk = 0, total = 0, gkOff = 0, offForm = 0, dup = 0, mins = true;
+  for (let i = 0; i < 400; i++) {
+    const subs = C.pickSubs(xi, bench, rng);
+    const ons = new Set();
+    for (const sb of subs) {
+      total++;
+      if (sb.off.pos === "GK" || sb.on.pos === "GK") gkOff++;
+      if ((sb.off.pos === "DF" ? "DF" : sb.off.pos === "FW" ? "FW" : "MF") === (sb.on.pos === "DF" ? "DF" : sb.on.pos === "FW" ? "FW" : "MF")) posOk++;
+      if ((sb.off.fm || 0) < 0) offForm++;
+      if (ons.has(sb.on.id)) dup++; ons.add(sb.on.id);
+      if (sb.min < 46 || sb.min > 85) mins = false;
+    }
+  }
+  ok("subs come on for a player in the same line when one is free, never for the keeper", total > 500 && posOk / total > 0.85 && gkOff === 0, [posOk, total, gkOff]);
+  ok("poor form starters are the ones who usually come off", offForm / total > 0.6, offForm / total);
+  ok("a bench player comes on once and changes happen between the 46th and 85th minute", dup === 0 && mins, null);
+  const parts = C.participants(xi, [{ off: xi[6], on: bench[2], min: 60 }, { off: xi[10], on: bench[3], min: 80 }]);
+  ok("participants carry minutes: starters 90 unless subbed, subs the rest", parts.length === 13 && parts.find(e => e.p.id === 6).min === 60 && parts.find(e => e.p.id === 13).min === 30 && parts.find(e => e.p.id === 14).min === 10 && parts.find(e => e.p.id === 0).min === 90 && parts.find(e => e.p.id === 13).start === false, null);
+  for (const e of parts) { delete e.p.fm; delete e.p.mo; }
+  C.applyResult(parts, 2, 0);
+  const full = parts.find(e => e.p.id === 0).p, sub10 = parts.find(e => e.p.id === 14).p, sub30 = parts.find(e => e.p.id === 13).p, off60 = parts.find(e => e.p.id === 6).p;
+  ok("form swings scale with minutes: a full match gets the whole swing, a late sub a sliver", full.fm === 1 && sub30.fm === 0.3 && Math.abs(sub10.fm - 0.1) < 1e-9 && Math.abs(off60.fm - 0.7) < 1e-9, [full.fm, sub30.fm, sub10.fm, off60.fm]);
+  for (const e of parts) C.recordAppearance(e.p, e.start, e.min);
+  ok("appearances are kept as a tiny array: starts, sub games, minutes", full.ap.join() === "1,0,90" && sub30.ap.join() === "0,1,30" && off60.ap.join() === "1,0,60", null);
+  const star = mk(50, "MF", 88), kid = mk(51, "MF", 70); kid.age = 19; const reg = mk(52, "MF", 78);
+  for (let w = 0; w < 10; w++) { C.playingTime(star, 0); C.playingTime(kid, 0); C.playingTime(reg, 0); C.drift(star, () => 0.99); C.drift(kid, () => 0.99); C.drift(reg, () => 0.99); }
+  ok("ten weeks on the bench sinks morale, stars fastest, kids least", star.mo <= -1.5 && reg.mo < -0.8 && kid.mo < 0 && kid.mo > reg.mo && reg.mo > star.mo, [star.mo, reg.mo, kid.mo]);
+  const rot = mk(53, "MF", 80);
+  for (let w = 0; w < 10; w++) { C.playingTime(rot, 25); C.drift(rot, () => 0.99); }
+  ok("a rotation player who keeps coming on stays level", !rot.mo && !rot.bn, [rot.mo, rot.bn]);
+  const starter = mk(54, "MF", 80);
+  for (let w = 0; w < 10; w++) { C.playingTime(starter, 90); C.drift(starter, () => 0.99); }
+  ok("a regular starter holds steady or rises", (starter.mo || 0) >= 0, starter.mo);
+  const back = mk(55, "MF", 80); for (let w = 0; w < 5; w++) C.playingTime(back, 0); C.playingTime(back, 70);
+  ok("one match back wipes the bench count", !back.bn, back.bn);
+}
+
 console.log(passed + " passed, " + failed + " failed");
 process.exit(failed ? 1 : 0);
