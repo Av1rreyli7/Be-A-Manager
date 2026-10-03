@@ -126,7 +126,7 @@ describe("landing page content", () => {
     const clone = host.cloneNode(true) as HTMLElement;
     clone.querySelectorAll('[aria-hidden="true"], [hidden], style').forEach((n) => n.remove());
     expect(clone.textContent).toBe(
-      "BAM" + "Welcome to Be-A-Manager" + ORDER.map((id) => GAMES[id].name + GAMES[id].line + GAMES[id].enter).join(""),
+      "Welcome to Be-A-Manager" + ORDER.map((id) => GAMES[id].name + GAMES[id].line + GAMES[id].enter).join(""),
     );
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
@@ -154,13 +154,17 @@ describe("landing page content", () => {
 });
 
 describe("the intro", () => {
-  it("builds one timeline with the lights, the welcome flight and the two card moments, under 3.2 seconds", () => {
+  it("plays the welcome first, then the two card moments, all in under 3.8 seconds", () => {
     mount();
     const t = tl();
     expect(t).toBeTruthy();
     expect(phase()).toBe("intro");
     expect(Object.keys(t!.labels)).toEqual(expect.arrayContaining(["lights", "fly", "cards"]));
-    expect((t as unknown as { duration(): number }).duration()).toBeLessThan(3.2);
+    expect((t as unknown as { duration(): number }).duration()).toBeLessThan(3.8);
+    // the games only start once the welcome word has landed and the intro layer is gone
+    const L = t!.labels as Record<string, number>;
+    expect(L.cards).toBeGreaterThanOrEqual(L.fly + 0.6);
+    expect(L.cards).toBeLessThan(2.4);
     // the skip button shows from the first frame, and the links work while the intro plays
     expect($<HTMLButtonElement>(".bam-skip").hidden).toBe(false);
     expect($(".bam-intro").style.pointerEvents).not.toBe("auto");

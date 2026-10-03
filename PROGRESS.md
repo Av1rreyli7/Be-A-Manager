@@ -333,3 +333,12 @@ Night, lineup shirts, events teaser and popup, 3D match) are kept locally in sit
 - [x] Tests: typecheck, vitest 79, condition 106, API 228, DOM 150, 3D 242, site checks, build, boot 48.
       The API battery's loan ask check now plays the January window again in fresh worlds when the first one
       sees no ask by chance (about one run in eleven failed on luck; the game is unchanged).
+
+## Welcome intro first, BAM removed (landing only)
+
+- [x] The welcome plays first and on its own (about 2.1 s): lights, WELCOME TO tracking in from the middle, the
+      big letters flipping up middle out, the colour run, a light sweep clipped to the letters (a third layer per
+      letter placed by --sw), a lens streak and a heartbeat, then the flight to the headline. The cards label
+      now starts only after the intro layer is gone; the football kick and basketball bounce are unchanged.
+- [x] The BAM logo and mark in the header are removed (and from the first paint guard).
+- [x] Landing test: the welcome comes before the cards, whole sequence under 3.8 s (about 3.7 s).

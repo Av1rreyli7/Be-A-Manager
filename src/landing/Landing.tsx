@@ -3,12 +3,13 @@
  * Be-A-Manager landing page: a short cinematic intro, then the two games side by side.
  * Mostly motion and colour, barely any reading: each game is its animated title, one short line and a way in.
  *
- * One GSAP timeline runs the whole show (about 2.9 seconds):
- *   1. lights: the frame draws, the floodlight lamps flicker on, the beams come up
- *   2. WELCOME TO BE-A-MANAGER: the letters rise and flip in from the middle out, a colour wave runs
- *      across them, then the word flies up and lands as the brand in the header
- *   3. Floodlights: a football is kicked across the card and the title letters chase it in
- *   4. Game Night: a basketball drops in and bounces, the title slams down behind it on the first bounce
+ * One GSAP timeline runs the whole show (about 3.6 seconds), always in this order:
+ *   1. WELCOME TO BE-A-MANAGER, on its own (about 2.1 s): the frame draws and the floodlights flicker on,
+ *      WELCOME TO tracks in from the middle, the big letters flip up from below from the middle out, the
+ *      colour runs across them, a band of light sweeps over the word with a lens streak and a small
+ *      heartbeat, then the word flies up and lands as the headline
+ *   2. only then the games: a football is kicked in and the FLOODLIGHTS letters chase it, a basketball
+ *      drops in and bounces and GAME NIGHT slams down behind it on the first bounce
  *
  * Rules: transform and opacity only (the GPU does the work). Every link works from the first frame:
  * the intro layer never takes pointer events. Skip, Esc or a scroll jump to the end. A second visit in the
@@ -65,6 +66,7 @@ function Letters({ text, layered = false }: { text: string; layered?: boolean })
           <span key={i} className="L" style={style}>
             <b className="w">{c}</b>
             <b className="c">{c}</b>
+            <b className="s">{c}</b>
           </span>
         ) : (
           <span key={i} className="ch" style={style}>
@@ -96,31 +98,48 @@ function buildIntro(root: HTMLElement): gsap.core.Timeline {
   const brand = root.querySelector(".bam-brand");
   const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-  /* 1. lights */
+  /* 1. lights: the frame draws, the lamps flicker on, the beams come up */
   tl.addLabel("lights", 0);
   tl.set(intro, { display: "flex", opacity: 1 }, 0);
-  tl.fromTo(q(".bam-frame .ln-x"), { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power2.inOut" }, 0);
-  tl.fromTo(q(".bam-frame .ln-y"), { scaleY: 0 }, { scaleY: 1, duration: 0.7, ease: "power2.inOut" }, 0);
-  tl.fromTo(q(".bam-frame .cn"), { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.45);
-  tl.fromTo(q(".bam-lamps i"), { opacity: 0 }, { keyframes: { opacity: [0, 1, 0.2, 1] }, duration: 0.3, stagger: 0.035, ease: "none" }, 0.04);
-  tl.fromTo(q(".bam-beam"), { opacity: 0, scaleY: 0.55 }, { keyframes: { opacity: [0, 0.95, 0.35, 1] }, scaleY: 1, duration: 0.5, stagger: 0.09, ease: "power2.out" }, 0.1);
-  tl.fromTo(q(".bam-dim"), { opacity: 1 }, { opacity: 0.6, duration: 0.5, ease: "power1.out" }, 0.18);
-  tl.fromTo(q(".bam-top [data-lp]"), { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.35, stagger: 0.05 }, 0.1);
+  tl.fromTo(q(".bam-frame .ln-x"), { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power2.inOut" }, 0);
+  tl.fromTo(q(".bam-frame .ln-y"), { scaleY: 0 }, { scaleY: 1, duration: 0.6, ease: "power2.inOut" }, 0);
+  tl.fromTo(q(".bam-frame .cn"), { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.4);
+  tl.fromTo(q(".bam-lamps i"), { opacity: 0 }, { keyframes: { opacity: [0, 1, 0.2, 1] }, duration: 0.3, stagger: 0.035, ease: "none" }, 0.02);
+  tl.fromTo(q(".bam-beam"), { opacity: 0, scaleY: 0.55 }, { keyframes: { opacity: [0, 0.95, 0.35, 1] }, scaleY: 1, duration: 0.5, stagger: 0.09, ease: "power2.out" }, 0.08);
+  tl.fromTo(q(".bam-dim"), { opacity: 1 }, { opacity: 0.6, duration: 0.5, ease: "power1.out" }, 0.16);
 
-  /* 2. welcome */
-  tl.fromTo(q(".bam-welcome .ch"), { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.34, stagger: 0.022 }, 0.2);
-  tl.fromTo(q(".bam-welcome .rule"), { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "power2.inOut" }, 0.24);
+  /* 2. welcome: WELCOME TO tracks in from the middle, the rules draw outwards */
+  const small = q(".bam-welcome .ch");
+  const mid = (small.length - 1) / 2;
+  tl.fromTo(
+    small,
+    { opacity: 0, x: (i: number) => (i - mid) * 16, y: 6 },
+    { opacity: 1, x: 0, y: 0, duration: 0.5, ease: "expo.out", stagger: { each: 0.016, from: "center" } },
+    0.1,
+  );
+  tl.fromTo(q(".bam-welcome .rule"), { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "expo.out" }, 0.2);
+
+  /* the big word: letters flip up from below, middle out, with a little overshoot */
   tl.fromTo(
     q(".bam-big .L"),
-    { opacity: 0, yPercent: 105, rotateX: -80, scale: 0.82 },
-    { opacity: 1, yPercent: 0, rotateX: 0, scale: 1, duration: 0.6, ease: "back.out(1.5)", stagger: { each: 0.034, from: "center" } },
-    0.3,
+    { opacity: 0, yPercent: 115, rotateX: -95, scale: 0.7 },
+    { opacity: 1, yPercent: 0, rotateX: 0, scale: 1, duration: 0.56, ease: "back.out(1.7)", stagger: { each: 0.03, from: "center" } },
+    0.28,
   );
   tl.fromTo(q(".bam-bloom"), { opacity: 0, scale: 0.35 }, { opacity: 1, scale: 1, duration: 0.5, ease: "power2.out" }, 0.62);
-  tl.fromTo(q(".bam-big .L .c"), { opacity: 0 }, { opacity: 1, duration: 0.28, stagger: 0.028, ease: "power1.out" }, 0.78);
-  tl.to(q(".bam-bloom"), { opacity: 0, duration: 0.5, ease: "power1.in" }, 1.1);
+  // the colour runs across the letters, left to right
+  tl.fromTo(q(".bam-big .L .c"), { opacity: 0 }, { opacity: 1, duration: 0.26, stagger: 0.026, ease: "power1.out" }, 0.74);
+  // the light sweep: a band of light runs across the word, clipped to the letters so only they light up.
+  // --sw is the band's place in letters (from before the first to past the last); each letter reads it.
+  const n = BRAND.length;
+  tl.fromTo(big, { "--sw": -3 }, { "--sw": n + 2, duration: 0.62, ease: "power2.inOut" }, 0.86);
+  // a lens streak flashes as the light passes the middle, and the word gives one small heartbeat
+  tl.fromTo(q(".bam-flare"), { opacity: 0, scaleX: 0.05 }, { keyframes: { opacity: [0, 1, 0.9, 0] }, scaleX: 1, duration: 0.6, ease: "power2.out" }, 1.0);
+  tl.fromTo(big, { scale: 1 }, { keyframes: { scale: [1, 1.035, 1] }, duration: 0.46, ease: "sine.inOut" }, 1.0);
+  tl.to(q(".bam-bloom"), { opacity: 0, duration: 0.45, ease: "power1.in" }, 1.18);
 
-  tl.addLabel("fly", 1.32);
+  /* the word flies up and lands as the headline; the welcome is over before the games start */
+  tl.addLabel("fly", 1.52);
   tl.to(q(".bam-welcome"), { opacity: 0, y: -18, duration: 0.28, ease: "power2.in" }, "fly");
   let path = { x: 0, y: 0, scale: 1 };
   tl.to(
@@ -129,18 +148,19 @@ function buildIntro(root: HTMLElement): gsap.core.Timeline {
       x: () => (path = flight(big, brand)).x,
       y: () => path.y,
       scale: () => path.scale,
-      duration: 0.58,
+      duration: 0.56,
       ease: "power3.inOut",
     },
     "fly",
   );
   tl.to(q(".bam-dim"), { opacity: 0, duration: 0.6, ease: "power1.inOut" }, "fly");
-  tl.fromTo(q(".bam-brand"), { opacity: 0 }, { opacity: 1, duration: 0.16, ease: "none" }, "fly+=0.5");
-  tl.to(intro, { opacity: 0, duration: 0.16, ease: "none" }, "fly+=0.52");
-  tl.set(intro, { display: "none" }, "fly+=0.7");
+  tl.fromTo(q(".bam-brand"), { opacity: 0 }, { opacity: 1, duration: 0.14, ease: "none" }, "fly+=0.5");
+  tl.to(intro, { opacity: 0, duration: 0.14, ease: "none" }, "fly+=0.52");
+  tl.set(intro, { display: "none" }, "fly+=0.66");
 
   /* 3 and 4. the two games */
-  tl.addLabel("cards", 1.66);
+  // the games come in only after the welcome has landed
+  tl.addLabel("cards", "fly+=0.66");
   const [fl, gn] = ORDER.map((id) => root.querySelector<HTMLElement>(`.bam-card[data-game="${id}"]`));
   if (fl) {
     cardIn(tl, fl, "cards");
@@ -347,11 +367,6 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
 
       <div className="bam-page">
         <header className="bam-top">
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- a plain link keeps the landing free of router state */}
-          <a className="bam-logo" href="/" aria-label="Be-A-Manager home" data-lp="">
-            <span className="bam-mark" aria-hidden="true" />
-            <span>BAM</span>
-          </a>
           <button type="button" className="bam-skip" onClick={skip} hidden={phase !== "intro"}>
             Skip intro
           </button>
@@ -426,6 +441,7 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
         </p>
         <p className="bam-big">
           <Letters text={BRAND} layered />
+          <span className="bam-flare" />
         </p>
       </div>
     </div>
