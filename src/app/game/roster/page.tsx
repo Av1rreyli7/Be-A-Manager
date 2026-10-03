@@ -111,7 +111,7 @@ function CardGrid({ title, players }: { title: string; players: Player[] }) {
         <h2 className="label mb-2.5 flex items-center gap-2">
           {title} <span className="text-ink num">{players.length}</span>
         </h2>
-        <div className="stagger grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5" data-km="rows">
           {sorted.map((p, i) => {
             const pg = perGame(seasonTotal(l, p.id));
             return (

@@ -2,7 +2,7 @@
 import clsx from "clsx";
 import { Trophy } from "@phosphor-icons/react";
 import { useLeague } from "@/lib/store";
-import { Card, Empty, PageHeader, TeamBadge } from "@/components/ui";
+import { Appear, Card, Empty, PageHeader, TeamBadge } from "@/components/ui";
 import type { League, PlayoffSeries } from "@/engine/types/game";
 import { groupTable } from "@/engine/season/cup";
 import { roundName } from "@/engine/season/playoffs";
@@ -79,7 +79,7 @@ export default function PlayoffsPage() {
               <div>
                 <div className="mb-2 flex items-center justify-center gap-1.5 font-display text-[14px] font-black uppercase tracking-[0.14em] text-accent"><Trophy size={16} weight="fill" /> NBA Finals</div>
                 <Series l={l} s={finals} />
-                {finals?.winner && <div className="anim-rise mt-3 flex items-center justify-center gap-2 bg-gold px-2 py-1.5 font-display text-[17px] font-black uppercase text-bg chamfer"><Trophy size={18} weight="fill" /> {l.teams[finals.winner].name}</div>}
+                {finals?.winner && <Appear kind="celebrate" sparks className="mt-3 flex items-center justify-center gap-2 bg-[image:var(--k-grad-gold)] px-2 py-1.5 font-display text-[17px] font-black uppercase text-bg chamfer"><Trophy size={18} weight="fill" /> {l.teams[finals.winner].name}</Appear>}
               </div>
               <div><Series l={l} s={find("East", 3, 0)} /></div>
               <div className="space-y-12">{[0, 1].map((i) => <Series key={i} l={l} s={find("East", 2, i)} />)}</div>
@@ -99,13 +99,13 @@ export default function PlayoffsPage() {
         ) : (
           <>
             {l.cup.champion && (
-              <div className="anim-rise mb-4 flex flex-wrap items-center gap-3 rounded-[4px] bg-gold/12 px-4 py-3 shadow-[inset_3px_0_0_var(--color-gold)]">
+              <Appear className="mb-4 flex flex-wrap items-center gap-3 rounded-[4px] bg-gold/12 px-4 py-3 shadow-[inset_3px_0_0_var(--color-gold)]">
                 <Trophy size={28} weight="fill" className="text-gold" />
                 <div>
                   <div className="font-display text-[19px] font-black uppercase leading-none">{l.teams[l.cup.champion].fullName}</div>
                   <div className="text-sm text-dim">NBA Cup champions{l.cup.mvp ? `. MVP: ${l.players[l.cup.mvp]?.name ?? ""}` : ""}</div>
                 </div>
-              </div>
+              </Appear>
             )}
             {l.cup.knockout.qf.length > 0 && (
               <div className="mb-4 grid gap-2 sm:grid-cols-3">

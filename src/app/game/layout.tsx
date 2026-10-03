@@ -36,12 +36,12 @@ import {
 } from "@phosphor-icons/react";
 import { useGame, useLeague } from "@/lib/store";
 import { SimControls } from "@/components/SimControls";
-import { AppearancePicker } from "@/components/AppearancePicker";
 import { TeamMark } from "@/components/ui";
 import { PHASE_LABEL } from "@/lib/format";
 import { fmtDate } from "@/engine/util/dates";
 import { guestJoin, hostResume, savedGuestSession } from "@/lib/online/session";
-import { useTeamTheme } from "@/lib/theme";
+import { useCourtMode, useTeamTheme } from "@/lib/theme";
+import { useEnterScreen } from "@/lib/motion";
 import { emptyRecord } from "@/engine/season/standings";
 
 /** Where to take the user when the league enters each phase. */
@@ -127,8 +127,12 @@ export default function GameLayout({ children }: { children: ReactNode }) {
     });
   }, [league, load, router]);
 
-  if (!league) return <BootScreen text={tried ? "Redirecting" : "Loading league"} />;
-  return <Shell>{children}</Shell>;
+  useCourtMode();
+  return (
+    <div data-kmode="court" className="court-root">
+      {league ? <Shell>{children}</Shell> : <BootScreen text={tried ? "Taking you back" : "Loading your league"} />}
+    </div>
+  );
 }
 
 function BootScreen({ text }: { text: string }) {
@@ -139,7 +143,7 @@ function BootScreen({ text }: { text: string }) {
           <span className="bam-dots" aria-hidden /> Front Office
         </span>
         <div className="h-px w-44 overflow-hidden bg-line">
-          <div className="shimmer h-full w-full" />
+          <div className="k-shimmer h-full w-full" />
         </div>
         <span className="label">{text}</span>
       </div>
@@ -166,6 +170,9 @@ function Shell({ children }: { children: ReactNode }) {
     if (to && path !== to) router.push(to);
   }, [l.phase, path, router]);
   const [open, setOpen] = useState(false);
+  // every screen settles in when the route changes
+  const page = useRef<HTMLDivElement>(null);
+  useEnterScreen(page, path);
   // expose the header height so the sticky sidebar sits flush under it
   const hdr = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -193,11 +200,11 @@ function Shell({ children }: { children: ReactNode }) {
                 onClick={() => setOpen(false)}
                 aria-current={active ? "page" : undefined}
                 className={clsx(
-                  "group relative flex items-center gap-2.5 rounded-[4px] px-2 py-[7px] text-[13px] font-medium transition-colors duration-150",
-                  active ? "bg-accent/[0.09] text-ink" : "text-dim hover:bg-ink/[0.04] hover:text-ink",
+                  "group relative flex items-center gap-2.5 rounded-[4px] px-2 py-[7px] text-[13px] font-medium transition-[color,background-color,transform] duration-200",
+                  active ? "bg-gradient-to-r from-accent/[0.14] to-transparent text-ink" : "text-dim hover:bg-ink/[0.04] hover:text-ink hover:translate-x-0.5",
                 )}
               >
-                {active && <span aria-hidden className="absolute -left-3 top-1/2 h-[7px] w-[6px] -translate-y-1/2 bg-accent" />}
+                {active && <span aria-hidden className="nav-pip absolute -left-3 top-1/2 h-[16px] w-[3px] -translate-y-1/2" />}
                 <I size={17} weight={active ? "fill" : "regular"} className={clsx("shrink-0 transition-colors", active ? "text-accent" : "text-mute group-hover:text-dim")} />
                 <span className="truncate">{i.label}</span>
               </Link>
@@ -205,16 +212,13 @@ function Shell({ children }: { children: ReactNode }) {
           })}
         </div>
       ))}
-      <div className="mt-1 border-t border-line px-2 pt-4">
-        <AppearancePicker compact />
-      </div>
     </nav>
   );
 
   return (
     <div className="min-h-[100dvh]">
       <header ref={hdr} className="sticky top-0 z-40 border-b border-line bg-bg/92 backdrop-blur-md">
-        <div className="team-band on-dark relative">
+        <div className="team-band relative">
                     <div className="relative flex items-center gap-2 px-2 py-2 sm:gap-3 sm:px-4">
             <button className="grid h-9 w-9 place-items-center rounded-[4px] text-ink/90 hover:bg-ink/10 lg:hidden" onClick={() => setOpen(!open)} aria-label="Open menu" aria-expanded={open}>
               <List size={22} weight="bold" />
@@ -252,7 +256,7 @@ function Shell({ children }: { children: ReactNode }) {
         </div>
         <OnlineBar />
         {busy ? (
-          <div className="shimmer flex items-center gap-2 border-t border-line px-4 py-1.5 text-xs text-dim">
+          <div className="k-shimmer flex items-center gap-2 border-t border-line px-4 py-1.5 text-xs text-dim">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
             {busy} {progress && <span className="font-semibold text-ink">{fmtDate(progress)}</span>}
           </div>
@@ -264,8 +268,8 @@ function Shell({ children }: { children: ReactNode }) {
         <aside className="scroll-thin sticky top-[var(--hdr,92px)] hidden h-[calc(100dvh-var(--hdr,92px))] w-60 shrink-0 overflow-y-auto border-r border-line bg-bg/60 lg:block">{nav}</aside>
         {open && (
           <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm lg:hidden" onClick={() => setOpen(false)}>
-            <aside className="anim-rise scroll-thin h-full w-[min(84vw,300px)] overflow-y-auto border-r border-line bg-panel" onClick={(e) => e.stopPropagation()}>
-              <div className="team-band on-dark flex items-center justify-between px-4 py-3">
+            <aside className="drawer-in scroll-thin h-full w-[min(84vw,300px)] overflow-y-auto border-r border-line bg-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="team-band flex items-center justify-between px-4 py-3">
                 <Link href="/gm" onClick={() => setOpen(false)} className="flex items-center gap-2.5 font-num text-[12px] font-bold uppercase tracking-[0.2em] text-white">
                   <span className="bam-dots" aria-hidden /> Front Office
                 </Link>
@@ -278,7 +282,7 @@ function Shell({ children }: { children: ReactNode }) {
           </div>
         )}
         <main id="main" className="min-w-0 flex-1 px-3 pb-24 pt-4 sm:px-6 sm:pt-6 lg:pb-10">
-          <div key={path} className="page-enter mx-auto max-w-[1440px]">
+          <div key={path} ref={page} className="mx-auto max-w-[1440px]">
             {children}
           </div>
         </main>
@@ -296,7 +300,7 @@ function BottomBar({ path, onMore }: { path: string; onMore: () => void }) {
         const I = q.icon;
         return (
           <Link key={q.href} href={q.href} aria-current={on ? "page" : undefined} className={clsx("relative flex flex-col items-center gap-1 py-2 font-num text-[9px] font-bold uppercase tracking-[0.1em]", on ? "text-ink" : "text-mute")}>
-            {on && <span aria-hidden className="absolute inset-x-5 top-0 h-[2px] bg-accent" />}
+            {on && <span aria-hidden className="absolute inset-x-5 top-0 h-[2px] bg-[image:var(--k-grad)]" />}
             <I size={21} weight={on ? "fill" : "regular"} className={on ? "text-accent" : undefined} />
             {q.label}
           </Link>

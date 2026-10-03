@@ -25,7 +25,7 @@ export default function FriendsChallenge() {
   const l = useLeague();
   const me = useTeamId();
   const online = useGame((s) => s.online);
-  if (!l.online) return <Empty>This isn&apos;t an online league. Start one from the main menu under Play with friends.</Empty>;
+  if (!l.online) return <Empty>This is not an online league. Start one from the main menu under Play with friends.</Empty>;
   const humans = Object.keys(l.online.members).filter((t) => l.teams[t]);
   const rows = humans.map((t) => ({ t, name: l.online!.members[t], ...seasonPoints(l, t) })).sort((a, b) => b.points - a.points || b.w - a.w);
   const allTime = humans

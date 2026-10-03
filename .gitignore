@@ -48,3 +48,4 @@ next-env.d.ts
 
 # the copy of this tree that is made for uploading to GitHub
 /upload/
+.work/

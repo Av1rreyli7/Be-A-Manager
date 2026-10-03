@@ -3,7 +3,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import { ArrowRight, Basketball, FastForward, FirstAidKit, Warning, WarningOctagon, Info } from "@phosphor-icons/react";
 import { useGame, useIsOnlineGuest, useLeague, useTeamId } from "@/lib/store";
-import { Button, Card, PlayerLink, Stat, TeamBadge, TeamMark } from "@/components/ui";
+import { Button, Card, CountUp, PlayerLink, Stat, TeamBadge, TeamMark } from "@/components/ui";
 import { playableGame } from "@/lib/hardwood";
 import { conferenceStandings, emptyRecord, gamesBack } from "@/engine/season/standings";
 import { capStatus } from "@/engine/cap/payroll";
@@ -43,7 +43,7 @@ export default function Dashboard() {
       <h1 className="sr-only">{team.fullName} dashboard</h1>
 
       {/* scoreboard hero */}
-      <section className="panel on-dark relative overflow-hidden">
+      <section className="panel relative overflow-hidden">
         <div aria-hidden className="hero-wash absolute inset-0" />
         <div aria-hidden className="stripes absolute inset-0 [mask-image:linear-gradient(90deg,black,transparent_60%)]" />
         <div className="relative grid gap-6 p-4 sm:p-6 lg:grid-cols-[1.5fr_1fr] lg:items-end">
@@ -64,11 +64,11 @@ export default function Dashboard() {
             <dl className="mt-5 grid max-w-xl grid-cols-[1.3fr_1fr_1fr_1fr] divide-x divide-white/15 rounded-[4px] bg-black/30 py-3 backdrop-blur-sm">
               <div className="min-w-0 px-2.5 sm:px-4">
                 <dt className="label !text-white/60">Record</dt>
-                <dd className="whitespace-nowrap font-display text-[24px] font-black leading-none text-white num sm:text-[36px]">{rec.w}-{rec.l}</dd>
+                <dd className="whitespace-nowrap font-display text-[24px] font-black leading-none text-white num sm:text-[36px]"><CountUp value={rec.w} />-<CountUp value={rec.l} /></dd>
               </div>
               <div className="min-w-0 px-2.5 sm:px-4">
                 <dt className="label !text-white/60">Seed</dt>
-                <dd className="whitespace-nowrap font-display text-[24px] font-black leading-none text-white num sm:text-[36px]">{seed || "-"}</dd>
+                <dd className="whitespace-nowrap font-display text-[24px] font-black leading-none text-white num sm:text-[36px]">{seed ? <CountUp value={seed} /> : "-"}</dd>
               </div>
               <div className="min-w-0 px-2.5 sm:px-4">
                 <dt className="label !text-white/60">Streak</dt>
@@ -76,14 +76,14 @@ export default function Dashboard() {
               </div>
               <div className="min-w-0 px-2.5 sm:px-4">
                 <dt className="label !text-white/60">Net</dt>
-                <dd className="whitespace-nowrap font-display text-[24px] font-black leading-none text-white num sm:text-[36px]">{gp ? f1((rec.pf - rec.pa) / gp) : "-"}</dd>
+                <dd className={clsx("whitespace-nowrap font-display text-[24px] font-black leading-none num sm:text-[36px]", gp && rec.pf > rec.pa ? "text-good" : gp && rec.pf < rec.pa ? "text-bad" : "text-white")}>{gp ? <CountUp value={(rec.pf - rec.pa) / gp} format={f1} /> : "-"}</dd>
               </div>
             </dl>
           </div>
 
           <div className="rounded-[6px] border border-white/10 bg-bg/70 p-4 backdrop-blur-md">
             <div className="flex items-center justify-between">
-              <span className="font-num text-[12px] font-black uppercase tracking-[0.12em] text-accent">Up next</span>
+              <span className="grad-title font-num text-[12px] font-black uppercase tracking-[0.12em]">Up next</span>
               {next && <span className="text-xs font-semibold text-dim">{fmtDate(next.date, { weekday: "short", month: "short", day: "numeric" })}</span>}
             </div>
             {next && opp ? (
@@ -109,7 +109,7 @@ export default function Dashboard() {
                             Sim it
                           </Button>
                         )}
-                        <span className="w-full text-xs text-dim">Game day. Play it yourself in Hardwood Legends, or let the sim decide.</span>
+                        <span className="w-full text-xs text-dim">Game day. Play it yourself in Hardwood Legends, or let the sim call it.</span>
                       </>
                     ) : guest ? (
                       <span className="text-xs text-dim">On game day you can play this one yourself in Hardwood Legends.</span>
@@ -125,18 +125,18 @@ export default function Dashboard() {
                 )}
               </>
             ) : (
-              <p className="mt-3 text-sm text-dim">No games on the calendar. Use the phase button up top to move the season along.</p>
+              <p className="mt-3 text-sm text-dim">No games coming up. Use the button up top to move the season on.</p>
             )}
           </div>
         </div>
       </section>
 
       {l.alerts.length > 0 && (
-        <ul className="stagger grid gap-2 md:grid-cols-2">
-          {l.alerts.map((a, i) => {
+        <ul className="grid gap-2 md:grid-cols-2" data-km="rows">
+          {l.alerts.map((a) => {
             const I = a.level === "danger" ? WarningOctagon : a.level === "warn" ? Warning : Info;
             return (
-              <li key={a.id} style={{ ["--i" as string]: i }}>
+              <li key={a.id}>
                 <Link
                   href={a.href ?? "/game"}
                   className={clsx(
@@ -155,15 +155,15 @@ export default function Dashboard() {
       )}
 
       {recent.length > 0 && (
-        <section aria-label="Last five games" className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+        <section aria-label="Last five games" className="grid grid-cols-3 gap-2 sm:grid-cols-5" data-km="rows">
           {recent.map((g, i) => {
             const home = g.home === t;
             const my = home ? g.result!.homeScore : g.result!.awayScore;
             const op = home ? g.result!.awayScore : g.result!.homeScore;
             const win = my > op;
             return (
-              <Link key={g.id} href={`/game/box/${encodeURIComponent(g.id)}`} className={clsx("panel lift anim-flip overflow-hidden", i > 2 && "hidden sm:block")} style={{ animationDelay: `${i * 60}ms` }}>
-                <div className={clsx("flex items-center justify-between px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em]", win ? "bg-good/90 text-bg" : "bg-bad/90 text-bg")}>
+              <Link key={g.id} href={`/game/box/${encodeURIComponent(g.id)}`} className={clsx("panel lift overflow-hidden", i > 2 && "hidden sm:block")}>
+                <div className={clsx("flex items-center justify-between px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-bg", win ? "bg-gradient-to-r from-good to-teal" : "bg-gradient-to-r from-bad to-[#ff8a5b]")}>
                   <span>{win ? "Win" : "Loss"}</span>
                   <span className="opacity-75">{fmtDate(g.date)}</span>
                 </div>
@@ -224,7 +224,7 @@ export default function Dashboard() {
                   <div className="label">{k}</div>
                   {best ? (
                     <>
-                      <div className="font-display text-[28px] font-black leading-none num">{f1(best.pg[k])}</div>
+                      <div className="font-display text-[28px] font-black leading-none num" style={{ color: k === "pts" ? "var(--k-orange-hi)" : k === "reb" ? "var(--k-teal)" : "var(--k-sky)" }}><CountUp value={best.pg[k]} format={f1} /></div>
                       <PlayerLink player={best.p} className="mt-1 block truncate text-xs" />
                     </>
                   ) : (
@@ -248,7 +248,7 @@ export default function Dashboard() {
             {injured.length > 0 && (
               <div className="mt-4 flex gap-2 rounded-[4px] bg-bad/8 px-3 py-2 text-xs text-dim">
                 <FirstAidKit size={15} weight="fill" className="mt-px shrink-0 text-bad" />
-                <span>{injured.map((p) => `${p.lastName} (${p.injury!.type}, ${p.injury!.daysOut}d)`).join(", ")}</span>
+                <span>{injured.map((p) => `${p.lastName} (${p.injury!.type}, ${p.injury!.daysOut} days)`).join(", ")}</span>
               </div>
             )}
           </Card>

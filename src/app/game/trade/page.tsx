@@ -4,7 +4,7 @@ import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { useGame, useLeague, useTeamId } from "@/lib/store";
-import { Bar, Button, Card, Empty, Modal, OvrPot, PageHeader, PlayerLink, Tabs, TeamBadge, inputCls } from "@/components/ui";
+import { Appear, Bar, Button, Card, Empty, Modal, OvrPot, PageHeader, PlayerLink, Tabs, TeamBadge, inputCls } from "@/components/ui";
 import type { League, TeamId, TradeAssets } from "@/engine/types/game";
 import { contractOf, newId, salaryIn, seasonAge, teamPlayers } from "@/engine/league/helpers";
 import { addDays } from "@/engine/util/dates";
@@ -57,16 +57,16 @@ function TradeMachine() {
   const togglePick = (t: TeamId, kid: string) => update((x) => { const s = x.sides.find((y) => y.teamId === t)!; s.picks = s.picks.includes(kid) ? s.picks.filter((p) => p !== kid) : [...s.picks, kid]; if (!s.picks.includes(kid) && x.protections) delete x.protections[kid]; });
 
   const propose = (force = false) => {
-    if (!v.valid && !force) return toast("Fix the CBA issues first", "error");
-    if (!force && aiTeams.length && !ai.accept) return toast("They turned it down: see the counter-offer", "error");
+    if (!v.valid && !force) return toast("Fix the cap problems first", "error");
+    if (!force && aiTeams.length && !ai.accept) return toast("They said no. See their counter offer", "error");
     // online: a trade with a friend's team is sent to them to accept
     const friends = l.online ? a.sides.map((s) => s.teamId).filter((t) => t !== me && l.userTeams.includes(t)) : [];
-    if (friends.length > 1) return toast("Trades can include only one friend's team at a time", "error");
+    if (friends.length > 1) return toast("Trades can include only one friend at a time", "error");
     if (friends.length === 1 && !force) {
       const to = friends[0];
       const who = l.online?.members[to] ?? l.teams[to].name;
       mutate((lg) => void lg.tradeOffers.push({ id: newId(lg, "to"), from: me, to, assets: JSON.parse(JSON.stringify(a)), created: lg.date, expires: addDays(lg.date, 14), reasoning: [`Offer from ${lg.online?.members[me] ?? lg.teams[me].name} (${lg.teams[me].fullName})`] }));
-      toast(`Offer sent to ${who}: it's waiting in their “Offers received”`, "success");
+      toast(`Offer sent to ${who}. It waits in their “Offers received”`, "success");
       setA(empty(a.sides.map((s) => s.teamId)));
       return;
     }
@@ -82,13 +82,13 @@ function TradeMachine() {
     const c = counterOffer(l, a, ai1, me);
     if (c) {
       setA(c);
-      toast("Counter-offer loaded: review and propose", "success");
+      toast("Counter offer loaded. Check it and send", "success");
     } else toast("They don't see a deal here", "error");
   };
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Trade Machine" sub={tw.open ? "Up to 4 teams · live CBA validation · AI acceptance meter" : tw.reason} />
+      <PageHeader title="Trade Machine" sub={tw.open ? "Up to 4 teams · live cap check · see how close the AI is to yes" : tw.reason} />
       <Tabs tabs={[{ id: "machine", label: "Build a trade" }, { id: "offers", label: `Offers received (${l.tradeOffers.filter((o) => (l.online ? o.to === me : l.userTeams.includes(o.to))).length})` }, { id: "block", label: `Trade block (${l.tradeBlock.length})` }]} value={tab} onChange={setTab} />
 
       {tab === "machine" && (
@@ -111,7 +111,7 @@ function TradeMachine() {
           <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
             <Card title="CBA check" right={anyAssets ? (v.valid ? <span className="inline-flex items-center gap-1 font-bold text-good"><CheckCircle size={15} weight="fill" /> Legal</span> : <span className="inline-flex items-center gap-1 font-bold text-bad"><XCircle size={15} weight="fill" /> Illegal</span>) : null}>
               {!anyAssets ? (
-                <Empty>Select players, picks or cash to build a trade.</Empty>
+                <Empty>Pick players, picks or cash to build a trade.</Empty>
               ) : (
                 <>
                   <div className="overflow-x-auto scroll-thin">
@@ -173,7 +173,7 @@ function TradeMachine() {
       {tab === "offers" && <OffersTab onLoad={(x) => (setA(x), setTab("machine"))} />}
       {tab === "block" && (
         <Card title="Your trade block">
-          {l.tradeBlock.length === 0 ? <Empty>Add players from the roster page. AI teams call about players on your block.</Empty> : (
+          {l.tradeBlock.length === 0 ? <Empty>Add players from the roster page. AI teams call about anyone on your block.</Empty> : (
             <ul className="space-y-2">
               {l.tradeBlock.map((id) => <li key={id} className="flex items-center justify-between"><PlayerLink player={l.players[id]} /><Button size="sm" onClick={() => router.push(`/game/finder?player=${id}`)}>Find offers</Button></li>)}
             </ul>
@@ -182,10 +182,10 @@ function TradeMachine() {
       )}
 
       <Modal open={!!done} onClose={() => setDone(null)} title="Trade accepted">
-        <div className="anim-rise text-center">
-          <Handshake size={56} weight="duotone" className="mx-auto mb-3 text-accent" />
+        <Appear kind="celebrate" sparks className="text-center">
+          <Handshake size={56} weight="duotone" className="mx-auto mb-3 text-accent drop-shadow-[0_0_18px_var(--accent)]" />
           <p className="text-sm">{done}</p>
-        </div>
+        </Appear>
       </Modal>
     </div>
   );

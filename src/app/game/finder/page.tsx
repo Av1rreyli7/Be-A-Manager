@@ -3,7 +3,7 @@ import { Check, X, XCircle } from "@phosphor-icons/react";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { callWorker, useGame, useLeague, useTeamId } from "@/lib/store";
-import { Button, Card, Empty, Field, OvrPot, PageHeader, PlayerLink, Tabs, TeamBadge, inputCls } from "@/components/ui";
+import { Appear, Button, Card, Empty, Field, OvrPot, PageHeader, PlayerLink, Tabs, TeamBadge, inputCls } from "@/components/ui";
 import type { FinderOffer } from "@/engine/trade/ai";
 import { executeTrade } from "@/engine/trade/execute";
 import { validateTrade } from "@/engine/cap/trade";
@@ -23,7 +23,7 @@ function OfferCard({ o, rank }: { o: FinderOffer; rank?: number }) {
   if (gone) return null;
   const v = validateTrade(l, o.assets);
   return (
-    <div className="panel anim-rise p-4">
+    <Appear className="panel p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="flex items-center gap-2">{rank != null && <span className="font-num text-[17px] font-black text-mute">#{rank}</span>}<TeamBadge league={l} teamId={o.teamId} withName /></span>
         <span className="text-xs text-dim">value to you <b className="text-ink">{o.valueToMe.toFixed(1)}</b> · their meter {Math.min(100, o.meter)}%</span>
@@ -47,7 +47,7 @@ function OfferCard({ o, rank }: { o: FinderOffer; rank?: number }) {
         <Button size="sm" variant="success" disabled={!v.valid} onClick={() => { mutate((lg) => void executeTrade(lg, o.assets)); toast("Trade completed", "success"); setGone(true); }}>Accept</Button>
         <Button size="sm" onClick={() => { sessionStorage.setItem("fo:loadTrade", JSON.stringify(o.assets)); router.push("/game/trade?load=1"); }}>Open in Trade Machine</Button>
       </div>
-    </div>
+    </Appear>
   );
 }
 
@@ -116,9 +116,9 @@ function Finder() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Trade Finder" sub="The AI scans all 29 teams and returns CBA-legal deals it would actually accept." />
+      <PageHeader title="Trade Finder" sub="The AI checks all 29 teams and shows legal deals they would really take." />
       <Tabs tabs={[{ id: "shop", label: "Shop my player" }, { id: "acquire", label: "What would it take?" }, { id: "need", label: "Find a player by need" }]} value={tab} onChange={setTab} />
-      {busy && <div className="panel shimmer px-4 py-3 text-sm">Scanning the league…</div>}
+      {busy && <div className="panel k-shimmer !bg-transparent px-4 py-3 text-sm">Scanning the league</div>}
 
       {tab === "shop" && (
         <>
@@ -192,7 +192,7 @@ function Finder() {
             </div>
           </div>
           <div ref={tab === "shop" ? results : undefined} className="scroll-mt-[calc(var(--hdr,92px)+12px)]" />
-          {offers && (offers.length ? <div className="grid gap-3 lg:grid-cols-2">{offers.map((o, i) => <OfferCard key={o.teamId} o={o} rank={i + 1} />)}</div> : <Empty>No team would make a CBA-legal offer right now.</Empty>)}
+          {offers && (offers.length ? <div className="grid gap-3 lg:grid-cols-2">{offers.map((o, i) => <OfferCard key={o.teamId} o={o} rank={i + 1} />)}</div> : <Empty>No team can make a legal offer right now.</Empty>)}
         </>
       )}
 

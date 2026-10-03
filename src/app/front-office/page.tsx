@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { ArrowLeft, ArrowRight, Basketball, Briefcase, Keyboard } from "@phosphor-icons/react";
-import { useTeamTheme } from "@/lib/theme";
-import { AppearancePicker } from "@/components/AppearancePicker";
+import { useCourtMode, useTeamTheme } from "@/lib/theme";
+import { useEnterScreen } from "@/lib/motion";
 import { SiteBackdrop } from "@/components/SiteBackdrop";
 
 interface Progress {
@@ -29,6 +29,9 @@ function readProgress(): Progress {
 
 export default function GameHub() {
   useTeamTheme(null);
+  useCourtMode();
+  const root = useRef<HTMLElement>(null);
+  useEnterScreen(root, 0);
   const [p, setP] = useState<Progress | null>(null);
   useEffect(() => {
     const t = setTimeout(() => setP(readProgress()), 0);
@@ -36,10 +39,11 @@ export default function GameHub() {
   }, []);
 
   return (
-    <main id="main" className="relative mx-auto flex min-h-[100dvh] max-w-[1280px] flex-col px-5 pb-12 pt-10 sm:px-10 sm:pt-14">
+    <div data-kmode="court" className="court-root">
+    <main ref={root} id="main" className="relative mx-auto flex min-h-[100dvh] max-w-[1280px] flex-col px-5 pb-12 pt-10 sm:px-10 sm:pt-14">
       <SiteBackdrop />
-      <header className="anim-rise relative mb-8 flex flex-wrap items-end justify-between gap-6">
-        <div>
+      <header className="relative mb-8 flex flex-wrap items-end justify-between gap-6">
+        <div data-km="head">
           {/* the way back to the Be-A-Manager landing page, a full page load on purpose so its own look applies cleanly */}
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/" className="mb-5 inline-flex items-center gap-2 font-num text-[10.5px] font-bold uppercase tracking-[0.16em] text-dim transition-colors hover:text-ink">
@@ -47,12 +51,10 @@ export default function GameHub() {
           </a>
           <div className="label mb-3 !text-accent">Pick your game</div>
           <h1 className="font-display text-[44px] font-black uppercase leading-none tracking-[0.02em] sm:text-[72px]">
-            Game <span className="text-accent">night</span>
+            Game <span className="grad-title">night</span>
           </h1>
-          <p className="mt-4 max-w-[46ch] text-[15px] leading-relaxed text-dim">Run a franchise from the front office, or grab the controller and play the game yourself.</p>
-        </div>
-        <div className="w-full max-w-sm">
-          <AppearancePicker compact />
+          <span aria-hidden className="head-bar" />
+          <p className="mt-4 max-w-[46ch] text-[15px] leading-relaxed text-dim">Run the team from the office. Or grab the keys and play it yourself.</p>
         </div>
       </header>
 
@@ -64,11 +66,11 @@ export default function GameHub() {
           kind="Manage"
           mark="GM"
           icon={<Briefcase size={30} weight="duotone" />}
-          color="#d6363b"
-          blurb="Be the GM. Real 2026-27 rosters and contracts, the full CBA, trades, the draft and free agency."
-          facts={["605 players", "Full CBA", "Play with friends"]}
+          color="#8b6cff"
+          blurb="Be the GM. Real 2026-27 rosters and deals, the full cap rules, trades, the draft and free agency."
+          facts={["605 players", "Full cap rules", "Play with friends"]}
           cta="Open Front Office"
-          status={p?.foLeague ? "Your league is saved. Pick up where you left off." : null}
+          status={p?.foLeague ? "Your league is saved. Jump back in." : null}
           delay={60}
         />
         <GameTile
@@ -77,16 +79,17 @@ export default function GameHub() {
           kind="Play"
           mark="5v5"
           icon={<Basketball size={30} weight="duotone" />}
-          color="#ff8a00"
-          blurb="Take the court. 3D 5-on-5 with all 30 teams, a shot meter, dribble moves, and a season with playoffs."
-          facts={["3D 5-on-5", "Season + playoffs", "Keyboard controls"]}
+          color="#ff8a3d"
+          blurb="Take the court. 3D five on five with all 30 teams, a shot meter, dribble moves and a full season."
+          facts={["3D five on five", "Season and playoffs", "Keyboard controls"]}
           cta="Play Hardwood Legends"
-          status={p?.hlSeason ? (p.hlSeason.playoffs ? "Your season is in the playoffs." : `Season in progress: game ${Math.min(p.hlSeason.gi + 1, p.hlSeason.len)} of ${p.hlSeason.len}.`) : null}
+          status={p?.hlSeason ? (p.hlSeason.playoffs ? "Your season is in the playoffs." : `Season on: game ${Math.min(p.hlSeason.gi + 1, p.hlSeason.len)} of ${p.hlSeason.len}.`) : null}
           warning={p?.touchOnly ? "Needs a keyboard. Play it on a computer." : null}
           delay={120}
         />
       </div>
     </main>
+    </div>
   );
 }
 
@@ -94,6 +97,8 @@ function GameTile({ href, internal, title, kind, mark, icon, color, blurb, facts
   const body = (
     <>
       <div aria-hidden className="hero-wash absolute inset-0" style={{ ["--tc-team" as string]: color }} />
+      <div aria-hidden className="tile-glow absolute inset-0" style={{ ["--tc-team" as string]: color }} />
+      <span aria-hidden className="absolute inset-x-0 top-0 h-[2px]" style={{ background: `linear-gradient(90deg, ${color}, transparent 70%)` }} />
       <div aria-hidden className="stripes absolute inset-0 [mask-image:linear-gradient(120deg,black,transparent_70%)]" />
       <span aria-hidden className="pointer-events-none absolute -bottom-6 right-1 select-none font-num text-[130px] font-bold uppercase leading-none text-white/[0.05] sm:text-[170px]">{mark}</span>
       <div className="relative flex h-full flex-col p-6 sm:p-8">
@@ -121,8 +126,8 @@ function GameTile({ href, internal, title, kind, mark, icon, color, blurb, facts
       </div>
     </>
   );
-  const cls = clsx("group panel on-dark lift anim-rise relative block min-h-[380px] overflow-hidden");
-  const style = { animationDelay: `${delay}ms` };
+  const cls = clsx("group panel lift relative block min-h-[380px] overflow-hidden");
+  const style = { ["--delay" as string]: `${delay}ms` };
   return internal ? (
     <Link href={href} className={cls} style={style}>
       {body}

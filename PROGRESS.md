@@ -259,3 +259,61 @@ pitch balls and the bench list, and the tooltip with the base and the event caus
 - Multi season check in the condition battery: four made up seasons with results, subs, playing time, drift
   and events keep league wide form and morale within 0.5 of zero with no upward creep and under 8 percent of
   players at the extremes. The same check runs on the real world after a Sim Season in the API battery.
+
+## Big build: landing rebuild, colorful unification, super animation, shirts, events rework, FC27 push
+
+Goal: one colourful game with modes inside it. A cinematic landing, one shared kit and palette, every screen
+animated with GSAP, lineup shirts, the transfer market RAT bug, events revealed a week ahead with one per club
+per week and 200 more events, a slower OVR climb, and a 3D match pushed toward a TV broadcast with set pieces.
+This replaces the earlier unfinished U1 to U8 list (its theme removal and first kit draft were kept and built on).
+Resume from the first unchecked box.
+
+Decisions:
+- Palette and kit: public/kit.css. Dark night ground (#04060a) with aurora washes. Two modes on one palette:
+  pitch (Floodlights: volt #d0e85c, turf #2fd27a) and court (Game Night: orange #ff8a3d, amber #ffbe4a),
+  shared aurora teal, sky, violet, gold. A page sets data-kmode="pitch" or "court"; --k-accent, --k-grad and
+  the glow button follow it. Position colours: GK amber, DEF sky, MID teal, FWD coral (G sky, F teal, C violet).
+- Motion: GSAP 3.15 (npm gsap, @gsap/react). One motion file, public/kit-motion.js (KitMotion: rise, cascade,
+  enter, count, pop, pulse, slideIn, tabIndicator, celebrate, sparks, press). Floodlights and Hardwood Legends
+  load /floodlights/vendor/gsap.min.js then /kit-motion.js; React imports src/lib/motion.ts (km, useScreenEnter).
+  Transform and opacity only, clearProps after every tween, nothing touches pointer-events, reduced motion jumps
+  to the end state.
+- Work split for parallel workers, each keeps a checklist in site/.work/<name>.md (not uploaded):
+  landing (src/landing, src/app/page.tsx), gamenight (src/app/**, src/components, globals.css, theme.ts,
+  hardwood-legends.html), fl-ui (floodlights/index.html look, animation, shirts, RAT bug), events (condition.js,
+  events_data.js, server.js event and OVR code, the event flow functions in index.html), match3d (match3d.mjs,
+  match_sim3d.mjs, match.js controller only, tests-site/test_match3d.js).
+- Ports while working: shared Next dev server 3200; standalone Floodlights servers: fl-ui 3203, events 3204,
+  match3d 3205, each with FL_SAVE_FILE pointing at its own scratch file (new env override in floodlights/server.js).
+  The API battery takes FL_TEST_PORT. Only the lead runs next build.
+- site/ now has a local git repo for checkpoints (never pushed; the GitHub copy is ../github).
+
+Checklist:
+- [x] B0 foundation: gsap installed, kit.css palette, kit-motion.js, src/lib/motion.ts, FL_SAVE_FILE, screenshot tool
+- [x] B1 landing rebuild (Part 1)
+- [x] B2 Game Night and Hardwood Legends: theme system gone, kit, colour, animation, voice (Parts 2 and 3)
+- [x] B3 Floodlights page: colour, kit, animation, lineup shirts, RAT bug audit, voice (Parts 2, 3, 4, 5)
+- [x] B4 events rework: week ahead reveal, teaser, lobby popup, one per club per week, 200 more events (Part 6)
+- [x] B5 OVR balance: slower climb, multi season check (Part 8)
+- [x] B6 3D match: broadcast look, kickoff dribble, goal kick rule, corners, free kicks, penalties, crosses and
+      headers, AI use, match moments (Part 7, Part 3.5)
+- [x] B7 integration: side by side screenshots, test_site, all batteries 0 failed, build, boot, memory under 400 MB
+- [x] B8 docs, upload folder, push to GitHub
+
+Build result: all boxes done. npm run test:all passed with 0 failed on the first full run: typecheck, vitest 80,
+condition battery 106, API battery 228 (also twice in a row by the events worker), DOM battery 150, 3D battery
+242 (includes the headless 24 match loop), site checks 165, build, boot test 48 (189 MB after the checks).
+Production server idles at 125 MB. Proof screenshots (landing intro moments, side by side Floodlights and Game
+Night, lineup shirts, events teaser and popup, 3D match) are kept locally in site/.work/proof (not uploaded).
+- Event rate measured: one every 4.0 weeks per club, never two in a week. Pool 438 events (205 new, 60 of them
+  off pitch injuries).
+- OVR after three real seasons: title winners' regulars +0.21 to +0.36 (was +1.45 to +1.83), league regulars
+  steady at about -0.17, 1.1 to 1.3 percent of players at the extremes.
+- RAT column: the live data was right in every league filter and the bad digits could not be reproduced in
+  Chrome; the column misalignment (rows without an arrow shifted) is fixed with a fixed arrow slot, and ovrFace now
+  refuses any value that is not a real rating (falls back to the base), with DOM checks that fail on a delta.
+- Shirt numbers: the server now sends squad wide numbers with the 3D lineups, so a player wears the same number
+  on the lineup shirts and in the 3D match.
+- Frame rate: workers measured 60 fps on mains power (landing intro, screen entrances, lineup stagger, 3D match at
+  1.6 to 5.6 ms CPU a frame). The final proof run was on battery, where Chrome caps every page (even a blank one)
+  at 30 fps, so those numbers say nothing about the pages.

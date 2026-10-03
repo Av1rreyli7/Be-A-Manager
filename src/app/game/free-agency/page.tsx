@@ -74,7 +74,7 @@ function OfferModal({ p, onClose }: { p: Player; onClose: () => void }) {
           <Button
             onClick={() => {
               // outside the FA period players answer immediately
-              if (salary < ask.salary * 0.97 && interest.score < 55) return toast(`${p.name} declines: asking about ${money(ask.salary)} per year`, "error");
+              if (salary < ask.salary * 0.97 && interest.score < 55) return toast(`${p.name} says no. He wants about ${money(ask.salary)} a year`, "error");
               mutate((lg) => {
                 const res = signPlayer(lg, me, lg.players[p.id], terms);
                 toast(res.ok ? `${p.name} signed!` : res.errors.join("; "), res.ok ? "success" : "error");
@@ -104,7 +104,7 @@ function FreeAgency() {
   const sheets = l.freeAgency.offers.filter((o) => o.status === "accepted" && o.offerSheet && o.matchDeadline && l.players[o.playerId]?.rfaTeam === me && l.players[o.playerId]?.status === "fa");
   return (
     <div className="space-y-4">
-      <PageHeader title="Free Agency" sub={l.phase === "free-agency" ? `Day ${l.freeAgency.day} · players decide over simulated days; asking prices fall as FA drags on` : "Unsigned players available now (minimum, 10-day, two-way or exceptions)"} />
+      <PageHeader title="Free Agency" sub={l.phase === "free-agency" ? `Day ${l.freeAgency.day} · players decide over simulated days; asking prices fall as FA drags on` : "Free players you can sign now: minimum, 10 day, two way or with an exception"} />
       <div className="grid gap-4 sm:grid-cols-4">
         <Card><Stat label="Team salary" value={money(st.salary)} sub={<span className={STATUS_COLOR[st.status]}>{STATUS_LABEL[st.status]}</span>} /></Card>
         <Card><Stat label="Cap room" value={money(st.room)} /></Card>

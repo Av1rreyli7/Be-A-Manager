@@ -8,7 +8,7 @@ import type { SimTarget } from "@/engine/league/advance";
 
 const NEXT_PHASE: Record<string, string> = {
   "season-end": "Draft lottery",
-  "draft-lottery": "Combine & workouts",
+  "draft-lottery": "Combine and workouts",
   "pre-draft": "Start the draft",
   draft: "Finish draft",
   options: "Open free agency",
@@ -85,13 +85,13 @@ export function SimControls() {
                 <span className="hidden sm:inline">More</span> <CaretDown size={12} weight="bold" className="transition-transform group-open:rotate-180" />
               </span>
             </summary>
-            <div className="panel anim-rise absolute right-0 z-50 mt-2 w-64 p-1.5 text-sm">
+            <div className="panel menu-pop absolute right-0 z-50 mt-2 w-64 p-1.5 text-sm">
               {(
                 [
                   ["game-day", "To my next game day (G)"],
                   ["month", "Sim a month (M)"],
-                  ...(l.phase === "regular" || l.phase === "preseason" ? ([["deadline", "To trade deadline (T)"], ["allstar", "To All-Star Sunday (S)"], ["regular-end", "To end of regular season (R)"]] as const) : []),
-                  ["playoffs-end", "To end of playoffs (P)"],
+                  ...(l.phase === "regular" || l.phase === "preseason" ? ([["deadline", "To the trade deadline (T)"], ["allstar", "To All-Star Sunday (S)"], ["regular-end", "To the end of the season (R)"]] as const) : []),
+                  ["playoffs-end", "To the end of the playoffs (P)"],
                 ] as [SimTarget, string][]
               ).map(([t, label]) => (
                 <button key={t} disabled={!!busy} onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); void sim(t); }} className="block w-full rounded-[3px] px-3 py-2 text-left text-dim transition-colors hover:bg-ink/[0.06] hover:text-ink disabled:opacity-40">
@@ -104,7 +104,7 @@ export function SimControls() {
       )}
       {fa && (
         <>
-          <Button size="sm" disabled={!!busy} onClick={() => sim("day")} title="Advance one FA day (D)">
+          <Button size="sm" disabled={!!busy} onClick={() => sim("day")} title="Next free agency day (D)">
             <Play size={13} weight="fill" /> FA day {l.freeAgency.day + 1}
           </Button>
           <Button size="sm" disabled={!!busy} onClick={() => sim("week")}>
@@ -113,7 +113,7 @@ export function SimControls() {
         </>
       )}
       {NEXT_PHASE[l.phase] && (
-        <Button size="sm" variant={inSeason || fa ? "default" : "primary"} disabled={!!busy} onClick={() => advance()} title="Advance phase (A)">
+        <Button size="sm" variant={inSeason || fa ? "default" : "primary"} disabled={!!busy} onClick={() => advance()} title="Next step (A)">
           {NEXT_PHASE[l.phase]}
         </Button>
       )}
@@ -123,16 +123,16 @@ export function SimControls() {
       <Modal open={help} onClose={() => setHelp(false)} title="Keyboard shortcuts">
         <ul className="grid grid-cols-2 gap-2 text-sm">
           {[
-            ["D", "Play / sim one day"],
+            ["D", "Play or sim one day"],
             ["N", "Sim to your next game"],
-            ["G", "Sim to your next game day (stop before tip-off)"],
+            ["G", "Sim to your next game day, stop before tip off"],
             ["W", "Sim one week"],
             ["M", "Sim one month"],
-            ["T", "Sim to trade deadline"],
+            ["T", "Sim to the trade deadline"],
             ["S", "Sim to All-Star Sunday"],
-            ["R", "Sim to end of regular season"],
-            ["P", "Sim to end of playoffs"],
-            ["A", "Advance offseason phase"],
+            ["R", "Sim to the end of the season"],
+            ["P", "Sim to the end of the playoffs"],
+            ["A", "Next offseason step"],
             ["?", "This help"],
           ].map(([k, d]) => (
             <li key={k} className="flex items-center gap-2">
@@ -141,7 +141,7 @@ export function SimControls() {
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-xs text-mute">Current phase: {PHASE_LABEL[l.phase]}</p>
+        <p className="mt-3 text-xs text-mute">Now: {PHASE_LABEL[l.phase]}</p>
       </Modal>
     </div>
   );

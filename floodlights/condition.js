@@ -10,18 +10,26 @@ const T = {
   FORM_MAX: 3, MORALE_MAX: 2,
   HOME: 1, AWAY: -1, ANALYST_HOME: 1, PERSONAL_STEP: 0.5,
   RET_PENALTY: 5, RET_WEEKS: 5, RET_WEEKS_PHYSIO: 3,
-  // gains are slow, losses bite: a hot streak takes weeks to build and one bad day dents it
-  WIN_FORM: 0.6, BIG_WIN_FORM: 1.0, LOSS_FORM: -1.0, BIG_LOSS_FORM: -1.6, BIG_MARGIN: 3,
-  WIN_MORALE: 0.2, LOSS_MORALE: -0.35, SIGN_MORALE: 1, LISTED_MORALE: -1, LOAN_OUT_MORALE: -0.5,
+  // gains are small and rare, losses bite: a win lifts a player's form only on some days (WIN_CHANCE), and
+  // every gain shrinks the closer he already is to the top (GAIN_DAMP), so a streak nudges, never rockets.
+  // A loss from a high drops hard; a loss when he is already low digs in less (LOSS_DAMP_LOW), which keeps
+  // the league average near zero instead of sinking.
+  WIN_FORM: 0.4, BIG_WIN_FORM: 0.6, LOSS_FORM: -0.9, BIG_LOSS_FORM: -1.4, BIG_MARGIN: 3,
+  WIN_CHANCE: 0.6, GAIN_DAMP: 1.5, LOSS_DAMP_LOW: 0.85,
+  WIN_MORALE: 0.12, LOSS_MORALE: -0.35, SIGN_MORALE: 1, LISTED_MORALE: -1, LOAN_OUT_MORALE: -0.5,
   // the pull back toward zero grows with the distance: form loses a fifth of itself a week (at least 0.15),
   // morale loses 15 percent (at least 0.05). Holding +3 form means winning nearly every week.
   FORM_DRIFT_RATE: 0.2, FORM_DRIFT_MIN: 0.15, MORALE_DRIFT_RATE: 0.15, MORALE_DRIFT_MIN: 0.05,
+  // a player who is playing shakes off a bad spell faster than a high fades (losses bite, then heal);
+  // a player on the bench keeps the normal pull, so the slide for unused players is untouched
+  FORM_DRIFT_RATE_LOW: 0.45, FORM_DRIFT_MIN_LOW: 0.3, MORALE_DRIFT_RATE_LOW: 0.22, MORALE_DRIFT_MIN_LOW: 0.06,
   // not playing: two weeks are barely felt, a month plus is clearly negative, rust on form and gloom on morale
   RUST_FORM: -0.3, RUST_FORM_FLOOR: -2, BENCH_RAMP: 0.03, BENCH_RAMP_CAP: 6,
-  EVENT_P1: 0.15, EVENT_P2: 0.08, NEWS_CAP: 10, NEWS_CAP_HUMAN: 40, FX_CAP: 8,
+  // one event at most per club per week, about one every four weeks (a 25 percent roll each week)
+  EVENT_P: 0.25, NEWS_CAP: 10, NEWS_CAP_HUMAN: 40, FX_CAP: 8,
   LONG_HAUL_KM: 2500, LONG_HAUL: -0.5, SHORT_TRIP_KM: 400,
   SUB_WEIGHTS: [0.07, 0.16, 0.34, 0.27, 0.11, 0.05], SUB_EARLIEST: 46, SUB_LATEST: 85,
-  BENCH_GRACE: 2, BENCH_MORALE: -0.1, STAR_MULT: 1.3, KID_MULT: 0.6, STAR_RATING: 84, KID_AGE: 20, PLAYED_MORALE: 0.1, FULL_MINUTES: 60,
+  BENCH_GRACE: 2, BENCH_MORALE: -0.1, STAR_MULT: 1.3, KID_MULT: 0.6, STAR_RATING: 84, KID_AGE: 20, PLAYED_MORALE: 0.05, FULL_MINUTES: 60,
   OVR_MIN: 30, OVR_MAX: 99
 };
 
@@ -117,9 +125,15 @@ function setForm(p, v) { v = r1(clamp(v, -T.FORM_MAX, T.FORM_MAX)); if (v) p.fm 
 function setMorale(p, v) { v = Math.round(clamp(v, -T.MORALE_MAX, T.MORALE_MAX) * 100) / 100; if (v) p.mo = v; else delete p.mo; }
 function bumpMorale(p, d) { setMorale(p, (p.mo || 0) + d); }
 function bumpForm(p, d) { setForm(p, (p.fm || 0) + d); }
-// everyone who played: up on a win, more on a big one, down on a loss, more on a thrashing.
-// Entries are players (a full match) or { p, min } so a sub who came on late gets a smaller swing.
-function applyResult(list, gf, ga) {
+// how much of a gain lands when he is already up: the full step from zero or below, a sliver near the cap
+function gainRoom(v, max) { return Math.pow(clamp(1 - Math.max(0, v) / max, 0, 1), T.GAIN_DAMP); }
+// a loss lands in full from zero or above and digs in less when he is already low
+function lossRoom(v, max) { return 1 - T.LOSS_DAMP_LOW * clamp(-Math.min(0, v) / max, 0, 1); }
+// everyone who played: up a little on some wins, a bit more on a big one, down hard on a loss, more on a
+// thrashing. Entries are players (a full match) or { p, min } so a sub who came on late gets a smaller swing.
+// rng decides whose form a win lifts this week (Math.random when left out).
+function applyResult(list, gf, ga, rng) {
+  const r = rng || Math.random;
   const margin = gf - ga;
   let f = 0, m = 0;
   if (margin > 0) { f = margin >= T.BIG_MARGIN ? T.BIG_WIN_FORM : T.WIN_FORM; m = T.WIN_MORALE; }
@@ -128,8 +142,10 @@ function applyResult(list, gf, ga) {
     if (!e) continue;
     const p = e.p || e;
     const share = e.p ? clamp((e.min || 0) / 90, 0.1, 1) : 1;
-    if (f) bumpForm(p, f * share);
-    if (m) bumpMorale(p, m * share);
+    if (f > 0) { if (r() < T.WIN_CHANCE) bumpForm(p, f * share * gainRoom(p.fm || 0, T.FORM_MAX)); }
+    else if (f < 0) bumpForm(p, f * share * lossRoom(p.fm || 0, T.FORM_MAX));
+    if (m > 0) bumpMorale(p, m * share * gainRoom(p.mo || 0, T.MORALE_MAX));
+    else if (m < 0) bumpMorale(p, m * share * lossRoom(p.mo || 0, T.MORALE_MAX));
   }
 }
 
@@ -213,42 +229,61 @@ function playingTime(p, minutes) {
 }
 // everyone drifts back toward zero every week, and the further out he is the harder the pull
 function drift(p) {
+  const playing = !(p.bn > 0);
   if (p.fm) {
-    const step = Math.max(T.FORM_DRIFT_MIN, Math.abs(p.fm) * T.FORM_DRIFT_RATE);
+    const low = p.fm < 0 && playing;
+    const step = Math.max(low ? T.FORM_DRIFT_MIN_LOW : T.FORM_DRIFT_MIN, Math.abs(p.fm) * (low ? T.FORM_DRIFT_RATE_LOW : T.FORM_DRIFT_RATE));
     setForm(p, Math.abs(p.fm) <= step ? 0 : p.fm - Math.sign(p.fm) * step);
   }
   if (p.mo) {
-    const step = Math.max(T.MORALE_DRIFT_MIN, Math.abs(p.mo) * T.MORALE_DRIFT_RATE);
+    const low = p.mo < 0 && playing;
+    const step = Math.max(low ? T.MORALE_DRIFT_MIN_LOW : T.MORALE_DRIFT_MIN, Math.abs(p.mo) * (low ? T.MORALE_DRIFT_RATE_LOW : T.MORALE_DRIFT_RATE));
     setMorale(p, Math.abs(p.mo) <= step ? 0 : p.mo - Math.sign(p.mo) * step);
   }
 }
 
 // ---------- unexpected events ----------
-// returns how many events fire this week for one club: 0, 1 or 2
-function rollEventCount(rng) {
+// One roll per club per week, so a club never gets more than one event in a week.
+function rollEvent(rng) { return (rng || Math.random)() < T.EVENT_P; }
+// kept for older callers: 0 or 1, never 2
+function rollEventCount(rng) { return rollEvent(rng) ? 1 : 0; }
+// a stable id per event, from its text, so a pending event survives a restart and a pool reorder
+function eventId(ev) { return hashStr(String(ev.t)).toString(36); }
+// injury weeks for an off pitch injury event: a number or [min, max]. A head physio takes a week off.
+function injuryWeeks(ev, rng, physio) {
   const r = rng || Math.random;
-  if (r() >= T.EVENT_P1) return 0;
-  return r() < T.EVENT_P2 ? 2 : 1;
+  const span = Array.isArray(ev.inj) ? ev.inj : [ev.inj, ev.inj];
+  const wk = span[0] + Math.floor(r() * (span[1] - span[0] + 1));
+  return Math.max(1, physio ? wk - 1 : wk);
 }
-// picks the targets and writes the news line. squad is the list of senior players at the club.
-function applyEvent(ev, club, squad, round, rng) {
+const weeksText = n => (n === 1 ? "a week" : n + " weeks");
+// picks the targets, applies the effect and writes the news line. squad is the list of senior players.
+// opts: { physio } shortens injuries. An injury event only picks a player who is fit right now.
+function applyEvent(ev, club, squad, round, rng, opts) {
   const r = rng || Math.random;
   const pick = arr => arr[Math.floor(r() * arr.length)];
-  if (!squad.length) return null;
+  const pool = ev.inj ? squad.filter(p => !(p.inj > 0) && !(p.ban > 0)) : squad;
+  if (!pool.length) return null;
   let targets;
-  if (ev.who === "squad") targets = squad.slice();
-  else if (ev.who === "gk") { const gks = squad.filter(p => p.pos === "GK"); targets = [gks.length ? pick(gks) : pick(squad)]; }
+  if (ev.who === "squad") targets = pool.slice();
+  else if (ev.who === "gk") { const gks = pool.filter(p => p.pos === "GK"); targets = [gks.length ? pick(gks) : pick(pool)]; }
   else if (ev.who === "few") {
-    const pool = squad.slice();
+    const left = pool.slice();
     targets = [];
-    const n = Math.min(pool.length, 2 + Math.floor(r() * 3));
-    for (let i = 0; i < n; i++) targets.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
-  } else targets = [pick(squad)];
+    const n = Math.min(left.length, 2 + Math.floor(r() * 3));
+    for (let i = 0; i < n; i++) targets.push(left.splice(Math.floor(r() * left.length), 1)[0]);
+  } else targets = [pick(pool)];
+  const inj = ev.inj ? injuryWeeks(ev, r, opts && opts.physio) : 0;
   const names = targets.map(p => p.name);
   const text = String(ev.t)
     .replace(/\{p\}/g, names[0])
     .replace(/\{q\}/g, names[1] || names[0])
-    .replace(/\{n\}/g, String(names.length));
+    .replace(/\{n\}/g, String(names.length))
+    .replace(/\{d\}/g, weeksText(inj));
+  if (inj) {
+    // off pitch injuries go through the normal injury system: out for the weeks, then the return knock
+    for (const p of targets) p.inj = Math.max(p.inj || 0, inj);
+  }
   if (ev.w > 0) {
     club.fx = club.fx || [];
     club.fx.push({ ids: ev.who === "squad" ? "all" : targets.map(p => p.id), f: ev.f || 0, m: ev.m || 0, until: round + ev.w - 1, s: shortCause(text) });
@@ -256,13 +291,24 @@ function applyEvent(ev, club, squad, round, rng) {
   } else {
     for (const p of targets) { if (ev.f) bumpForm(p, ev.f); if (ev.m) bumpMorale(p, ev.m); }
   }
-  return { text, ids: targets.map(p => p.id), f: ev.f || 0, m: ev.m || 0, w: ev.w || 0 };
+  return { text, ids: targets.map(p => p.id), f: ev.f || 0, m: ev.m || 0, w: ev.w || 0, inj, who: ev.who, h: ev.h || "", names: names.slice(0, 3), n: names.length, id: eventId(ev) };
+}
+// the small effect card a news item carries so the popup can say what the event did
+function eventCard(res) {
+  const e = { k: res.who, n: res.n, p: res.names };
+  if (res.h) e.h = res.h;
+  if (res.f) e.f = res.f;
+  if (res.m) e.m = res.m;
+  if (res.w) e.w = res.w;
+  if (res.inj) e.j = res.inj;
+  return e;
 }
 // news gets an id per club so each manager can be shown what he has not seen yet
-function addNews(club, round, text, cap) {
+// extra: optional fields for the item, for example { e: eventCard } on an unexpected event
+function addNews(club, round, text, cap, extra) {
   club.news = club.news || [];
   club.newsSeq = (club.newsSeq || 0) + 1;
-  club.news.unshift({ i: club.newsSeq, w: round, t: text });
+  club.news.unshift(Object.assign({ i: club.newsSeq, w: round, t: text }, extra || {}));
   club.news = club.news.slice(0, cap || T.NEWS_CAP);
 }
 
@@ -357,6 +403,6 @@ module.exports = {
   T, clamp, r1, r3, hashStr, personalOffset, homeAway, injuryReturn, startInjuryReturn, healInjuryReturn,
   activeFx, pruneFx, effOvr, parts, setForm, setMorale, bumpForm, bumpMorale, applyResult, drift,
   rollSubCount, pickSubs, participants, recordAppearance, playingTime,
-  rollEventCount, applyEvent, addNews, shortCause, activeCauses,
+  rollEvent, rollEventCount, eventId, injuryWeeks, applyEvent, eventCard, addNews, shortCause, activeCauses,
   haversine, transportOptions, hotelOptions, longHaul, tripModifier, tripPrice, policyBooking, aiTravelModifier, smartFill, bulkCost, recommendFund
 };

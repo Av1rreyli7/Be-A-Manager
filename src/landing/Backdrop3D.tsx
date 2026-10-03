@@ -9,22 +9,28 @@
  */
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import type { MotionValue } from "motion/react";
 import * as THREE from "three";
 import type { GameId } from "./games";
 
 /** distance between the two sets, far enough for the fog to hide one from the other */
 const GAP = 760;
 
+/** a value read every frame (pointer drift), kept outside React state so moving the mouse renders nothing */
+export interface Drift {
+  get(): number;
+}
+
 interface Props {
   featured: GameId;
-  sx: MotionValue<number>;
-  sy: MotionValue<number>;
+  sx: Drift;
+  sy: Drift;
   warmed: GameId[];
   /** reduced motion: hold the camera still */
   still: boolean;
   onReady: () => void;
   onSlow: () => void;
+  /** stop drawing (tab hidden, or the intro is busy in front): no frames, no GPU work */
+  paused?: boolean;
 }
 
 /* ---------- small helpers ---------- */
@@ -542,7 +548,7 @@ function Arena({ time, mix }: { time: React.RefObject<number>; mix: React.RefObj
 
 /* ---------- the camera rig: orbit, pointer drift, the glide between sets, and the frame rate watch ---------- */
 
-function Rig({ featured, sx, sy, still, time, mix, onReady, onSlow }: Omit<Props, "warmed"> & { time: React.RefObject<number>; mix: React.RefObject<number> }) {
+function Rig({ featured, sx, sy, still, time, mix, onReady, onSlow }: Omit<Props, "warmed" | "paused"> & { time: React.RefObject<number>; mix: React.RefObject<number> }) {
   const { camera, setDpr } = useThree();
   const angle = useRef(0.62);
   const perf = useRef({ ready: false, t: 0, frames: 0, lowered: false, warm: 0 });
@@ -576,6 +582,13 @@ function Rig({ featured, sx, sy, still, time, mix, onReady, onSlow }: Omit<Props
       p.ready = true;
       onReady();
     }
+    // a long gap is a pause (hidden tab, paused loop), not a slow frame: start the count again
+    if (rawDt > 0.25) {
+      p.warm = 0;
+      p.t = 0;
+      p.frames = 0;
+      return;
+    }
     p.warm += rawDt;
     if (p.warm > 1.2) {
       p.t += rawDt;
@@ -596,6 +609,16 @@ function Rig({ featured, sx, sy, still, time, mix, onReady, onSlow }: Omit<Props
   return null;
 }
 
+/** compiles every material up front (both sets), so the first glide to the arena never stalls on a shader build */
+function Precompile({ arena }: { arena: boolean }) {
+  const { gl, scene, camera } = useThree();
+  useEffect(() => {
+    const id = requestAnimationFrame(() => gl.compile(scene, camera));
+    return () => cancelAnimationFrame(id);
+  }, [gl, scene, camera, arena]);
+  return null;
+}
+
 export default function Backdrop3D(props: Props) {
   const time = useRef(0);
   const mix = useRef(props.featured === "frontoffice" ? 1 : 0);
@@ -610,6 +633,7 @@ export default function Backdrop3D(props: Props) {
     <div ref={wrap} style={{ position: "absolute", inset: 0 }}>
       <Canvas
         dpr={[1, 1.5]}
+        frameloop={props.paused ? "never" : "always"}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         camera={{ fov: 36, near: 1, far: 2400, position: [150, 112, 200] }}
         style={{ pointerEvents: "none" }}
@@ -622,9 +646,10 @@ export default function Backdrop3D(props: Props) {
         <fog attach="fog" args={["#000000", 300, 720]} />
         <hemisphereLight args={["#aebbd6", "#0a0c08", 0.5]} />
         <directionalLight position={[40, 90, 60]} intensity={0.55} color="#ffffff" />
-        <Rig {...props} time={time} mix={mix} />
+        <Rig featured={props.featured} sx={props.sx} sy={props.sy} still={props.still} onReady={props.onReady} onSlow={props.onSlow} time={time} mix={mix} />
         <Stadium time={time} mix={mix} />
         {showArena && <Arena time={time} mix={mix} />}
+        <Precompile arena={showArena} />
       </Canvas>
     </div>
   );

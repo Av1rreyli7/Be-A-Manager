@@ -18,7 +18,7 @@ export default function AssetsPage() {
   const kv = picks.reduce((s, k) => s + pickValue(l, k, me), 0);
   return (
     <div className="space-y-4">
-      <PageHeader title="My Assets" sub="Everything you can trade, valued the way your front office sees it (strategy-adjusted)." />
+      <PageHeader title="My Assets" sub="Everything you can trade, valued the way your team sees it." />
       <div className="grid gap-4 sm:grid-cols-4">
         <Card><Stat label="Player value" value={pv.toFixed(0)} /></Card>
         <Card><Stat label="Pick value" value={kv.toFixed(0)} sub={`${picks.filter((k) => k.round === 1).length} firsts · ${picks.filter((k) => k.round === 2).length} seconds`} /></Card>

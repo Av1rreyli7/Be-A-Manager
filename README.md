@@ -4,7 +4,7 @@ Two manager games on one site, by Avir & Ayanssh.
 
 - **Floodlights** (`/floodlights/`): a multiplayer football manager. Create a room, share the 4 letter code, pick clubs and play seasons together. You can play your own matches in 3D or in the Classic top down view.
 - **Game Night** (`/front-office`): two basketball games in one. Front Office is a GM game with real rosters, contracts, trades, the draft and free agency, where the matches play out on their own. Hardwood Legends is a 3D game you play yourself on the keyboard. The landing page calls this entry Game Night; the address and the app itself are unchanged.
-- **The landing page** (`/`): pick a game. The featured game fills the stage, and the list on the left switches between the two.
+- **The landing page** (`/`): a short intro (WELCOME TO BE-A-MANAGER, a football kicked in for Floodlights, a basketball bounce for Game Night), then one card per game. Skip it any time, and links work from the first frame.
 
 ## Run it on your computer
 
@@ -23,7 +23,7 @@ One Node process serves everything (`server.js`):
 - **Express** owns Floodlights: the game page at `/floodlights/`, its files (`match.js`, `match3d.mjs`, `match_sim3d.mjs`, `condition.js`, `events_data.js`, `travel_data.js`, three.js, fonts) and its API at `/api/...`.
 - **Next.js** serves everything else: the landing page and all of Front Office.
 
-Why a custom server and not a static export: Front Office has pages with ids in the address (`/game/player/[id]`, `/game/team/[id]`, `/game/box/[id]`) and one API route. A static export would have meant changing Front Office itself. With the custom server Front Office needs no changes to how it works. The whole thing idles at about 170 MB of memory, well inside the 512 MB of a free Render instance.
+Why a custom server and not a static export: Front Office has pages with ids in the address (`/game/player/[id]`, `/game/team/[id]`, `/game/box/[id]`) and one API route. A static export would have meant changing Front Office itself. With the custom server Front Office needs no changes to how it works. The whole thing idles at about 125 MB of memory (about 190 MB after the boot test clicks through every part), well inside the 512 MB of a free Render instance.
 
 Why the Floodlights API stayed at `/api/...`: nothing collides. Front Office only owns `/api/refresh-data`. Express answers the Floodlights paths and passes every other request on to Next.
 
@@ -33,7 +33,8 @@ Where things live:
 | --- | --- |
 | `server.js` | the combined server |
 | `floodlights/` | the Floodlights server (`server.js`), client (`index.html`), match engine (`match.js`), 3D match look (`match3d.mjs`) with its deep sim (`match_sim3d.mjs`), the condition and travel maths (`condition.js`), the event pool and travel dataset, world data, fonts and its two test batteries |
-| `src/app/page.tsx`, `src/landing/` | the landing page (React, Motion, three.js with React Three Fiber) |
+| `src/app/page.tsx`, `src/landing/` | the landing page (React, GSAP, three.js with React Three Fiber) |
+| `public/kit.css`, `public/kit-motion.js`, `src/lib/motion.ts` | the shared look and motion for every part of the site: one palette (pitch mode for Floodlights, court mode for Game Night), shared buttons, panels, tables, chips, and GSAP screen entrances |
 | `src/app/front-office/` | the Game Night picker with Front Office and Hardwood Legends (it used to be the home page of Front Office) |
 | `src/app/game`, `src/app/gm`, `src/app/online`, `src/engine`, `src/lib`, `src/components`, `src/worker` | Front Office. The game works as before; its look now matches the rest of the site (`src/app/globals.css`, `src/lib/theme.ts`, `src/components/ui.tsx`) |
 | `public/games/hardwood-legends.html` | Hardwood Legends. Its menus and HUD carry the site look; the 3D court is as it was |

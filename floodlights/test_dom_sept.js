@@ -27,16 +27,94 @@ ok("host only visibility toggle for sim season", html.includes('$("simSeasonBtn"
 ok("the squad table shows form, morale and effective rating", html.includes("<th class=\"num\" title=\"Form") && html.includes(">Morale</th>") && html.includes(">Eff</th>") && html.includes("condChip(p.cond && p.cond.form, 3)"), null);
 ok("the feed shows the club news first", html.includes("Your club this season") && html.includes("s.myClub.news"), null);
 ok("every list shows one number, with an arrow only when effective differs from base", html.includes("function ovrFace(base, eff)") && html.includes('dir === "flat" ? base : eff') && (html.match(/ovrChip\(/g) || []).length >= 8 && !html.includes('class="ovb"') && html.includes("\\u25b2") && html.includes("\\u25bc"), (html.match(/ovrChip\(/g) || []).length);
-ok("the lineup pitch uses the same bare face, no pill, arrow beside the number", html.includes("luball\">${p.cond ? luFace(p) : p.rating}") && html.includes("function luFace(p)") && html.includes(".luball .lua.up") && !html.includes(".ovr{position:relative;display:inline-flex;align-items:center;gap:4px;background:var(--raise)"), null);
+ok("the lineup pitch shows shirts with the rating chip attached, the remove X and age and position under", html.includes('<span class="lushirt">${shirtSvg(kitOf(p), nums[p.id] || "", luShort(p.name))}') && html.includes('<span class="luX" onclick="luSlotClear(${i},event)"') && html.includes('<span class="luchip">${p.cond ? ovrChip(p, true) : ratFace(p.rating)}</span>') && html.includes('<span class="luage">${p.age}Y \\u00b7 ${posBadge(p)}</span>'), null);
 ok("the tooltip holds the base and the event cause", html.includes("BASE ' + base") && html.includes("c.causes || []") && html.includes("Not played"), null);
 ok("events pop up after a sim, one after another, and get marked seen on the server", html.includes('id="eventModal"') && html.includes("function queueEvents(s)") && html.includes("function showNextEvent()") && html.includes('api("/api/newsseen", { id: x.i })') && html.includes("EV.queue.shift()") && html.includes("more after this"), null);
 ok("the popups are delivered from the state's unseen list and the News feed keeps the archive", html.includes("s.myClub.unseenNews") && html.includes("Your club this season"), null);
+ok("on the results screen the event is only teased; the popup waits for the lobby", html.includes('id="mdTeaser"') && html.includes("function evTeaser(s)") && html.includes("evTeaser(s);") && html.includes("!evOnResults(s)") && html.includes("brewing at "), null);
+ok("playing your match, Play matchweek, Sim season and Sim next week all wait behind the event gate", html.includes("function evGate(fn)") && html.includes("if (evGate(() => window.playMatch(kind))) return;") && html.includes('if (evGate(() => $("simBtn").onclick())) return;') && html.includes("if (evGate(() => {})) return;") && html.includes("evGate(sim.onclick)"), null);
+ok("the popup shows what the event did (injury, form, morale, how long, who) and many at once become one summary", html.includes("function evChips(e)") && html.includes("OUT FOR ") && html.includes('id="evFx"') && html.includes("WHILE THE WEEKS FLEW BY") && html.includes("Got it, let's play"), null);
 ok("the OVR chip carries a breakdown popover with form, morale and injury return", html.includes('class="ovtip"') && html.includes('line("Form", c.form)') && html.includes('line("Morale", c.morale)') && html.includes('line("Back from injury", c.ret)') && html.includes(".ovr:hover .ovtip,.ovr:focus .ovtip"), null);
 ok("arrows animate in with the rows and pulse once when a value changes", html.includes("@keyframes ovrin") && html.includes("@keyframes ovrpulse") && html.includes("OVR_SEEN[key] !== eff") && html.includes("prefers-reduced-motion"), null);
-ok("squad, lineup, market, academy, loans out and scout tips all use the chip", html.includes("<td class=\"num\">${ovrChip(p)}</td><td class=\"num\">${appsText(p)}</td>") && (html.match(/ovrChip\(p, true\)/g) || []).length === 2 && html.includes("<td class=\"num\">${ovrChip(p)}</td><td class=\"num\">${p.pot || \"?\"}</td>"), null);
+ok("squad, lineup, market, academy, loans out and scout tips all use the chip", html.includes("<td class=\"num\">${ovrChip(p)}</td><td class=\"num\">${appsText(p)}</td>") && (html.match(/ovrChip\(p, true\)/g) || []).length === 3 && html.includes("<td class=\"num\">${ovrChip(p)}</td><td class=\"num\">${p.pot || \"?\"}</td>"), (html.match(/ovrChip\(p, true\)/g) || []).length);
 ok("appearances show compactly in the squad table and stale players are flagged", html.includes(">Apps</th>") && html.includes("function appsText(p)") && html.includes("p.bn >= 3 ? \" stale\""), null);
 ok("the match detail lists the subs who came on", html.includes("class=\"mdsubs\">SUBS: ") && html.includes("evd.subs"), null);
 ok("the travel tab, planner and advisor are on the page", html.includes('data-t="travel"') && html.includes('id="tab-travel"') && html.includes('id="travelModal"') && html.includes("/api/travelfund") && html.includes("/api/travelbook") && html.includes("travelBulk(") && html.includes("smart"), null);
+
+// ---- the RAT column: one effective number (never the modifier), arrow in a fixed slot, columns aligned ----
+{
+  // a helper is either one line (function x(a) { ... }) or a block that closes on its own line
+  const grab = name => {
+    const one = new RegExp("^function " + name + "\\([^)]*\\) \\{.*\\}$", "m").exec(html);
+    if (one) return one[0];
+    const m = new RegExp("function " + name + "\\([^)]*\\) \\{[\\s\\S]*?\\n\\}").exec(html); return m ? m[0] : "";
+  };
+  const src = ["const OVR_SEEN = {};", grab("rcol"), grab("rchip"), grab("ratFace"), grab("ovrFace"), grab("ovrChip")].join("\n");
+  let chip = null;
+  try { chip = new Function(src + "\nreturn { ovrChip, ovrFace, ratFace };")(); } catch (e) { chip = null; }
+  ok("the rating helpers can be read out of the page", !!chip, null);
+  if (chip) {
+    const face = h => { const m = /class="ove"[^>]*>([^<]*)<\/span><span class="ova">([^<]*)<\/span>/.exec(h); return m ? { n: m[1], a: m[2] } : null; };
+    const cond = (eff, extra) => Object.assign({ form: 0, morale: 0, ret: 0, traveller: 0, causes: [], bench: 0, eff }, extra || {});
+    const up = face(chip.ovrChip({ id: 1, name: "A", rating: 91, cond: cond(93.9, { form: 2.9 }) }));
+    const down = face(chip.ovrChip({ id: 2, name: "B", rating: 80, cond: cond(77.6, { form: -2.4 }) }));
+    const flat = face(chip.ovrChip({ id: 3, name: "C", rating: 88, cond: cond(88.2) }));
+    const bare = face(chip.ratFace(74));
+    ok("a player up on his base shows his effective OVR with an up arrow, never the plus", !!up && up.n === "94" && up.a === "▲", up);
+    ok("a player down on his base shows his effective OVR with a down arrow, never the minus", !!down && down.n === "78" && down.a === "▼", down);
+    ok("a flat player shows his base and an empty arrow slot", !!flat && flat.n === "88" && flat.a === "", flat);
+    ok("a rating with no condition data uses the same face and slot", !!bare && bare.n === "74" && bare.a === "", bare);
+    // a whole market worth of players: the shown number is always a real rating, never a small delta like 02
+    let bad = [];
+    for (let r = 45; r <= 94; r++) for (const d of [-4.6, -2.2, -0.4, 0, 0.3, 1.6, 3.9]) {
+      const f = face(chip.ovrChip({ id: r * 100 + Math.round(d * 10), name: "P", rating: r, cond: cond(r + d) }));
+      const want = Math.round(r + d) === r ? String(r) : String(Math.round(r + d));
+      if (!f || f.n !== want || f.n.length < 2 || /^0/.test(f.n)) bad.push([r, d, f && f.n]);
+    }
+    ok("every shown rating is the effective OVR, two digits, no leading zero", bad.length === 0, bad.slice(0, 5));
+  }
+  ok("the market RAT cell is the chip on the player's own rating and condition", html.includes('<td class="num rat">${ovrChip(p)}</td>') && /api\("\/api\/market\?q=/.test(html), null);
+  ok("the arrow slot is always drawn so a column lines up", html.includes("'</span><span class=\"ova\">' + face.arrow + \"</span>\"") && html.includes(".ovr{display:inline-grid;grid-template-columns:auto 9px"), null);
+  ok("the out on loan table has its number headers right aligned like the cells", html.includes('<th class="num">Age</th><th class="num">Rat</th><th>At</th>'), null);
+  ok("free agents and nation squads use the same rating face", html.includes('<td class="num rat">${ratFace(p.rating)}</td>') && (html.match(/ratFace\(p\.rating\)/g) || []).length >= 4, (html.match(/ratFace\(p\.rating\)/g) || []).length);
+}
+
+// ---- lineup shirts ----
+ok("shirts are vector, from the back, in the club kit, the keeper in his own colour", html.includes("function shirtSvg(kit, num, name, cls)") && html.includes("const SHIRT_PATH") && html.includes("function keeperKit(kit)") && html.includes("FLMatch.pickKits(name") && html.includes('id="shirtShade"'), null);
+ok("shirt numbers follow the 3D match role rule and are unique inside the squad", html.includes("function shirtNumbers(squad)") && html.includes("GK: [1, 13, 25], CB: [4, 5, 6, 15, 16, 24]") && html.includes("ST: [9, 10, 18, 20]"), null);
+{
+  const grab = name => { const m = new RegExp("function " + name + "\\([^)]*\\) \\{[\\s\\S]*?\\n\\}").exec(html); return m ? m[0] : ""; };
+  const pre = /const NUM_PREF = \{[\s\S]*?\};\nconst NUM_FALLBACK = [^\n]*\nlet SHIRT = [^\n]*/.exec(html);
+  let nums = null;
+  try { nums = new Function((pre ? pre[0] : "") + "\n" + grab("shirtNumbers") + "\nreturn shirtNumbers;")(); } catch (e) { nums = null; }
+  ok("the shirt number rule can be read out of the page", !!nums, null);
+  if (nums) {
+    const squad = [
+      { id: 1, pos: "GK", role: "GK", rating: 85 }, { id: 2, pos: "GK", role: "GK", rating: 70 }, { id: 3, pos: "FW", role: "ST", rating: 90 },
+      { id: 4, pos: "FW", role: "ST", rating: 80 }, { id: 5, pos: "DF", role: "CB", rating: 84 }, { id: 6, pos: "MF", role: "CAM", rating: 88 },
+      { id: 7, pos: "FW", role: "RW", rating: 86 }, { id: 8, pos: "DF", role: "RB", rating: 78 }
+    ];
+    for (let i = 9; i <= 32; i++) squad.push({ id: i, pos: ["DF", "MF", "FW"][i % 3], role: ["CB", "CM", "ST"][i % 3], rating: 60 + (i % 9) });
+    const m = nums(squad);
+    const vals = squad.map(p => m[p.id]);
+    ok("every player in a 32 man squad gets a number and no two share one", vals.every(v => Number.isInteger(v) && v > 0) && new Set(vals).size === vals.length, vals);
+    ok("the best keeper wears 1, the best striker 9, the playmaker 10", m[1] === 1 && m[3] === 9 && m[6] === 10 && m[2] === 13, [m[1], m[3], m[6], m[2]]);
+    ok("numbers stay put when ratings move but the squad does not", JSON.stringify(nums(squad.map(p => Object.assign({}, p, { rating: p.rating + (p.id % 3) })))) === JSON.stringify(m), null);
+  }
+}
+ok("bench and reserve rows carry a small shirt with the number", (html.match(/<span class="bp">\$\{miniShirt\(kitOf\(p\), nums\[p\.id\] \|\| ""\)\}<\/span>/g) || []).length === 2, null);
+ok("drag and tap placement on the pitch is untouched", html.includes('data-slot="${i}" onclick="luSlotTap(${i})" ondragover="event.preventDefault()"') && html.includes('ondrop="luDrop(event,${i})"') && html.includes("window.luDrop = (ev, slotIdx)") && html.includes('ondragstart="luDrag(event,${p.id})"'), null);
+ok("shirts lift on hover, cast a shadow and drop in one after another when the lineup opens", html.includes(".luslot.lufilled:hover .lushirt{transform:translateY(-3px)}") && html.includes("drop-shadow(0 5px 4px") && html.includes("function shirtsIn(all, only)"), null);
+
+// ---- motion and the shared kit ----
+ok("the page runs in the kit's pitch mode and loads GSAP and the motion kit before the game", html.includes('<html lang="en" data-kmode="pitch">') && html.indexOf('<script src="vendor/gsap.min.js"></script>') > 0 && html.indexOf('<script src="/kit-motion.js"></script>') > html.indexOf('<script src="vendor/gsap.min.js"></script>') && html.indexOf('<script src="/kit-motion.js"></script>') < html.indexOf('<script src="match.js"></script>'), null);
+ok("the poll never replays an entrance: containers are only rewritten when their markup changed", html.includes("if (el._fxHtml === html) return false;") && html.includes("Date.now() >= FX.hot") && html.includes("const moved = before ? list.filter((r, i) => before[i] !== now[i]) : list;"), null);
+ok("screens animate in when a tab opens, with a sliding indicator under the tab", html.includes("if (was !== b) enterScreen($(\"tab-\" + b.dataset.t));") && html.includes("KM.tabIndicator(bar, on)") && html.includes("function enterScreen(sec)"), null);
+ok("big numbers count up, form arrows pulse when they move, popups pop and messages slide in", html.includes("function countText(el, text)") && html.includes("countText($(\"hBudget\")") && html.includes("KM.pulse(c, { scale: 1.4 })") && html.includes("KM.pop(card)") && html.includes("KM.slideIn(t, { x: 14 })"), null);
+ok("HERE WE GO for your club gets the celebration, and it never takes a click", html.includes('id="hwg"') && html.includes("function hereWeGo(text, kick)") && html.includes("KM.celebrate(") && html.includes("KM.sparks(") && /#hwg\{[^}]*pointer-events:none/.test(html), null);
+ok("a deal that goes through gets its own moment on the offer card", html.includes('data-oid="${o.id}"') && html.includes('card.classList.add("won")'), null);
+ok("the confidence bar scales on the GPU instead of resizing", html.includes('cfl.style.transform = "scaleX("') && !html.includes('cfl.style.width ='), null);
+ok("reduced motion: the kit settles everything at once and the page's own extras switch off", html.includes(".luslot.lufilled:hover .lushirt{transform:none}") && html.includes(".mdhero.goalflash::after{animation:none"), null);
 
 // offers: countered inbound keeps the old bid alive, loan asks tagged
 ok("seller can take the standing bid after countering", html.includes("Take their ${money(o.fee)}"), null);
@@ -197,7 +275,7 @@ ok("the page lets the engine ask for a fresh state", html.includes("recheck: () 
 ok("state polling keeps running while a match is open", html.includes("pollTimer = setInterval(tick, 3000)") && /STATE = await api\("\/api\/state"\);[\s\S]{0,200}FLMatch\.isOpen\(\)\)\) render\(\)/.test(html), null);
 ok("the old will not count banner is gone", !engine.includes("WILL NOT COUNT") && !engine.includes("stillValid") && !html.includes("stillValid"), null);
 ok("the engine has the host has simmed message", engine.includes("The host has simmed this week, your match was decided by the sim."), null);
-ok("the plain sim buttons have no confirm popup", /\$\("simBtn"\)\.onclick = async \(\) => \{ \$\("simBtn"\)\.disabled = true; try \{ await api\("\/api\/sim",\{\}\)/.test(html) && /sim\.onclick = async \(\) => \{ sim\.disabled = true; try \{ await api\("\/api\/sim",\{\}\)/.test(html), null);
+ok("the plain sim buttons have no confirm popup, they only wait for a new event to be seen", /\$\("simBtn"\)\.onclick = async \(\) => \{\s*\/\/[^\n]*\n\s*if \(evGate\(\(\) => \$\("simBtn"\)\.onclick\(\)\)\) return;\s*\$\("simBtn"\)\.disabled = true; try \{ await api\("\/api\/sim",\{\}\)/.test(html) && /sim\.onclick = \(\) => evGate\(sim\.onclick\) \|\| \(async \(\) => \{ sim\.disabled = true; try \{ await api\("\/api\/sim",\{\}\)/.test(html), null);
 ok("kick off tells the server which fixture the page is showing", html.includes('api("/api/playstart", { kind, home: f.home, away: f.away })'), null);
 
 // the page helper that finds the simmed score once the round has moved on

@@ -7,6 +7,8 @@ const path = require("path");
 const here = f => path.join(__dirname, f);
 const PORT = process.env.FL_TEST_PORT || "3000";
 const BASE = process.env.FL_TEST_BASE || ("http://localhost:" + PORT);
+// the server writes its save here; FL_SAVE_FILE lets a test run keep its own file (the server reads the same variable)
+const SAVE_FILE = process.env.FL_SAVE_FILE || here("games.json");
 
 let passed = 0, failed = 0;
 function ok(name, cond, detail) {
@@ -36,7 +38,7 @@ async function readSave(wantCode) {
   await sleep(650);
   for (let i = 0; i < 60; i++) {
     try {
-      const all = JSON.parse(fs.readFileSync(here("games.json")));
+      const all = JSON.parse(fs.readFileSync(SAVE_FILE));
       if (!wantCode) return all;
       const found = Object.values(all).find(x => x.code === wantCode);
       if (found && found.clubs && found.players) return all;
@@ -48,7 +50,7 @@ async function readSave(wantCode) {
 async function main() {
   let server = null;
   if (!process.env.FL_TEST_BASE) {
-    try { fs.unlinkSync(here("games.json")); } catch (e) {}
+    try { fs.unlinkSync(SAVE_FILE); } catch (e) {}
     server = spawn("node", [here("server.js")], { stdio: "ignore", env: Object.assign({}, process.env, { PORT }) });
     process.on("exit", () => { try { server.kill(); } catch (e) {} });
     await sleep(1200);
@@ -639,8 +641,11 @@ console.log("b5");
   ok("Sim season runs the rest of the season through every system", r.status === 200 && r.j.round === 38, r.j);
   r = await api(`/api/state?code=${tc}&name=Trav`);
   ok("after Sim season the club news still reads like a season and nothing was swallowed", r.j.myClub.news.length >= 2 && r.j.myClub.news.length <= 40 && r.j.seasonOver === true && r.j.myClub.news.every(x => Number.isInteger(x.i)), r.j.myClub.news.length);
-  const evLines = r.j.myClub.news.filter(x => !/^TRAVEL:/.test(x.t)).length;
-  ok("events fired at the intended rate over the season, about 5 to 7 a club, allowing for luck", evLines >= 2 && evLines <= 12, evLines);
+  const evItems = r.j.myClub.news.filter(x => !/^TRAVEL:/.test(x.t));
+  const evLines = evItems.length;
+  ok("events fired at the intended rate over the season, about one every four weeks, allowing for luck", evLines >= 3 && evLines <= 18, evLines);
+  ok("every event in the news carries its card and the week it is for, never two in one week", evItems.every(x => x.e && Number.isInteger(x.w)) && new Set(evItems.map(x => x.w)).size === evItems.length, evItems.map(x => x.w));
+  ok("no event lands after the final week, there is no match left for it", r.j.myClub.news.every(x => x.w <= 38), r.j.myClub.news.map(x => x.w));
   const unseenAll = r.j.myClub.unseenNews;
   ok("every event is waiting to pop up until the manager has seen it, oldest first", unseenAll.length === r.j.myClub.news.length && unseenAll[0].i < unseenAll[unseenAll.length - 1].i, unseenAll.length);
   r = await api("/api/newsseen", { code: tc, name: "Trav", id: unseenAll[1].i });
@@ -667,8 +672,109 @@ console.log("b5");
   const subbed = Object.values(g.lastEvents || {}).filter(e => e.subs && e.subs.length);
   ok("the week's match detail lists the subs who came on, at most five a side", subbed.length >= 1 && Object.values(g.lastEvents || {}).every(e => !e.subs || (e.subs.filter(x => x.c === Object.keys(g.lastEvents).find(k => g.lastEvents[k] === e).split("|")[0]).length <= 5 && e.subs.every(x => x.n && x.off && x.min >= 46 && x.min <= 85))), subbed.length);
   const benched = Object.values(g.players).filter(p => p.bn >= 6 && !p.academy && (LEAGUE_HUMAN.has(p.club)));
-  ok("players left on the bench for weeks have sunk in morale", benched.length > 0 && benched.filter(p => (p.mo || 0) < 0).length >= benched.length * 0.75, benched.slice(0, 2).map(p => [p.name, p.bn, p.mo]));
+  // most have sunk; a lingering good news event can lift one of them, so the group is judged as a whole
+  ok("players left on the bench for weeks have sunk in morale", benched.length > 0 && benched.filter(p => (p.mo || 0) < 0).length >= benched.length * 0.5 && benched.reduce((s2, p) => s2 + (p.mo || 0), 0) / benched.length < -0.4, benched.slice(0, 4).map(p => [p.name, p.bn, p.mo]));
   ok("the save for one game stays lean with 300 plus clubs tracked", lenNow < 2.6 * 1024 * 1024, Math.round(lenNow / 1024) + " KB");
+
+  // ============ events a week ahead: pre roll on a saved result, teaser, reveal before the next week ============
+  console.log("section events ahead", Date.now());
+  {
+    r = await api("/api/create", { name: "Evo" });
+    const ec = r.j.code;
+    await api("/api/pick", { code: ec, name: "Evo", team: "Brentford" });
+    await api("/api/start", { code: ec, name: "Evo" });
+    let brewSeen = 0, quietSeen = 0, brewOk = true, quietOk = true, teaseOk = true, consumed = true;
+    const notes = [];
+    for (let w = 0; w < 34 && (brewSeen < 2 || quietSeen < 3); w++) {
+      let st = await api(`/api/state?code=${ec}&name=Evo`);
+      const fx = (st.j.playable || []).find(f => f.kind === "league");
+      const before = new Set(st.j.myClub.news.map(x => x.i));
+      let brewing = null;
+      if (fx && !fx.blocked && (await api("/api/playstart", { code: ec, name: "Evo", kind: "league" })).status === 200) {
+        r = await api("/api/playresult", { code: ec, name: "Evo", kind: "league", home: fx.home, away: fx.away, hg: 1, ag: 0 });
+        brewing = r.j.brewing === true;
+        if (brewing !== /brewing at Brentford/.test(r.j.message || "")) teaseOk = false;
+      }
+      await api("/api/sim", { code: ec, name: "Evo" });
+      st = await api(`/api/state?code=${ec}&name=Evo`);
+      const fresh = st.j.myClub.news.filter(x => !before.has(x.i) && x.e);
+      if (brewing === true) {
+        brewSeen++;
+        if (!(fresh.length === 1 && fresh[0].w === st.j.round + 1 && st.j.myClub.unseenNews.some(u => u.i === fresh[0].i))) { brewOk = false; notes.push(["brew", st.j.round, fresh]); }
+      } else if (brewing === false) {
+        quietSeen++;
+        if (fresh.length) { quietOk = false; notes.push(["quiet", st.j.round, fresh]); }
+      }
+      const sv = await readSave(ec);
+      const gg = Object.values(sv).find(x => x.code === ec);
+      if (gg.clubs.Brentford.pendEv) consumed = false;
+    }
+    ok("a saved live result decides next week's event and only teases it", teaseOk && brewSeen >= 1, [brewSeen, teaseOk]);
+    ok("a teased event lands in the news for exactly the week ahead and waits as unseen", brewOk, notes.slice(0, 2));
+    ok("when the result said nothing is brewing, the sim does not roll a second time", quietOk && quietSeen >= 1, [quietSeen, notes.slice(0, 2)]);
+    ok("the pending event is used up when the week is simmed", consumed, null);
+  }
+
+  // ============ three real seasons: OVR balance and event rate across the whole world ============
+  console.log("section balance", Date.now());
+  {
+    const C = require("./condition");
+    r = await api("/api/create", { name: "Bal" });
+    const bc = r.j.code;
+    await api("/api/pick", { code: bc, name: "Bal", team: "Fulham" });
+    await api("/api/start", { code: bc, name: "Bal" });
+    const rows = [];
+    let evAll = [], firstAvg = null;
+    for (let season = 1; season <= 3; season++) {
+      r = await api("/api/simseason", { code: bc, name: "Bal" });
+      if (r.status !== 200) { ok("sim season for the balance check", false, r.j); break; }
+      const st = await api(`/api/state?code=${bc}&name=Bal`);
+      evAll.push(st.j.myClub.news.filter(x => x.e && !evAll.flat().some(y => y.i === x.i)).map(x => ({ i: x.i, w: x.w, s: season })));
+      // the save is written a moment after the request, so wait until it shows this season finished
+      let gg = null;
+      for (let t = 0; t < 40; t++) {
+        const sv = await readSave(bc);
+        gg = Object.values(sv).find(x => x.code === bc);
+        if (gg && gg.season === st.j.season && gg.round >= 38) break;
+        await sleep(300);
+      }
+      const pl = Object.values(gg.players).filter(p => !p.academy && p.club && gg.clubs[p.club] && gg.leagueFixtures[gg.clubs[p.club].league]);
+      const delta = p => C.effOvr(p, { neutral: true }) - p.rating;
+      const mean = v => v.reduce((a, b) => a + b, 0) / (v.length || 1);
+      const regulars = pl.filter(p => p.ap && p.ap[0] >= 19);
+      const champs = [];
+      for (const [lg, fixtures] of Object.entries(gg.leagueFixtures)) {
+        const pts = {};
+        for (const round of fixtures) for (const m of round) {
+          if (m.hg === null || m.hg === undefined) continue;
+          pts[m.home] = (pts[m.home] || 0) + (m.hg > m.ag ? 3 : m.hg === m.ag ? 1 : 0);
+          pts[m.away] = (pts[m.away] || 0) + (m.ag > m.hg ? 3 : m.hg === m.ag ? 1 : 0);
+        }
+        const top = Object.entries(pts).sort((a, b) => b[1] - a[1])[0];
+        if (top) champs.push(top[0]);
+      }
+      const champRegs = regulars.filter(p => champs.includes(p.club)).map(delta);
+      const row = {
+        season, everyone: +mean(pl.map(delta)).toFixed(2), regulars: +mean(regulars.map(delta)).toFixed(2),
+        atExtremes: +(pl.filter(p => Math.abs(delta(p)) >= 4).length / pl.length).toFixed(3),
+        champRegulars: +mean(champRegs).toFixed(2), champBest: +Math.max(...champRegs).toFixed(2), clubEvents: evAll[season - 1].length
+      };
+      rows.push(row);
+      if (firstAvg === null) firstAvg = row;
+      if (season < 3) await api("/api/nextseason", { code: bc, name: "Bal" });
+    }
+    console.log("OVR balance in the real world, effective minus base at the end of each season (all leagues):");
+    console.table(rows);
+    const evs = evAll.flat();
+    const perSeason = evs.length / rows.length;
+    const weeksBySeason = rows.map(rw => evs.filter(e => e.s === rw.season).map(e => e.w));
+    const oneAWeek = weeksBySeason.every(ws => new Set(ws).size === ws.length);
+    console.log("events at Fulham: " + evs.length + " over " + rows.length + " seasons, " + perSeason.toFixed(1) + " a season, about one every " + (37 / Math.max(0.1, perSeason)).toFixed(1) + " weeks, never two in a week: " + oneAWeek);
+    ok("three real seasons: the league average holds steady near zero", rows.length === 3 && rows.every(rw => Math.abs(rw.regulars) <= 0.8) && Math.abs(rows[2].regulars - rows[0].regulars) <= 0.4 && Math.abs(rows[2].everyone - rows[0].everyone) <= 0.4, rows);
+    ok("three real seasons: only a few percent of players sit at the extremes", rows.every(rw => rw.atExtremes < 0.05), rows.map(rw => rw.atExtremes));
+    ok("three real seasons: title winners' regulars end slightly up, not maxed", rows.every(rw => rw.champRegulars >= -0.3 && rw.champRegulars <= 2.5 && rw.champBest < 4.5), rows.map(rw => [rw.champRegulars, rw.champBest]));
+    ok("three real seasons: one event every three to five weeks or so, never two in a week", perSeason >= 4 && perSeason <= 16 && oneAWeek, [perSeason, oneAWeek]);
+  }
 
   console.log(passed + " passed, " + failed + " failed");
   if (server) server.kill();

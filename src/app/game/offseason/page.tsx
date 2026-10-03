@@ -142,7 +142,7 @@ export default function OffseasonHub() {
               {progression.map(({ p, prev, cur }) => {
                 const d = cur.ovr - prev.ovr;
                 return (
-                  <li key={p.id} className="anim-rise flex items-center justify-between rounded-[4px] border border-line px-3 py-1.5 text-sm">
+                  <li key={p.id} className="flex items-center justify-between rounded-[4px] border border-line px-3 py-1.5 text-sm">
                     <PlayerLink player={p} />
                     <span className="flex items-center gap-2"><Rating value={prev.ovr} className="opacity-50" />→<Rating value={cur.ovr} /><b className={d > 0 ? "text-good" : d < 0 ? "text-bad" : "text-dim"}>{d > 0 ? `+${d}` : d}</b></span>
                   </li>

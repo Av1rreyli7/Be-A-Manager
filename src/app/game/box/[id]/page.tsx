@@ -12,7 +12,7 @@ export default function BoxPage() {
   const l = useLeague();
   const [tab, setTab] = useState<"box" | "pbp">("box");
   const b = l.boxScores[decodeURIComponent(id)];
-  if (!b) return <Empty>Box score not available (box scores are kept for the current season).</Empty>;
+  if (!b) return <Empty>No box score. Only this season's games are kept.</Empty>;
   const s = b.summary;
   const teamName = (t: string) => l.teams[t]?.fullName ?? (t === "EAST" ? "Team East" : t === "WEST" ? "Team West" : t);
   const quarters = s.quarters.home.length;

@@ -117,7 +117,7 @@ function PlayGame() {
     <div className="space-y-5">
       <PageHeader title="Play your game" sub={`${fmtDate(g.date, { weekday: "long", month: "long", day: "numeric" })} · ${g.round ?? (g.type === "regular" ? "Regular season" : g.type)}`} />
 
-      <section className="panel on-dark relative overflow-hidden">
+      <section className="panel relative overflow-hidden">
         <div aria-hidden className="hero-wash absolute inset-0" style={{ ["--tc-team" as string]: l.teams[opp]?.colors.primary }} />
         <div aria-hidden className="stripes absolute inset-0 [mask-image:linear-gradient(90deg,black,transparent_70%)]" />
         <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 p-5 sm:p-8">

@@ -1,9 +1,12 @@
 "use client";
 /** Fast sortable / searchable / filterable table with pagination for large lists. */
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import clsx from "clsx";
 import { CaretDown, CaretLeft, CaretRight, CaretUp, MagnifyingGlass } from "@phosphor-icons/react";
-import { inputCls } from "./ui";
+import { PosBadge, inputCls } from "./ui";
+import { km } from "@/lib/motion";
+
+const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export interface Column<T> {
   key: string;
@@ -74,6 +77,18 @@ export function DataTable<T>({
   const cur = Math.min(page, pages - 1);
   const shown = filtered.slice(cur * pageSize, cur * pageSize + pageSize);
 
+  // a new sort or page cascades the rows in again (the first showing is the screen entrance's job)
+  const body = useRef<HTMLTableSectionElement>(null);
+  const view = `${sort}|${dir}|${cur}|${q}`;
+  const firstView = useRef(view);
+  useIso(() => {
+    if (view === firstView.current || !body.current) return;
+    const tl = km.cascade(Array.from(body.current.children), { y: 4 });
+    return () => {
+      tl?.progress(1).kill();
+    };
+  }, [view]);
+
   return (
     <div>
       {(search || filters) && (
@@ -89,7 +104,7 @@ export function DataTable<T>({
           <span className="label ml-auto">{filtered.length} rows</span>
         </div>
       )}
-      <div className="scroll-thin overflow-x-auto border border-line bg-ink/[0.012]">
+      <div className="data-table scroll-thin overflow-x-auto border border-line bg-ink/[0.012]">
         <table className="w-full min-w-max border-collapse text-[13px]">
           <thead className="sticky top-0 z-[1] bg-panel-2">
             <tr>
@@ -110,7 +125,7 @@ export function DataTable<T>({
                     c.value && "cursor-pointer hover:!text-ink",
                     c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "text-left",
                     c.hideOnMobile && "hidden md:table-cell",
-                    sort === c.key && "!text-accent shadow-[inset_0_-1px_0_var(--accent)]",
+                    sort === c.key && "sorted !text-accent",
                   )}
                 >
                   {c.label}
@@ -119,12 +134,12 @@ export function DataTable<T>({
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody ref={body}>
             {shown.map((r) => (
-              <tr key={rowKey(r)} onClick={onRowClick ? () => onRowClick(r) : undefined} className={clsx("border-b border-line/60 transition-colors duration-100 last:border-0 even:bg-ink/[0.018] hover:bg-ink/[0.05]", onRowClick && "cursor-pointer", rowClassName?.(r))}>
+              <tr key={rowKey(r)} onClick={onRowClick ? () => onRowClick(r) : undefined} className={clsx("border-b border-line/60 transition-colors duration-100 last:border-0 even:bg-ink/[0.018] hover:bg-accent/[0.06]", onRowClick && "cursor-pointer", rowClassName?.(r))}>
                 {columns.map((c) => (
                   <td key={c.key} className={clsx(dense ? "px-2.5 py-1" : "px-2.5 py-1.5", "num whitespace-nowrap", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "text-left", c.hideOnMobile && "hidden md:table-cell", c.className)}>
-                    {c.render ? c.render(r) : String(c.value?.(r) ?? "")}
+                    {c.render ? c.render(r) : c.key === "pos" && c.value?.(r) ? <PosBadge pos={String(c.value(r))} /> : String(c.value?.(r) ?? "")}
                   </td>
                 ))}
               </tr>

@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
@@ -7,6 +7,8 @@ import { ArrowLeft, Check, Copy, SignOut } from "@phosphor-icons/react";
 import { Button, Card, Field, TeamMark, inputCls, seg } from "@/components/ui";
 import { SiteBackdrop } from "@/components/SiteBackdrop";
 import { useGame } from "@/lib/store";
+import { useCourtMode } from "@/lib/theme";
+import { useEnterScreen } from "@/lib/motion";
 import { loadTeamsOnly } from "@/lib/seed";
 import type { SeedTeam } from "@/engine/types/seed";
 import { DEFAULT_SETTINGS } from "@/engine/league/init";
@@ -27,7 +29,7 @@ function TeamGrid({ teams, taken, selected, onPick, disabled }: { teams: SeedTea
             key={t.id}
             disabled={disabled || (!!who && !mine)}
             onClick={() => onPick(t.id)}
-            className={clsx("flex items-center gap-2 rounded-[6px] border px-2 py-1.5 text-left text-xs transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed", mine ? "card-wash on-dark border-transparent text-white" : who ? "border-line opacity-45" : "border-line bg-ink/[0.02] hover:border-line-2 hover:bg-ink/[0.05]")}
+            className={clsx("flex items-center gap-2 rounded-[6px] border px-2 py-1.5 text-left text-xs transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed", mine ? "card-wash border-transparent text-white" : who ? "border-line opacity-45" : "border-line bg-ink/[0.02] hover:border-line-2 hover:bg-ink/[0.05]")}
             style={mine ? { ["--tc-team" as string]: t.colors.primary } : undefined}
           >
             <TeamChip t={t} />
@@ -65,15 +67,15 @@ function LobbyView({ lobby, teams }: { lobby: Lobby; teams: SeedTeam[] }) {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex gap-1" aria-label={`Room code ${lobby.code}`}>
               {lobby.code.split("").map((ch, i) => (
-                <span key={i} className="anim-flip grid h-14 w-11 place-items-center border border-line-2 bg-bg font-num text-[28px] font-bold text-accent" style={{ animationDelay: `${i * 50}ms` }}>{ch}</span>
+                <span key={i} className="anim-flip code-tile grid h-14 w-11 place-items-center border border-line-2 bg-bg font-num text-[28px] font-bold" style={{ animationDelay: `${i * 50}ms` }}>{ch}</span>
               ))}
             </div>
             <Button size="sm" onClick={copy}><Copy size={14} /> Copy invite</Button>
           </div>
-          <p className="mt-2 text-xs text-dim">Friends open <span className="text-ink">{link}</span>, tap “Join with a code” and type this code.{isHost ? " Keep this tab open: your browser runs the league." : ""}</p>
+          <p className="mt-2 text-xs text-dim">Friends open <span className="text-ink">{link}</span>, tap “Join with a code” and type this code.{isHost ? " Keep this tab open. Your browser runs the league." : ""}</p>
         </Card>
         <Card title={`Managers (${lobby.members.length})`}>
-          <ul className="divide-y divide-line">
+          <ul className="divide-y divide-line" data-km="rows">
             {lobby.members.map((m) => {
               const t = m.team ? byId.get(m.team) : null;
               return (
@@ -81,7 +83,7 @@ function LobbyView({ lobby, teams }: { lobby: Lobby; teams: SeedTeam[] }) {
                   <span title={m.online ? "Online" : "Offline"} className={clsx("h-2 w-2 rounded-full", m.online ? "bg-good shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-good)_25%,transparent)]" : "bg-mute")} />
                   <span className="font-semibold">{m.name}</span>
                   {m.host && <span className="chip !text-accent">host</span>}
-                  <span className="ml-auto flex items-center gap-2 text-xs text-dim">{t ? <><TeamChip t={t} small /> {t.fullName}</> : "picking a team…"}</span>
+                  <span className="ml-auto flex items-center gap-2 text-xs text-dim">{t ? <><TeamChip t={t} small /> {t.fullName}</> : "picking a team"}</span>
                   {isHost && !m.host && <button className="text-xs text-mute hover:text-bad" onClick={() => hostKick(m.connId)}>remove</button>}
                 </li>
               );
@@ -109,19 +111,19 @@ function LobbyView({ lobby, teams }: { lobby: Lobby; teams: SeedTeam[] }) {
                   try {
                     await hostStart({ ...DEFAULT_SETTINGS });
                   } catch (e) {
-                    toast(`Couldn't start: ${(e as Error).message}`, "error");
+                    toast(`Could not start: ${(e as Error).message}`, "error");
                     setStarting(false);
                   }
                 }}
               >
-                {starting ? "Building the league…" : `Start league with ${lobby.members.filter((m) => m.team).length} manager${lobby.members.filter((m) => m.team).length === 1 ? "" : "s"}`}
+                {starting ? "Building the league" : `Start league with ${lobby.members.filter((m) => m.team).length} manager${lobby.members.filter((m) => m.team).length === 1 ? "" : "s"}`}
               </Button>
-              <p className="text-xs text-dim">Friends can also join after it starts: they pick any team nobody has. Only you can sim; everyone runs their own team&apos;s trades, signings and lineups.</p>
+              <p className="text-xs text-dim">Friends can join after it starts too. They pick any free team. Only you can sim. Everyone runs their own trades, signings and lineups.</p>
             </div>
           </Card>
         ) : (
           <Card>
-            <p className="text-sm">{lobby.started ? "The league has started: pick a team to jump in." : me?.team ? "You're in. Waiting for the host to start the league…" : "Pick your team from the list."}</p>
+            <p className="text-sm">{lobby.started ? "The league is on. Pick a team to jump in." : me?.team ? "You're in. Waiting for the host to start." : "Pick your team from the list."}</p>
           </Card>
         )}
       </div>
@@ -197,7 +199,7 @@ function Online() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
       <Card title="Play with friends">
-        <p className="text-sm text-dim">Everyone takes a team in the same league. Trade with each other and with the AI teams, sign free agents, run your own rotation: the host sims the season for everyone. Best team wins the challenge.</p>
+        <p className="text-sm text-dim">Everyone takes a team in one league. Trade with each other and the AI, sign free agents, set your own rotation. The host sims for everyone. Best team wins.</p>
         <div className="mt-4 flex gap-1">
           {(["host", "join"] as const).map((m) => (
             <button key={m} onClick={() => setMode(m)} className={seg(mode === m)}>
@@ -229,7 +231,7 @@ function Online() {
                   }
                 }}
               >
-                {busy ? "Connecting…" : "Join league"}
+                {busy ? "Connecting" : "Join league"}
               </Button>
             </>
           ) : (
@@ -259,12 +261,12 @@ function Online() {
                   }
                 }}
               >
-                {busy ? "Opening room…" : team ? "Create room" : "Pick your team first"}
+                {busy ? "Opening the room" : team ? "Make a room" : "Pick your team first"}
               </Button>
             </>
           )}
           {online?.error && <p className="border border-bad/40 bg-bad/[0.06] px-3 py-2 text-sm text-bad">{online.error}</p>}
-          <p className="text-xs text-mute">Connections go directly between browsers. Some school or work networks block this: if joining fails, try a phone hotspot.</p>
+          <p className="text-xs text-mute">Browsers talk to each other directly. Some school or work networks block that. If joining fails, try a phone hotspot.</p>
         </div>
       </Card>
       {mode === "host" ? (
@@ -275,9 +277,9 @@ function Online() {
         <Card title="How it works">
           <ol className="list-decimal space-y-1.5 pl-5 text-sm text-dim">
             <li>Get the room code from whoever is hosting.</li>
-            <li>Enter your name and the code, then pick a team nobody has taken.</li>
-            <li>Manage your team: trades (with friends or AI), free agency, extensions, lineups, draft picks.</li>
-            <li>The host sims days, weeks or the whole season. Standings decide the challenge.</li>
+            <li>Type your name and the code, then pick a free team.</li>
+            <li>Run your team: trades with friends or the AI, free agency, extensions, lineups, picks.</li>
+            <li>The host sims days, weeks or the whole season. The standings pick the winner.</li>
           </ol>
         </Card>
       )}
@@ -287,17 +289,22 @@ function Online() {
 
 export default function OnlinePage() {
   const online = useGame((s) => s.online);
+  useCourtMode();
+  const root = useRef<HTMLElement>(null);
+  useEnterScreen(root, online?.lobby ? "lobby" : "start");
   return (
-    <main id="main" className="relative mx-auto max-w-[1280px] px-5 pb-16 pt-10 sm:px-10 sm:pt-14">
+    <div data-kmode="court" className="court-root">
+    <main ref={root} id="main" className="relative mx-auto max-w-[1280px] px-5 pb-16 pt-10 sm:px-10 sm:pt-14">
       <SiteBackdrop />
       <div className="relative mb-8 flex flex-wrap items-end gap-x-4 gap-y-3">
-        <div>
+        <div data-km="head">
           <Link href="/gm" className="mb-5 inline-flex items-center gap-2 font-num text-[10.5px] font-bold uppercase tracking-[0.16em] text-dim transition-colors hover:text-ink">
             <ArrowLeft size={12} weight="bold" /> Main menu
           </Link>
           <h1 className="font-display text-[36px] font-black uppercase leading-none tracking-[0.02em] sm:text-[56px]">
-            Friends <span className="text-accent">league</span>
+            Friends <span className="grad-title">league</span>
           </h1>
+          <span aria-hidden className="head-bar" />
         </div>
         {online && (
           <button className="btn btn-sm btn-ghost ml-auto hover:!bg-bad/10 hover:!text-bad" onClick={() => leaveOnline()}>
@@ -311,5 +318,6 @@ export default function OnlinePage() {
         </Suspense>
       </div>
     </main>
+    </div>
   );
 }

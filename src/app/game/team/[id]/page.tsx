@@ -15,7 +15,7 @@ export default function TeamPage() {
   const { id } = useParams<{ id: string }>();
   const l = useLeague();
   const t = l.teams[id];
-  if (!t) return <Empty>Team not found</Empty>;
+  if (!t) return <Empty>No such team.</Empty>;
   const r = l.standings[id] ?? emptyRecord(id);
   const cap = capStatus(l, id);
   const hc = Object.values(l.coaches).find((c) => c.teamId === id && c.role === "HC");

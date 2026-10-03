@@ -8,15 +8,17 @@ export type GameId = "floodlights" | "frontoffice";
 export interface GameInfo {
   id: GameId;
   name: string;
-  /** small decode label above the game name */
+  /** small label above the game name */
   kind: string;
+  /** colour mode from the shared kit: pitch (volt and turf) or court (orange and amber) */
+  mode: "pitch" | "court";
   blurb: string;
   /** for a bundle: the games inside it, each with one short line that tells them apart */
   inside?: { name: string; text: string }[];
+  /** three short facts shown as chips */
+  chips: string[];
   href: string;
   enter: string;
-  /** label on the control that brings this game to the front */
-  see: string;
 }
 
 export const GAMES: Record<GameId, GameInfo> = {
@@ -24,23 +26,25 @@ export const GAMES: Record<GameId, GameInfo> = {
     id: "floodlights",
     name: "Floodlights",
     kind: "FOOTBALL MANAGER",
-    blurb: "Run a football club with your friends. Sign players, haggle over fees, chase the cups and play your own matches in 3D.",
+    mode: "pitch",
+    blurb: "Run a football club with your mates. Sign stars, haggle over fees, chase the cups and play the big games yourself in 3D.",
+    chips: ["320 clubs", "Play with friends", "Matches in 3D"],
     href: "/floodlights/",
     enter: "ENTER FLOODLIGHTS",
-    see: "SEE FLOODLIGHTS",
   },
   frontoffice: {
     id: "frontoffice",
     name: "Game Night",
     kind: "BASKETBALL BUNDLE",
+    mode: "court",
     blurb: "Two basketball games in one.",
     inside: [
       { name: "Front Office", text: "Be the GM. Run rosters, trades and the draft. The matches play out on their own." },
       { name: "Hardwood Legends", text: "No desk work. Grab the roster and play the season yourself in 5v5." },
     ],
+    chips: ["Real rosters", "Trades and drafts", "Play 5v5"],
     href: "/front-office",
     enter: "ENTER GAME NIGHT",
-    see: "SEE GAME NIGHT",
   },
 };
 

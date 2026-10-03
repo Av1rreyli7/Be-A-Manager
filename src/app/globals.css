@@ -1,88 +1,59 @@
 @import "tailwindcss";
 
 /*
- * Game Night (Front Office and Hardwood Legends): the Be-A-Manager site look.
- * Pure black ground, hairlines at 13 percent white, chamfered corners,
- * Inter for reading and headings, Chakra Petch for small labels and big numbers,
- * liquid glass buttons, and the glow button for the main action. One accent: volt.
- * Team colours only show where they name a team (header band, team marks, washes).
- * The tokens below are the defaults; src/lib/theme.ts writes the same set at runtime
- * for the chosen mode (dark or light) and style (colorful or plain).
+ * Game Night (Front Office and Hardwood Legends) in the Be-A-Manager kit (public/kit.css).
+ * One palette for the whole site: night ground with aurora washes, hairlines, chamfered corners,
+ * Inter for reading, Chakra Petch for small labels and big numbers, glass buttons and the glow button.
+ * Game Night runs in court mode (data-kmode="court"): warm orange and amber accents.
+ * Team colours show where they name a team (header band, team marks, washes).
+ * Dark only. src/lib/theme.ts writes the team colour tokens at runtime.
+ *
+ * The tokens below read the kit. They are declared again on every [data-kmode] element, because a
+ * variable that points at another variable is resolved where it is declared: this way --accent
+ * inside a court mode root is orange, while the landing keeps its own.
  */
+:root,
+[data-kmode] {
+  --bg: var(--k-bg);
+  --panel: var(--k-panel);
+  --panel-2: var(--k-panel-2);
+  --line: var(--k-line);
+  --line-2: rgba(255, 255, 255, 0.22);
+  --ink: var(--k-ink);
+  --dim: #b7bfcc;
+  --mute: var(--k-dim-2);
+  --accent: var(--k-accent);
+  --accent-2: var(--k-accent-2);
+  --accent-hi: var(--k-accent-hi);
+  --accent-ink: var(--k-accent-ink);
+  --good: var(--k-good);
+  --warn: var(--k-warn);
+  --bad: var(--k-bad);
+  --info: var(--k-info);
+  --gold: var(--k-gold);
+  --glass-bg: var(--k-glass);
+  --glass-bg-hover: var(--k-glass-hover);
+  --glass-ink: #ffffff;
+  --glass-edge: var(--k-glass-edge);
+  --glass-edge-hover: var(--k-glass-edge-hover);
+  --glass-shine: rgba(255, 255, 255, 0.4);
+  --cut: var(--k-cut);
+}
 :root {
-  --bg: #000000;
-  --panel: #070807;
-  --panel-2: #101210;
-  --line: #222422;
-  --line-2: #3b3e3a;
-  --ink: #ffffff;
-  --dim: #b9bdb6;
-  --mute: #8a8d88;
-  --accent: #d0e85c;
-  --accent-ink: #12160a;
   --team: #d6363b;
   --team-2: #14213d;
   --team-deep: hsl(358 50% 16%);
-  --hero-base: #070807;
-  --band-end: #000000;
-  --glow: 13%;
+  --hero-base: #0a0e14;
+  --band-end: #04060a;
+  --glow: 16%;
   --wash: 46%;
-  --good: #5fd38d;
-  --warn: #f2a94a;
-  --bad: #f25c5c;
-  --info: #8fbcf2;
-  --gold: #e9b949;
   --tier-elite: #d6f1ff;
-  --tier-gold: #e9b949;
-  --tier-green: #4cc38a;
+  --tier-gold: #ffcf5a;
+  --tier-green: #4ee08f;
   --tier-steel: #a9b7c9;
   --tier-bronze: #c99474;
   --tier-elite-fill: #c7ecff;
   --tier-steel-fill: #8f9db1;
-  /* liquid glass (the quiet button) */
-  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.11), rgba(0, 0, 0, 0.5) 46%, rgba(150, 170, 200, 0.09));
-  --glass-bg-hover: linear-gradient(135deg, rgba(210, 225, 255, 0.18), rgba(0, 0, 0, 0.35) 48%, rgba(180, 195, 220, 0.16));
-  --glass-ink: #ffffff;
-  --glass-edge: rgba(198, 198, 198, 0.42);
-  --glass-edge-hover: rgba(220, 230, 255, 0.78);
-  --glass-shine: rgba(255, 255, 255, 0.4);
-  --cut: 14px;
-}
-
-/* light defaults (before theme.ts runs) */
-:root[data-mode="light"] {
-  --bg: #f3f4f0;
-  --panel: #ffffff;
-  --panel-2: #eceee8;
-  --line: #d9dcd4;
-  --line-2: #b9bdb3;
-  --ink: #0e120b;
-  --dim: #454940;
-  --mute: #6c7167;
-  --accent: #55650f;
-  --accent-ink: #ffffff;
-  --hero-base: #10130f;
-  --band-end: #000000;
-  --glow: 9%;
-  --wash: 30%;
-  --good: #1f8a5b;
-  --warn: #a5720f;
-  --bad: #cf3a41;
-  --info: #3a69a1;
-  --gold: #a5760f;
-  --tier-elite: #2f78a3;
-  --tier-gold: #a5760f;
-  --tier-green: #1f8a5b;
-  --tier-steel: #5b6b80;
-  --tier-bronze: #94593a;
-  --tier-elite-fill: #6fb6dd;
-  --glass-bg: linear-gradient(180deg, #ffffff 0%, #f1f2ee 48%, #e2e4dd 100%);
-  --glass-bg-hover: linear-gradient(180deg, #ffffff 0%, #f6f8ef 42%, #e3e8d0 100%);
-  --glass-ink: #111111;
-  --glass-edge: #b9bdb3;
-  --glass-edge-hover: #8d9186;
-  --glass-shine: rgba(255, 255, 255, 0.9);
-  color-scheme: light;
 }
 
 @theme inline {
@@ -105,6 +76,10 @@
   --color-bad: var(--bad);
   --color-info: var(--info);
   --color-gold: var(--gold);
+  --color-accent-2: var(--accent-2);
+  --color-teal: var(--k-teal);
+  --color-sky: var(--k-sky);
+  --color-violet: var(--k-violet);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   /* Chakra Petch: small labels and big numbers */
@@ -117,9 +92,6 @@ html {
   background: var(--bg);
   color-scheme: dark;
 }
-html[data-mode="light"] {
-  color-scheme: light;
-}
 html {
   scroll-behavior: smooth;
 }
@@ -131,9 +103,17 @@ body {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
-  /* a faint wash of the team colour in one corner, like the lights behind the landing page */
+  background: var(--bg);
+}
+
+/* the root of every Game Night screen: the aurora, plus a glow of the team colour in one corner */
+.court-root {
+  min-height: 100dvh;
   background:
-    radial-gradient(1000px 460px at 0% -10%, color-mix(in oklab, var(--team) var(--glow), transparent), transparent 62%),
+    radial-gradient(900px 420px at 0% -8%, color-mix(in oklab, var(--team) var(--glow), transparent), transparent 62%),
+    radial-gradient(60% 46% at 92% -4%, rgba(139, 108, 255, 0.12), transparent 70%),
+    radial-gradient(50% 40% at 70% 0%, rgba(255, 138, 61, 0.1), transparent 70%),
+    radial-gradient(70% 50% at 30% 110%, rgba(62, 230, 196, 0.07), transparent 70%),
     var(--bg);
   background-attachment: fixed;
 }
@@ -202,13 +182,81 @@ body {
     background: var(--panel);
   }
 
-  /* marked panel: a short volt line at the top left, the site's way to flag the one that matters */
+  /* marked panel: a short line in the mode gradient at the top left, the site's way to flag the one that matters */
   .panel-edge {
     background:
-      linear-gradient(var(--accent), var(--accent)) top left / 54px 2px no-repeat border-box,
+      var(--k-grad) top left / 54px 2px no-repeat border-box,
       linear-gradient(to bottom left, transparent calc(50% - 0.65px), var(--line-2) calc(50% - 0.65px), var(--line-2) calc(50% + 0.65px), transparent calc(50% + 0.65px)) top right / var(--cut) var(--cut) no-repeat border-box,
       linear-gradient(to bottom left, transparent calc(50% - 0.65px), var(--line-2) calc(50% - 0.65px), var(--line-2) calc(50% + 0.65px), transparent calc(50% + 0.65px)) bottom left / var(--cut) var(--cut) no-repeat border-box,
       var(--panel);
+  }
+
+  /* card title pip: a short bar in the mode gradient */
+  .card-pip {
+    width: 3px;
+    height: 13px;
+    flex: none;
+    border-radius: 1px;
+    background: var(--k-grad);
+    box-shadow: 0 0 10px rgba(var(--k-accent-rgb), 0.55);
+  }
+  /* the line under a page title: the mode gradient, drawn in from the left */
+  .head-bar {
+    display: block;
+    width: 56px;
+    height: 3px;
+    margin-top: 10px;
+    border-radius: 2px;
+    background: var(--k-grad);
+    box-shadow: 0 0 14px rgba(var(--k-accent-rgb), 0.5);
+    transform-origin: left center;
+    animation: k-drawx 0.5s var(--k-ease-line) 0.08s both;
+  }
+  /* the active side menu entry */
+  .nav-pip {
+    border-radius: 2px;
+    background: var(--k-grad);
+    box-shadow: 0 0 10px rgba(var(--k-accent-rgb), 0.6);
+  }
+  /* the phone menu slides in from the left */
+  .drawer-in {
+    animation: drawer-in 0.32s var(--k-ease) both;
+  }
+  @keyframes drawer-in {
+    from {
+      transform: translateX(-24px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  /* room code letters glow in the mode gradient */
+  .code-tile {
+    color: var(--k-accent-hi);
+    text-shadow: 0 0 14px rgba(var(--k-accent-rgb), 0.55);
+    box-shadow: inset 0 -2px 0 rgba(var(--k-accent-rgb), 0.6);
+  }
+
+  /* tables: the kit table head, a gradient line under the sorted column */
+  .data-table thead th.sorted {
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  /* small dropdown menus pop from their corner */
+  .menu-pop {
+    transform-origin: top right;
+    animation: k-pop 0.24s var(--k-ease) both;
+  }
+
+  /* a gradient title, for the one heading on a screen that should shine */
+  .grad-title {
+    background: var(--k-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   .inset {
@@ -244,37 +292,20 @@ body {
     --tc: var(--tc-team, var(--team));
     background: linear-gradient(var(--dir, 100deg), color-mix(in oklab, var(--tc) var(--wash), transparent), transparent 74%);
   }
+  /* a game tile lights up from below on hover */
+  .tile-glow {
+    background: radial-gradient(80% 60% at 30% 110%, color-mix(in oklab, var(--tc-team) 38%, transparent), transparent 70%);
+    opacity: 0.35;
+    transition: opacity 0.4s ease;
+  }
+  .group:hover > .tile-glow {
+    opacity: 1;
+  }
   .card-wash {
     --tc: var(--tc-team, var(--team));
     background: linear-gradient(135deg, color-mix(in oklab, var(--tc) 82%, #000000), color-mix(in oklab, var(--tc) 30%, var(--hero-base)));
   }
-  [data-style="plain"] :is(.hero-wash, .side-wash, .card-wash) {
-    --tc: var(--team);
-  }
-  [data-style="plain"] .side-wash {
-    background: none;
-  }
 
-  /* dark islands (header band, heroes) keep dark-mode tokens on a light page */
-  [data-mode="light"] .on-dark {
-    --bg: #000000;
-    --panel: #070807;
-    --panel-2: #101210;
-    --line: #222422;
-    --line-2: #3b3e3a;
-    --ink: #ffffff;
-    --dim: #b9bdb6;
-    --mute: #8a8d88;
-    --accent: #d0e85c;
-    --accent-ink: #12160a;
-    --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.11), rgba(0, 0, 0, 0.5) 46%, rgba(150, 170, 200, 0.09));
-    --glass-bg-hover: linear-gradient(135deg, rgba(210, 225, 255, 0.18), rgba(0, 0, 0, 0.35) 48%, rgba(180, 195, 220, 0.16));
-    --glass-ink: #ffffff;
-    --glass-edge: rgba(198, 198, 198, 0.42);
-    --glass-edge-hover: rgba(220, 230, 255, 0.78);
-    --glass-shine: rgba(255, 255, 255, 0.4);
-    color: var(--ink);
-  }
 
   .chip {
     display: inline-flex;
@@ -326,10 +357,10 @@ body {
     white-space: nowrap;
     cursor: pointer;
     user-select: none;
-    transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, color 0.25s ease, filter 0.35s ease, transform 0.08s ease;
+    transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, color 0.25s ease, filter 0.35s ease, transform 0.12s var(--k-ease);
   }
   .btn:active {
-    transform: translateY(1px);
+    transform: translateY(1px) scale(0.98);
   }
   .btn:disabled {
     pointer-events: none;
@@ -381,23 +412,15 @@ body {
     background: linear-gradient(180deg, #ffffff 0%, #f3f6ff 42%, #d5def2 100%);
     box-shadow: inset 0 1px 0 #ffffff, 0 0 22px rgba(186, 208, 255, 0.35);
   }
-  /* the glow button: the main action on a screen. Near black with a bank of volt light at its foot,
-     the same button the landing page uses to enter a game. */
+  /* the glow button: the main action on a screen. Near black with a bank of light in the mode colour at its
+     foot (orange in court mode), the same button the landing page uses to enter a game. */
   .btn-glow {
     color: #ffffff;
     border: 0;
     border-radius: 10px;
-    text-shadow: 0 1px 2px rgba(10, 16, 0, 0.5);
-    background: linear-gradient(to top, #eef7b0 1px, #e8f59a 2px, #e1f486 3px, #d9ee6e 4px, #d0e85c 5px, #b4cc3c 6px, #a0b82e 7px, #93aa28 8px, #80961f 9px, #6b7e17 10px, #566613 12px, #4f5d16 13px, #465311 14px, #374210 16px, #2a3210 18px, #202710 20px, #171c0f 24px, #10140c 30px, #0e120b 34px, #0e120b 100%);
-    box-shadow:
-      inset 0 3px 3px -2px rgba(236, 246, 190, 0.1),
-      inset 1px 0 0 rgba(255, 255, 255, 0.09),
-      inset -1px 0 0 rgba(255, 255, 255, 0.09),
-      0 1px 0 rgba(214, 234, 140, 0.38),
-      1px 0 0 rgba(214, 234, 140, 0.17),
-      -1px 0 0 rgba(214, 234, 140, 0.17),
-      0 0 8px rgba(208, 232, 92, 0.1),
-      0 2px 5px -3px rgba(208, 232, 92, 0.45);
+    text-shadow: 0 1px 2px rgba(10, 10, 0, 0.5);
+    background: var(--k-glow-bank);
+    box-shadow: var(--k-glow-shadow);
   }
   .btn-glow::before {
     content: "";
@@ -408,7 +431,7 @@ body {
     height: 1.9px;
     z-index: 1;
     filter: blur(0.55px);
-    background: linear-gradient(90deg, rgba(225, 244, 134, 0) 0%, rgba(225, 244, 134, 0.58) 34%, rgba(240, 250, 190, 0.74) 50%, rgba(225, 244, 134, 0.58) 66%, rgba(225, 244, 134, 0) 100%);
+    background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--k-accent-hi) 62%, transparent) 34%, color-mix(in srgb, var(--k-accent-hi) 80%, white) 50%, color-mix(in srgb, var(--k-accent-hi) 62%, transparent) 66%, transparent 100%);
   }
   .btn-glow::after {
     content: "";
@@ -417,18 +440,18 @@ body {
     z-index: -1;
     border-radius: inherit;
     pointer-events: none;
-    background: linear-gradient(90deg, rgba(240, 250, 190, 0.7), rgba(240, 250, 190, 0) 13px), linear-gradient(270deg, rgba(240, 250, 190, 0.7), rgba(240, 250, 190, 0) 13px);
+    background: linear-gradient(90deg, rgba(var(--k-accent-rgb), 0.7), rgba(var(--k-accent-rgb), 0) 13px), linear-gradient(270deg, rgba(var(--k-accent-rgb), 0.7), rgba(var(--k-accent-rgb), 0) 13px);
     -webkit-mask: linear-gradient(to top, #000 0, #000 6px, rgba(0, 0, 0, 0.4) 12px, rgba(0, 0, 0, 0.15) 18px, rgba(0, 0, 0, 0.09) 24px, rgba(0, 0, 0, 0.02) 30px, rgba(0, 0, 0, 0.02) 100%);
     mask: linear-gradient(to top, #000 0, #000 6px, rgba(0, 0, 0, 0.4) 12px, rgba(0, 0, 0, 0.15) 18px, rgba(0, 0, 0, 0.09) 24px, rgba(0, 0, 0, 0.02) 30px, rgba(0, 0, 0, 0.02) 100%);
   }
   .btn-glow:hover {
     filter: brightness(1.12);
-    box-shadow: inset 0 1px 0 rgba(240, 250, 190, 0.6), inset 1px 0 0 rgba(225, 244, 134, 0.35), inset -1px 0 0 rgba(225, 244, 134, 0.35), 0 6px 22px rgba(160, 190, 50, 0.42);
+    box-shadow: var(--k-glow-shadow-hover);
   }
   /* the small one keeps the same light on a shorter bank */
   .btn-glow.btn-sm {
     border-radius: 8px;
-    background: linear-gradient(to top, #e8f59a 1px, #d9ee6e 2px, #d0e85c 3px, #a0b82e 4px, #80961f 5px, #566613 7px, #465311 8px, #2a3210 10px, #202710 12px, #171c0f 15px, #0e120b 20px, #0e120b 100%);
+    background: linear-gradient(to top, var(--k-accent-hi) 1px, var(--k-accent) 3px, color-mix(in srgb, var(--k-accent) 62%, #000) 5px, color-mix(in srgb, var(--k-accent) 34%, #000) 8px, color-mix(in srgb, var(--k-accent) 18%, #000) 12px, color-mix(in srgb, var(--k-accent) 8%, #000) 20px, color-mix(in srgb, var(--k-accent) 8%, #000) 100%);
   }
   .btn-glow.btn-sm::after {
     -webkit-mask: linear-gradient(to top, #000 0, #000 4px, rgba(0, 0, 0, 0.3) 8px, rgba(0, 0, 0, 0.08) 14px, rgba(0, 0, 0, 0.02) 20px, rgba(0, 0, 0, 0.02) 100%);
@@ -513,9 +536,6 @@ body {
     border-radius: 50%;
     background: #ffffff;
   }
-  [data-mode="light"] .site-stars {
-    display: none;
-  }
 
   /* ---------- rating tiers (colour-coded, solid fills) ---------- */
   .rt {
@@ -598,16 +618,6 @@ body {
       transform: none;
     }
   }
-  @keyframes page-in {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
   @keyframes flip {
     from {
       transform: rotateX(80deg);
@@ -638,16 +648,9 @@ body {
   .anim-rise {
     animation: rise 0.42s var(--ease-out-quart) both;
   }
-  /* Fills backwards only. A transform that stays applied after the animation would trap
-     position: fixed children (the full screen Hardwood Legends game) inside the page column. */
-  .page-enter {
-    animation: page-in 0.32s var(--ease-out-quart) backwards;
-  }
-  /* staggered children: set --i on each */
-  .stagger > * {
-    animation: rise 0.45s var(--ease-out-quart) both;
-    animation-delay: calc(var(--i, 0) * 45ms);
-  }
+  /* Screen entrances are GSAP (src/lib/motion.ts, public/kit-motion.js). Every tween clears its transform when
+     done: a transform left on the page would trap position: fixed children (the full screen Hardwood Legends
+     game) inside the page column. */
   .anim-flip {
     animation: flip 0.55s var(--ease-out-quart) both;
   }
@@ -671,7 +674,7 @@ body {
     animation-play-state: paused;
   }
   .shimmer {
-    background-image: linear-gradient(90deg, transparent, color-mix(in oklab, var(--accent) 16%, transparent), transparent);
+    background-image: linear-gradient(90deg, transparent, color-mix(in oklab, var(--accent) 22%, transparent), transparent);
     background-size: 200% 100%;
     animation: shimmer 1.4s linear infinite;
   }

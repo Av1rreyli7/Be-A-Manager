@@ -39,7 +39,7 @@ export default function StaffPage() {
     });
   return (
     <div className="space-y-4">
-      <PageHeader title="Staff & G League" sub={`Coaching ratings affect game performance (offense/defense), player development and morale. G League affiliate: ${l.teams[me].gLeagueName}.`} />
+      <PageHeader title="Staff & G League" sub={`Coaches change how you play, how players grow and how happy they are. G League team: ${l.teams[me].gLeagueName}.`} />
       <Card title="Your staff">
         {staff.map((c) => <CoachRow key={c.id} c={c} action={<Button size="sm" variant="danger" onClick={() => mutate((lg) => { lg.coaches[c.id].teamId = null; toast(`${c.name} let go`); })}>Fire</Button>} />)}
       </Card>

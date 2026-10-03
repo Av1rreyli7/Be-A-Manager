@@ -1,26 +1,44 @@
 // @vitest-environment jsdom
 /**
- * Landing page checks: the title, both game links, the credit line, and the featured game
- * switcher (copy and labels swap together, nothing is added to or removed from the DOM).
- * The 3D backdrop never mounts here because jsdom has no WebGL, which is also the
- * fallback path real visitors on weak devices get.
+ * Landing page checks: the welcome headline, both game cards with their links and colour modes, the intro
+ * timeline (skip, Esc, the short version for a second visit), the calm version for reduced motion, and the
+ * wording rules. The 3D backdrop never mounts here because jsdom has no WebGL, which is also the fallback
+ * path real visitors on weak devices get.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import fs from "node:fs";
 import path from "node:path";
-import Landing from "@/landing/Landing";
+import Landing, { SEEN_KEY } from "@/landing/Landing";
 import { GAMES, ORDER, other } from "@/landing/games";
-import { createDecoder } from "@/landing/decode";
 import { STARS_A, STARS_B } from "@/landing/starfield";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+type TL = { progress(): number; time(): number; labels: Record<string, number> };
 let host: HTMLDivElement;
 let root: Root;
 
-function mount() {
+/** reduce = true: the visitor asked for reduced motion */
+function mount({ reduce = false, seen = false } = {}) {
+  window.matchMedia = ((q: string) => ({
+    matches: q.includes("no-preference") ? !reduce : q.includes(": reduce") ? reduce : false,
+    media: q,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+    onchange: null,
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+  globalThis.fetch = vi.fn(() => Promise.reject(new Error("no network in tests"))) as unknown as typeof fetch;
+  localStorage.clear();
+  sessionStorage.clear();
+  if (seen) sessionStorage.setItem(SEEN_KEY, "seen");
+  delete (window as unknown as { __bamIntroTL?: TL }).__bamIntroTL;
+  // jsdom has no canvas: answer "no WebGL" quietly, like a device that cannot do 3D
+  HTMLCanvasElement.prototype.getContext = (() => null) as unknown as typeof HTMLCanvasElement.prototype.getContext;
   host = document.createElement("div");
   document.body.appendChild(host);
   root = createRoot(host);
@@ -28,19 +46,9 @@ function mount() {
 }
 const $ = <T extends Element = HTMLElement>(sel: string) => host.querySelector<T>(sel)!;
 const $$ = <T extends Element = HTMLElement>(sel: string) => Array.from(host.querySelectorAll<T>(sel));
-const click = (el: Element) => act(() => el.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-const featured = () => $(".bam").getAttribute("data-featured");
-const onVariant = () => $$(".bam-variant").filter((v) => v.classList.contains("is-on"));
+const tl = () => (window as unknown as { __bamIntroTL?: TL }).__bamIntroTL;
+const phase = () => $(".bam").getAttribute("data-phase");
 
-beforeEach(() => {
-  // reduced motion keeps the decode labels still, so the text is the same on every run
-  window.matchMedia = ((q: string) => ({ matches: q.includes("reduce"), media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, onchange: null, dispatchEvent: () => false })) as unknown as typeof window.matchMedia;
-  globalThis.fetch = vi.fn(() => Promise.reject(new Error("no network in tests"))) as unknown as typeof fetch;
-  localStorage.clear();
-  // jsdom has no canvas: answer "no WebGL" quietly, like a device that cannot do 3D
-  HTMLCanvasElement.prototype.getContext = (() => null) as unknown as typeof HTMLCanvasElement.prototype.getContext;
-  mount();
-});
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
@@ -48,199 +56,177 @@ afterEach(() => {
 });
 
 describe("landing page content", () => {
-  it("has the Be-A-Manager title as the one big headline", () => {
+  it("has one headline that reads Welcome to Be-A-Manager, drawn letter by letter", () => {
+    mount({ reduce: true });
     const h1 = $$("h1");
     expect(h1).toHaveLength(1);
-    expect(h1[0].textContent).toBe("Be-A-Manager");
+    expect(h1[0].querySelector(".sr-only")!.textContent).toBe("Welcome to Be-A-Manager");
+    expect($$(".bam-brand .ch").map((c) => c.textContent).join("")).toBe("BE-A-MANAGER");
+    // the big welcome word in the intro layer has the same letters, each with a white and a colour layer
+    expect($$(".bam-big .L .w").map((c) => c.textContent).join("")).toBe("BE-A-MANAGER");
+    expect($$(".bam-big .L .c")).toHaveLength(12);
+    expect($(".bam-welcome").textContent).toBe("WELCOME TO");
   });
 
-  it("links to both games", () => {
-    const hrefs = $$<HTMLAnchorElement>("a").map((a) => a.getAttribute("href"));
-    expect(hrefs).toContain("/floodlights/");
-    expect(hrefs).toContain("/front-office");
-    // each game has its own enter button, always in the DOM
+  it("has a card for each game with its enter button, both always in the page", () => {
+    mount({ reduce: true });
+    expect($$(".bam-card")).toHaveLength(2);
     expect($('[data-enter="floodlights"]').getAttribute("href")).toBe("/floodlights/");
     expect($('[data-enter="frontoffice"]').getAttribute("href")).toBe("/front-office");
     expect($('[data-enter="floodlights"]').textContent).toBe("ENTER FLOODLIGHTS");
     expect($('[data-enter="frontoffice"]').textContent).toBe("ENTER GAME NIGHT");
-    expect($('[data-enter="floodlights"]').classList.contains("bam-glowbtn")).toBe(true);
+    for (const id of ORDER) {
+      const btn = $(`[data-enter="${id}"]`);
+      expect(btn.classList.contains("k-btn-glow")).toBe(true);
+      expect(btn.classList.contains("bam-glowbtn")).toBe(true);
+      // the whole card is clickable through one stretched link that goes to the same place
+      expect($(`.bam-card[data-game="${id}"] .bam-hit`).getAttribute("href")).toBe(GAMES[id].href);
+      expect($(`.bam-card[data-game="${id}"] .bam-hit`).getAttribute("tabindex")).toBe("-1");
+    }
+    // the top bar links to both games too
+    const hrefs = $$<HTMLAnchorElement>(".bam-nav a").map((a) => a.getAttribute("href"));
+    expect(hrefs).toEqual(["/floodlights/", "/front-office"]);
+  });
+
+  it("gives each game its colour mode from the shared kit: pitch for Floodlights, court for Game Night", () => {
+    mount({ reduce: true });
+    expect($('.bam-card[data-game="floodlights"]').getAttribute("data-kmode")).toBe("pitch");
+    expect($('.bam-card[data-game="frontoffice"]').getAttribute("data-kmode")).toBe("court");
+    expect(GAMES.floodlights.mode).toBe("pitch");
+    expect(GAMES.frontoffice.mode).toBe("court");
+  });
+
+  it("shows a ball with each title: a football for Floodlights, a basketball for Game Night", () => {
+    mount({ reduce: true });
+    expect($$('.bam-card[data-game="floodlights"] .bam-ball svg')).toHaveLength(1);
+    expect($$('.bam-card[data-game="floodlights"] .bam-streak')).toHaveLength(1);
+    expect($$('.bam-card[data-game="frontoffice"] .bam-ball svg')).toHaveLength(1);
+    expect($$('.bam-card[data-game="frontoffice"] .bam-shock')).toHaveLength(1);
+    expect($('.bam-card[data-game="floodlights"] .bam-title .sr-only').textContent).toBe("Floodlights");
+    expect($('.bam-card[data-game="frontoffice"] .bam-title .sr-only').textContent).toBe("Game Night");
   });
 
   it("uses Game Night as the site level name, and Front Office only for the game inside it", () => {
+    mount({ reduce: true });
     const text = host.textContent!.toUpperCase();
     expect(text).not.toContain("ENTER FRONT OFFICE");
-    expect(text).not.toContain("SEE FRONT OFFICE");
     expect(text).not.toContain("BASKETBALL GM");
     expect(host.textContent!.match(/Front Office/gi)).toHaveLength(1);
-    expect(GAMES.frontoffice.href).toBe("/front-office");
+    expect($(".bam-inside").textContent).toContain("The matches play out on their own.");
+    expect($(".bam-inside").textContent).toContain("play the season yourself in 5v5.");
+    expect(other("floodlights")).toBe("frontoffice");
   });
 
-  it("shows the credit line", () => {
+  it("has short punchy copy, chips, the stats and the credit line", () => {
+    mount({ reduce: true });
+    for (const id of ORDER) expect($$(`.bam-card[data-game="${id}"] .bam-chips .k-chip`)).toHaveLength(3);
+    expect($(".bam-lede").textContent).toBe("Two games. Pick one and run the whole show.");
+    expect($$(".bam-lede em")).toHaveLength(1);
+    expect($(".bam-stats").textContent).toContain("320 clubs");
+    expect($(".bam-stats").textContent).toContain("15 leagues");
     expect($(".bam-credit").textContent).toBe("By Avir & Ayanssh");
   });
 
-  it("has the badge, the supporting line with one serif accent word, and three stats", () => {
-    expect($(".bam-badge").textContent).toBe("Two games. One site.");
-    expect($$(".bam-lede em")).toHaveLength(1);
-    expect($(".bam-lede").textContent).toContain("run the whole show");
-    expect($$(".bam-stat")).toHaveLength(3);
-    expect($(".bam-stats").textContent).toContain("clubs in the world");
-    expect($(".bam-stats").textContent).toContain("Two managers, one site");
-  });
-
-  it("draws the frame and the starfield", () => {
+  it("draws the frame, the floodlights and the starfield", () => {
+    mount({ reduce: true });
     expect($$(".bam-frame > .ln")).toHaveLength(4);
     expect($$(".bam-frame > .cn")).toHaveLength(4);
+    expect($$(".bam-beam")).toHaveLength(2);
+    expect($$(".bam-lamps i")).toHaveLength(12);
     expect($$(".bam-stars i")).toHaveLength(2);
     expect(STARS_A.split("rgba").length - 1).toBe(150);
     expect(STARS_B.split("rgba").length - 1).toBe(18);
   });
 
-  it("uses no em dashes or en dashes anywhere it renders", () => {
-    expect(host.innerHTML).not.toMatch(new RegExp("[" + String.fromCharCode(8211, 8212) + "]"));
-    for (const f of ["Landing.tsx", "Backdrop3D.tsx", "landing.css", "games.ts", "decode.ts", "starfield.ts"]) {
-      expect(fs.readFileSync(path.join(__dirname, "..", "src", "landing", f), "utf8"), f).not.toMatch(new RegExp("[" + String.fromCharCode(8211, 8212) + "]"));
+  it("uses no em dashes or en dashes anywhere it renders or in its source", () => {
+    mount({ reduce: true });
+    const bad = new RegExp("[" + String.fromCharCode(8211, 8212) + "]");
+    expect(host.innerHTML).not.toMatch(bad);
+    for (const f of ["Landing.tsx", "Backdrop3D.tsx", "Balls.tsx", "landing.css", "games.ts", "starfield.ts"]) {
+      expect(fs.readFileSync(path.join(__dirname, "..", "src", "landing", f), "utf8"), f).not.toMatch(bad);
     }
-  });
-
-  it("settles every entrance element even though animations never run here", async () => {
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 80));
-    });
-    const appear = $$(".appear");
-    expect(appear.length).toBeGreaterThan(20);
-    expect(appear.every((el) => el.classList.contains("is-in"))).toBe(true);
+    expect(fs.readFileSync(path.join(__dirname, "..", "src", "app", "page.tsx"), "utf8")).not.toMatch(bad);
   });
 });
 
-describe("featured game switcher", () => {
-  it("starts with Floodlights featured", () => {
-    expect(featured()).toBe("floodlights");
-    expect(onVariant()).toHaveLength(1);
-    expect(onVariant()[0].getAttribute("data-game")).toBe("floodlights");
-    expect($(".bam-rail li.on").textContent).toBe("FLOODLIGHTS");
-    expect($(".bam-glow.is-on").classList.contains("is-floodlights")).toBe(true);
+describe("the intro", () => {
+  it("builds one timeline with the lights, the welcome flight and the two card moments, under 3.5 seconds", () => {
+    mount();
+    const t = tl();
+    expect(t).toBeTruthy();
+    expect(phase()).toBe("intro");
+    expect(Object.keys(t!.labels)).toEqual(expect.arrayContaining(["lights", "fly", "cards"]));
+    expect((t as unknown as { duration(): number }).duration()).toBeLessThan(3.5);
+    // the skip button shows from the first frame, and the links work while the intro plays
+    expect($<HTMLButtonElement>(".bam-skip").hidden).toBe(false);
+    expect($(".bam-intro").style.pointerEvents).not.toBe("auto");
   });
 
-  it("keeps both games in the DOM as siblings at all times", () => {
-    expect($$(".bam-variant")).toHaveLength(2);
-    expect($$(".bam-glow")).toHaveLength(2);
-    expect($$(".bam-rail button")).toHaveLength(2);
+  it("skip jumps straight to the end and remembers the visit for this tab", () => {
+    mount();
+    act(() => $<HTMLButtonElement>(".bam-skip").click());
+    expect(tl()!.progress()).toBe(1);
+    expect(phase()).toBe("done");
+    expect($<HTMLButtonElement>(".bam-skip").hidden).toBe(true);
+    expect($(".bam-intro").style.display).toBe("none");
+    for (const card of $$(".bam-card")) expect(card.style.opacity).toBe("1");
+    expect($(".bam-brand").style.opacity).toBe("1");
+    expect(sessionStorage.getItem(SEEN_KEY)).toBe("seen");
+    // the replay button appears once the intro is over
+    expect($$(".bam-mini").map((b) => b.textContent)).toContain("Replay intro");
   });
 
-  it("has no side preview card, the rail is the switcher", () => {
-    expect(host.querySelector(".bam-side")).toBeNull();
-    expect(host.querySelector(".bam-mock")).toBeNull();
-    expect(host.querySelector(".bam-side-cap")).toBeNull();
-    expect(host.querySelectorAll("img")).toHaveLength(0);
-    expect(host.textContent).not.toContain("ALSO HERE");
-    expect($$(".bam-rail button").map((b) => b.textContent)).toEqual(["FLOODLIGHTS", "GAME NIGHT"]);
-    expect($$(".bam-pill").map((b) => b.textContent)).toEqual(["FLOODLIGHTS", "GAME NIGHT"]);
-    expect($('.bam-variant[data-game="floodlights"] [data-see="frontoffice"]').textContent).toBe("SEE GAME NIGHT");
-  });
-
-  it("swaps the copy and the labels together when the featured game changes", () => {
-    const before = host.querySelectorAll("*").length;
-    click($('.bam-rail button[data-game="frontoffice"]'));
-
-    expect(featured()).toBe("frontoffice");
-    const on = onVariant();
-    expect(on).toHaveLength(1);
-    expect(on[0].getAttribute("data-game")).toBe("frontoffice");
-    // headline, supporting text and label of the featured block
-    expect(on[0].querySelector(".bam-title")!.textContent).toBe(GAMES.frontoffice.name);
-    expect(on[0].querySelector(".bam-title")!.textContent).toBe("Game Night");
-    expect(on[0].querySelector(".bam-kind")!.textContent).toBe("BASKETBALL BUNDLE");
-    // the copy explains the two games inside and how they differ
-    const blurb = on[0].querySelector(".bam-blurb")!;
-    expect(blurb.textContent).toContain("Two basketball games in one.");
-    const inside = Array.from(blurb.querySelectorAll(".bam-in")).map((el) => el.textContent);
-    expect(inside).toHaveLength(2);
-    expect(inside[0]).toBe("Front Office: Be the GM. Run rosters, trades and the draft. The matches play out on their own.");
-    expect(inside[1]).toBe("Hardwood Legends: No desk work. Grab the roster and play the season yourself in 5v5.");
-    expect(on[0].getAttribute("aria-hidden")).toBe("false");
-    // the old game is hidden from readers and from the keyboard
-    const off = $('.bam-variant[data-game="floodlights"]');
-    expect(off.getAttribute("aria-hidden")).toBe("true");
-    expect(off.hasAttribute("inert")).toBe(true);
-    // rail and backdrop follow
-    expect($(".bam-rail li.on").textContent).toBe("GAME NIGHT");
-    expect($('.bam-rail button[data-game="frontoffice"]').getAttribute("aria-pressed")).toBe("true");
-    expect($(".bam-glow.is-on").classList.contains("is-frontoffice")).toBe(true);
-    // zero flash: only classes changed, the elements are the same
-    expect(host.querySelectorAll("*").length).toBe(before);
-  });
-
-  it("is fully reversible from every control", () => {
-    click($('.bam-variant.is-on [data-see="frontoffice"]'));
-    expect(featured()).toBe("frontoffice");
-    click($('.bam-variant.is-on [data-see="floodlights"]'));
-    expect(featured()).toBe("floodlights");
-    click($('.bam-rail button[data-game="frontoffice"]'));
-    expect(featured()).toBe("frontoffice");
-    click($('.bam-rail button[data-game="floodlights"]'));
-    expect(featured()).toBe("floodlights");
-    click($('.bam-rail button[data-game="floodlights"]'));
-    expect(featured()).toBe("floodlights");
-    expect($(".bam-rail li.on").textContent).toBe("FLOODLIGHTS");
-  });
-
-  it("warms the other game on intent, before the click", () => {
-    expect(document.head.querySelector('link[data-bam-warm="frontoffice"]')).toBeNull();
+  it("Esc skips the intro too", () => {
+    mount();
     act(() => {
-      $('.bam-rail button[data-game="frontoffice"]').dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     });
-    const link = document.head.querySelector<HTMLLinkElement>('link[data-bam-warm="frontoffice"]');
-    expect(link?.rel).toBe("prefetch");
-    expect(link?.getAttribute("href")).toBe("/front-office");
-    expect(featured()).toBe("floodlights");
+    expect(tl()!.progress()).toBe(1);
+    expect(phase()).toBe("done");
+  });
+
+  it("a second visit in the same tab plays only the quick card moments", () => {
+    mount({ seen: true });
+    const t = tl()!;
+    expect(t.time()).toBeGreaterThanOrEqual(t.labels.cards);
+    expect($(".bam-intro").style.display).toBe("none");
+  });
+
+  it("hides the pieces still to come, so nothing shows its end state before the intro gets to it", () => {
+    mount();
+    expect($('.bam-card[data-game="frontoffice"]').style.opacity).toBe("0");
+    expect($(".bam-foot").style.opacity).toBe("0");
   });
 });
 
-describe("3D backdrop fallback", () => {
-  it("stays on the still backdrop when the device cannot do 3D", async () => {
+describe("reduced motion", () => {
+  it("gets the calm page at once: no timeline, no intro layer, nothing hidden, no skip, no replay", () => {
+    mount({ reduce: true });
+    expect(tl()).toBeUndefined();
+    expect(phase()).toBe("done");
+    expect($<HTMLButtonElement>(".bam-skip").hidden).toBe(true);
+    expect($(".bam-intro").style.display).not.toBe("flex");
+    for (const el of $$(".bam-card, .bam-brand, .bam-foot")) expect(el.style.opacity).toBe("");
+    expect($$(".bam-mini").map((b) => b.textContent)).not.toContain("Replay intro");
+  });
+
+  it("never mounts the 3D backdrop when the device has no WebGL", async () => {
+    mount({ reduce: true });
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 600));
     });
     expect($(".bam").getAttribute("data-3d")).toBe("off");
-    expect(host.querySelector("canvas")).toBeNull();
-    expect($(".bam-3d").textContent).toBe("3D OFF");
-    expect($(".bam-3d").getAttribute("aria-pressed")).toBe("false");
+    expect($$(".bam-canvas")).toHaveLength(0);
   });
 });
 
-describe("game data and decode labels", () => {
-  it("describes exactly two games in simple words", () => {
-    expect(ORDER).toEqual(["floodlights", "frontoffice"]);
-    expect(other("floodlights")).toBe("frontoffice");
-    expect(other("frontoffice")).toBe("floodlights");
-    for (const id of ORDER) {
-      expect(GAMES[id].blurb.split(" ").length).toBeLessThanOrEqual(26);
-      for (const x of GAMES[id].inside ?? []) expect(x.text.split(" ").length).toBeLessThanOrEqual(18);
-      expect(JSON.stringify(GAMES[id])).not.toMatch(new RegExp("[" + String.fromCharCode(8211, 8212) + "]"));
-    }
-  });
-
-  it("a decode label always ends on its real text", () => {
-    vi.useFakeTimers();
-    try {
-      const box = document.createElement("div");
-      box.innerHTML = '<a href="#"><span class="t">ENTER FLOODLIGHTS</span></a>';
-      document.body.appendChild(box);
-      const d = createDecoder(box, false);
-      const el = box.querySelector<HTMLElement>(".t")!;
-      d.decode(el);
-      vi.advanceTimersByTime(60);
-      expect(el.textContent!.length).toBeLessThanOrEqual("ENTER FLOODLIGHTS".length);
-      vi.advanceTimersByTime(1500);
-      expect(el.textContent).toBe("ENTER FLOODLIGHTS");
-      d.setText(el, "3D OFF");
-      vi.advanceTimersByTime(1500);
-      expect(el.textContent).toBe("3D OFF");
-      d.destroy();
-      box.remove();
-    } finally {
-      vi.useRealTimers();
-    }
+describe("first paint guard", () => {
+  const page = fs.readFileSync(path.join(__dirname, "..", "src", "app", "page.tsx"), "utf8");
+  it("hides the intro pieces before the first paint, skips it for reduced motion and lifts itself if scripts fail", () => {
+    expect(page).toContain("prefers-reduced-motion: reduce");
+    expect(page).toContain('s.id="bam-prehide"');
+    expect(page).toContain("4500");
+    expect(page).toContain("bam:intro");
+    expect(page).toContain("dangerouslySetInnerHTML={{ __html: PREHIDE }}");
   });
 });

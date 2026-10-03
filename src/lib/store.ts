@@ -186,7 +186,7 @@ export const useGame = create<GameState>((set, get) => ({
   advancePhase: async () => {
     const l = get().league;
     if (!l || get().busy) return;
-    if (get().online?.role === "guest") return get().toast("Only the host can advance the league", "error");
+    if (get().online?.role === "guest") return get().toast("Only the host can move the league on", "error");
     set({ busy: "Advancing…" });
     try {
       const res = await callWorker({ cmd: "phase", league: l });

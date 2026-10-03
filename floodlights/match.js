@@ -1305,7 +1305,7 @@ function makeView(canvas) {
 // CONTROLLER
 // =====================================================================
 let active = null;
-const KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyQ", "KeyT", "KeyX", "KeyF", "Space", "ShiftLeft", "ShiftRight", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyQ", "KeyT", "KeyX", "KeyF", "KeyC", "Space", "ShiftLeft", "ShiftRight", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 const esc = s => String(s === undefined || s === null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 function diffLine(mine, theirs) {
@@ -1337,7 +1337,7 @@ function open(cfg) {
   const doc = root.document;
   const wrap = doc.getElementById("matchWrap"), canvas = doc.getElementById("matchCanvas"), panel = doc.getElementById("matchPanel");
   if (!wrap || !canvas || !panel) return false;
-  const A = active = { cfg, wrap, canvas, panel, mode: "pre", sim: null, view: null, keys: {}, passQ: false, throughQ: false, slideQ: false, skillQ: false, shootLatch: false, acc: 0, last: 0, raf: 0, checkT: 0, saving: false, saved: false, view3d: null, want3d: false, load3d: null };
+  const A = active = { cfg, wrap, canvas, panel, mode: "pre", sim: null, view: null, keys: {}, passQ: false, throughQ: false, slideQ: false, skillQ: false, crossQ: false, shootLatch: false, acc: 0, last: 0, raf: 0, checkT: 0, saving: false, saved: false, view3d: null, want3d: false, load3d: null };
   wrap.classList.remove("hidden");
   wrap.classList.remove("m3d");
   A.view = makeView(canvas);
@@ -1366,14 +1366,15 @@ function open(cfg) {
       '<div class="mrow"><div><b>' + esc(Math.round(myR)) + "</b><small>YOUR TEAM</small></div><div><b>" + esc(Math.round(opR)) + "</b><small>THEIR TEAM</small></div></div>" +
       '<p class="mdiff">' + esc(diffLine(myR, opR)) + "</p>" +
       '<div class="mkeys">' +
-      "<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move</span>" +
-      "<span><kbd>Shift</kbd> Sprint. It drains stamina, fit players last longer.</span>" +
-      "<span><kbd>Q</kbd> Pass to the team mate you are facing, or switch player when you do not have the ball</span>" +
-      "<span><kbd>T</kbd> Through ball: a pass into the space ahead of a running team mate</span>" +
-      "<span><kbd>E</kbd> Hold to power up a shot, let go to shoot. Hold W or S to pick a corner. Too much power and it flies over.</span>" +
-      "<span><kbd>F</kbd> Skill move when you have the ball: stepover, feint, drag back or roulette. Good dribblers beat their man, poor ones lose the ball.</span>" +
-      "<span><kbd>Space</kbd> Hold when defending to close the ball carrier down and make a standing tackle</span>" +
-      "<span><kbd>X</kbd> Slide tackle: a big lunge. Time it right and you win the ball clean, get it wrong and you are on the ground and beaten.</span>" +
+      "<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move. <kbd>Shift</kbd> Sprint, fit players last longer.</span>" +
+      "<span><kbd>Q</kbd> Pass to the team mate you face, or switch player without the ball</span>" +
+      "<span><kbd>T</kbd> Through ball into the space ahead of a runner</span>" +
+      "<span><kbd>E</kbd> Hold to power a shot, let go to shoot. W or S picks the corner. Too much power flies over.</span>" +
+      "<span><kbd>F</kbd> Skill move. Good dribblers beat their man, poor ones lose the ball.</span>" +
+      "<span><kbd>Space</kbd> Hold when defending to close down and make a standing tackle</span>" +
+      "<span><kbd>X</kbd> Slide tackle. Time it and win it clean. Miss the ball and catch the man: a foul, in your box a penalty.</span>" +
+      "<span><kbd>C</kbd> Cross (3D) from out wide. With the ball in the air, <kbd>E</kbd> heads at goal and <kbd>Q</kbd> heads to a mate.</span>" +
+      "<span><b>Set pieces (3D)</b> Kick off: just run with it. Corners: W A S D aim, hold E, C for a perfect cross, Q short. Free kicks: W or S aim, A or D bend, hold E. Penalties: W or S picks the side, hold E. In goal, hold W or S to dive.</span>" +
       "<span><kbd>Esc</kbd> Pause</span></div>" +
       "<p>You play as " + esc(mineName) + " and attack to the right. The game picks your player nearest the ball. The match takes about 6 minutes and you need a keyboard.</p>" +
       '<p class="mwarn">You get one go. Once you kick off, the final score is what counts for this week. If you leave before full time, the match is simmed like normal.</p>' +
@@ -1535,6 +1536,7 @@ function open(cfg) {
       through: A.throughQ,
       slide: A.slideQ,
       skill: A.skillQ,
+      cross: A.crossQ,
       tackle: !!k.Space
     };
   }
@@ -1555,6 +1557,7 @@ function open(cfg) {
       if (e.code === "KeyT") A.throughQ = true;
       if (e.code === "KeyX") A.slideQ = true;
       if (e.code === "KeyF") A.skillQ = true;
+      if (e.code === "KeyC") A.crossQ = true;
     }
   };
   A.onBlur = () => { A.keys = {}; if (A.mode === "playing") showPause(); };
@@ -1571,7 +1574,7 @@ function open(cfg) {
       let n = 0;
       while (A.acc >= STEP && n < 6) {
         A.sim.step(input());
-        A.passQ = false; A.shootLatch = false; A.throughQ = false; A.slideQ = false; A.skillQ = false;
+        A.passQ = false; A.shootLatch = false; A.throughQ = false; A.slideQ = false; A.skillQ = false; A.crossQ = false;
         A.acc -= STEP; n++;
       }
       if (n === 6) A.acc = 0;

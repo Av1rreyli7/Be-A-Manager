@@ -24,7 +24,8 @@ function walk(dir, skip, out) {
 }
 
 // ---------- no em dashes or en dashes anywhere ----------
-const SKIP = new Set(["node_modules", ".next", "upload", ".git", "package-lock.json", "games.json", ".DS_Store"]);
+// .work holds the build checklists of parallel workers; it is local only and never uploaded
+const SKIP = new Set(["node_modules", ".next", "upload", ".git", ".work", "package-lock.json", "games.json", ".DS_Store"]);
 const all = walk(root, SKIP, []);
 const dashy = [];
 for (const f of all) {
@@ -43,8 +44,8 @@ for (const ref of ["stratum_reference.md", "vesper_reference.md", "vertex_spacee
 const pkg = JSON.parse(read("package.json"));
 ok("start runs the combined server in production mode", pkg.scripts.start === "NODE_ENV=production node server.js", pkg.scripts.start);
 ok("build is next build", pkg.scripts.build === "next build", pkg.scripts.build);
-for (const dep of ["express", "next", "react", "react-dom", "motion", "three", "@react-three/fiber", "dexie", "peerjs", "tailwindcss", "@tailwindcss/postcss", "typescript"]) ok("runtime or build dependency present: " + dep, !!pkg.dependencies[dep], null);
-ok("no surprise dependencies were added", Object.keys(pkg.dependencies).every(d => ["@phosphor-icons/react", "@react-three/fiber", "@tailwindcss/postcss", "@types/node", "@types/react", "@types/react-dom", "@types/three", "clsx", "dexie", "express", "motion", "next", "peerjs", "react", "react-dom", "recharts", "tailwindcss", "three", "typescript", "zustand"].includes(d)), Object.keys(pkg.dependencies));
+for (const dep of ["express", "next", "react", "react-dom", "motion", "three", "@react-three/fiber", "dexie", "peerjs", "tailwindcss", "@tailwindcss/postcss", "typescript", "gsap", "@gsap/react"]) ok("runtime or build dependency present: " + dep, !!pkg.dependencies[dep], null);
+ok("no surprise dependencies were added", Object.keys(pkg.dependencies).every(d => ["@phosphor-icons/react", "@react-three/fiber", "@tailwindcss/postcss", "@types/node", "@types/react", "@types/react-dom", "@types/three", "clsx", "dexie", "express", "gsap", "@gsap/react", "motion", "next", "peerjs", "react", "react-dom", "recharts", "tailwindcss", "three", "typescript", "zustand"].includes(d)), Object.keys(pkg.dependencies));
 const server = read("server.js");
 ok("server.js mounts Floodlights before Next", server.indexOf('require("./floodlights/server")') > 0 && server.indexOf('require("./floodlights/server")') < server.indexOf('server.all("*"'), null);
 ok("server.js listens on the port Render hands it", server.includes("process.env.PORT"), null);
@@ -58,12 +59,14 @@ ok("the production build does not need the test tools", read("next.config.ts").i
 // ---------- Front Office is still all there ----------
 for (const f of ["src/app/gm/page.tsx", "src/app/game/layout.tsx", "src/app/game/page.tsx", "src/app/online/page.tsx", "src/app/api/refresh-data/route.ts", "src/app/front-office/page.tsx", "src/worker/sim.worker.ts", "src/engine/sim/game.ts", "src/lib/db.ts", "src/lib/online/net.ts", "public/games/hardwood-legends.html", "data/players.json"]) ok("Front Office file kept: " + f, has(f), null);
 const hub = read("src/app/front-office/page.tsx");
-ok("the Front Office hub kept both of its games", hub.includes('href="/gm"') && hub.includes('href="/games/hardwood-legends.html"') && hub.includes("AppearancePicker"), null);
+ok("the Front Office hub kept both of its games", hub.includes('href="/gm"') && hub.includes('href="/games/hardwood-legends.html"') && !hub.includes("AppearancePicker"), null);
 ok("links that used to point at the old hub now point at /front-office", read("src/app/gm/page.tsx").includes('href="/front-office"') && read("public/games/hardwood-legends.html").includes('location.href="/front-office"'), null);
 if (fs.existsSync(path.join(root, "..", "front-office"))) {
   // every original Front Office source file is still present in the combined app
   const orig = walk(path.join(root, "..", "front-office", "src"), new Set([".DS_Store"]), []).map(f => path.relative(path.join(root, "..", "front-office"), f));
-  const gone = orig.filter(f => f !== "src/app/page.tsx" && !has(f));
+  // the theme picker files were deleted on purpose: Game Night is one dark theme now
+  const removed = new Set(["src/app/page.tsx", "src/components/AppearancePicker.tsx", "src/lib/appearance.ts", "src/lib/appearanceBoot.ts"]);
+  const gone = orig.filter(f => !removed.has(f) && !has(f));
   ok("no Front Office source file went missing", gone.length === 0, gone);
 }
 
@@ -81,28 +84,36 @@ const gcss = read("src/app/globals.css");
 const themeFile = read("src/lib/theme.ts");
 const hl = read("public/games/hardwood-legends.html");
 ok("Game Night uses the shared self hosted fonts, nothing from Google", rootLayout.includes("@/lib/fonts") && !rootLayout.includes("next/font/google") && !gcss.includes("fonts.googleapis.com"), null);
-ok("Game Night uses the site palette: black ground, volt accent", gcss.includes("--bg: #000000") && gcss.includes("--accent: #d0e85c") && themeFile.includes('"#d0e85c"') && themeFile.includes('"--bg": "#000000"'), null);
-ok("Game Night panels have cut corners and hairlines", gcss.includes("clip-path: polygon(0 0, calc(100% - var(--cut)) 0") && gcss.includes("--line: #222422"), null);
-ok("Game Night has the glow button and the liquid glass button", gcss.includes(".btn-glow") && gcss.includes(".btn-glass") && gcss.includes("#eef7b0 1px, #e8f59a 2px"), null);
-ok("Game Night keeps light mode and the plain style", gcss.includes(':root[data-mode="light"]') && gcss.includes('[data-style="plain"]') && themeFile.includes("plain"), null);
-ok("the page entrance does not trap the full screen game", /\.page-enter \{\s*animation: page-in [^;]*backwards;/.test(gcss), null);
-ok("Hardwood Legends uses the site fonts and the volt accent", hl.includes("url(/floodlights/fonts/inter.woff2)") && hl.includes("url(/floodlights/fonts/chakra-petch-700.woff2)") && hl.includes("--accent:#d0e85c") && !hl.includes("fonts.googleapis.com"), null);
+const gnRoots = ["src/app/game/layout.tsx", "src/app/gm/page.tsx", "src/app/front-office/page.tsx", "src/app/online/page.tsx"].map(read);
+ok("Game Night reads the kit palette (night ground, accent from the mode)", gcss.includes("--bg: var(--k-bg)") && gcss.includes("--accent: var(--k-accent)") && gcss.includes("[data-kmode] {") && !themeFile.includes('"--bg"') && !themeFile.includes('"--accent"'), null);
+ok("every Game Night screen runs in court mode (warm orange), the landing is not forced into it", gnRoots.every(f => f.includes('data-kmode="court"') && f.includes("useCourtMode()")) && !rootLayout.includes("data-kmode"), null);
+ok("Game Night panels have cut corners and hairlines", gcss.includes("clip-path: polygon(0 0, calc(100% - var(--cut)) 0") && gcss.includes("--line: var(--k-line)"), null);
+ok("Game Night has the glow button and the liquid glass button from the kit", gcss.includes(".btn-glow") && gcss.includes(".btn-glass") && gcss.includes("background: var(--k-glow-bank)") && gcss.includes("box-shadow: var(--k-glow-shadow)"), null);
+const uiFile = read("src/components/ui.tsx"), motionFile = read("src/lib/motion.ts");
+ok("Game Night screens animate with the shared motion kit", gnRoots[0].includes("useEnterScreen(page, path)") && motionFile.includes("export function enterScreen") && uiFile.includes("km.tabIndicator") && uiFile.includes("km.pop(box.current)") && uiFile.includes("km.count(") && read("src/components/Toasts.tsx").includes("km.slideIn") && uiFile.includes("km.press("), null);
+ok("old CSS entrances are gone from Game Night screens (GSAP owns them)", !walk(path.join(root, "src", "app"), new Set(), []).concat(walk(path.join(root, "src", "components"), new Set(), [])).some(f => /className="[^"]*\b(anim-rise|stagger|page-enter)\b/.test(fs.readFileSync(f, "utf8"))), null);
+ok("Game Night is dark only: no light mode, no plain style, no theme picker, no boot script", !gcss.includes('data-mode="light"') && !gcss.includes('[data-style="plain"]') && !has("src/components/AppearancePicker.tsx") && !has("src/lib/appearance.ts") && !has("src/lib/appearanceBoot.ts") && !rootLayout.includes("BOOT_SCRIPT") && !rootLayout.includes("data-mode"), null);
+ok("every surface links the shared kit", rootLayout.includes('href="/kit.css"') && read("floodlights/index.html").includes('href="/kit.css"') && hl.includes('href="/kit.css"') && has("public/kit.css"), null);
+ok("the page entrance does not trap the full screen game: every tween clears its transform", read("public/kit-motion.js").includes('var CLEAR = "transform,opacity,visibility"') && !gcss.includes(".page-enter"), null);
+ok("Hardwood Legends uses the site fonts and the court accent from the kit", hl.includes("url(/floodlights/fonts/inter.woff2)") && hl.includes("url(/floodlights/fonts/chakra-petch-700.woff2)") && hl.includes('<html data-kmode="court">') && hl.includes("--accent:var(--k-accent)") && !hl.includes("#d0e85c") && !hl.includes("fonts.googleapis.com"), null);
+ok("Hardwood Legends menus animate with GSAP and the motion kit", hl.includes('<script src="/floodlights/vendor/gsap.min.js"></script><script src="/kit-motion.js"></script>') && hl.includes("function hlEnter()") && hl.includes("KitMotion.pulse(sc"), null);
 ok("Hardwood Legends has the glow button and cut corner panels", hl.includes(".btn.primary{color:#ffffff;border:0;border-radius:11px") && hl.includes(".panel,.tcard{border-radius:0"), null);
 ok("the headline, the credit and both games are in the landing source", landing.includes("Be-A-Manager") && landing.includes("By Avir &amp; Ayanssh") && landing.includes("ORDER.map"), null);
 ok("the 3D scene is lazy loaded, not part of the first bundle", landing.includes('lazy(() => import("./Backdrop3D"))') && !/from "three"/.test(landing) && !landing.includes("@react-three/fiber"), null);
 ok("the scene is built with three.js and React Three Fiber", scene.includes('from "@react-three/fiber"') && scene.includes('from "three"') && scene.includes("<Canvas"), null);
 ok("3D has a fallback for weak devices and reduced motion", landing.includes("prefers-reduced-motion") && landing.includes("weakDevice()") && landing.includes("hasWebGL()") && scene.includes("onSlow"), null);
-ok("pointer parallax uses motion values, not React state", landing.includes("useMotionValue") && landing.includes("useSpring") && landing.includes("pointermove"), null);
-ok("warm on intent and idle warmup are wired", landing.includes("onPointerEnter={() => warm(") && landing.includes("onFocus={() => warm(") && landing.includes("requestIdleCallback"), null);
-ok("entrance robustness: animationend adds is-in, with a two frame fallback", landing.includes('"animationend"') && landing.includes('classList.add("is-in")') && (landing.match(/requestAnimationFrame/g) || []).length >= 2, null);
+ok("pointer drift for the 3D camera lives in refs, not React state", landing.includes("makeDrift()") && landing.includes("pointermove") && !landing.includes("motion/react") && scene.includes("export interface Drift"), null);
+ok("warm on intent and idle warmup are wired", landing.includes("onPointerEnter={() => {") && landing.includes("warm(id)") && landing.includes("onFocus={() => warm(") && landing.includes("requestIdleCallback"), null);
+ok("the intro is one GSAP timeline with the welcome flight and the two ball moments", landing.includes('from "gsap"') && landing.includes('from "@gsap/react"') && landing.includes("useGSAP(") && landing.includes("gsap.matchMedia()") && /addLabel\("lights"/.test(landing) && /addLabel\("fly"/.test(landing) && /addLabel\("cards"/.test(landing) && landing.includes("function kick(") && landing.includes("function bounce(") && landing.includes('"bounce.out"'), null);
+ok("the intro never blocks input and can be skipped at once", css.includes(".bam-intro {") && /\.bam-intro \{[^}]*pointer-events: none/.test(css) && landing.includes("tl.progress(1)") && landing.includes('e.key === "Escape"') && landing.includes('"wheel"'), null);
+ok("a second visit in the same tab gets the short version", landing.includes("sessionStorage") && landing.includes('tl.seek("cards")'), null);
+ok("the first paint is guarded so the end state never flashes, and the guard lifts itself", page.includes('s.id="bam-prehide"') && page.includes("4500") && page.includes("prefers-reduced-motion: reduce") && landing.includes('getElementById("bam-prehide")?.remove()'), null);
+ok("the intro moves only transform and opacity: no layout properties in the timeline", !/(width|height|top|left|margin|padding)\s*:\s*[^,}]*[,}]/.test(landing.slice(landing.indexOf("function buildIntro"), landing.indexOf("export default function Landing"))), null);
+ok("the 3D backdrop pauses when hidden and during the intro, and compiles its shaders up front", landing.includes('paused={hidden || phase === "intro"}') && scene.includes('frameloop={props.paused ? "never" : "always"}') && scene.includes("gl.compile(scene, camera)"), null);
 ok("black is forced in three places", css.includes("html:has(.bam)") && landing.includes('style={{ background: "#000", color: "#fff" }}') && landing.includes("html,body{background:#000000 !important"), null);
-const glow = css.slice(css.indexOf(".bam-glowbtn {"), css.indexOf("/* ---------- liquid glass buttons"));
-ok("glow button contract: clipped by its own rounded rect", glow.includes("overflow: hidden") && glow.includes("linear-gradient(to top"), null);
-ok("glow button contract: masked edge light and top streak", glow.includes(".bam-glowbtn::after") && glow.includes("mask: linear-gradient(to top") && glow.includes(".bam-glowbtn::before"), null);
-ok("glow button contract: no halo, the largest resting outer blur is 8px", !/drop-shadow/.test(glow) && !/0 0 (9|[1-9][0-9])px/.test(glow.slice(0, glow.indexOf(".bam-glowbtn:hover"))), null);
-ok("the entrance animates translate and scale, never transform", (() => { const k = css.slice(css.indexOf("@keyframes bam-drawx")); const frames = k.slice(0, k.indexOf("@media")); return !/transform\s*:/.test(frames) && /translate:/.test(frames) && /scale:/.test(frames); })(), null);
-ok("liquid metal pills and both glass buttons use the reference recipes", css.includes("linear-gradient(105deg, #050505 0%, #2a2a2a 48%, #4a4a4a 100%)") && css.includes("linear-gradient(180deg, #ffffff 0%, #e7e7e7 48%, #cfcfcf 100%)") && css.includes("linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.5) 46%, rgba(150, 170, 200, 0.1))"), null);
-ok("the frame has chamfered corners and hairlines", css.includes(".bam .cn-tl") && css.includes("--line: rgba(255, 255, 255, 0.13)"), null);
+ok("the landing reads the shared kit: glow buttons, chips, pitch and court modes", landing.includes("k-btn k-btn-glow") && landing.includes('className="k-chip"') && read("src/landing/games.ts").includes('mode: "pitch"') && read("src/landing/games.ts").includes('mode: "court"') && landing.includes("data-kmode={g.mode}") && css.includes("var(--k-grad)") && css.includes("var(--k-accent-rgb)"), null);
+ok("the floodlight beams are soft conic cones with no blur filter", /\.bam-beam \{[^}]*conic-gradient/.test(css) && !/\.bam-beam \{[^}]*filter:/.test(css), null);
+ok("the frame has chamfered corners and hairlines", css.includes(".bam-frame .cn-tl") && css.includes("--line: rgba(255, 255, 255, 0.13)"), null);
 ok("reduced motion switches every animation and transition off", css.includes("@media (prefers-reduced-motion: reduce)") && css.includes("animation: none !important"), null);
 ok("the side preview card is gone from the landing", !css.includes(".bam-side") && !css.includes("bam-mock") && !has("public/landing"), null);
 

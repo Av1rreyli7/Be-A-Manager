@@ -51,7 +51,7 @@ export default function HistoryPage() {
             )}
           </Card>
           <Card title="Single season (this save)">
-            {l.records.singleSeason.length === 0 ? <Empty>Complete a season to set records.</Empty> : (
+            {l.records.singleSeason.length === 0 ? <Empty>Finish a season to set records.</Empty> : (
               <ul className="space-y-2 text-sm">{l.records.singleSeason.map((r) => <li key={r.stat} className="flex justify-between gap-2"><span className="text-dim">{r.stat}</span><span><b className="font-num text-[15px]">{r.value}</b> · {l.players[r.playerId] ? <PlayerLink player={l.players[r.playerId]} /> : r.name} <span className="text-xs text-mute">{r.season}</span></span></li>)}</ul>
             )}
           </Card>

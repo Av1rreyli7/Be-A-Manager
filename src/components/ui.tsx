@@ -1,20 +1,23 @@
 "use client";
 import Link from "next/link";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import clsx from "clsx";
 import { X, Basketball } from "@phosphor-icons/react";
 import type { League, Player } from "@/engine/types/game";
 import { ratingBg } from "@/lib/format";
 import { scoutedRatings } from "@/engine/offseason/draft";
+import { km } from "@/lib/motion";
+
+const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export function Card({ title, right, children, className, pad = true }: { title?: ReactNode; right?: ReactNode; children: ReactNode; className?: string; pad?: boolean }) {
   return (
-    <section className={clsx("panel", className)}>
+    <section data-km="block" className={clsx("panel", className)}>
       {(title || right) && (
-        <header className="flex min-h-11 items-center justify-between gap-3 border-b border-line px-4 py-2">
+        <header className="card-head flex min-h-11 items-center justify-between gap-3 border-b border-line px-4 py-2">
           <h2 className="flex min-w-0 items-center gap-2.5 font-display text-[13px] font-bold uppercase leading-none tracking-[0.07em] text-ink">
-            <span aria-hidden className="h-[7px] w-[6px] shrink-0 bg-accent" />
+            <span aria-hidden className="card-pip" />
             <span className="min-w-0 truncate">{title}</span>
           </h2>
           {right && <div className="flex shrink-0 items-center gap-2 text-xs text-dim [&_a]:font-semibold [&_a]:text-accent [&_a:hover]:underline">{right}</div>}
@@ -38,9 +41,13 @@ export function Button({ children, onClick, variant = "default", size = "md", di
       type={type}
       title={title}
       disabled={disabled}
-      onClick={onClick}
+      onClick={(e) => {
+        km.press(e.currentTarget);
+        onClick?.();
+      }}
       className={clsx(
-        // the site's buttons (see .btn in globals.css): glow for the main action, liquid glass for the rest
+        // the kit buttons (.btn in globals.css is the kit recipe, layered so size utilities still win):
+        // glow for the main action, liquid glass for the rest
         "btn",
         size === "sm" && "btn-sm",
         variant === "primary" && "btn-glow",
@@ -68,15 +75,22 @@ export function Stat({ label, value, sub, tone }: { label: string; value: ReactN
   return (
     <div className="min-w-0">
       <div className="label">{label}</div>
-      <div className={clsx("mt-1 font-display text-[24px] font-extrabold leading-none num", tone === "good" && "text-good", tone === "bad" && "text-bad", tone === "warn" && "text-warn")}>{value}</div>
+      <div className={clsx("mt-1 font-display text-[24px] font-extrabold leading-none num", tone === "good" && "text-good", tone === "bad" && "text-bad", tone === "warn" && "text-warn")}>{typeof value === "number" ? <CountUp value={value} /> : value}</div>
       {sub && <div className="mt-1 truncate text-xs text-dim">{sub}</div>}
     </div>
   );
 }
 
 export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: T; label: ReactNode }[]; value: T; onChange: (v: T) => void }) {
+  const bar = useRef<HTMLDivElement>(null);
+  // the kit indicator slides under the active tab
+  useIso(() => {
+    const el = bar.current;
+    if (!el) return;
+    km.tabIndicator(el, el.querySelector<HTMLElement>('[aria-selected="true"]'));
+  }, [value, tabs.length]);
   return (
-    <div role="tablist" className="scroll-thin -mx-1 flex gap-1 overflow-x-auto border-b border-line px-1">
+    <div ref={bar} role="tablist" className="scroll-thin relative -mx-1 flex gap-1 overflow-x-auto border-b border-line px-1">
       {tabs.map((t) => {
         const on = value === t.id;
         return (
@@ -91,12 +105,62 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
             )}
           >
             {t.label}
-            <span aria-hidden className={clsx("absolute inset-x-2 -bottom-px h-[2px] bg-accent transition-transform duration-300 ease-out", on ? "scale-x-100" : "scale-x-0")} />
           </button>
         );
       })}
     </div>
   );
+}
+
+/** A number that counts up to its value, and gives a small pulse whenever it changes. */
+export function CountUp({ value, format, className }: { value: number; format?: (v: number) => string; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const last = useRef<number | null>(null);
+  const fmt = format ?? ((v: number) => String(Math.round(v)));
+  useIso(() => {
+    const el = ref.current;
+    if (!el) return;
+    const from = last.current;
+    last.current = value;
+    const tw = km.count(el, value, { from: from ?? (Number.isInteger(value) && Math.abs(value) < 10 ? value : 0), format: fmt, duration: from == null ? 0.55 : 0.4 });
+    if (from != null && from !== value) km.pulse(el, { scale: 1.12 });
+    return () => {
+      tw?.progress(1).kill();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+  return (
+    <span ref={ref} className={clsx("inline-block", className)}>
+      {fmt(value)}
+    </span>
+  );
+}
+
+/** Something that shows up after the screen is in (a result, a banner, a pick): rises, pops or celebrates once. */
+export function Appear({ children, kind = "rise", sparks, className, style }: { children: ReactNode; kind?: "rise" | "pop" | "celebrate"; sparks?: boolean; className?: string; style?: React.CSSProperties }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useIso(() => {
+    const el = ref.current;
+    if (!el) return;
+    const tw = kind === "pop" ? km.pop(el) : kind === "celebrate" ? km.celebrate(el, { tilt: 0 }) : km.rise(el);
+    // court colours for the sparks: orange, amber, teal, violet, gold
+    if (sparks) km.sparks(el, { colors: ["#ff8a3d", "#ffbe4a", "#3ee6c4", "#8b6cff", "#ffcf5a"] });
+    return () => {
+      tw?.progress(1).kill();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <div ref={ref} className={clsx(kind === "celebrate" && "relative", className)} style={style}>
+      {children}
+    </div>
+  );
+}
+
+/** Basketball position as a coloured kit badge: guards sky, forwards teal, centers violet. */
+export function PosBadge({ pos, className }: { pos: string; className?: string }) {
+  const k = pos.startsWith("C") ? "c" : pos.includes("G") ? "g" : "f";
+  return <span className={clsx("k-pos", k, className)}>{pos}</span>;
 }
 
 export function TeamBadge({ league, teamId, size = "md", withName }: { league: League; teamId: string | null | undefined; size?: "sm" | "md" | "lg"; withName?: boolean }) {
@@ -171,19 +235,23 @@ export function Bar({ value, max = 100, color = "bg-accent" }: { value: number; 
 }
 
 export function Modal({ open, onClose, title, children, wide }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; wide?: boolean }) {
+  const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
     const k = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   }, [open, onClose]);
+  useIso(() => {
+    if (open) km.pop(box.current);
+  }, [open]);
   if (!open || typeof document === "undefined") return null;
   // portal to <body> so a parent with transform/filter/backdrop-filter can't trap or clip the overlay
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={onClose} role="dialog" aria-modal="true">
-      <div className={clsx("panel anim-rise max-h-[92dvh] w-full overflow-y-auto scroll-thin", wide ? "sm:max-w-4xl" : "sm:max-w-lg")} onClick={(e) => e.stopPropagation()}>
+    <div className="k-scrim fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={onClose} role="dialog" aria-modal="true">
+      <div ref={box} className={clsx("panel modal-box max-h-[92dvh] w-full overflow-y-auto scroll-thin", wide ? "sm:max-w-4xl" : "sm:max-w-lg")} onClick={(e) => e.stopPropagation()}>
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-4 py-3">
-          <span aria-hidden className="absolute left-0 top-0 h-[2px] w-[54px] bg-accent" />
+          <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-[image:var(--k-grad)]" />
           <h3 className="font-display text-[15px] font-extrabold uppercase tracking-[0.06em]">{title}</h3>
           <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-[4px] text-dim transition-colors hover:bg-ink/5 hover:text-ink" aria-label="Close">
             <X size={18} weight="bold" />
@@ -214,16 +282,22 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   );
 }
 
-export const inputCls = "w-full rounded-[6px] border border-line bg-ink/[0.035] px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-mute hover:border-line-2 focus:border-accent focus:ring-1 focus:ring-accent";
+/** The kit input look (k-input), as utilities so a screen can still size it. */
+export const inputCls = "w-full rounded-[6px] border border-line bg-ink/[0.035] px-3 py-2 text-sm text-ink outline-none transition-[border-color,box-shadow] placeholder:text-mute hover:border-line-2 focus:border-accent focus:ring-1 focus:ring-accent focus:shadow-[0_0_18px_-6px_var(--accent)]";
 
 export function PageHeader({ title, sub, right }: { title: ReactNode; sub?: ReactNode; right?: ReactNode }) {
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
-      <div className="min-w-0">
+      <div className="k-head-glow min-w-0" data-km="head">
         <h1 className="font-display text-[26px] font-black uppercase leading-none tracking-[0.02em] sm:text-[34px]">{title}</h1>
+        <span aria-hidden className="head-bar" />
         {sub && <div className="mt-2 max-w-[75ch] text-sm text-dim">{sub}</div>}
       </div>
-      {right && <div className="flex flex-wrap items-center gap-2">{right}</div>}
+      {right && (
+        <div className="flex flex-wrap items-center gap-2" data-km="head">
+          {right}
+        </div>
+      )}
     </div>
   );
 }
@@ -241,7 +315,7 @@ export function PlayerCard({ league, player, stats, href = true, className, styl
           <Rating value={player.ovr} size="md" />
         </div>
         <div className="absolute right-3 top-3 flex flex-col items-end gap-1">
-          <span className="rounded-[2px] bg-black/45 px-1.5 py-1 font-num text-[11px] font-bold leading-none tracking-[0.08em] text-white">{player.pos}</span>
+          <PosBadge pos={player.pos} className="!bg-black/55" />
           {player.injury && <span className="rounded-[2px] bg-bad px-1.5 py-0.5 text-[10px] font-bold leading-none text-bg">OUT {player.injury.daysOut}D</span>}
         </div>
         <span aria-hidden className="absolute inset-x-0 bottom-0 h-1" style={{ background: colors.secondary }} />

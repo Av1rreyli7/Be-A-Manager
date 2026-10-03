@@ -47,10 +47,18 @@ for (const f of ["three.module.js", "three.core.js"]) {
     res.sendFile(path.join(THREE_BUILD, f));
   });
 }
+// GSAP for the screen animations (the same package the landing and Game Night use)
+const GSAP_BUILD = path.join(path.dirname(require.resolve("gsap/package.json")), "dist");
+app.get("/floodlights/vendor/gsap.min.js", (req, res) => {
+  res.type("text/javascript");
+  res.set("Cache-Control", "public, max-age=86400");
+  res.sendFile(path.join(GSAP_BUILD, "gsap.min.js"));
+});
 // the shared fonts (Inter and Chakra Petch), the same files the landing page uses
 app.use("/floodlights/fonts", express.static(path.join(__dirname, "fonts"), { maxAge: "7d" }));
 
-const SAVE_FILE = path.join(__dirname, "games.json");
+// FL_SAVE_FILE lets test runs keep their own save file so two runs never share one
+const SAVE_FILE = process.env.FL_SAVE_FILE || path.join(__dirname, "games.json");
 let games = {};
 try { games = JSON.parse(fs.readFileSync(SAVE_FILE, "utf8")); } catch (e) { games = {}; }
 
@@ -712,7 +720,8 @@ function autoBook(game, club, id, km, oppName, week) {
   }
   tv.fund = C.r3(Math.max(0, tv.fund - price));
   tv.trips[id] = bk;
-  if (note) { C.addNews(club, week, note, C.T.NEWS_CAP_HUMAN); log(game, note.replace("TRAVEL: the", "TRAVEL (" + club.name + "): the")); }
+  // week here is the round index, the news shows the week number people see (one higher)
+  if (note) { C.addNews(club, week + 1, note, C.T.NEWS_CAP_HUMAN); log(game, note.replace("TRAVEL: the", "TRAVEL (" + club.name + "): the")); }
   return bk;
 }
 // the away side's travel modifier for one match
@@ -788,9 +797,8 @@ function afterResult(game, m, xis, kind) {
     }
   }
 }
-// the weekly pass over every player and club: drift, injury returns, academy growth, unexpected events
+// the weekly pass over every player and club: drift, injury returns, academy growth
 function weeklyCondition(game) {
-  const week = game.round + 1;
   for (const p of Object.values(game.players)) {
     C.drift(p);
     C.healInjuryReturn(p);
@@ -807,15 +815,50 @@ function weeklyCondition(game) {
         if (kid && kid.rating < kid.pot && Math.random() < chance) { kid.rating++; kid.value = marketValue(kid.rating, kid.age, kid.pos); }
       }
     }
-    const count = C.rollEventCount();
-    if (!count) continue;
+  }
+}
+
+// ---------- unexpected events ----------
+// The event for week N is decided when week N minus 1 is over and its effect covers week N's match.
+// A manager who plays his own match live gets his club's roll the moment the result is saved (stored as
+// club.pendEv = { s: season, w: week, x: event id or "" for none}), so the full time screen can tease it.
+// Every other club rolls when the week is simmed. One roll per club per week, so never two events.
+const EVENT_BY_ID = new Map(EVENTS.map(ev => [C.eventId(ev), ev]));
+function rollClubEvent() {
+  return C.rollEvent() ? EVENTS[Math.floor(Math.random() * EVENTS.length)] : null;
+}
+// called from /api/playresult: decides the next week's event for this club now, without applying it
+function preRollEvent(game, clubName) {
+  const club = game.clubs[clubName];
+  if (!club || !game.started) return null;
+  const week = game.round + 2;
+  if (week > (game.totalRounds || 38)) return null;
+  if (club.pendEv && club.pendEv.s === game.season && club.pendEv.w === week) return club.pendEv.x ? club.pendEv : null;
+  const ev = rollClubEvent();
+  club.pendEv = { s: game.season, w: week, x: ev ? C.eventId(ev) : "" };
+  return ev ? club.pendEv : null;
+}
+// runs once a week right after the round moves on (and after injuries tick), so an off the pitch injury
+// keeps every week it was given. No event after the final week: there is no match left for it to touch.
+function weeklyEvents(game) {
+  if (game.round >= (game.totalRounds || 38)) return;
+  const week = game.round + 1;
+  for (const [name, club] of Object.entries(game.clubs)) {
+    const human = humanOf(game, name);
+    if (!(LEAGUES[club.league] || {}).playable && !human) continue;
+    let ev;
+    const pend = club.pendEv;
+    if (pend && pend.s === game.season && pend.w === week) ev = pend.x ? (EVENT_BY_ID.get(pend.x) || null) : null;
+    else ev = rollClubEvent();
+    delete club.pendEv;
+    if (!ev) continue;
     const seniors = club.squad.map(id => game.players[id]).filter(p => p && !p.academy);
-    for (let i = 0; i < count; i++) {
-      const ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
-      const res = C.applyEvent(ev, club, seniors, game.round, Math.random);
-      if (!res) continue;
-      // the per club feed is only kept for clubs a person manages, AI clubs just take the effect
-      if (human) { C.addNews(club, week, res.text, C.T.NEWS_CAP_HUMAN); log(game, "EVENT (" + name + "): " + res.text); }
+    const res = C.applyEvent(ev, club, seniors, game.round, Math.random, { physio: !!(club.staff || {}).physio });
+    if (!res) continue;
+    // the per club feed is only kept for clubs a person manages, AI clubs just take the effect
+    if (human) {
+      C.addNews(club, week, res.text, C.T.NEWS_CAP_HUMAN, { e: C.eventCard(res) });
+      log(game, "EVENT (" + name + "): " + res.text);
     }
   }
 }
@@ -2209,6 +2252,8 @@ function playMatchweek(game) {
       }
     }
   }
+  // the event for the coming week, decided now that this week is over
+  weeklyEvents(game);
   for (const [name, club] of Object.entries(game.clubs)) {
     if (!(LEAGUES[club.league] || {}).playable && !humanOf(game, name)) continue;
     const seniors = club.squad.map(id => game.players[id]).filter(p => p && !p.academy && !(p.inj > 0) && !(p.ban > 0));
@@ -2466,6 +2511,26 @@ app.post("/api/travelbook", (req, res) => {
   res.json({ ok: true, fund: tv.fund, policy: tv.smart ? "smart" : tv.policy });
 });
 
+// shirt numbers across the whole squad, the same rule the lineup page uses for its shirts, so a player wears
+// the same number on the lineup pitch and in the 3D match
+const KIT_NUM_PREF = {
+  GK: [1, 13, 25], CB: [4, 5, 6, 15, 16, 24], LB: [3, 12, 21], RB: [2, 22, 23], CDM: [6, 8, 14, 16],
+  CM: [8, 10, 14, 16, 18], CAM: [10, 7, 20, 21], LW: [11, 17, 19, 7], RW: [7, 17, 19, 11], ST: [9, 10, 18, 20]
+};
+const KIT_NUM_FALLBACK = { GK: "GK", DF: "CB", MF: "CM", FW: "ST" };
+function kitNumbers(game, team) {
+  const club = game.clubs[team];
+  const squad = ((club && club.squad) || []).map(id => game.players[id]).filter(Boolean);
+  const used = new Set(), map = {};
+  squad.slice().sort((a, b) => b.rating - a.rating || a.id - b.id).forEach(p => {
+    const pref = KIT_NUM_PREF[String(p.role || "").toUpperCase()] || KIT_NUM_PREF[KIT_NUM_FALLBACK[p.pos] || "CM"];
+    let n = pref.find(x => !used.has(x));
+    if (!n) { n = 12; while (used.has(n)) n++; }
+    used.add(n); map[p.id] = n;
+  });
+  return map;
+}
+
 app.post("/api/playstart", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
@@ -2492,7 +2557,8 @@ app.post("/api/playstart", (req, res) => {
   // the playable match uses the same effective OVRs as the sim would for this fixture
   const cupKey = fx.kind === "league" ? "L" : fx.kind;
   const mm = { home: fx.home, away: fx.away };
-  const rowFor = (team, home) => p => ({ n: p.name, pos: p.pos, role: p.role || p.pos, r: Math.round(effOf(game, p, team, { home, m: mm, kind: cupKey, week: game.round })), base: p.rating });
+  const nums = { [fx.home]: kitNumbers(game, fx.home), [fx.away]: kitNumbers(game, fx.away) };
+  const rowFor = (team, home) => p => ({ n: p.name, pos: p.pos, role: p.role || p.pos, r: Math.round(effOf(game, p, team, { home, m: mm, kind: cupKey, week: game.round })), base: p.rating, num: nums[team][p.id] });
   save();
   res.json({
     ok: true, kind: fx.kind, label: fx.label, home: fx.home, away: fx.away, side: fx.side,
@@ -2528,8 +2594,14 @@ app.post("/api/playresult", (req, res) => {
   play.hg = hg;
   play.ag = ag;
   log(game, `${user.name} just played their ${fx.label} match on the pitch. The score lands when the week is simmed.`);
+  // the result is in, so next week's surprise (if any) is decided now. It is only teased here.
+  const brewing = !!preRollEvent(game, user.team);
   save();
-  res.json({ ok: true, message: `Saved. ${home} ${hg}-${ag} ${away} is locked in and counts when the host sims the week.` });
+  res.json({
+    ok: true, brewing,
+    message: `Saved. ${home} ${hg}-${ag} ${away} is locked in and counts when the host sims the week.` +
+      (brewing ? ` Something unexpected is brewing at ${user.team}. Head back to the lobby after the week is simmed to find out.` : "")
+  });
 });
 
 app.post("/api/nextseason", (req, res) => {
@@ -3295,6 +3367,8 @@ if (require.main === module) {
   const solo = express();
   solo.get("/", (req, res) => res.redirect("/floodlights/"));
   solo.use(app);
+  // the shared kit (kit.css, kit-motion.js) lives in the Next public folder; serve it here too when alone
+  solo.use(express.static(path.join(__dirname, "..", "public")));
   const PORT = process.env.PORT || 3000;
   solo.listen(PORT, () => console.log(`Floodlights running on port ${PORT}`));
 }

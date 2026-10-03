@@ -78,26 +78,38 @@ ok("the full formula: base plus form plus morale plus home plus travel plus inju
 
 // ---------- form and morale after results ----------
 {
+  const always = () => 0, never = () => 0.99;
   const xi = []; for (let i = 0; i < 11; i++) xi.push(P(i, 75));
-  C.applyResult(xi, 2, 1);
-  ok("a win nudges form up a little and morale a touch", xi.every(p => p.fm === 0.6 && p.mo === 0.2), xi[0]);
-  C.applyResult(xi, 5, 0);
-  ok("a thrashing gives a bigger nudge", xi.every(p => p.fm === 1.6), xi[0].fm);
-  C.applyResult(xi, 0, 4);
-  ok("a heavy loss bites harder than a win helps: form drops more than it rose", xi.every(p => !p.fm && Math.abs(p.mo - 0.05) < 1e-9), [xi[0].fm, xi[0].mo]);
-  ok("losing is sharper than winning in the numbers themselves", -C.T.LOSS_FORM > C.T.WIN_FORM && -C.T.BIG_LOSS_FORM > C.T.BIG_WIN_FORM && -C.T.LOSS_MORALE > C.T.WIN_MORALE, null);
+  C.applyResult(xi, 2, 1, always);
+  ok("a win nudges form up a small step and morale a touch", xi.every(p => p.fm === C.T.WIN_FORM && p.mo === C.T.WIN_MORALE), xi[0]);
+  const rare = []; for (let i = 0; i < 11; i++) rare.push(P(50 + i, 75));
+  C.applyResult(rare, 2, 1, never);
+  ok("on an off day a win does not lift form at all, only a touch of morale", rare.every(p => !p.fm && p.mo === C.T.WIN_MORALE), rare[0]);
+  ok("a win lifts form only on some days", C.T.WIN_CHANCE > 0.3 && C.T.WIN_CHANCE < 0.8, C.T.WIN_CHANCE);
+  const big = P(70, 75); C.applyResult([big], 4, 0, always);
+  ok("a thrashing gives a bigger nudge than a narrow win", big.fm === C.T.BIG_WIN_FORM && big.fm > C.T.WIN_FORM, big.fm);
+  const high = P(71, 75, { fm: 2.5 }); C.applyResult([high], 2, 0, always);
+  ok("the closer to the top, the smaller the gain", high.fm - 2.5 < 0.1 && high.fm >= 2.5 && C.T.WIN_FORM * Math.pow(1 - 2.5 / 3, C.T.GAIN_DAMP) < 0.05, high.fm);
+  const fromUp = P(72, 75, { fm: 0.4 }); C.applyResult([fromUp], 0, 4, always);
+  ok("a heavy loss bites harder than a win helps: form drops far more than it rose", fromUp.fm === Math.round((0.4 + C.T.BIG_LOSS_FORM) * 10) / 10, fromUp.fm);
+  ok("losing is sharper than winning in the numbers themselves", -C.T.LOSS_FORM > 2 * C.T.WIN_FORM && -C.T.BIG_LOSS_FORM > 2 * C.T.BIG_WIN_FORM && -C.T.LOSS_MORALE > 2 * C.T.WIN_MORALE, null);
   {
     const hot = P(97, 75);
     const steps = [];
-    for (let w = 0; w < 10; w++) { C.applyResult([hot], 2, 0); C.drift(hot); steps.push(hot.fm); }
-    ok("a hot streak takes several good weeks to build and never quite reaches the cap by itself", steps[0] < 1 && steps[4] > steps[0] && steps[9] >= 2 && steps[9] <= 3, steps);
-    C.applyResult([hot], 0, 2);
-    ok("one bad day dents the streak quickly", hot.fm <= steps[9] - 0.9, [steps[9], hot.fm]);
+    for (let w = 0; w < 10; w++) { C.applyResult([hot], 2, 0, always); C.drift(hot); steps.push(hot.fm); }
+    ok("ten straight wins, every one lifting form, only nudge it to about +1, nowhere near the +3 cap", steps[0] < 0.5 && steps[4] > steps[0] && steps[9] >= 0.7 && steps[9] <= 1.4, steps);
+    C.applyResult([hot], 0, 2, always);
+    ok("one bad day wipes the streak out quickly", (hot.fm || 0) <= steps[9] - 0.79, [steps[9], hot.fm]);
     const held = P(96, 75, { fm: 3 });
-    C.applyResult([held], 1, 0); C.drift(held);
-    ok("holding +3 needs a win every week: a win keeps him at the top end", held.fm >= 2.4, held.fm);
+    C.applyResult([held], 1, 0, always); C.drift(held);
+    ok("a player at +3 slides back down even while winning", held.fm < 3 && held.fm >= 2.2, held.fm);
     C.drift(held);
-    ok("a week without a win pulls him off the top", held.fm < 2.4, held.fm);
+    ok("a week without a win pulls him further off the top", held.fm < 2.3, held.fm);
+    const playing = P(95, 75, { fm: -2, mo: -1 }), benched = P(94, 75, { fm: -2, mo: -1, bn: 4 });
+    C.drift(playing); C.drift(benched);
+    ok("a player who is playing shakes off a bad spell faster than a benched one", playing.fm > benched.fm && playing.mo > benched.mo, [playing.fm, benched.fm, playing.mo, benched.mo]);
+    const lowLoss = P(93, 75, { fm: -2 }); C.applyResult([lowLoss], 0, 1, always);
+    ok("a loss when already low digs in less than a loss from the top", -2 - lowLoss.fm < -C.T.LOSS_FORM, lowLoss.fm);
   }
   const q = P(99, 75, { fm: 3, mo: 2 });
   const far = [];
@@ -111,24 +123,46 @@ ok("the full formula: base plus form plus morale plus home plus travel plus inju
 }
 
 // ---------- events ----------
-ok("the event pool has at least 200 distinct events", EVENTS.length >= 200 && new Set(EVENTS.map(e => e.t)).size === EVENTS.length, EVENTS.length);
-ok("every event says who it hits, what it does and how long", EVENTS.every(e => ["one", "few", "squad", "gk"].includes(e.who) && typeof e.t === "string" && e.t.length > 20 && (e.f !== undefined || e.m !== undefined || e.w !== undefined) && (e.w === undefined || [0, 1, 2, 3].includes(e.w))), null);
+const NEW_EVENTS = EVENTS.filter(e => e.h);
+ok("the event pool holds the old 233 plus 200 more", EVENTS.length >= 433 && NEW_EVENTS.length >= 200, [EVENTS.length, NEW_EVENTS.length]);
+ok("every event has a unique id and unique words", new Set(EVENTS.map(C.eventId)).size === EVENTS.length && new Set(EVENTS.map(e => e.t)).size === EVENTS.length, null);
+ok("every new event has its own headline", new Set(NEW_EVENTS.map(e => e.h)).size === NEW_EVENTS.length && NEW_EVENTS.every(e => e.h.length >= 3 && e.h.length <= 26), null);
+ok("every event says who it hits, what it does and how long", EVENTS.every(e => ["one", "few", "squad", "gk"].includes(e.who) && typeof e.t === "string" && e.t.length > 20 && (e.f !== undefined || e.m !== undefined || e.w !== undefined || e.inj !== undefined) && (e.w === undefined || [0, 1, 2, 3].includes(e.w)) && (e.f === undefined || Math.abs(e.f) <= 2) && (e.m === undefined || Math.abs(e.m) <= 2)), EVENTS.filter(e => !["one", "few", "squad", "gk"].includes(e.who)).slice(0, 2));
 {
-  const neg = EVENTS.filter(e => (e.f || 0) + (e.m || 0) < 0).length, pos = EVENTS.filter(e => (e.f || 0) + (e.m || 0) > 0).length;
-  ok("the pool mixes bad, good and neutral news", neg >= 60 && pos >= 60, [neg, pos]);
+  const inj = EVENTS.filter(e => e.inj !== undefined);
+  const span = e => (Array.isArray(e.inj) ? e.inj : [e.inj, e.inj]);
+  ok("at least 40 off the pitch injury events with sensible lengths", inj.length >= 40 && inj.every(e => { const [a, b] = span(e); return Number.isInteger(a) && Number.isInteger(b) && a >= 1 && b >= a && b <= 6; }), inj.length);
+  ok("injury events name the length and only injury events do", inj.every(e => e.t.includes("{d}") && (e.who === "one" || e.who === "gk")) && EVENTS.filter(e => e.inj === undefined).every(e => !e.t.includes("{d}")), null);
+  ok("the asked for injury stories are in the pool", ["kitchen|pan|toast|onion", "stairs", "dog", "gym|bench press|dumbbell", "shelves|DIY|hammer|ladder"].every(rx => inj.some(e => new RegExp(rx, "i").test(e.t + e.h))), null);
+  const words = t => new Set(t.toLowerCase().replace(/\{.\}/g, "").replace(/[^a-z ]/g, " ").split(/\s+/).filter(w => w.length > 3));
+  const W = EVENTS.map(e => words(e.t));
+  let worst = 0;
+  for (let i = 0; i < W.length; i++) for (let j = i + 1; j < W.length; j++) {
+    if (!EVENTS[i].h && !EVENTS[j].h) continue;
+    let both = 0; for (const w of W[i]) if (W[j].has(w)) both++;
+    worst = Math.max(worst, both / (W[i].size + W[j].size - both));
+  }
+  ok("no new event reads like a copy of another one", worst < 0.5, worst);
+}
+{
+  const neg = EVENTS.filter(e => (e.f || 0) + (e.m || 0) < 0 || e.inj).length, pos = EVENTS.filter(e => (e.f || 0) + (e.m || 0) > 0).length;
+  ok("the pool mixes bad, good and neutral news", neg >= 120 && pos >= 120, [neg, pos]);
 }
 ok("the asked for examples are in the pool", EVENTS.some(e => /left at the hotel/.test(e.t)) && EVENTS.some(e => /firecrackers/.test(e.t)) && EVENTS.some(e => /became a dad|newborn|baby arrived/.test(e.t)) && EVENTS.some(e => /bonding dinner/.test(e.t)) && EVENTS.some(e => /keeper did an interview trashing the coach/.test(e.t)), null);
 {
-  // frequency: many clubs, many seasons, independent rolls
+  // frequency: one roll per club per week, so never two in a week, and about one every three to five weeks
   const rng = seeded(11);
-  let total = 0; const seasons = 3000; const perClub = [];
-  for (let i = 0; i < seasons; i++) { let n = 0; for (let w = 0; w < 38; w++) n += C.rollEventCount(rng); total += n; perClub.push(n); }
-  const avg = total / seasons;
-  ok("a club sees about 5 to 7 events a season on average", avg >= 5 && avg <= 7, avg);
-  ok("a week brings at most two events and a second one is rare", perClub.every(n => n <= 76) && C.T.EVENT_P2 < 0.2, null);
-  const weekly = []; for (let w = 0; w < 20000; w++) weekly.push(C.rollEventCount(rng));
-  const one = weekly.filter(n => n >= 1).length / weekly.length;
-  ok("roughly 15 to 20 percent of weeks bring an event", one >= 0.13 && one <= 0.2, one);
+  let total = 0, maxWeek = 0; const seasons = 3000; const gaps = []; let last = null, wk = 0;
+  for (let i = 0; i < seasons; i++) for (let w = 0; w < 38; w++, wk++) {
+    const n = C.rollEventCount(rng);
+    total += n; maxWeek = Math.max(maxWeek, n);
+    if (n) { if (last !== null) gaps.push(wk - last); last = wk; }
+  }
+  const avgGap = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+  console.log("events (pure roll): " + (total / seasons).toFixed(2) + " a club a season, one every " + avgGap.toFixed(2) + " weeks on average, at most " + maxWeek + " in a week");
+  ok("a club gets one event every three to five weeks on average", avgGap >= 3 && avgGap <= 5, avgGap);
+  ok("a week never brings more than one event for a club", maxWeek === 1 && C.T.EVENT_P2 === undefined, maxWeek);
+  ok("the server rolls each club once a week and keeps a pending event for the week ahead", serverText.includes("function weeklyEvents(game)") && serverText.includes("pendEv") && !serverText.includes("rollEventCount") && serverText.includes("preRollEvent(game, user.team)"), null);
 }
 {
   const club = { name: "Test FC" };
@@ -209,9 +243,9 @@ ok("AI clubs travel by budget: rich clubs go luxury, poor clubs go cheap", C.aiT
   const parts = C.participants(xi, [{ off: xi[6], on: bench[2], min: 60 }, { off: xi[10], on: bench[3], min: 80 }]);
   ok("participants carry minutes: starters 90 unless subbed, subs the rest", parts.length === 13 && parts.find(e => e.p.id === 6).min === 60 && parts.find(e => e.p.id === 13).min === 30 && parts.find(e => e.p.id === 14).min === 10 && parts.find(e => e.p.id === 0).min === 90 && parts.find(e => e.p.id === 13).start === false, null);
   for (const e of parts) { delete e.p.fm; delete e.p.mo; }
-  C.applyResult(parts, 2, 0);
+  C.applyResult(parts, 0, 2);
   const full = parts.find(e => e.p.id === 0).p, sub10 = parts.find(e => e.p.id === 14).p, sub30 = parts.find(e => e.p.id === 13).p, off60 = parts.find(e => e.p.id === 6).p;
-  ok("form swings scale with minutes: a full match gets the whole swing, a late sub a sliver", full.fm === 0.6 && sub30.fm === 0.2 && Math.abs(sub10.fm - 0.1) < 1e-9 && Math.abs(off60.fm - 0.4) < 1e-9, [full.fm, sub30.fm, sub10.fm, off60.fm]);
+  ok("form swings scale with minutes: a full match gets the whole swing, a late sub a sliver", full.fm === -0.9 && sub30.fm === -0.3 && Math.abs(sub10.fm + 0.1) < 1e-9 && Math.abs(off60.fm + 0.6) < 1e-9, [full.fm, sub30.fm, sub10.fm, off60.fm]);
   for (const e of parts) C.recordAppearance(e.p, e.start, e.min);
   ok("appearances are kept as a tiny array: starts, sub games, minutes", full.ap.join() === "1,0,90" && sub30.ap.join() === "0,1,30" && off60.ap.join() === "1,0,60", null);
   const star = mk(50, "MF", 88), kid = mk(51, "MF", 70); kid.age = 19; const reg = mk(52, "MF", 78);
@@ -229,41 +263,94 @@ ok("AI clubs travel by budget: rich clubs go luxury, poor clubs go cheap", C.aiT
   const back = mk(55, "MF", 80); for (let w = 0; w < 7; w++) { C.playingTime(back, 0); C.drift(back); }
   const low = back.mo;
   for (let w = 0; w < 8; w++) { C.playingTime(back, 90); C.applyResult([back], 1, 1); C.drift(back); }
-  ok("playing again stops the slide at once and recovers at the normal slow rate", !back.bn && low < -0.3 && back.mo > low && back.mo <= 0.6, [low, back.mo]);
-  // several seasons of a made up league: averages stay near zero, only a few at the extremes
+  ok("playing again stops the slide at once and he climbs back toward level", !back.bn && low < -0.3 && (back.mo || 0) > low && (back.mo || 0) <= 0.6, [low, back.mo]);
+  // five seasons of a made up 20 club league with a real strength spread: the league average stays put,
+  // only a few players sit at the extremes, and the champions' regulars end slightly up, not maxed
   {
     const rng = seeded(77);
-    const teams = [];
-    for (let t = 0; t < 20; t++) { const sq = []; for (let i = 0; i < 22; i++) sq.push(Object.assign(mk(t * 100 + i, i === 0 || i === 11 ? "GK" : i % 11 < 5 ? "DF" : i % 11 < 8 ? "MF" : "FW", 60 + t + Math.floor(rng() * 12)), { age: 18 + Math.floor(rng() * 16) })); teams.push({ sq, str: 60 + t }); }
-    const pool = EVENTS;
-    let creep = [];
-    for (let season = 0; season < 4; season++) {
-      for (let w = 0; w < 38; w++) {
-        for (let t = 0; t < 20; t += 2) {
-          const A = teams[t], B = teams[t + 1];
-          const xiOf = T2 => T2.sq.slice().sort((a, b) => C.effOvr(b, { neutral: true }) - C.effOvr(a, { neutral: true })).filter((p, i, arr) => arr.indexOf(arr.find(x => x.pos === "GK")) === i || p.pos !== "GK").slice(0, 11);
-          const xa = xiOf(A), xb = xiOf(B);
-          const pa = C.participants(xa, C.pickSubs(xa, A.sq.filter(p => !xa.includes(p)), rng)), pb = C.participants(xb, C.pickSubs(xb, B.sq.filter(p => !xb.includes(p)), rng));
-          const ga = Math.floor(rng() * 3 + (A.str - B.str) / 10 + 0.5), gb = Math.floor(rng() * 3);
-          C.applyResult(pa, ga, gb); C.applyResult(pb, gb, ga);
-          for (const T2 of [[A, pa], [B, pb]]) for (const p of T2[0].sq) { const e = T2[1].find(x => x.p === p); C.playingTime(p, e ? e.min : 0); }
-        }
-        for (const T2 of teams) {
-          for (const p of T2.sq) C.drift(p);
-          const club = {};
-          const cnt = C.rollEventCount(rng);
-          for (let i = 0; i < cnt; i++) C.applyEvent(pool[Math.floor(rng() * pool.length)], club, T2.sq, w, rng);
-        }
-        teams.forEach((T2, ti) => { [T2, teams[(ti + 7) % 20]] = [teams[(ti + 7) % 20], T2]; });
-      }
-      const all = teams.flatMap(T2 => T2.sq);
-      const avgF = all.reduce((s2, p) => s2 + (p.fm || 0), 0) / all.length, avgM = all.reduce((s2, p) => s2 + (p.mo || 0), 0) / all.length;
-      const ext = all.filter(p => Math.abs(p.fm || 0) >= 2.5 || Math.abs(p.mo || 0) >= 1.8).length / all.length;
-      creep.push({ avgF: +avgF.toFixed(2), avgM: +avgM.toFixed(2), ext: +ext.toFixed(3) });
+    const pois = l => { const L = Math.exp(-l); let k = 0, q = 1; do { k++; q *= rng(); } while (q > L); return k - 1; };
+    const teams = []; let pid = 5000;
+    for (let t = 0; t < 20; t++) {
+      const base = 68 + Math.round(t * 0.8), sq = [];
+      for (let i = 0; i < 24; i++) sq.push(Object.assign(mk(pid++, i === 0 || i === 11 ? "GK" : i % 11 < 5 ? "DF" : i % 11 < 8 ? "MF" : "FW", base + Math.floor(rng() * 8) - (i >= 11 ? 3 : 0)), { age: 18 + Math.floor(rng() * 16) }));
+      teams.push({ sq, club: {} });
     }
-    ok("over four seasons league wide form and morale sit near zero with no upward creep", creep.every(c => Math.abs(c.avgF) < 0.5 && Math.abs(c.avgM) < 0.5) && creep[3].avgF <= creep[0].avgF + 0.25 && creep[3].avgM <= creep[0].avgM + 0.25, creep);
-    ok("only a few percent of players sit at the extremes at any moment", creep.every(c => c.ext < 0.08), creep.map(c => c.ext));
+    const neu = { neutral: true };
+    const xiOf = T2 => { const s2 = T2.sq.filter(p => !(p.inj > 0)).sort((a, b) => C.effOvr(b, neu) - C.effOvr(a, neu)); const gk = s2.find(p => p.pos === "GK"); return [gk].concat(s2.filter(p => p.pos !== "GK").slice(0, 10)); };
+    const strength = (pp, T2, home, w) => pp.reduce((x, e) => x + C.effOvr(e.p, { home, club: T2.club, round: w }) * e.min, 0) / pp.reduce((x, e) => x + e.min, 0);
+    const delta = (p, T2, w) => C.effOvr(p, { neutral: true, club: T2.club, round: w }) - p.rating;
+    const rows = []; const evWeeks = new Map(teams.map(T2 => [T2, []])); let maxPerWeek = 0, extWorst = 0;
+    for (let season = 0; season < 5; season++) {
+      const pts = new Map(teams.map(T2 => [T2, 0]));
+      for (const p of teams.flatMap(T2 => T2.sq)) delete p.ap;
+      for (let w = 0; w < 38; w++) {
+        const order = teams.slice().sort(() => rng() - 0.5);
+        for (let k = 0; k < 20; k += 2) {
+          const A = order[k], B = order[k + 1], xa = xiOf(A), xb = xiOf(B);
+          const pa = C.participants(xa, C.pickSubs(xa, A.sq.filter(p => !xa.includes(p) && !(p.inj > 0)), rng));
+          const pb = C.participants(xb, C.pickSubs(xb, B.sq.filter(p => !xb.includes(p) && !(p.inj > 0)), rng));
+          const sA = strength(pa, A, true, w), sB = strength(pb, B, false, w);
+          const ga = pois(1.42 * Math.exp((sA - sB) / 10)), gb = pois(1.12 * Math.exp((sB - sA) / 10));
+          C.applyResult(pa, ga, gb, rng); C.applyResult(pb, gb, ga, rng);
+          pts.set(A, pts.get(A) + (ga > gb ? 3 : ga === gb ? 1 : 0)); pts.set(B, pts.get(B) + (gb > ga ? 3 : ga === gb ? 1 : 0));
+          for (const [T2, pp] of [[A, pa], [B, pb]]) for (const p of T2.sq) { const e = pp.find(x => x.p === p); C.playingTime(p, e ? e.min : 0); if (e) C.recordAppearance(p, e.start, e.min); }
+        }
+        let ext = 0, all = 0;
+        for (const T2 of teams) {
+          for (const p of T2.sq) { C.drift(p); if (p.inj > 0) p.inj--; }
+          C.pruneFx(T2.club, w + 1);
+          let n = 0;
+          // the same one roll a week the server makes, for every club
+          if (C.rollEvent(rng)) { n++; evWeeks.get(T2).push(season * 38 + w); C.applyEvent(EVENTS[Math.floor(rng() * EVENTS.length)], T2.club, T2.sq, w + 1, rng); }
+          maxPerWeek = Math.max(maxPerWeek, n);
+          for (const p of T2.sq) { all++; if (Math.abs(delta(p, T2, w + 1)) >= 4) ext++; }
+        }
+        extWorst = Math.max(extWorst, ext / all);
+      }
+      const all = teams.flatMap(T2 => T2.sq.map(p => delta(p, T2, 38)));
+      const reg = teams.flatMap(T2 => T2.sq.filter(p => p.ap && p.ap[0] >= 19).map(p => delta(p, T2, 38)));
+      const champ = teams.slice().sort((a, b) => pts.get(b) - pts.get(a))[0];
+      const cs = champ.sq.filter(p => p.ap && p.ap[0] >= 19).map(p => delta(p, champ, 38));
+      const mean = v => v.reduce((a, b) => a + b, 0) / (v.length || 1);
+      const flat = teams.flatMap(T2 => T2.sq);
+      rows.push({ season: season + 1, everyone: +mean(all).toFixed(2), regulars: +mean(reg).toFixed(2), atExtremes: +(flat.filter(p => Math.abs(p.fm || 0) >= 2.5 || Math.abs(p.mo || 0) >= 1.8).length / flat.length).toFixed(3), champPts: pts.get(champ), champRegulars: +mean(cs).toFixed(2), champBest: +Math.max(...cs).toFixed(2) });
+    }
+    console.log("OVR balance, made up league, effective minus base at the end of each season:");
+    console.table(rows);
+    const gaps = []; for (const ws of evWeeks.values()) for (let i = 1; i < ws.length; i++) gaps.push(ws[i] - ws[i - 1]);
+    const avgGap = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+    console.log("events in the made up league: one every " + avgGap.toFixed(2) + " weeks per club, at most " + maxPerWeek + " in a week, worst week with " + (extWorst * 100).toFixed(1) + " percent of players 4 or more off their base");
+    ok("over five seasons the league average does not creep up or sink", rows.every(r => Math.abs(r.regulars) <= 0.6) && Math.abs(rows[4].regulars - rows[0].regulars) <= 0.4 && Math.abs(rows[4].everyone - rows[0].everyone) <= 0.4, rows);
+    ok("only a few percent of players sit at the extremes at any moment", rows.every(r => r.atExtremes < 0.05) && extWorst < 0.05, [rows.map(r => r.atExtremes), extWorst]);
+    const champAvg = rows.reduce((a, r) => a + r.champRegulars, 0) / rows.length;
+    ok("the champions' regulars end slightly up, never maxed out", champAvg >= 0.3 && champAvg <= 2.5 && rows.every(r => r.champBest < 4), [champAvg, rows.map(r => r.champBest)]);
+    ok("in a long run each club gets one event every three to five weeks and never two in a week", avgGap >= 3 && avgGap <= 5 && maxPerWeek === 1, [avgGap, maxPerWeek]);
   }
+}
+{
+  // off the pitch injuries go through the normal injury system
+  const club = {};
+  const squad = []; for (let i = 0; i < 6; i++) squad.push(P(700 + i, 70, { pos: i === 0 ? "GK" : "MF" }));
+  squad[1].inj = 2; squad[2].ban = 1;
+  const injEv = EVENTS.find(e => e.inj && e.who === "one" && Array.isArray(e.inj) && e.inj[0] >= 2);
+  let fitOnly = true, lengthsOk = true, textOk = true;
+  for (let i = 0; i < 40; i++) {
+    for (const p of squad) if (p.id !== 701) delete p.inj;
+    const r = C.applyEvent(injEv, club, squad, 3, seeded(100 + i));
+    const hit = squad.find(p => p.id === r.ids[0]);
+    if (hit.id === 701 || hit.id === 702) fitOnly = false;
+    if (!(hit.inj >= injEv.inj[0] && hit.inj <= injEv.inj[1] && r.inj === hit.inj)) lengthsOk = false;
+    if (r.text.includes("{") || !/out for (a week|\d+ weeks)/i.test(r.text)) textOk = false;
+  }
+  ok("an injury event only picks a fit player and puts him out for the stated weeks", fitOnly && lengthsOk, injEv.t);
+  ok("the news line says how long he is out", textOk, null);
+  for (const p of squad) if (p.id !== 701) delete p.inj;
+  const rp = C.applyEvent(injEv, club, squad, 3, seeded(5), { physio: true });
+  ok("a head physio takes a week off an off the pitch injury", rp.inj >= Math.max(1, injEv.inj[0] - 1) && rp.inj <= injEv.inj[1] - 1 && C.injuryWeeks({ inj: 3 }, null, true) === 2 && C.injuryWeeks({ inj: 1 }, null, true) === 1, [rp.inj]);
+  const card = C.eventCard(rp);
+  ok("the event card carries the headline, the injury length and who it hit for the popup", card.h === injEv.h && card.j === rp.inj && card.k === "one" && card.p.length === 1 && card.n === 1, card);
+  const cl2 = {}; C.addNews(cl2, 4, "line", 40, { e: card });
+  ok("news items can carry the event card", cl2.news[0].e === card && cl2.news[0].w === 4 && cl2.news[0].i === 1, cl2.news[0]);
 }
 
 // ---------- the display rule (same logic as the page's ovrFace) ----------

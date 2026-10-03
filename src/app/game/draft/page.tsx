@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { isMine, useGame, useIsOnlineGuest, useLeague, useTeamId } from "@/lib/store";
-import { Button, Card, Empty, OvrPot, PageHeader, PlayerLink, Stat, Tabs, TeamBadge } from "@/components/ui";
+import { Appear, Button, Card, Empty, OvrPot, PageHeader, PlayerLink, PosBadge, Stat, Tabs, TeamBadge } from "@/components/ui";
 import { DataTable } from "@/components/DataTable";
 import { aiDraftPick, consensusBoard, currentPick, draftPlayer, scoutProspect, scoutedRatings, workout } from "@/engine/offseason/draft";
 import { height } from "@/lib/format";
@@ -25,7 +25,7 @@ function DraftView() {
   const d = l.draft;
   // recomputed every render: picks mutate the league in place, so a memo would keep drafted players listed
   const board = d ? consensusBoard(l) : [];
-  if (!d) return <Empty>The next draft class is generated when the season starts.</Empty>;
+  if (!d) return <Empty>The next draft class shows up when the season starts.</Empty>;
   const prospects = d.prospects.map((id) => l.players[id]).filter((p) => p && p.status === "prospect");
   const cur = currentPick(l);
   const myPicks = d.order.filter((o) => o.owner === me);
@@ -97,18 +97,18 @@ function DraftView() {
       )}
 
       {tab === "live" && (
-        l.phase !== "draft" ? <Empty>The draft room opens after the lottery and combine. Current phase: {l.phase}.</Empty> : (
+        l.phase !== "draft" ? <Empty>The draft room opens after the lottery and combine. Now: {l.phase}.</Empty> : (
           <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
             <Card title="On the clock">
               {cur ? (
-                <div className="anim-rise">
+                <Appear key={cur.pick}>
                   <div className="flex items-center gap-3">
-                    <span className="font-num text-[36px] font-black">#{cur.pick}</span>
+                    <span className="grad-title font-num text-[36px] font-black">#{cur.pick}</span>
                     <TeamBadge league={l} teamId={cur.owner} size="lg" />
                     {cur.originalTeam !== cur.owner && <span className="text-xs text-dim">via {cur.originalTeam}</span>}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {isMine(l, cur.owner) ? <span className="chip anim-glow !bg-accent !text-accent-ink">Your pick: choose from the list</span> : l.online && l.userTeams.includes(cur.owner) ? <span className="chip">{l.online.members[cur.owner] ?? cur.owner} is on the clock…</span> : guest ? <span className="chip">Waiting for the host to make AI picks…</span> : (
+                    {isMine(l, cur.owner) ? <span className="chip anim-glow !bg-accent !text-accent-ink">Your pick. Choose from the list</span> : l.online && l.userTeams.includes(cur.owner) ? <span className="chip">{l.online.members[cur.owner] ?? cur.owner} is on the clock</span> : guest ? <span className="chip">Waiting for the host to make the AI picks</span> : (
                       <>
                         <Button variant="primary" onClick={() => mutate((lg) => void aiDraftPick(lg))}>Next pick</Button>
                         <Button onClick={simToMine} disabled={!myPicks.some((o) => !o.playerId)}>Sim to my pick</Button>
@@ -120,15 +120,15 @@ function DraftView() {
                     <Stat label="Your picks left" value={myPicks.filter((o) => !o.playerId).map((o) => `#${o.pick}`).join(", ") || "None"} />
                     <Stat label="Round" value={cur.round} />
                   </div>
-                </div>
-              ) : <Empty>The draft is complete. Continue to options & free agency.</Empty>}
+                </Appear>
+              ) : <Empty>The draft is done. Next up: options and free agency.</Empty>}
               <div className="mt-4 max-h-80 overflow-y-auto scroll-thin">
                 {d.order.filter((o) => o.playerId).reverse().map((o) => (
                   <div key={o.pickId} className={clsx("flex items-center gap-2 border-b border-line/50 py-1 text-sm", isMine(l, o.owner) && "bg-accent/10")}>
                     <span className="w-8 text-mute">{o.pick}</span>
                     <TeamBadge league={l} teamId={o.owner} size="sm" />
                     <PlayerLink player={l.players[o.playerId!]} />
-                    <span className="ml-auto text-xs text-dim">{l.players[o.playerId!]?.pos}</span>
+                    {l.players[o.playerId!] && <PosBadge pos={l.players[o.playerId!].pos} className="ml-auto" />}
                   </div>
                 ))}
               </div>

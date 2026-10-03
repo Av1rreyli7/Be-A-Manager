@@ -37,7 +37,7 @@ export default function PlayerPage() {
   const router = useRouter();
   const [tab, setTab] = useState<"overview" | "stats" | "log" | "edit">("overview");
   const p = l.players[decodeURIComponent(id)];
-  if (!p) return <Empty>Player not found.</Empty>;
+  if (!p) return <Empty>No such player.</Empty>;
   const c = contractOf(l, p);
   const prospect = p.status === "prospect";
   const scout = prospect ? scoutedRatings(p) : null;
@@ -51,7 +51,7 @@ export default function PlayerPage() {
 
   return (
     <div className="space-y-4">
-      <section className="panel on-dark relative overflow-hidden">
+      <section className="panel relative overflow-hidden">
         <div aria-hidden className="hero-wash absolute inset-0" style={{ ["--tc-team" as string]: tc.primary }} />
         <div aria-hidden className="stripes absolute inset-0 [mask-image:linear-gradient(90deg,black,transparent_65%)]" />
         <span aria-hidden className="pointer-events-none absolute -bottom-10 right-2 select-none font-num text-[150px] font-black leading-none text-white/[0.07] sm:text-[210px]">{p.jersey ?? p.pos}</span>
@@ -136,7 +136,7 @@ export default function PlayerPage() {
 
           <Card title="Ratings" className="lg:col-span-2">
             {prospect ? (
-              <Empty>True ratings are hidden until the draft. Use scouting points and workouts on the Draft page to narrow the range.</Empty>
+              <Empty>Real ratings stay hidden until the draft. Spend scouting points and workouts on the Draft page to narrow them down.</Empty>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 {GROUPS.map((g) => (

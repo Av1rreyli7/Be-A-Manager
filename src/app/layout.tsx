@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toasts } from "@/components/Toasts";
-import { BOOT_SCRIPT } from "@/lib/appearanceBoot";
 import { chakra, inter } from "@/lib/fonts";
 
 // The site's two faces, the same files the landing page and Floodlights use:
@@ -19,15 +18,15 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#000000",
-  colorScheme: "dark light",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} ${chakra.variable} h-full antialiased`} data-mode="dark" data-style="colorful" suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${chakra.variable} h-full antialiased`}>
       <head>
-        {/* applies the saved light/dark + style choice before first paint */}
-        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
+        {/* the shared visual kit: tokens, buttons, panels, motion, the same file Floodlights and Hardwood Legends load */}
+        <link rel="stylesheet" href="/kit.css" />
       </head>
       <body className="min-h-full">
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[80] focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-accent-ink">

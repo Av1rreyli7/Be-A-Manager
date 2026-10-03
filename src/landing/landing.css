@@ -1,369 +1,876 @@
 /* ==========================================================
-   Be-A-Manager landing page
-   Mood and frame: Stratum. Component polish: Vesper.
-   Glow buttons, starfield, entrance technique: Vertex.
-   Featured and side switcher: SpaceEdu.
-
-   Every measurement is a reference pixel of a 1280 x 800 canvas.
-   --u is the frame unit and scales with the viewport.
-   --t is the type and content unit.
-   Layers (back to front): stars 0, 3D and glow 1, scrim 2, frame 3.
-   Shapes: chamfered corners on the frame and cards, 6 to 7px on
-   Vesper buttons and pills, 12px on the glow buttons.
-   One accent on the whole site: floodlight volt.
+   Be-A-Manager landing page.
+   Reads the shared kit (public/kit.css): palette, glow button, chips.
+   Floodlights cards run in pitch mode (volt, turf), Game Night in court mode (orange, amber).
+   Everything that moves is moved by GSAP (Landing.tsx) with transform and opacity only.
+   The resting state below is the calm page reduced motion users get.
    ========================================================== */
 
-/* pure black in three places so the page can never flash white:
-   here, in the inline style on the root element, and in the style tag the page renders */
-html:has(.bam), html:has(.bam) body { background: #000000 !important; color: #ffffff; }
+html:has(.bam) {
+  background: #000000;
+  overflow-x: clip;
+}
 
 .bam {
-  --u: clamp(0.68px, min(100vw / 1280, 100vh / 800), 1.72px);
-  --u: clamp(0.68px, min(100vw / 1280, 100dvh / 800), 1.72px);
-  --t: var(--u);
-  /* spare height on viewports taller than the design, shared out like the SpaceEdu vshift */
-  --extra: 0px;
   --line: rgba(255, 255, 255, 0.13);
-  --volt: #d0e85c;
-  --volt-hi: #e1f486;
-  --ink: #0e120b;
-  --muted: #9a9a9a;
-  --hair: max(1px, calc(1 * var(--u)));
-  --nudge: calc(1 * var(--t));
-  --e-mask: cubic-bezier(0.16, 1, 0.3, 1);
-  --e-line: cubic-bezier(0.65, 0, 0.35, 1);
-  --e-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --cut: 16px;
+  --pad: clamp(18px, 3.4vw, 52px);
   --f-ui: var(--font-inter, "Inter"), system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --f-lbl: var(--font-chakra, "Chakra Petch"), var(--font-inter, "Inter"), system-ui, sans-serif;
   --f-serif: var(--font-instrument, "Instrument Serif"), "Times New Roman", Times, serif;
+  /* the kit reads these for its buttons and chips */
+  --k-f-ui: var(--f-ui);
+  --k-f-lbl: var(--f-lbl);
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: clip;
+  font-family: var(--f-ui);
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+}
+.bam *,
+.bam *::before,
+.bam *::after {
+  box-sizing: border-box;
+}
+.bam .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- background: aurora, stars, the 3D stadium, the floodlights ---------- */
+.bam-bg {
   position: fixed;
   inset: 0;
+  z-index: 0;
   overflow: hidden;
-  background: #000000;
-  color: #ffffff;
-  font-family: var(--f-ui);
-  font-variant-numeric: normal;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: geometricPrecision;
-  isolation: isolate;
+  pointer-events: none;
 }
-.bam *, .bam *::before, .bam *::after { box-sizing: border-box; }
-.bam a { color: inherit; text-decoration: none; }
-.bam button { font-family: inherit; }
-.bam img { display: block; }
-
-/* ---------- starfield: two 1px dots, each one long box-shadow list ---------- */
-.bam-stars { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
-.bam-stars i { position: absolute; left: 0; top: 0; width: 1px; height: 1px; border-radius: 50%; background: #ffffff; }
-
-/* ---------- background: still glows, with the 3D scene above them when it is on ---------- */
-.bam-bg { position: absolute; inset: 0; z-index: 1; will-change: transform; transform-origin: 50% 50%; backface-visibility: hidden; pointer-events: none; }
-.bam-glow { position: absolute; inset: 0; opacity: 0; transition: opacity 0.9s ease; }
-.bam-glow.is-on { opacity: 1; }
-.bam-glow.is-floodlights {
+.bam-aurora {
+  position: absolute;
+  inset: -8%;
   background:
-    radial-gradient(46% 26% at 58% 78%, rgba(74, 168, 96, 0.34), rgba(74, 168, 96, 0) 72%),
-    conic-gradient(from 196deg at 18% -6%, rgba(236, 244, 255, 0) 0deg, rgba(236, 244, 255, 0.1) 9deg, rgba(236, 244, 255, 0) 19deg),
-    conic-gradient(from 144deg at 96% -8%, rgba(236, 244, 255, 0) 0deg, rgba(236, 244, 255, 0.1) 10deg, rgba(236, 244, 255, 0) 20deg),
-    radial-gradient(70% 50% at 58% 100%, rgba(208, 232, 92, 0.07), rgba(208, 232, 92, 0) 70%);
+    radial-gradient(40% 36% at 24% 46%, rgba(208, 232, 92, 0.15), transparent 72%),
+    radial-gradient(38% 38% at 78% 48%, rgba(255, 138, 61, 0.17), transparent 72%),
+    radial-gradient(46% 34% at 50% 2%, rgba(139, 108, 255, 0.17), transparent 72%),
+    radial-gradient(60% 40% at 50% 112%, rgba(62, 230, 196, 0.12), transparent 72%),
+    radial-gradient(30% 30% at 6% 96%, rgba(79, 179, 255, 0.1), transparent 72%),
+    linear-gradient(180deg, #05070d 0%, #04060a 60%, #030408 100%);
 }
-.bam-glow.is-frontoffice {
-  background:
-    radial-gradient(44% 24% at 58% 78%, rgba(214, 140, 62, 0.36), rgba(214, 140, 62, 0) 72%),
-    conic-gradient(from 168deg at 58% -10%, rgba(255, 226, 190, 0) 0deg, rgba(255, 226, 190, 0.11) 12deg, rgba(255, 226, 190, 0) 24deg),
-    radial-gradient(70% 50% at 58% 100%, rgba(214, 54, 59, 0.08), rgba(214, 54, 59, 0) 70%);
+.bam-stars {
+  position: absolute;
+  inset: 0;
 }
-.bam[data-3d="on"] .bam-glow.is-on { opacity: 0.4; }
-.bam-canvas { position: absolute; inset: 0; opacity: 0; transition: opacity 1.4s ease; }
-.bam[data-3d="on"] .bam-canvas { opacity: 1; }
-.bam-canvas canvas { display: block; }
-
+.bam-stars i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  border-radius: 50%;
+  background: transparent;
+}
+.bam-canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+.bam[data-3d="on"] .bam-canvas {
+  opacity: 0.5;
+}
 .bam-scrim {
-  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  position: absolute;
+  inset: 0;
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.18) 34%, rgba(0, 0, 0, 0) 52%, rgba(0, 0, 0, 0.1) 78%, rgba(0, 0, 0, 0.74) 100%),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.25) 36%, rgba(0, 0, 0, 0) 58%);
+    radial-gradient(120% 90% at 50% 40%, transparent 40%, rgba(0, 0, 0, 0.55) 100%),
+    linear-gradient(180deg, transparent 70%, rgba(3, 4, 8, 0.7) 100%);
+}
+/* the dark before the lights come up (the intro lifts it) */
+.bam-dim {
+  position: absolute;
+  inset: 0;
+  background: #000000;
+  opacity: 0;
+}
+/* two floodlight beams from above, a soft conic cone each: no blur filter, so they cost nothing to move */
+.bam-beam {
+  position: absolute;
+  top: -2vh;
+  width: 90vmax;
+  height: 120vh;
+  margin-left: -45vmax;
+  transform-origin: 50% 0;
+  mix-blend-mode: screen;
+  background: conic-gradient(from 164deg at 50% 0%, transparent 0deg, rgba(var(--beam), 0.16) 8deg, rgba(var(--beam), 0.3) 16deg, rgba(var(--beam), 0.16) 24deg, transparent 32deg);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 92%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 92%);
+}
+.bam-beam.is-l {
+  left: 20%;
+  rotate: -24deg;
+  --beam: 230, 245, 180;
+}
+.bam-beam.is-r {
+  left: 80%;
+  rotate: 24deg;
+  --beam: 255, 205, 160;
+}
+/* the lamp heads the beams come from */
+.bam-lamps {
+  position: absolute;
+  top: -3px;
+  display: grid;
+  grid-template-columns: repeat(3, 9px);
+  gap: 3px;
+  margin-left: -16px;
+}
+.bam-lamps.is-l {
+  left: 20%;
+  rotate: -24deg;
+}
+.bam-lamps.is-r {
+  left: 80%;
+  rotate: 24deg;
+}
+.bam-lamps i {
+  display: block;
+  width: 9px;
+  height: 5px;
+  border-radius: 2px;
+  background: #fffbe8;
+  box-shadow: 0 0 10px 2px rgba(255, 248, 220, 0.75), 0 0 26px 6px rgba(255, 240, 200, 0.25);
 }
 
-/* ---------- frame: 30u inset, 1px hairline, 26u chamfer on all four corners ---------- */
-.bam-frame { position: absolute; z-index: 3; left: calc(30 * var(--u)); top: calc(30 * var(--u)); right: calc(30 * var(--u)); bottom: calc(31 * var(--u)); }
-.bam .ln { position: absolute; background: var(--line); pointer-events: none; }
-.bam .ln-t { left: calc(26 * var(--u)); right: calc(26 * var(--u)); top: 0; height: var(--hair); }
-.bam .ln-b { left: calc(26 * var(--u)); right: calc(26 * var(--u)); bottom: 0; height: var(--hair); }
-.bam .ln-l { top: calc(26 * var(--u)); bottom: calc(26 * var(--u)); left: 0; width: var(--hair); }
-.bam .ln-r { top: calc(26 * var(--u)); bottom: calc(26 * var(--u)); right: 0; width: var(--hair); }
-.bam .cn { position: absolute; width: calc(26 * var(--u)); height: calc(26 * var(--u)); pointer-events: none; }
-.bam .cn-tl, .bam .cn-br { background: linear-gradient(to bottom right, transparent calc(50% - 0.65px), var(--line) calc(50% - 0.65px), var(--line) calc(50% + 0.65px), transparent calc(50% + 0.65px)); }
-.bam .cn-tr, .bam .cn-bl { background: linear-gradient(to bottom left, transparent calc(50% - 0.65px), var(--line) calc(50% - 0.65px), var(--line) calc(50% + 0.65px), transparent calc(50% + 0.65px)); }
-.bam .cn-tl { left: 0; top: 0; }
-.bam .cn-tr { right: 0; top: 0; }
-.bam .cn-bl { left: 0; bottom: 0; }
-.bam .cn-br { right: 0; bottom: 0; }
+/* ---------- the frame: hairlines with cut corners ---------- */
+.bam-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  --in: 14px;
+}
+.bam-frame .ln {
+  position: absolute;
+  background: var(--line);
+}
+.bam-frame .ln-t,
+.bam-frame .ln-b {
+  left: calc(var(--in) + var(--cut));
+  right: calc(var(--in) + var(--cut));
+  height: 1px;
+}
+.bam-frame .ln-t {
+  top: var(--in);
+  transform-origin: left center;
+}
+.bam-frame .ln-b {
+  bottom: var(--in);
+  transform-origin: right center;
+}
+.bam-frame .ln-l,
+.bam-frame .ln-r {
+  top: calc(var(--in) + var(--cut));
+  bottom: calc(var(--in) + var(--cut));
+  width: 1px;
+}
+.bam-frame .ln-l {
+  left: var(--in);
+  transform-origin: center top;
+}
+.bam-frame .ln-r {
+  right: var(--in);
+  transform-origin: center bottom;
+}
+.bam-frame .cn {
+  position: absolute;
+  width: calc(var(--cut) * 1.4142);
+  height: 1px;
+  background: var(--line);
+  margin-left: calc(var(--cut) * -0.7071);
+}
+.bam-frame .cn-tl {
+  left: calc(var(--in) + var(--cut) / 2);
+  top: calc(var(--in) + var(--cut) / 2);
+  rotate: -45deg;
+}
+.bam-frame .cn-tr {
+  left: calc(100% - var(--in) - var(--cut) / 2);
+  top: calc(var(--in) + var(--cut) / 2);
+  rotate: 45deg;
+}
+.bam-frame .cn-bl {
+  left: calc(var(--in) + var(--cut) / 2);
+  top: calc(100% - var(--in) - var(--cut) / 2);
+  rotate: 45deg;
+}
+.bam-frame .cn-br {
+  left: calc(100% - var(--in) - var(--cut) / 2);
+  top: calc(100% - var(--in) - var(--cut) / 2);
+  rotate: -45deg;
+}
 
-/* ---------- shared label face: Chakra Petch, with the decode effect on .t ---------- */
-.bam .lbl { font-family: var(--f-lbl); font-weight: 700; font-size: calc(10 * var(--t)); line-height: 1; white-space: nowrap; text-transform: uppercase; }
-.bam .t { position: relative; top: var(--nudge); display: inline-block; text-align: left; white-space: pre; }
-.bam .ico { flex: none; display: block; }
+/* ---------- the page ---------- */
+.bam-page {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2.6vh, 30px);
+  padding: clamp(24px, 3.4vh, 36px) var(--pad) clamp(26px, 3.6vh, 38px);
+}
 
-/* ---------- logo ---------- */
-.bam-logo { position: absolute; left: calc(24 * var(--t)); top: calc(22 * var(--t)); height: calc(19 * var(--t)); display: block; overflow: hidden; color: #ffffff; letter-spacing: calc(2.4 * var(--t)); font-size: calc(13 * var(--t)); }
-.bam-logo-in { display: flex; align-items: center; gap: calc(9 * var(--t)); height: 100%; }
-/* brand mark: a bank of six floodlights, the same mark Floodlights uses */
-.bam-mark { --m: calc(6.2 * var(--t)); flex: none; width: calc(var(--m) * 3); height: calc(var(--m) * 2); background: radial-gradient(circle at center, var(--volt) 0 calc(var(--m) * 0.3), transparent calc(var(--m) * 0.36)) 0 0 / var(--m) var(--m); }
-
-/* ---------- masthead: liquid metal pills with the shine sweep ---------- */
-.bam-masthead { position: absolute; right: calc(11 * var(--t)); top: calc(12 * var(--t)); height: calc(41 * var(--t)); display: flex; align-items: center; gap: calc(8 * var(--t)); }
+.bam-top {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+.bam-logo {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 700 13px/1 var(--f-lbl);
+  letter-spacing: 0.2em;
+  color: #ffffff;
+  text-decoration: none;
+}
+.bam-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--k-grad-aurora);
+  box-shadow: 0 0 18px rgba(79, 179, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  clip-path: polygon(0 0, 70% 0, 100% 30%, 100% 100%, 30% 100%, 0 70%);
+}
+.bam-nav {
+  display: flex;
+  gap: 8px;
+}
 .bam-pill {
-  position: relative; overflow: hidden; display: inline-flex; align-items: center; height: calc(36 * var(--t)); padding: 0 calc(16 * var(--t));
-  border-radius: 7px; border: 1px solid rgba(198, 198, 198, 0.55);
-  background: linear-gradient(105deg, #050505 0%, #2a2a2a 48%, #4a4a4a 100%);
-  color: #f3f3f3; letter-spacing: calc(0.9 * var(--t));
-  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font: 700 10.5px/1 var(--f-lbl);
+  letter-spacing: 0.14em;
+  color: var(--k-soft);
+  text-decoration: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.45) 50%, rgba(150, 170, 220, 0.1));
+  border: 1px solid rgba(200, 210, 230, 0.26);
+  transition: border-color 0.25s ease, color 0.2s ease, background 0.25s ease;
 }
-.bam-pill::before { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.16) 50%, transparent 70%); transform: translateX(-120%); transition: transform 0.6s ease; pointer-events: none; }
-.bam-pill:hover { border-color: rgba(235, 235, 235, 0.9); background: linear-gradient(105deg, #111111 0%, #3a3a3a 45%, #6a6a6a 100%); box-shadow: 0 0 18px rgba(200, 210, 230, 0.18); }
-.bam-pill:hover::before { transform: translateX(120%); }
-.bam-pill .t { z-index: 1; }
+.bam-pill .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--k-accent);
+  box-shadow: 0 0 8px rgba(var(--k-accent-rgb), 0.9);
+}
+.bam-pill:hover,
+.bam-pill:focus-visible {
+  color: #ffffff;
+  border-color: var(--k-accent-edge);
+  background: linear-gradient(135deg, rgba(var(--k-accent-rgb), 0.18), rgba(0, 0, 0, 0.4) 55%);
+}
+.bam-skip {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  font: 700 10.5px/1 var(--f-lbl);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.bam-skip:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+}
+.bam-skip[hidden] {
+  display: none;
+}
+.bam :focus-visible {
+  outline: 2px solid var(--k-accent, #d0e85c);
+  outline-offset: 3px;
+}
 
-/* ---------- chapter rail: the game picker ---------- */
-.bam-rail { position: absolute; left: calc(10.5 * var(--t)); top: 50%; transform: translateY(calc(-50% + 1.5 * var(--t))); list-style: none; margin: 0; padding: 0; }
-.bam-rail li { height: calc(26.6 * var(--t)); display: flex; align-items: center; position: relative; }
-.bam-rail button { font-family: var(--f-lbl); font-weight: 700; font-size: calc(10 * var(--t)); line-height: 1; letter-spacing: calc(1.3 * var(--t)); white-space: nowrap; color: rgba(232, 238, 250, 0.36); background: none; border: 0; padding: calc(7 * var(--t)) 0; cursor: pointer; transition: color 0.3s ease; }
-.bam-rail button:hover, .bam-rail .on button { color: #e6eaf5; }
-.bam-rail li::before { content: ""; position: absolute; left: calc(-13.5 * var(--t)); top: 50%; width: calc(6 * var(--t)); height: calc(7 * var(--t)); background: var(--volt); translate: 0 -50%; scale: 0 1; transition: scale 0.42s var(--e-soft); }
-.bam-rail li.on::before { scale: 1 1; }
+/* ---------- hero: the brand the welcome word lands on ---------- */
+.bam-hero {
+  margin-top: auto;
+  text-align: center;
+}
+.bam-h1 {
+  margin: 0;
+  line-height: 1;
+}
+.bam-brand,
+.bam-big {
+  display: inline-block;
+  font-family: var(--f-lbl);
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+.bam-brand {
+  font-size: clamp(30px, 5.4vw, 86px);
+}
+/* one gradient spread across the whole word, cut per letter so every letter can move on its own */
+.bam-brand .ch,
+.bam-big .L .c {
+  display: inline-block;
+  background: var(--k-grad-aurora);
+  background-size: calc(var(--n) * 100%) 100%;
+  background-position: calc(var(--i) * 100% / (var(--n) - 1)) 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.bam-lede {
+  margin: clamp(8px, 1.4vh, 14px) auto 0;
+  max-width: 40ch;
+  font-size: clamp(14px, 1.2vw, 17px);
+  line-height: 1.5;
+  color: var(--k-soft);
+}
+.bam-lede em {
+  font-family: var(--f-serif);
+  font-style: italic;
+  font-size: 1.12em;
+  color: #ffffff;
+}
 
-/* ---------- hero: badge, the massive masked headline, the supporting line ---------- */
-.bam-hero { position: absolute; left: 0; right: 0; top: calc(84 * var(--t) + var(--extra) * 0.3); display: flex; flex-direction: column; align-items: center; text-align: center; pointer-events: none; }
-.bam-badge { display: inline-flex; align-items: center; gap: calc(8 * var(--t)); margin-bottom: calc(16 * var(--t)); padding: calc(8 * var(--t)) calc(14 * var(--t)); border-radius: 5px; background: linear-gradient(90deg, #7d7d7d 0%, #2a2a2a 52%, #0a0a0a 100%); color: #f2f2f2; font-size: calc(12.5 * var(--t)); font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; white-space: nowrap; }
-.bam-badge-star { width: calc(16 * var(--t)); height: calc(16 * var(--t)); color: #ffffff; filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.45)); animation: bam-star 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both; }
-.bam-h1 { margin: 0; font-weight: 700; font-size: calc(96 * var(--t)); line-height: 1; letter-spacing: 0.02em; padding-left: 0.02em; color: #ffffff; text-transform: uppercase; white-space: nowrap; }
-.bam .hrow { display: block; overflow: hidden; padding: 0.06em 0.12em 0.1em; }
-.bam .hrise { display: block; }
-.bam-lede { margin: calc(10 * var(--t)) 0 0; max-width: calc(520 * var(--t)); font-size: calc(15.5 * var(--t)); font-weight: 400; line-height: 1.55; letter-spacing: -0.015em; color: rgba(224, 232, 245, 0.84); }
-/* the one serif accent word, in muted gray. Italic descenders get their own room. */
-.bam-lede em { font-family: var(--f-serif); font-style: italic; font-weight: 400; font-size: 1.22em; line-height: 1.1; letter-spacing: -0.01em; color: var(--muted); padding: 0 0.04em 0.04em; animation: bam-em 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.92s both; }
+/* ---------- the two games ---------- */
+.bam-games {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(16px, 2.4vw, 34px);
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+.bam-card {
+  position: relative;
+  container-type: inline-size;
+  min-height: 330px;
+}
+.bam-card-glow {
+  position: absolute;
+  inset: -6% -4% -10%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(var(--k-accent-rgb), 0.24), rgba(var(--k-accent-rgb), 0.06) 60%, transparent);
+  opacity: 0.75;
+  transition: opacity 0.4s ease;
+}
+.bam-card:hover .bam-card-glow {
+  opacity: 1;
+}
+.bam-card-lift {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.6vh, 16px);
+  padding: clamp(22px, 5.4cqi, 40px);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bam-card:hover .bam-card-lift {
+  transform: translateY(-4px);
+}
+/* card face: a 1px edge that follows the cut corners, then the dark glass inside it */
+.bam-card-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut)));
+  background: linear-gradient(160deg, rgba(var(--k-accent-rgb), 0.6), rgba(255, 255, 255, 0.14) 32%, rgba(255, 255, 255, 0.07) 70%, rgba(var(--k-accent-rgb), 0.3));
+  transition: background 0.4s ease;
+}
+.bam-card-bg::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  clip-path: polygon(0 0, calc(100% - var(--cut) + 0.6px) 0, 100% calc(var(--cut) - 0.6px), 100% 100%, calc(var(--cut) - 0.6px) 100%, 0 calc(100% - var(--cut) + 0.6px));
+  background: linear-gradient(165deg, rgba(var(--k-accent-rgb), 0.13), rgba(9, 12, 18, 0.93) 40%, rgba(5, 7, 11, 0.95));
+}
+.bam-card-bg::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 46%;
+  height: 3px;
+  background: var(--k-grad);
+}
+.bam-card:hover .bam-card-bg {
+  background: linear-gradient(160deg, rgba(var(--k-accent-rgb), 0.9), rgba(255, 255, 255, 0.2) 32%, rgba(255, 255, 255, 0.1) 70%, rgba(var(--k-accent-rgb), 0.5));
+}
+/* a little of each sport in the corner of its card */
+.bam-card-art {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.5) 40%, transparent 75%);
+  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.5) 40%, transparent 75%);
+}
+.is-floodlights .bam-card-art {
+  background:
+    radial-gradient(circle at 88% 112%, transparent 0 116px, rgba(255, 255, 255, 0.16) 117px 118.5px, transparent 120px),
+    linear-gradient(90deg, transparent calc(88% - 0.75px), rgba(255, 255, 255, 0.12) calc(88% - 0.75px) calc(88% + 0.75px), transparent calc(88% + 0.75px)),
+    repeating-linear-gradient(90deg, rgba(47, 210, 122, 0.11) 0 44px, rgba(47, 210, 122, 0.04) 44px 88px);
+}
+.is-frontoffice .bam-card-art {
+  background:
+    radial-gradient(circle at 88% 118%, transparent 0 128px, rgba(255, 176, 114, 0.22) 129px 130.5px, transparent 132px),
+    radial-gradient(circle at 88% 118%, rgba(255, 138, 61, 0.1) 0 54px, transparent 55px),
+    repeating-linear-gradient(90deg, rgba(201, 119, 58, 0.13) 0 24px, rgba(201, 119, 58, 0.05) 24px 25px, rgba(201, 119, 58, 0.09) 25px 48px);
+}
+/* the whole card is clickable: one stretched link under the content */
+.bam-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
 
-/* ---------- featured game: both games are stacked in one cell, only classes change ---------- */
-.bam-feature { position: absolute; left: calc(150 * var(--t)); bottom: calc(118 * var(--t) + var(--extra) * 0.22); width: calc(440 * var(--t)); display: grid; }
-.bam-variant { grid-area: 1 / 1; align-self: end; visibility: hidden; pointer-events: none; transition: visibility 0s linear 0.5s; }
-.bam-variant.is-on { visibility: visible; pointer-events: auto; transition-delay: 0s; }
-.bam-kind { display: flex; align-items: center; gap: calc(8 * var(--t)); color: var(--volt); letter-spacing: calc(1.3 * var(--t)); }
-.bam-kind .ico { width: calc(13 * var(--t)); height: calc(13 * var(--t)); }
-.bam-title { margin: calc(10 * var(--t)) 0 0; font-weight: 700; font-size: calc(46 * var(--t)); line-height: 1; letter-spacing: 0.035em; text-transform: uppercase; color: #ffffff; white-space: nowrap; }
-.bam-title .hrow { padding: 0.05em 0 0.08em; }
-.bam-blurb { margin: calc(8 * var(--t)) 0 0; max-width: calc(410 * var(--t)); font-size: calc(13.5 * var(--t)); line-height: calc(21.5 * var(--t)); color: rgba(224, 232, 245, 0.74); }
-/* a bundle lists the games inside it, one short line each */
-.bam-in { display: block; margin-top: calc(5 * var(--t)); }
-.bam-in b { font-weight: 600; color: #ffffff; }
-.bam-actions { display: flex; flex-wrap: wrap; align-items: center; gap: calc(10 * var(--t)); margin-top: calc(22 * var(--t)); }
+.bam-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font: 700 11px/1 var(--f-lbl);
+  letter-spacing: 0.18em;
+  color: var(--k-accent);
+}
+.bam-kind .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  rotate: 45deg;
+  background: var(--k-accent);
+  box-shadow: 0 0 10px rgba(var(--k-accent-rgb), 0.9);
+}
 
-/* the swap: the old copy drops into its mask and settles out, the new copy comes back the way it entered */
-.bam-variant .hrise { transition: translate 0.5s var(--e-mask); }
-.bam-variant .bam-kind, .bam-variant .bam-blurb, .bam-variant .bam-actions > * { transition: opacity 0.4s ease, translate 0.4s ease, transform 0.25s, box-shadow 0.25s, filter 0.25s, background 0.35s ease, border-color 0.35s ease; }
-.bam .bam-variant:not(.is-on) .hrise { translate: 0 112%; }
-.bam .bam-variant:not(.is-on) .bam-kind, .bam .bam-variant:not(.is-on) .bam-blurb, .bam .bam-variant:not(.is-on) .bam-actions > * { opacity: 0; translate: 0 calc(7 * var(--t)); }
-.bam-variant.is-on .hrise { transition: translate 0.9s var(--e-mask) 0.5s; }
-.bam-variant.is-on .bam-kind { transition-delay: 0.46s, 0.46s, 0s, 0s, 0s, 0s, 0s; }
-.bam-variant.is-on .bam-blurb { transition-delay: 0.58s, 0.58s, 0s, 0s, 0s, 0s, 0s; }
-.bam-variant.is-on .bam-actions > * { transition-delay: 0.68s, 0.68s, 0s, 0s, 0s, 0s, 0s; }
-.bam-variant.is-on .bam-actions > * + * { transition-delay: 0.76s, 0.76s, 0s, 0s, 0s, 0s, 0s; }
+.bam-title {
+  position: relative;
+  margin: 2px 0 0;
+  display: flex;
+  align-items: center;
+  font-family: var(--f-lbl);
+  font-weight: 700;
+  font-size: clamp(34px, 10.4cqi, 84px);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.bam-title-word {
+  position: relative;
+  z-index: 1;
+}
+.bam-title .ch {
+  display: inline-block;
+  background: var(--k-grad);
+  background-size: calc(var(--n) * 100%) 100%;
+  background-position: calc(var(--i) * 100% / (var(--n) - 1)) 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.bam-title .sp,
+.bam-big .sp {
+  display: inline-block;
+  width: 0.3em;
+}
+.bam-ball {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: 0.9em;
+  height: 0.9em;
+  margin-left: 0.14em;
+  pointer-events: none;
+}
+/* the basketball sits a little over the end of the title: the title landed behind it */
+.is-frontoffice .bam-ball {
+  margin-left: -0.12em;
+}
+.bam-ball-lift,
+.bam-ball-squash,
+.bam-ball-spin {
+  position: absolute;
+  inset: 0;
+}
+.bam-ball-squash {
+  transform-origin: 50% 100%;
+}
+.bam-ball-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55));
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.is-floodlights:hover .bam-ball-svg {
+  transform: rotate(40deg);
+}
+.is-frontoffice:hover .bam-ball-svg {
+  transform: translateY(-10%);
+}
+/* the kick: a light trail that grows behind the football */
+.bam-streak {
+  position: absolute;
+  right: 50%;
+  top: 50%;
+  width: 72vw;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 4px;
+  transform-origin: 100% 50%;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(47, 210, 122, 0.25) 45%, rgba(228, 246, 140, 0.95) 100%);
+  box-shadow: 0 0 14px rgba(208, 232, 92, 0.5);
+}
+/* the bounce: a ring of light where the basketball hits */
+.bam-shock {
+  position: absolute;
+  left: 50%;
+  bottom: -0.08em;
+  width: 1.3em;
+  height: 0.32em;
+  margin-left: -0.65em;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 176, 114, 0.9);
+  box-shadow: 0 0 18px rgba(255, 138, 61, 0.6);
+  opacity: 0;
+}
 
-/* ---------- glow button (Vertex pixel contract, light recolored to volt) ----------
-   A near black button with a bank of light pooled at its foot. The light is a background
-   gradient clipped by the button's own rounded rect. overflow:hidden does the clipping. */
+.bam-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bam-blurb {
+  margin: 0;
+  max-width: 46ch;
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.55;
+  color: var(--k-soft);
+}
+.bam-inside {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.bam-inside li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--k-dim);
+}
+.bam-inside b {
+  font: 700 10.5px/1 var(--f-lbl);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-accent-hi);
+  white-space: nowrap;
+}
+.bam-chips {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bam-chips .k-chip:nth-child(2) {
+  --k-cc: var(--k-teal);
+}
+.bam-chips .k-chip:nth-child(3) {
+  --k-cc: var(--k-sky);
+}
+
 .bam-glowbtn {
-  display: grid; place-items: center; position: relative; overflow: hidden; color: #ffffff;
-  height: calc(48 * var(--t)); min-height: 44px; padding: 0 calc(26 * var(--t)); border-radius: 12px;
-  font-size: calc(11.5 * var(--t)); letter-spacing: calc(1.1 * var(--t));
-  /* the bloom is a fixed bank of light about 18px tall at the foot */
-  background: linear-gradient(to top,
-    #eef7b0 1px, #e8f59a 2px, #e1f486 3px, #d9ee6e 4px, #d0e85c 5px,
-    #b4cc3c 6px, #a0b82e 7px, #93aa28 8px, #80961f 9px, #6b7e17 10px,
-    #566613 12px, #4f5d16 13px, #465311 14px, #374210 16px,
-    #2a3210 18px, #202710 20px, #171c0f 24px, #10140c 30px,
-    #0e120b 34px, #0e120b 100%);
-  box-shadow:
-    inset 0 3px 3px -2px rgba(236, 246, 190, 0.1),
-    inset 1px 0 0 rgba(255, 255, 255, 0.09),
-    inset -1px 0 0 rgba(255, 255, 255, 0.09),
-    0 1px 0 rgba(214, 234, 140, 0.38),
-    1px 0 0 rgba(214, 234, 140, 0.17), -1px 0 0 rgba(214, 234, 140, 0.17),
-    0 0 8px rgba(208, 232, 92, 0.1),
-    0 2px 5px -3px rgba(208, 232, 92, 0.45);
+  position: relative;
+  z-index: 2;
+  align-self: flex-start;
+  margin-top: auto;
+  height: 48px;
+  padding: 0 22px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  gap: 10px;
+  text-decoration: none;
 }
-/* a thin bright streak across the top edge */
-.bam-glowbtn::before {
-  content: ""; position: absolute; left: 22%; right: 38%; top: 0.8px; height: 1.9px; z-index: 1; filter: blur(0.55px);
-  background: linear-gradient(90deg, rgba(225, 244, 134, 0) 0%, rgba(225, 244, 134, 0.58) 34%, rgba(240, 250, 190, 0.74) 50%, rgba(225, 244, 134, 0.58) 66%, rgba(225, 244, 134, 0) 100%);
+.bam-glowbtn .arr {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
-/* side edge light with a 13px inward falloff, masked so it fades up the button */
-.bam-glowbtn::after {
-  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
-  background: linear-gradient(90deg, rgba(240, 250, 190, 0.7), rgba(240, 250, 190, 0) 13px), linear-gradient(270deg, rgba(240, 250, 190, 0.7), rgba(240, 250, 190, 0) 13px);
-  -webkit-mask: linear-gradient(to top, #000 0, #000 6px, rgba(0, 0, 0, 0.4) 12px, rgba(0, 0, 0, 0.15) 18px, rgba(0, 0, 0, 0.09) 24px, rgba(0, 0, 0, 0.02) 30px, rgba(0, 0, 0, 0.02) 100%);
-  mask: linear-gradient(to top, #000 0, #000 6px, rgba(0, 0, 0, 0.4) 12px, rgba(0, 0, 0, 0.15) 18px, rgba(0, 0, 0, 0.09) 24px, rgba(0, 0, 0, 0.02) 30px, rgba(0, 0, 0, 0.02) 100%);
+.bam-card:hover .bam-glowbtn .arr,
+.bam-glowbtn:focus-visible .arr {
+  transform: translateX(4px);
 }
-.bam-glowbtn .t { z-index: 2; line-height: 1; text-shadow: 0 1px 2px rgba(10, 16, 0, 0.5); top: calc(-1.5 * var(--t)); }
-.bam-glowbtn:hover { transform: translateY(-1px); filter: brightness(1.12); box-shadow: inset 0 1px 0 rgba(240, 250, 190, 0.6), inset 1px 0 0 rgba(225, 244, 134, 0.35), inset -1px 0 0 rgba(225, 244, 134, 0.35), 0 6px 22px rgba(160, 190, 50, 0.42); }
-.bam-glowbtn:active { transform: translateY(0); }
-
-/* ---------- liquid glass buttons (Vesper recipes) ---------- */
-.bam-btn {
-  position: relative; isolation: isolate; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
-  height: calc(42 * var(--t)); min-height: 40px; padding: 0 calc(18 * var(--t)); border-radius: 6px; line-height: 1; white-space: nowrap; cursor: pointer;
-  letter-spacing: calc(0.9 * var(--t));
+.bam-card:hover .bam-glowbtn {
+  filter: brightness(1.12);
+  box-shadow: var(--k-glow-shadow-hover);
 }
-.bam-btn::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.45) 48%, transparent 76%); transform: translateX(-130%); transition: transform 0.65s ease; pointer-events: none; }
-.bam-btn:hover::after { transform: translateX(130%); }
-.bam-btn:active { scale: 0.98; }
-.bam-btn-solid { background: linear-gradient(180deg, #ffffff 0%, #e7e7e7 48%, #cfcfcf 100%); color: #111111; border: 1px solid #ffffff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95); }
-.bam-btn-solid:hover { background: linear-gradient(180deg, #ffffff 0%, #f3f6ff 42%, #d5def2 100%); border-color: #f2f6ff; box-shadow: inset 0 1px 0 #ffffff, 0 0 26px rgba(186, 208, 255, 0.4), 0 8px 18px rgba(255, 255, 255, 0.14); }
-.bam-btn-ghost {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.5) 46%, rgba(150, 170, 200, 0.1));
-  color: #ffffff; border: 1px solid rgba(198, 198, 198, 0.55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-}
-.bam-btn-ghost:hover { background: linear-gradient(135deg, rgba(210, 225, 255, 0.18), rgba(0, 0, 0, 0.35) 48%, rgba(180, 195, 220, 0.16)); border-color: rgba(220, 230, 255, 0.8); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 24px rgba(170, 200, 255, 0.28); }
-
-/* ---------- stat row (Vesper) ---------- */
-.bam-stats { position: absolute; left: 0; right: 0; bottom: calc(47 * var(--t)); height: calc(46 * var(--t)); padding: 0 calc(64 * var(--t)); display: flex; align-items: center; justify-content: space-between; gap: calc(24 * var(--t)); color: #d8d8d8; pointer-events: none; }
-.bam-stat { display: inline-flex; align-items: center; gap: calc(11 * var(--t)); font-size: calc(13 * var(--t)); letter-spacing: -0.015em; white-space: nowrap; }
-.bam-stat .ico { width: calc(18 * var(--t)); height: calc(18 * var(--t)); color: #e8e8e8; }
-.bam-stat b { font-weight: 600; color: #ffffff; font-variant-numeric: tabular-nums; }
-
-/* ---------- dock ---------- */
-.bam-dock { position: absolute; left: 0; right: 0; bottom: 0; height: calc(47 * var(--t)); --nudge: calc(1.6 * var(--t)); }
-.bam-dock .rule { position: absolute; left: 0; right: 0; top: 0; height: var(--hair); background: var(--line); }
-.bam-dock .div { position: absolute; top: 0; bottom: 0; width: var(--hair); background: rgba(255, 255, 255, 0.21); }
-.bam-dock .div-l { left: calc(116 * var(--t)); }
-.bam-dock .div-r { right: calc(156 * var(--t)); }
-.bam-dock button, .bam-dock p { display: flex; align-items: center; margin: 0; background: none; border: 0; padding: 0; color: rgba(255, 255, 255, 0.82); }
-.bam-dock button { cursor: pointer; transition: color 0.3s ease; }
-.bam-dock button:hover { color: #ffffff; }
-.bam-3d { position: absolute; left: calc(26 * var(--t)); top: 0; bottom: 0; }
-.bam-3d .ico { width: calc(13 * var(--t)); height: calc(13 * var(--t)); }
-.bam-3d .t { margin-left: calc(9 * var(--t)); letter-spacing: calc(0.4 * var(--t)); }
-.bam-credit { position: absolute; left: 50%; transform: translateX(-50%); top: 0; bottom: 0; }
-.bam-credit .t { letter-spacing: calc(1.1 * var(--t)); color: rgba(255, 255, 255, 0.7); }
-.bam-live { position: absolute; right: calc(24 * var(--t)); top: 0; bottom: 0; }
-.bam-live .t { margin-left: calc(9 * var(--t)); letter-spacing: calc(0.4 * var(--t)); }
-/* a real status light: the game server answered */
-.bam-pulse { width: calc(6 * var(--t)); height: calc(6 * var(--t)); border-radius: 50%; background: var(--volt); animation: bam-pulse 1.8s ease-in-out infinite; }
-
-/* ---------- focus ---------- */
-.bam a:focus-visible, .bam button:focus-visible { outline: calc(1.5 * var(--t)) solid var(--volt); outline-offset: calc(3 * var(--t)); }
-
-/* ================= ENTRANCE =================
-   One sequence, once, on load. The backdrop never moves.
-   DRAW   frame and dock hairlines scale from their anchor
-   MASK   logo, headline and game name rise out of an overflow mask
-   DECODE every label resolves with the scramble effect (JS)
-   SETTLE copy, pills and controls arrive on a short lift
-   The keyframes animate the individual translate / scale
-   properties, never transform, so they compose with the transforms that
-   position elements and with hover states instead of colliding.
-   .appear rests at opacity 1, so nothing is ever stranded invisible:
-   animationend adds .is-in, and JS force settles if animations never run. */
-.bam .appear { animation-duration: var(--dur, 1.05s); animation-fill-mode: both; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); animation-delay: var(--d, 0.08s); }
-.bam .appear--drawx { animation-name: bam-drawx; animation-duration: 0.5s; animation-timing-function: var(--e-line); transform-origin: var(--o, left center); }
-.bam .appear--drawy { animation-name: bam-drawy; animation-duration: 0.5s; animation-timing-function: var(--e-line); transform-origin: var(--o, center top); }
-.bam .appear--fade { animation-name: bam-fade; animation-duration: 0.45s; animation-timing-function: linear; }
-.bam .appear--mask { animation-name: bam-mask; animation-duration: var(--dur, 0.8s); }
-.bam .appear--soft { animation-name: bam-soft; animation-duration: var(--dur, 0.72s); animation-timing-function: var(--e-soft); }
-.bam .appear--scale { animation-name: bam-scale; }
-.bam .appear--pop { animation-name: bam-pop; }
-.bam .appear--btn { animation-name: bam-btn; }
-.bam .appear--side { animation-name: bam-side; }
-.bam .appear--stat { animation-name: bam-stat; }
-.bam .appear.is-in { animation: none; }
-
-@keyframes bam-drawx { from { scale: 0 1; } to { scale: 1 1; } }
-@keyframes bam-drawy { from { scale: 1 0; } to { scale: 1 1; } }
-@keyframes bam-fade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes bam-mask { from { translate: 0 112%; } to { translate: 0 0; } }
-@keyframes bam-soft { from { opacity: 0; translate: 0 calc(9 * var(--t)); } to { opacity: 1; translate: 0 0; } }
-@keyframes bam-scale { from { opacity: 0; scale: 0.84; } to { opacity: 1; scale: 1; } }
-@keyframes bam-pop { 0% { opacity: 0; scale: 0.9; } 70% { opacity: 1; scale: 1.03; } 100% { opacity: 1; scale: 1; } }
-@keyframes bam-btn { from { opacity: 0; translate: 0 18px; scale: 0.94; } to { opacity: 1; translate: 0 0; scale: 1; } }
-@keyframes bam-side { from { opacity: 0; translate: 22px 0; } to { opacity: 1; translate: 0 0; } }
-@keyframes bam-stat { from { opacity: 0; translate: 0 20px; } to { opacity: 1; translate: 0 0; } }
-@keyframes bam-star { 0% { scale: 0.2; rotate: -50deg; } 65% { scale: 1.2; rotate: 8deg; } 100% { scale: 1; rotate: 0deg; } }
-@keyframes bam-em { from { opacity: 0.35; filter: blur(4px); } to { opacity: 1; filter: blur(0); } }
-@keyframes bam-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-@media (prefers-reduced-motion: reduce) {
-  .bam *, .bam *::before, .bam *::after { transition: none !important; animation: none !important; }
-  .bam-glowbtn:hover { transform: none; }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .bam-btn-ghost { -webkit-backdrop-filter: none; backdrop-filter: none; background: #14161a; }
+.bam-btnflash {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 25%, rgba(255, 255, 255, 0.55) 50%, transparent 75%);
 }
 
-/* ---------- tablet ----------
-   Below 1152px wide the type unit stops shrinking with the width, as long as the
-   whole 739 unit tall composition still fits the height. The frame keeps scaling. */
-@media (max-width: 1152px) {
-  .bam {
-    --u: clamp(0.7px, min(100vw / 1280, 100vh / 800), 1.1px);
-    --u: clamp(0.7px, min(100vw / 1280, 100dvh / 800), 1.1px);
-    --t: max(var(--u), min(clamp(0.9px, calc(0.9px + (1152px - 100vw) * 0.00042), 1.06px), calc((100dvh - 61 * var(--u)) / 745)));
+/* ---------- footer ---------- */
+.bam-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  width: 100%;
+  max-width: 1320px;
+  margin: auto auto 0;
+  padding-top: clamp(8px, 2vh, 24px);
+}
+.bam-stats {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+}
+.bam-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 700 10.5px/1 var(--f-lbl);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-dim);
+}
+.bam-stat b {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+.bam-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--k-good);
+  box-shadow: 0 0 10px var(--k-good);
+  animation: bam-pulse 2.4s ease-in-out infinite;
+}
+@keyframes bam-pulse {
+  50% {
+    opacity: 0.35;
   }
-  .bam-h1 { font-size: min(calc(96 * var(--t)), 8.6vw); }
-  .bam-feature { left: calc(132 * var(--t)); width: min(calc(440 * var(--t)), 48vw); }
-  .bam-stats { padding: 0 calc(34 * var(--t)); }
 }
-/* spare height (portrait tablets, tall windows): share it between the hero and the lower row */
-@media (min-width: 900px) and (min-height: 620px) {
-  .bam { --extra: max(0px, calc(100dvh - 61 * var(--u) - 739 * var(--t))); }
+.bam-foot-r {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.bam-mini {
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: var(--k-dim);
+  font: 700 10px/1 var(--f-lbl);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.bam-mini:hover,
+.bam-mini[aria-pressed="true"] {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.bam-credit {
+  margin: 0;
+  font: 700 10.5px/1 var(--f-lbl);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-dim-2);
 }
 
-/* ---------- phone and short screens: a real flow column that scrolls ----------
-   Same elements in the same order. The frame grows with the content, the
-   backdrop stays fixed behind it. */
-@media (max-width: 899px), (max-height: 619px) {
-  .bam {
-    --u: 1px;
-    --t: clamp(0.96px, calc(100vw / 400), 1.08px);
-    position: relative; inset: auto; min-height: 100dvh; overflow: visible;
+/* ---------- the intro layer ---------- */
+.bam-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 3.4vh, 34px);
+  pointer-events: none;
+}
+.bam-bloom {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 90vmin;
+  height: 60vmin;
+  margin: -30vmin 0 0 -45vmin;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.22), rgba(79, 179, 255, 0.12) 45%, rgba(139, 108, 255, 0.06) 70%, transparent);
+  opacity: 0;
+}
+.bam-welcome {
+  position: relative;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font: 700 clamp(12px, 1.3vw, 16px) / 1 var(--f-lbl);
+  letter-spacing: 0.5em;
+  color: var(--k-soft);
+}
+.bam-welcome .word {
+  margin-right: -0.5em;
+}
+.bam-welcome .ch {
+  display: inline-block;
+}
+.bam-welcome .sp {
+  display: inline-block;
+  width: 0.5em;
+}
+.bam-welcome .rule {
+  display: block;
+  width: clamp(28px, 6vw, 80px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6));
+}
+.bam-welcome .rule:last-child {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.6), transparent);
+}
+.bam-big {
+  position: relative;
+  margin: 0;
+  font-size: min(10.4vw, 170px);
+  line-height: 1;
+  perspective: 900px;
+}
+.bam-big .L {
+  position: relative;
+  display: inline-block;
+  transform-origin: 50% 100%;
+}
+.bam-big .L .w {
+  color: #ffffff;
+  text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+}
+.bam-big .L .c {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+}
+.bam-big .L b {
+  font-weight: 700;
+}
+
+/* ---------- smaller screens ---------- */
+@media (max-height: 820px) and (min-width: 761px) {
+  .bam-card {
+    min-height: 300px;
   }
-  .bam-stars, .bam-bg, .bam-scrim { position: fixed; }
-  /* the copy sits right over the scene here, so the scene steps back */
-  .bam-scrim { background: linear-gradient(180deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.58) 55%, rgba(0, 0, 0, 0.78) 100%); }
+  .bam-lede {
+    margin-top: 6px;
+  }
+}
+@media (max-width: 1000px) {
+  .bam-inside li {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+@media (max-width: 760px) {
+  .bam {
+    --cut: 12px;
+    --pad: 18px;
+  }
   .bam-frame {
-    position: relative; left: auto; top: auto; right: auto; bottom: auto;
-    margin: 14px; min-height: calc(100dvh - 28px);
-    display: grid; grid-template-columns: 1fr auto; align-content: start;
-    grid-template-areas: "logo nav" "hero hero" "rail rail" "feature feature" "stats stats" "dock dock";
-    grid-template-rows: auto auto auto auto 1fr auto;
+    --in: 7px;
   }
-  .bam .ln-t, .bam .ln-b { left: 18px; right: 18px; }
-  .bam .ln-l, .bam .ln-r { top: 18px; bottom: 18px; }
-  .bam .cn { width: 18px; height: 18px; }
-  .bam-logo { position: relative; left: auto; top: auto; grid-area: logo; margin: 20px 0 0 18px; align-self: center; }
-  .bam-masthead { position: relative; right: auto; top: auto; grid-area: nav; margin: 12px 12px 0 0; gap: 6px; }
-  .bam-pill { padding: 0 calc(11 * var(--t)); height: 36px; }
-  .bam-hero { position: relative; top: auto; grid-area: hero; padding: 34px 16px 0; }
-  .bam-h1 { font-size: min(calc(96 * var(--t)), 10vw); }
-  .bam-lede { max-width: 30ch; }
-  .bam-rail { position: relative; left: auto; top: auto; transform: none; grid-area: rail; display: flex; justify-content: center; gap: 22px; margin-top: 30px; }
-  .bam-rail li { height: 44px; }
-  .bam-rail li::before { left: 0; right: 0; top: auto; bottom: 6px; width: auto; height: 2px; translate: none; }
-  .bam-rail button { padding: 14px 0; }
-  .bam-feature { position: relative; left: auto; bottom: auto; width: auto; grid-area: feature; padding: 18px 22px 0; }
-  .bam-title { font-size: min(calc(40 * var(--t)), 8vw); }
-  .bam-blurb { max-width: 46ch; }
-  /* the two games have copy of different length: only the one on show takes up room, so there is never a gap */
-  .bam-variant { align-self: start; }
-  .bam-variant:not(.is-on) { position: absolute; left: 22px; right: 22px; top: 18px; }
-  .bam-stats { position: relative; bottom: auto; grid-area: stats; height: auto; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 12px; padding: 34px 22px 22px; }
-  .bam-stat { white-space: normal; }
-  .bam-dock { position: relative; bottom: auto; grid-area: dock; height: auto; min-height: 47px; display: flex; flex-wrap: wrap; align-items: stretch; justify-content: space-between; }
-  .bam-dock .div { display: none; }
-  .bam-3d, .bam-credit, .bam-live { position: static; transform: none; min-height: 47px; padding: 0 16px; }
-  .bam-credit { flex: 1 1 auto; justify-content: center; }
-  @media (max-width: 420px) {
-    .bam-credit { order: 3; flex: 1 0 100%; border-top: var(--hair) solid var(--line); }
+  .bam-top {
+    grid-template-columns: 1fr auto;
+  }
+  .bam-nav {
+    display: none;
+  }
+  .bam-brand {
+    font-size: clamp(26px, 8.4vw, 40px);
+  }
+  .bam-games {
+    grid-template-columns: 1fr;
+  }
+  .bam-card {
+    min-height: 0;
+  }
+  .bam-card-lift {
+    padding: 22px 20px 24px;
+  }
+  .bam-glowbtn {
+    align-self: stretch;
+    margin-top: 6px;
+  }
+  .bam-foot {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .bam-beam {
+    width: 130vmax;
+    margin-left: -65vmax;
+  }
+}
+
+/* reduced motion: the calm page, nothing moves on its own and the intro never shows */
+@media (prefers-reduced-motion: reduce) {
+  .bam *,
+  .bam *::before,
+  .bam *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .bam-intro {
+    display: none !important;
+  }
+  .bam-card:hover .bam-card-lift,
+  .bam-card:hover .bam-ball-svg {
+    transform: none;
   }
 }
