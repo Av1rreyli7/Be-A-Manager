@@ -108,6 +108,7 @@ ok("Hardwood Legends uses the kit glass primary button and cut corner panels", !
 ok("the headline and both games are in the landing source", landing.includes("Be-A-Manager") && landing.includes("ORDER.map"), null);
 ok("the landing is light: no 3D scene, no three.js, no stats fetch", !has("src/landing/Backdrop3D.tsx") && !/from "three"/.test(landing) && !landing.includes("@react-three/fiber") && !landing.includes("Backdrop3D") && !landing.includes("stats.json"), null);
 ok("each game shows only its title, one short line and the enter button", landing.includes('className="bam-line">{g.line}') && !/bam-(lede|kind|blurb|inside|chips|foot|stats|mini|credit|pill|card-bg|card-art|btnflash|glowbtn)/.test(landing + css) && read("src/landing/games.ts").includes("line: "), null);
+ok("the credit line sits under the two games, small and quiet, and fades in after the cards", landing.includes('<p className="bam-by">by avir and ayanssh</p>') && landing.indexOf('className="bam-by"') > landing.indexOf('className="bam-games"') && /\.bam-by \{[^}]*font: 600 11px/.test(css) && landing.includes('q(".bam-by")') && page.includes(".bam-by,"), null);
 ok("reduced motion gets the calm page", landing.includes("prefers-reduced-motion") && css.includes("@media (prefers-reduced-motion: reduce)"), null);
 ok("warm on intent and idle warmup are wired", landing.includes("onPointerEnter={() => warm(id)}") && landing.includes("onFocus={() => warm(id)}") && landing.includes("requestIdleCallback") && !landing.includes("motion/react"), null);
 ok("the intro is one GSAP timeline with the welcome flight and the two ball moments", landing.includes('from "gsap"') && landing.includes('from "@gsap/react"') && landing.includes("useGSAP(") && landing.includes("gsap.matchMedia()") && /addLabel\("lights"/.test(landing) && /addLabel\("fly"/.test(landing) && /addLabel\("cards"/.test(landing) && landing.includes("function kick(") && landing.includes("function bounce(") && landing.includes('"bounce.out"'), null);
@@ -134,13 +135,38 @@ for (const tab of ["squad", "lineup", "market", "offers", "romano", "matches", "
 if (fs.existsSync(path.join(root, "..", "floodlights", "index.html"))) {
   // The page script and the server rules now differ from the originals on purpose (dynamic OVR, events, travel,
   // sim season, loan cap). The world data and the Classic match sim still have to be the originals.
-  for (const f of ["players.js", "world_pack.js", "extra_clubs.js", "league_fill.js"]) ok("world data untouched: " + f, read("floodlights/" + f) === fs.readFileSync(path.join(root, "..", "floodlights", f), "utf8"), null);
+  // The October 2026 squads replace the old squads on purpose (squads_2026.js, applied in players.js). The other
+  // world packs are still the originals; league_fill.js only swaps Mazatlan (dissolved in 2026) for Atlante.
+  for (const f of ["world_pack.js", "extra_clubs.js"]) ok("world data untouched: " + f, read("floodlights/" + f) === fs.readFileSync(path.join(root, "..", "floodlights", f), "utf8"), null);
+  ok("league_fill.js only swaps Mazatlan for Atlante", read("floodlights/league_fill.js") === fs.readFileSync(path.join(root, "..", "floodlights", "league_fill.js"), "utf8").replace('"Mazatlan": { league', '"Atlante": { league'), null);
   // the sim part of the match engine is the original too
   const origEngine = fs.readFileSync(path.join(root, "..", "floodlights", "match.js"), "utf8");
   const simPart = s => s.slice(s.indexOf("function createSim"), s.indexOf("// LOOK"));
   ok("the match sim (rules, AI, controls) is untouched", simPart(read("floodlights/match.js")) === simPart(origEngine) && simPart(origEngine).length > 30000, null);
   // the 3D look has its own deep sim next to it, so Classic can stay exactly as it was
   ok("the deep sim for 3D is a separate file and Classic does not use it", has("floodlights/match_sim3d.mjs") && !simPart(read("floodlights/match.js")).includes("match_sim3d"), null);
+}
+
+// ---------- the October 2026 squads ----------
+{
+  const { SQUADS_2026 } = require(path.join(root, "floodlights", "squads_2026.js"));
+  const { buildDatabase } = require(path.join(root, "floodlights", "players.js"));
+  const db = buildDatabase();
+  const ROLES = new Set(["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"]);
+  const GROUP = { GK: "GK", CB: "DF", LB: "DF", RB: "DF", CDM: "MF", CM: "MF", CAM: "MF", LW: "FW", RW: "FW", ST: "FW" };
+  const clubs = Object.keys(SQUADS_2026);
+  ok("every club in the game has an October 2026 squad", clubs.length === 320 && clubs.every(c => db.clubs[c]) && Object.keys(db.clubs).length === 320, clubs.length);
+  const rows = clubs.flatMap(c => SQUADS_2026[c].map(r => [c].concat(r)));
+  const badRow = rows.filter(([c, n, pos, age, r, num, role]) => !n || !/^[A-Za-z0-9 .'-]+$/.test(n) || !(age >= 15 && age <= 46) || !(r >= 50 && r <= 91) || !ROLES.has(role) || GROUP[role] !== pos || (num !== null && !(num >= 1 && num <= 99)));
+  ok("every squad row is a plain name, an age, a rating on the scale, a role that fits the position", badRow.length === 0, badRow.slice(0, 5));
+  const dupNum = clubs.filter(c => { const n = SQUADS_2026[c].map(r => r[4]).filter(Boolean); return new Set(n).size !== n.length; });
+  ok("shirt numbers are unique inside every club", dupNum.length === 0, dupNum);
+  ok("every squad has at least 17 players and a keeper", clubs.every(c => SQUADS_2026[c].length >= 17 && SQUADS_2026[c].some(r => r[1] === "GK")), null);
+  const at = n => (db.players.find(p => p.name === n) || {}).club;
+  ok("the big summer 2026 moves are in (Salah, Rodri, Gordon, Bruno Guimaraes, Konate, Rashford)", at("Mohamed Salah") === "Trabzonspor" && at("Rodri") === "Barcelona" && at("Anthony Gordon") === "Barcelona" && at("Bruno Guimaraes") === "Arsenal" && at("Ibrahima Konate") === "Real Madrid" && at("Marcus Rashford") === "Man United", null);
+  ok("players who left the clubs in the game are gone (Lewandowski to Chicago Fire, Benzema without a club)", !at("Robert Lewandowski") && !at("Karim Benzema"), null);
+  ok("real shirt numbers and loans reach the database", db.players.find(p => p.name === "Marcus Rashford").num === 9 && db.players.find(p => p.name === "Ronald Araujo").loanFrom === "Barcelona", null);
+  ok("Mazatlan (dissolved in 2026) is Atlante now, with its own travel row", !!db.clubs.Atlante && !db.clubs.Mazatlan && read("floodlights/travel_data.js").includes('"Atlante": ["Mexico City"'), null);
 }
 
 // ---------- docs ----------
@@ -155,7 +181,7 @@ if (fs.existsSync(up)) {
   const upFiles = walk(up, new Set(), []).map(f => path.relative(up, f));
   const bad = upFiles.filter(f => /(^|\/)(node_modules|\.next)\//.test(f) || /games\.json$/.test(f) || /\.DS_Store$/.test(f) || /\.tsbuildinfo$/.test(f));
   ok("the upload folder has no node_modules, .next, games.json or junk", bad.length === 0, bad.slice(0, 8));
-  for (const f of ["package.json", "package-lock.json", "server.js", "next.config.ts", "tsconfig.json", "tsconfig.build.json", "postcss.config.mjs", ".gitignore", ".node-version", "render.yaml", "README.md", "DEPLOY.md", "floodlights/server.js", "floodlights/index.html", "floodlights/match.js", "floodlights/match3d.mjs", "floodlights/match_sim3d.mjs", "floodlights/condition.js", "floodlights/events_data.js", "floodlights/travel_data.js", "floodlights/test_condition.js", "floodlights/players.js", "floodlights/world_pack.js", "floodlights/extra_clubs.js", "floodlights/league_fill.js", "floodlights/fonts/inter.woff2", "floodlights/test_sept.js", "floodlights/test_dom_sept.js", "src/app/page.tsx", "src/app/layout.tsx", "src/landing/Landing.tsx", "src/landing/Balls.tsx", "src/landing/landing.css", "public/games/hardwood-legends.html", "data/players.json", "tests/landing.test.tsx", "tests-site/test_boot.js"]) ok("upload has " + f, upFiles.includes(f), null);
+  for (const f of ["package.json", "package-lock.json", "server.js", "next.config.ts", "tsconfig.json", "tsconfig.build.json", "postcss.config.mjs", ".gitignore", ".node-version", "render.yaml", "README.md", "DEPLOY.md", "floodlights/server.js", "floodlights/index.html", "floodlights/match.js", "floodlights/match3d.mjs", "floodlights/match_sim3d.mjs", "floodlights/m3d/sim.mjs", "floodlights/m3d/ball.mjs", "floodlights/m3d/view/index.mjs", "floodlights/m3d/view/anim.mjs", "floodlights/squads_2026.js", "floodlights/condition.js", "floodlights/events_data.js", "floodlights/travel_data.js", "floodlights/test_condition.js", "floodlights/players.js", "floodlights/world_pack.js", "floodlights/extra_clubs.js", "floodlights/league_fill.js", "floodlights/fonts/inter.woff2", "floodlights/test_sept.js", "floodlights/test_dom_sept.js", "src/app/page.tsx", "src/app/layout.tsx", "src/landing/Landing.tsx", "src/landing/Balls.tsx", "src/landing/landing.css", "public/games/hardwood-legends.html", "data/players.json", "tests/landing.test.tsx", "tests-site/test_boot.js"]) ok("upload has " + f, upFiles.includes(f), null);
   // the copy must match the working tree
   const stale = upFiles.filter(f => { const src = path.join(root, f); return !fs.existsSync(src) || !fs.readFileSync(src).equals(fs.readFileSync(path.join(up, f))); });
   ok("every file in upload matches the working tree", stale.length === 0, stale.slice(0, 8));

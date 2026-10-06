@@ -34,17 +34,21 @@ async function simTo(code, name, target) {
   }
   return { status: 200, j: { ok: true } };
 }
-async function readSave(wantCode) {
+// fresh(game) lets a check wait until the save on disk has caught up (the server writes it a moment after a call)
+async function readSave(wantCode, fresh) {
   await sleep(650);
+  let last = null;
   for (let i = 0; i < 60; i++) {
     try {
       const all = JSON.parse(fs.readFileSync(SAVE_FILE));
       if (!wantCode) return all;
       const found = Object.values(all).find(x => x.code === wantCode);
-      if (found && found.clubs && found.players) return all;
+      if (found && found.clubs && found.players) { last = all; if (!fresh || fresh(found)) return all; }
     } catch (e) {}
     await sleep(250);
   }
+  // it never caught up: hand back the newest save so the checks fail with their own message
+  if (last) return last;
   throw new Error("save never showed game " + wantCode);
 }
 async function main() {
@@ -688,7 +692,10 @@ console.log("b5");
   ok("appearances are tracked for everyone who played, starters and subs", parts.length > 2000 && parts.some(p => p.ap[1] > 0) && parts.every(p => p.ap.length === 3 && p.ap[2] >= 0), parts.length);
   const subbed = Object.values(g.lastEvents || {}).filter(e => e.subs && e.subs.length);
   ok("the week's match detail lists the subs who came on, at most five a side", subbed.length >= 1 && Object.values(g.lastEvents || {}).every(e => !e.subs || (e.subs.filter(x => x.c === Object.keys(g.lastEvents).find(k => g.lastEvents[k] === e).split("|")[0]).length <= 5 && e.subs.every(x => x.n && x.off && x.min >= 46 && x.min <= 85))), subbed.length);
-  const benched = Object.values(g.players).filter(p => p.bn >= 6 && !p.academy && (LEAGUE_HUMAN.has(p.club)));
+  // only clubs whose league is still playing at the end: a short league (the Scottish one ends after 22 rounds)
+  // lets its benched players drift back to level over the weeks without a match, which is the intended rule
+  const stillPlaying = c => ((g.leagueFixtures || {})[(g.clubs[c] || {}).league] || []).length >= g.round;
+  const benched = Object.values(g.players).filter(p => p.bn >= 6 && !p.academy && LEAGUE_HUMAN.has(p.club) && stillPlaying(p.club));
   // most have sunk; a lingering good news event can lift one of them, so the group is judged as a whole
   ok("players left on the bench for weeks have sunk in morale", benched.length > 0 && benched.filter(p => (p.mo || 0) < 0).length >= benched.length * 0.5 && benched.reduce((s2, p) => s2 + (p.mo || 0), 0) / benched.length < -0.4, benched.slice(0, 4).map(p => [p.name, p.bn, p.mo]));
   ok("the save for one game stays lean with 300 plus clubs tracked", lenNow < 2.6 * 1024 * 1024, Math.round(lenNow / 1024) + " KB");
@@ -916,11 +923,17 @@ console.log("b5");
     const seasonFrom = {};
     for (let season = 1; season <= 2; season++) {
       // news ids this season start after the last one of the season before (week numbers repeat each season)
-      for (const [n, team] of humans) { const s0 = await api(`/api/state?code=${tc2}&name=${n}`); seasonFrom[team] = Math.max(0, ...s0.j.myClub.news.map(x => x.i)); }
+      for (const [n, team] of humans) {
+        let s0 = await api(`/api/state?code=${tc2}&name=${n}`);
+        // a bad first season can cost a test manager the job (the board's rule): he takes the same club again
+        if (!s0.j.myClub) { await api("/api/pick", { code: tc2, name: n, team }); s0 = await api(`/api/state?code=${tc2}&name=${n}`); }
+        seasonFrom[team] = Math.max(0, ...s0.j.myClub.news.map(x => x.i));
+      }
       for (let wk = 0; wk < 38; wk++) {
         await api("/api/sim", { code: tc2, name: "Tra" });
         for (const [n, team] of humans) {
           const sx = await api(`/api/state?code=${tc2}&name=${n}`);
+          if (!sx.j.myClub) continue; // sacked at the end of the season, back in the job next season
           const fresh = sx.j.myClub.news.filter(x => x.e && x.e.k === "transfer" && !(seenIds[team] || new Set()).has(x.i));
           if (!fresh.length) continue;
           seenIds[team] = seenIds[team] || new Set();
@@ -930,7 +943,7 @@ console.log("b5");
             found.push({ team, season, w: x.w, round: sx.j.round, name: tr.name, pos: tr.pos, need: tr.need, from: tr.from, lv: tr.lv });
             if (!windowWeek(x.w) || x.w !== sx.j.round + 1) allWindow = false;
             if (sx.j.myClub.news.filter(y => y.e && y.w === x.w && y.i > seasonFrom[team]).length !== 1) oneWeekOk = false;
-            const sv = await readSave(tc2);
+            const sv = await readSave(tc2, y => y.round === sx.j.round && ((y.interestBumps || {})[team] || {})[tr.id] !== undefined);
             const gg = Object.values(sv).find(y => y.code === tc2);
             const p = gg.players[tr.id];
             if (!p || p.name !== tr.name || humanClubs.has(p.club) || p.club === team || p.club !== tr.club || !x.t.includes(tr.name) || !x.t.includes(tr.club)) { realOk = false; notes.push(["real", tr]); }

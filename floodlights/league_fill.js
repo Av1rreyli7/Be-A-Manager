@@ -102,7 +102,7 @@ const FILL_CLUBS = {
   "Queretaro": { league: "Liga MX", region: "mexico", tier: 70 },
   "Atlas": { league: "Liga MX", region: "mexico", tier: 72 },
   "Puebla": { league: "Liga MX", region: "mexico", tier: 70 },
-  "Mazatlan": { league: "Liga MX", region: "mexico", tier: 70 },
+  "Atlante": { league: "Liga MX", region: "mexico", tier: 70 },
   "Atletico San Luis": { league: "Liga MX", region: "mexico", tier: 71 },
   // Brasileirao up to 20, the real count
   "Bahia": { league: "Brasileirao", region: "brazil", tier: 76 },

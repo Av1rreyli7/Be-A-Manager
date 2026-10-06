@@ -40,6 +40,11 @@ app.get("/floodlights/match_sim3d.mjs", (req, res) => {
   res.type("text/javascript");
   res.sendFile(path.join(__dirname, "match_sim3d.mjs"));
 });
+// the rebuilt 3D match: its engine and view modules, fetched by the two entry files above
+app.use("/floodlights/m3d", express.static(path.join(__dirname, "m3d"), {
+  maxAge: 0,
+  setHeaders(res, file) { if (file.endsWith(".mjs")) res.setHeader("Content-Type", "text/javascript; charset=utf-8"); }
+}));
 // three.js for the 3D match, straight from the installed package
 const THREE_BUILD = path.dirname(require.resolve("three"));
 for (const f of ["three.module.js", "three.core.js"]) {
@@ -1157,7 +1162,9 @@ function newGame(hostName) {
   const playerMap = {};
   players.forEach(p => playerMap[p.id] = p);
   for (const p of players) {
-    const owner = REAL_LOANS[p.name];
+    // loans come with the October 2026 squads; the old name list only fills in for anyone without one
+    const owner = p.loanFrom || REAL_LOANS[p.name];
+    delete p.loanFrom;
     if (owner && clubs[owner] && p.club !== owner) p.loanOwner = owner;
   }
   for (const c of Object.values(clubs)) c.tactic = "balanced";
@@ -2706,7 +2713,11 @@ function kitNumbers(game, team) {
   const club = game.clubs[team];
   const squad = ((club && club.squad) || []).map(id => game.players[id]).filter(Boolean);
   const used = new Set(), map = {};
-  squad.slice().sort((a, b) => b.rating - a.rating || a.id - b.id).forEach(p => {
+  const order = squad.slice().sort((a, b) => b.rating - a.rating || a.id - b.id);
+  // the real shirt number first (October 2026 squads), the best player keeps it if two share one
+  for (const p of order) if (p.num && !used.has(p.num)) { used.add(p.num); map[p.id] = p.num; }
+  order.forEach(p => {
+    if (map[p.id]) return;
     const pref = KIT_NUM_PREF[String(p.role || "").toUpperCase()] || KIT_NUM_PREF[KIT_NUM_FALLBACK[p.pos] || "CM"];
     let n = pref.find(x => !used.has(x));
     if (!n) { n = 12; while (used.has(n)) n++; }
@@ -2742,7 +2753,7 @@ app.post("/api/playstart", (req, res) => {
   const cupKey = fx.kind === "league" ? "L" : fx.kind;
   const mm = { home: fx.home, away: fx.away };
   const nums = { [fx.home]: kitNumbers(game, fx.home), [fx.away]: kitNumbers(game, fx.away) };
-  const rowFor = (team, home) => p => ({ n: p.name, pos: p.pos, role: p.role || p.pos, r: Math.round(effOf(game, p, team, { home, m: mm, kind: cupKey, week: game.round })), base: p.rating, num: nums[team][p.id] });
+  const rowFor = (team, home) => p => ({ n: p.name, pos: p.pos, role: p.role || p.pos, r: Math.round(effOf(game, p, team, { home, m: mm, kind: cupKey, week: game.round })), base: p.rating, num: nums[team][p.id], age: p.age });
   save();
   res.json({
     ok: true, kind: fx.kind, label: fx.label, home: fx.home, away: fx.away, side: fx.side,

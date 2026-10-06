@@ -170,6 +170,8 @@ function buildIntro(root: HTMLElement): gsap.core.Timeline {
     cardIn(tl, gn, "cards+=0.36");
     bounce(tl, gn, "cards+=0.4");
   }
+  // the credit line settles in last, once both balls have landed
+  tl.fromTo(q(".bam-by"), { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "none" }, "cards+=0.9");
   return tl;
 }
 
@@ -427,6 +429,8 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
             );
           })}
         </section>
+
+        <p className="bam-by">by avir and ayanssh</p>
       </div>
 
       {/* the intro layer: shown only while the intro plays, never takes a click */}

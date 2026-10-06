@@ -73,6 +73,10 @@ async function main() {
   ok("the 3D view is served as a script", r.status === 200 && r.text.includes("createView3D") && r.type.includes("javascript"), [r.status, r.type]);
   r = await get("/floodlights/match_sim3d.mjs");
   ok("the deep sim behind the 3D view is served as a script", r.status === 200 && r.text.includes("createSim3D") && r.type.includes("javascript"), [r.status, r.type]);
+  for (const f of ["m3d/sim.mjs", "m3d/ball.mjs", "m3d/view/index.mjs", "m3d/view/anim.mjs"]) {
+    const g = await get("/floodlights/" + f);
+    ok("the rebuilt 3D match file " + f + " is served as a script", g.status === 200 && g.type.includes("javascript") && g.text.length > 1000, [g.status, g.type]);
+  }
   for (const f of ["three.module.js", "three.core.js"]) {
     const g = await get("/floodlights/vendor/" + f);
     ok("three.js file " + f, g.status === 200 && g.type.includes("javascript") && g.text.length > 100000, [g.status, g.text.length]);

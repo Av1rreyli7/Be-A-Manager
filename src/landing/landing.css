@@ -463,6 +463,25 @@ html:has(.bam) {
   transform: translateX(4px);
 }
 
+/* ---------- the credit line: small and quiet, under the two games ---------- */
+.bam-by {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  font: 600 11px/1 var(--f-lbl);
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.42);
+}
+.bam-by::before,
+.bam-by::after {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.13);
+}
+
 /* ---------- the intro layer ---------- */
 .bam-intro {
   position: fixed;

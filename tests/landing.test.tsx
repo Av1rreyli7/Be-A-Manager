@@ -126,7 +126,7 @@ describe("landing page content", () => {
     const clone = host.cloneNode(true) as HTMLElement;
     clone.querySelectorAll('[aria-hidden="true"], [hidden], style').forEach((n) => n.remove());
     expect(clone.textContent).toBe(
-      "Welcome to Be-A-Manager" + ORDER.map((id) => GAMES[id].name + GAMES[id].line + GAMES[id].enter).join(""),
+      "Welcome to Be-A-Manager" + ORDER.map((id) => GAMES[id].name + GAMES[id].line + GAMES[id].enter).join("") + "by avir and ayanssh",
     );
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
@@ -150,6 +150,30 @@ describe("landing page content", () => {
       expect(fs.readFileSync(path.join(__dirname, "..", "src", "landing", f), "utf8"), f).not.toMatch(bad);
     }
     expect(fs.readFileSync(path.join(__dirname, "..", "src", "app", "page.tsx"), "utf8")).not.toMatch(bad);
+  });
+});
+
+describe("the credit line", () => {
+  it("sits under the two games as one small line, outside both cards", () => {
+    mount({ reduce: true });
+    const by = $$(".bam-by");
+    expect(by).toHaveLength(1);
+    expect(by[0].textContent).toBe("by avir and ayanssh");
+    expect(by[0].closest(".bam-card")).toBeNull();
+    // it comes after the games in the page order
+    const games = $(".bam-games");
+    expect(games.compareDocumentPosition(by[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(by[0].getAttribute("aria-hidden")).toBeNull();
+  });
+
+  it("fades in last, after the two card moments, inside the intro", () => {
+    mount();
+    const t = tl()!;
+    const L = t.labels as Record<string, number>;
+    const tw = (t as unknown as { getChildren(): { targets(): Element[]; startTime(): number }[] }).getChildren().find((c) => typeof c.targets === "function" && c.targets().some((el) => el.classList && el.classList.contains("bam-by")));
+    expect(tw).toBeTruthy();
+    expect(tw!.startTime()).toBeGreaterThan(L.cards + 0.5);
+    expect((t as unknown as { duration(): number }).duration()).toBeLessThan(3.8);
   });
 });
 

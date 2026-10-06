@@ -405,3 +405,157 @@ Notes:
 - Tests, three full npm run test:all runs, all 0 failed: typecheck, vitest 79, condition 138, API 257, DOM 167,
   3D 280 (includes the headless match loop), layout 222 (new), site checks 166, build, boot 48. The server sat
   at 203 to 204 MB after the boot checks. Proof screenshots are in site/.work/proof/oct4 (not uploaded).
+
+## October 2026 squads, landing credit, 3D match rebuilt from scratch
+
+Goal (three parts): 1) every club's squad matches the real squads of October 2026 (summer 2026 window verified
+on the web, shirt numbers, adds and removals, ratings on the same scale); 2) a small "by avir and ayanssh" credit
+line on the landing under Floodlights and Game Night; 3) the playable 3D match thrown away and rebuilt from
+scratch to the full gameplay spec the user pasted (locomotion, ball physics, touches, passing, shooting,
+defending, keepers, 30 skill moves, off ball AI, set pieces, visuals). Classic stays untouched. Nothing outside
+the match changes. Resume from the first unchecked box.
+
+Decisions:
+- Squad source: the "Current squad" lists on each club's English Wikipedia page (raw wikitext, Fs player
+  templates: number, position, name), pulled by a script and cross checked against news searches for the big
+  movers. Ages from Wikidata birth dates (as of 6 Oct 2026). Detailed roles from Wikidata positions where known.
+- Players already in the database keep their rating and spelling (ASCII, no accents) wherever they now play.
+  New players get a rating on the same scale from the research agents (knowledge plus the club's band).
+- The data lands in a new file floodlights/squads_2026.js (rows: name, pos, age, rating, shirt number, role,
+  loan owner). players.js applies it after the old packs are merged, so every club's squad is replaced by the
+  real one. Club list and leagues stay as they are (the game's structure, travel data and tests depend on it).
+  The old byte identity check on the world data files in tests-site/test_site.js is replaced by checks on the
+  new squad data, on purpose.
+- Shirt numbers: kitNumbers (server) and the lineup page use the real number first, the old role rule after.
+- 3D match engine: plain Three.js ES modules (no React on the Floodlights page). The Floodlights page is
+  vanilla HTML with no bundler, and R3F needs React plus a bundler on that page. An imperative fixed step loop
+  also keeps the frame budget under control. Gameplay at 60 steps a second, ball physics sub stepped at 240 Hz,
+  AI thinking staggered at about 10 Hz, animation every render frame.
+- New engine lives in floodlights/m3d/ (sim core, physics, locomotion, touches, kicks, skills, defending,
+  keeper, AI, set pieces, referee) and the view in floodlights/m3d/view/ (rig, procedural animation with two
+  bone IK foot planting, kits, pitch, stadium, camera, HUD). match3d.mjs and match_sim3d.mjs stay as the two
+  entry files the page imports. three.js is still handed in, never imported, so node tests run the real scene.
+- No weather exists in Career Mode, so the match has no weather (spec 55 only asks to react to existing weather).
+- Controls: base map kept (WASD move, E shoot, Q pass, T through, X slide, Space tackle, F skill, Shift sprint),
+  extended: C cross or lob, R finesse shot, G chip, V flair skills, Z shield (attack) or jockey (defend),
+  Space on the ball knocks it on. Skills by F or V plus a direction relative to the body. Strip shows all of it.
+
+Squad research notes (scratch work lives in the session scratchpad, results land in squads_2026.js):
+- 9117 players listed on the 320 pages, 2926 matched to database players (ratings and spellings kept), 802 moves.
+- Mazatlan was dissolved in April 2026 and its Liga MX place went to Atlante: the club becomes Atlante.
+- 28 clubs with stale or undated Wikipedia lists (mostly Saudi and Liga MX) are refreshed from other sources.
+- Rating agents (one per league group) rate new players on the game scale and give every player a role.
+
+- Result: 7932 players in 320 clubs (cap 25 per club, at least the real first team), 23 loanees listed by two
+  clubs kept only at the club they play for, every player rated, ages as of 6 Oct 2026, real numbers and roles.
+- Web spot check (news sites, 6 Oct 2026), all 22 agree with the data: Salah (Trabzonspor, free, 6 Aug),
+  Rodri (Barcelona, 18 Aug), Lewandowski (Chicago Fire, not in the game, so gone), Bruno Guimaraes (Arsenal,
+  75m), Konate (Real Madrid, free), Anthony Gordon (Barcelona, 69m), Martinelli (Al-Hilal, 60m), Bernardo Silva
+  (Real Madrid, free), Rashford (back at Man United, number 9), Benzema (left Al-Hilal 1 Sep, no club, so gone),
+  Vlahovic (Besiktas, free), Griezmann (Orlando City), Semenyo (Man City, number 42), ter Stegen (Ajax, loan),
+  Ollie Watkins (Al-Hilal), Araujo (Liverpool, loan), Son (LAFC), Kane (Bayern), Ronaldo (Al-Nassr), Messi
+  (Inter Miami), Haaland (Man City), Mbappe (Real Madrid).
+
+- Batteries after the data change: condition 138, DOM 167, API 257 / 257 / 256 with 0 failed. Two fixes came
+  with it: namesakes in different clubs get a club tag like the original data did (Rodri MOR), and the API
+  battery's transfer tip check now waits until the save on disk has caught up (bigger saves take a moment
+  longer to write; the game itself was right).
+
+- Final runs turned up two rare API battery failures, both in the test's own assumptions, not the game (the
+  morale and board rules are unchanged): 1) the bench morale check pooled Brighton with Celtic, but the
+  Scottish league ends after 22 rounds, so Celtic's benched players drift back to level over the last 16 weeks
+  as designed; the real 25 man Celtic squad has more fringe players than the old data, which put the pooled
+  group right on the "half negative" line. The check now judges clubs whose league is still playing (Brighton:
+  9 of 9 benched players negative, average -1.49). 2) the transfer events section ran two seasons assuming no
+  test manager is ever sacked; a bad run can cost one the job at the season's end (the board rule), so the
+  test now takes the same club again, as a sacked manager can.
+
+Checklist, Part 1 (squads):
+- [x] S1 club to Wikipedia page map for all 320 clubs, reviewed by hand (16 wrong matches fixed by hand)
+- [x] S2 fetch and parse every current squad (numbers, positions, names, loans), ages and roles from Wikidata
+- [x] S3 match against the database (keep ratings and spellings), list movers, new players and leavers
+- [x] S4 ratings for new players (research agents), big movers cross checked against news
+- [x] S5 squads_2026.js written, players.js applies it, numbers used by kitNumbers and the lineup page
+- [x] S6 spot check 20+ famous players on the web, all batteries green, screenshots of updated squads
+
+Checklist, Part 2 (landing credit):
+- [x] L1 credit line under the two game entries, small and quiet, after the intro, tests updated
+
+Engine notes (floodlights/m3d, sim side written first, then the view):
+- Modules: consts, util, attrs (29 attributes and a movement profile per player from rating, role, age, name),
+  ball (drag, Magnus, bounce with friction and spin, roll, posts, bar, net, body deflections, 240 Hz), body
+  (intention to body response: burst, build up, braking, grip limited turning, pivots, strafe and backpedal caps,
+  gait clock that plants every footstep, balance, stamina and sprint reserve, falls, collisions with shoulder
+  and foul outcomes), control (touch dribbling on the footstep beat, close and sprint dribbling, first touch
+  grades perfect to failed, shielding, loose ball contests), kick (wind up, run onto the ball, contact quality,
+  launch solved against the real physics for every pass, cross and shot kind), defend (jockey, standing and
+  poke tackles judged on where the ball is, slides, shoulder, blocks, interceptions), keeper (angle positioning,
+  set, reaction, ballistic dives, catch or parry with rebounds, punch, smother, rush, claim, distribute),
+  skills (30 moves as programs with feints that fool AI defenders), aerial (headers and volleys of every kind),
+  ai (team brain, shape, pressing, marking, runs, carrier decisions), rules (laws, restarts, offside, cards),
+  user (keys to intentions and actions), sim (the fixed step loop).
+- First AI v AI telemetry after tuning (4 matches, 78 v 78): 2.5 goals, 6.8 shots (4 on target), 113 passes at
+  84 percent, 22 tackles, 10 skill moves a match, no NaN, no crashes, about 2.3 s of CPU for a whole match.
+  Restarts were eating 211 of 360 seconds until takers hurried and the clock slowed during set up.
+
+View notes (m3d/view): rig.mjs builds one skinned body per player (26 bones, about 4440 triangles, kit regions,
+numbers and names from a per team sheet, 9 hair styles, beards, faces, keeper gloves). anim.mjs poses every body
+each frame from the sim: stance feet locked to the sim's footprints (checked: within 3 mm while running), swing
+feet to the next plant, pelvis drop when a planted foot would be out of reach, lean into acceleration and turns,
+arms by style, head look and shoulder checks, kicks, touches, all 30 skills as foot paths pulled onto the real
+ball at each contact, tackles, slides, headers, keeper stance and dives, falls and get ups, stumbles, limps,
+celebrations, gestures, jaw and brows, hem and hair springs. About 0.18 ms a frame for all 22 in node.
+- The mirror: the sim's top down frame (x right, y down the screen) is a mirror of three.js, so the sim's foot 0
+  (on the body's +y side) is the right leg on screen. Right footed players use foot index 0 for their strong foot.
+- pitch.mjs and stadium.mjs (helper agent) and hud.mjs (helper agent) follow .work/m3d-view.md.
+
+Checklist, Part 3 (3D match rebuilt), each phase tested before the next:
+- [x] M0 old 3D match removed (match3d.mjs and match_sim3d.mjs are now two line entries into m3d/), module layout,
+      server route for m3d/, controller wiring (held, pressed and released keys with hold times, new keys C R G V Z,
+      13 chip strip, help and pause text, sub step alpha for smooth motion), new test battery
+- [x] M1 locomotion and ball physics: player profiles from ratings, accel and braking, turning, plant and cut,
+      backpedal and strafe, stumbles; ball with drag, spin, Magnus, bounce, roll, posts, net; touch based
+      dribbling (no magnet), close and sprint dribbling, first touch outcomes, shielding; rig with IK feet
+- [x] M2 passing and shooting: kick model (contact, foot, balance, pressure), every pass and cross type, through
+      balls into space, first time balls, every shot type, volleys and headers by ball height
+- [x] M3 defending and keeper: jockey, standing and poke tackles, slides, blocks, interceptions, shoulder
+      challenges, collisions with outcomes, falls by direction, get ups; keeper positioning, set, dives,
+      catch, parry with rebound physics, punch, smother, rush, one on ones, recovery
+- [x] M4 skill moves: all 30 with prep, execution, contact, rotation, exit, recovery, interruptible
+- [x] M5 off ball AI: shape, marking, cover, lanes, runs of every kind, scanning and calling, carrier decisions
+- [x] M6 set pieces and referee: kick off, throw ins, corners, goal kicks, free kicks with walls, penalties,
+      offside, fouls, advantage, cards, knocks, stamina and fatigue body language
+- [x] M7 polish and visuals: kits, boots, hair and cloth motion, pitch wear marks, shadows and ball shadow,
+      stadium and crowd, broadcast camera, HUD, celebrations and reactions, frame budget on a laptop
+- [x] M8 headless match battery (full matches, goal rates, no NaN, no stuck states, fouls and set pieces)
+
+Phase testing: each phase has its own block in tests-site/test_match3d.js (ball physics, locomotion and gait,
+dribbling and first touch, kicks, keepers, defending, skills, user control, set pieces through the headless
+matches, the view with a stub renderer), run after the phase was built and again after every later change.
+
+Polish pass notes (M7, found by watching matches in headless Chrome and with scratch telemetry):
+- Running looked like a lunge: feet landed 56 cm ahead of the hips at a jog and the hips sank 8 to 17 cm to
+  reach them. Now the foot lands about a third of the stance ahead (35 cm at a jog), the ankle rolls heel to toe
+  while planted, the heel rises earlier, a back foot out of reach rolls onto its toes before the hips drop, the
+  swing starts from the toe off pose (the heel used to snap flat for a frame), and the hip bounce is lowest at mid
+  stance in a run. Hips now ride 0.83 to 0.90 m at every speed (0.95 standing).
+- Getting up from a dive or a slide flipped the body's lying side in one frame; the side is now kept and the lift
+  eased. Keeper hands blend in and out of the ball reach. Half time dips to black while the teams change ends.
+- Kits looked washed out: softer key light and exposure. The low goal camera rises over the near stand.
+- End bias: with identical teams the side attacking +x took about 2.5 times the shots. An exact mirror test (the
+  same seed with both teams turned round) found three causes: the shot aim solver corrected the wrong way when
+  shooting toward -x, the AI first touch averaged two angles as plain numbers (near 180 degrees that sends the
+  touch backward), and a few restart spots used fixed sideways offsets. All fixed; a mirrored kick off now stays
+  a mirror image until rounding noise, and 32 identical team matches came out 91 shots one way, 102 the other.
+  The mirror test is in the battery so this cannot come back quietly.
+- Watching a whole match in the browser: a keeper who got a hand to an on target shot was credited with an own
+  goal; now the shooter keeps the goal unless the shot was going wide (the real convention). Corners were taken
+  while the attackers were still jogging back (2.8 in the box on average); a corner or a free kick with a wall
+  now waits for the players around the ball, up to 7 s, and has 4.9 in the box with no more restart time over a
+  match. A deep free kick no longer gets the goal framing (the ball sat at the edge of the screen).
+
+Final:
+- [x] F1 all batteries 0 failed three times, typecheck, vitest, boot test, memory under 400 MB idle
+      (three runs in a row: vitest 81, condition 138, API 255 to 257, DOM 167, 3D 126, layout 222, site 179,
+      build, boot 52, server memory 226 to 274 MB)
+- [x] F2 screenshots (match, credit line, squads), upload folder, push to GitHub, report

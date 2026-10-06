@@ -317,7 +317,7 @@ const TRAVEL = {
   "Queretaro": ["Queretaro", "Mexico", 20.5664, -100.4303, "Queretaro Intercontinental", "QRO", "ibis Queretaro", "Fiesta Inn Queretaro", "Casa de la Marquesa"],
   "Atlas": ["Guadalajara", "Mexico", 20.6997, -103.3269, "Guadalajara", "GDL", "ibis Guadalajara Expo", "Fiesta Americana Guadalajara", "Hyatt Regency Andares Guadalajara"],
   "Puebla": ["Puebla", "Mexico", 19.0200, -98.1858, "Puebla Hermanos Serdan", "PBC", "ibis Puebla", "Fiesta Inn Puebla FINSA", "Banyan Tree Puebla"],
-  "Mazatlan": ["Mazatlan", "Mexico", 23.2456, -106.4047, "Mazatlan", "MZT", "ibis Styles Mazatlan", "Fiesta Inn Mazatlan", "Pueblo Bonito Emerald Bay Resort and Spa"],
+  "Atlante": ["Mexico City", "Mexico", 19.3836, -99.1782, "Mexico City Benito Juarez", "MEX", "ibis Mexico Alameda", "Hilton Mexico City Reforma", "Four Seasons Hotel Mexico City"],
   "Atletico San Luis": ["San Luis Potosi", "Mexico", 22.1458, -101.0144, "San Luis Potosi Ponciano Arriaga", "SLP", "ibis San Luis Potosi", "Fiesta Inn San Luis Potosi Glorieta Juarez", "Hilton San Luis Potosi"],
 
   // ---------- single European clubs ----------

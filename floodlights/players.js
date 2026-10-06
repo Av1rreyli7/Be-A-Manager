@@ -1,4 +1,4 @@
-// Player database, 2025-26 season style squads.
+// Player database. The squads are the real ones as of October 2026 (squads_2026.js, applied below).
 // Format per club: league, transfer budget in millions (Prem clubs only), squad.
 // Each player: [name, position, age, rating]. Market value is computed from rating and age.
 
@@ -545,6 +545,9 @@ const { buildFillClubs } = require("./league_fill");
 }
 // Unify the Brazilian league name.
 for (const c of Object.values(CLUBS)) if (c.league === "Brazil") c.league = "Brasileirao";
+// Real squads as of October 2026 (squads_2026.js) replace the older squads above, club by club.
+const { SQUADS_2026 } = require("./squads_2026");
+for (const [club, rows] of Object.entries(SQUADS_2026)) if (CLUBS[club]) CLUBS[club].squad = rows;
 
 // Compute market value in millions from rating and age, with a small position tweak.
 const VALUE_CAP = 400;
@@ -575,7 +578,7 @@ function buildDatabase() {
   let id = 1;
   for (const [clubName, info] of Object.entries(CLUBS)) {
     const squadIds = [];
-    for (const [name, pos, age, rating] of info.squad) {
+    for (const [name, pos, age, rating, num, role, loan] of info.squad) {
       // Skip placeholder "gone" entries used to keep me honest while writing squads
       if (name.includes("gone")) continue;
       const p = {
@@ -585,6 +588,10 @@ function buildDatabase() {
         club: clubName,
         league: info.league
       };
+      // the October 2026 squads also carry the real shirt number, the detailed role and a loan owner
+      if (num) p.num = num;
+      if (role) p.role = role;
+      if (loan) p.loanFrom = loan;
       players.push(p);
       squadIds.push(p.id);
     }

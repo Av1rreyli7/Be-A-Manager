@@ -1296,7 +1296,9 @@ function makeView(canvas) {
 // CONTROLLER
 // =====================================================================
 let active = null;
-const KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyQ", "KeyT", "KeyX", "KeyF", "KeyC", "Space", "ShiftLeft", "ShiftRight", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyQ", "KeyT", "KeyX", "KeyF", "KeyC", "KeyR", "KeyG", "KeyV", "KeyZ", "Space", "ShiftLeft", "ShiftRight", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+// the action keys the 3D match reads as held, pressed and released (with how long they were held)
+const ACT_KEYS = { KeyE: "E", KeyQ: "Q", KeyT: "T", KeyC: "C", KeyR: "R", KeyG: "G", KeyF: "F", KeyV: "V", KeyZ: "Z", KeyX: "X", Space: "S" };
 const esc = s => String(s === undefined || s === null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 function diffLine(mine, theirs) {
@@ -1326,7 +1328,7 @@ function saveLook(v) {
 // ---------- the controls strip: small key chips at the top right, in the site kit look (kit.css tokens) ----------
 // Full while the match settles in, then it fades right down so it never fights the play, and comes back to
 // full on pause. 3D shows every key, Classic only the keys it uses.
-const STRIP_KEYS = [["WASD", "Move"], ["E", "Shoot"], ["Q", "Pass"], ["T", "Through"], ["X", "Slide"], ["Space", "Tackle"], ["F", "Skill"], ["Shift", "Sprint"]];
+const STRIP_KEYS = [["WASD", "Move"], ["Shift", "Sprint"], ["Q", "Pass"], ["T", "Through"], ["C", "Cross"], ["E", "Shoot"], ["R", "Finesse"], ["G", "Chip"], ["F", "Skill"], ["V", "Flair"], ["Z", "Shield"], ["Space", "Tackle"], ["X", "Slide"]];
 const STRIP_KEYS_CLASSIC = [["WASD", "Move"], ["E", "Shoot"], ["Q", "Pass"], ["Shift", "Sprint"]];
 const STRIP_FADE = 4;
 const STRIP_CSS = ".mx-keys{position:absolute;top:26px;right:18px;z-index:6;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:calc(100% - 380px);pointer-events:none;opacity:1;transition:opacity .7s ease}" +
@@ -1361,7 +1363,7 @@ function open(cfg) {
   const doc = root.document;
   const wrap = doc.getElementById("matchWrap"), canvas = doc.getElementById("matchCanvas"), panel = doc.getElementById("matchPanel");
   if (!wrap || !canvas || !panel) return false;
-  const A = active = { cfg, wrap, canvas, panel, mode: "pre", sim: null, view: null, keys: {}, passQ: false, throughQ: false, slideQ: false, skillQ: false, crossQ: false, shootLatch: false, acc: 0, last: 0, raf: 0, checkT: 0, saving: false, saved: false, view3d: null, want3d: false, load3d: null, strip: null, stripT: 0, stripDim: false, stripOff: false };
+  const A = active = { cfg, wrap, canvas, panel, mode: "pre", sim: null, view: null, keys: {}, down: {}, up: {}, holdAt: {}, passQ: false, throughQ: false, slideQ: false, skillQ: false, crossQ: false, shootLatch: false, acc: 0, last: 0, raf: 0, checkT: 0, saving: false, saved: false, view3d: null, want3d: false, load3d: null, strip: null, stripT: 0, stripDim: false, stripOff: false };
   wrap.classList.remove("hidden");
   wrap.classList.remove("m3d");
   A.view = makeView(canvas);
@@ -1397,15 +1399,17 @@ function open(cfg) {
       "<span><kbd>F</kbd> Skill move. Good dribblers beat their man, poor ones lose the ball.</span>" +
       "<span><kbd>Space</kbd> Hold when defending to close down and make a standing tackle</span>" +
       "<span><kbd>X</kbd> Slide tackle. Time it and win it clean. Miss the ball and catch the man: a foul, in your box a penalty.</span>" +
-      "<span><kbd>C</kbd> Cross (3D) from out wide. With the ball in the air, <kbd>E</kbd> heads at goal and <kbd>Q</kbd> heads to a mate.</span>" +
-      "<span><b>Set pieces (3D)</b> Kick off: just run with it. Corners: W A S D aim, hold E, C for a perfect cross, Q short. Free kicks: W or S aim, A or D bend, hold E. Penalties: W or S picks the side, hold E. In goal, hold W or S to dive.</span>" +
+      "<span><b>3D also has</b> <kbd>C</kbd> cross from wide or a lofted ball (light for a driven one, hard for a whipped one), <kbd>R</kbd> finesse shot that curls, <kbd>G</kbd> chip (or a lofted through ball far out), <kbd>V</kbd> flair skills, <kbd>Z</kbd> shield the ball or jockey without it, <kbd>Space</kbd> on the ball knocks it on.</span>" +
+      "<span><b>Skills (3D)</b> F or V with a direction picks the move from where you are facing. Tap again quickly for the bigger move, Shift with F for the cuts. E then Q is a fake shot.</span>" +
+      "<span><b>In the air (3D)</b> <kbd>E</kbd> heads or volleys at goal, <kbd>Q</kbd> heads to a mate. Press early for a first time pass or shot.</span>" +
+      "<span><b>Set pieces (3D)</b> W A S D aim, then hold a key for power: Q short, C cross or long, E shoot, R curl. Penalties: aim and hold E. Facing one in goal, hold W or S to dive.</span>" +
       "<span><kbd>Esc</kbd> Pause</span></div>" +
       "<p>You play as " + esc(mineName) + " and attack to the right. The game picks your player nearest the ball. The match takes about 6 minutes and you need a keyboard.</p>" +
       '<p class="mwarn">You get one go. Once you kick off, the final score is what counts for this week. If you leave before full time, the match is simmed like normal.</p>' +
       '<div class="mlook"><span class="mk">How it looks</span><div class="mseg">' +
       '<button class="small ghost' + (A.want3d ? " on" : "") + '" id="mxLook3d"' + (can3d ? "" : " disabled") + ">3D</button>" +
       '<button class="small ghost' + (A.want3d ? "" : " on") + '" id="mxLookClassic">Classic</button></div>' +
-      '<small id="mxLookNote">' + (can3d ? "3D is the full game: real player attributes, skill moves, slide tackles and through balls. Classic is the simple top down match as before, with the first five keys only. If 3D runs slowly on your laptop, pick Classic." : "3D is not available in this browser, so the match plays in Classic.") + "</small></div>" +
+      '<small id="mxLookNote">' + (can3d ? "3D is the full game: real players on a real pitch, every pass, shot, skill and tackle, built on each player's ratings. Classic is the simple top down match as before, with the first five keys only. If 3D runs slowly on your laptop, pick Classic." : "3D is not available in this browser, so the match plays in Classic.") + "</small></div>" +
       (err ? '<p class="merr">' + esc(err) + "</p>" : "") +
       '<div class="mbtns"><button class="ghost" id="mxBack">Not now</button><button class="gold" id="mxGo">Kick off</button></div>'
     );
@@ -1461,14 +1465,15 @@ function open(cfg) {
   function showPause() {
     A.mode = "paused";
     A.stripT = 0;
-    A.keys = {};
+    A.keys = {}; A.down = {}; A.up = {};
     show(
       '<div class="mk">Paused</div><h2>Take a breath</h2>' +
       "<p>The clock is stopped. Press Esc or hit Resume to carry on.</p>" +
       '<div class="mkeys">' +
       "<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move, <kbd>Shift</kbd> sprint. <kbd>Q</kbd> Pass. <kbd>E</kbd> Hold to shoot.</span>" +
-      (A.view3d ? "<span><kbd>T</kbd> Through ball. <kbd>F</kbd> Skill move. <kbd>Space</kbd> Close down and tackle. <kbd>X</kbd> Slide.</span>" +
-        "<span><kbd>C</kbd> Cross from wide. In the air, <kbd>E</kbd> heads at goal, <kbd>Q</kbd> to a mate.</span>" : "") +
+      (A.view3d ? "<span><kbd>T</kbd> Through ball. <kbd>C</kbd> Cross or lofted ball. <kbd>R</kbd> Finesse. <kbd>G</kbd> Chip.</span>" +
+        "<span><kbd>F</kbd> Skill, <kbd>V</kbd> flair (tap twice for more, Shift with F for cuts). <kbd>Z</kbd> Shield or jockey. <kbd>Space</kbd> Tackle, or knock it on. <kbd>X</kbd> Slide.</span>" +
+        "<span>In the air, <kbd>E</kbd> heads or volleys at goal, <kbd>Q</kbd> to a mate. Without the ball, <kbd>Q</kbd> switches player.</span>" : "") +
       "</div>" +
       '<div class="mbtns"><button class="red" id="mxQuit">Quit match</button><button class="gold" id="mxRes">Resume</button></div>'
     );
@@ -1487,7 +1492,7 @@ function open(cfg) {
     if (A.mode !== "paused") return;
     hide();
     A.stripT = STRIP_FADE - 2.5;
-    A.keys = {};
+    A.keys = {}; A.down = {}; A.up = {};
     A.acc = 0;
     A.mode = "playing";
   }
@@ -1561,7 +1566,7 @@ function open(cfg) {
 
   function input() {
     const k = A.keys;
-    return {
+    const inp = {
       mx: (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0),
       my: (k.KeyS || k.ArrowDown ? 1 : 0) - (k.KeyW || k.ArrowUp ? 1 : 0),
       sprint: !!(k.ShiftLeft || k.ShiftRight),
@@ -1573,6 +1578,13 @@ function open(cfg) {
       cross: A.crossQ,
       tackle: !!k.Space
     };
+    // the 3D engine reads every action key as held, just pressed, and just let go (with how long it was held)
+    if (A.view3d) {
+      const held = {}, down = {}, up = {};
+      for (const code in ACT_KEYS) { const n = ACT_KEYS[code]; held[n] = !!k[code]; if (A.down[code]) down[n] = true; if (A.up[code] !== undefined) up[n] = A.up[code]; }
+      inp.held = held; inp.down = down; inp.up = up;
+    }
+    return inp;
   }
   A.onKey = e => {
     if (!KEYS.has(e.code)) return;
@@ -1584,6 +1596,11 @@ function open(cfg) {
       return;
     }
     if (A.mode !== "playing") return;
+    if (ACT_KEYS[e.code]) {
+      const now = root.performance && root.performance.now ? root.performance.now() : Date.now();
+      if (down && !e.repeat && !A.keys[e.code]) { A.down[e.code] = true; A.holdAt[e.code] = now; }
+      if (!down && A.keys[e.code]) A.up[e.code] = Math.max(0.02, (now - (A.holdAt[e.code] || now)) / 1000);
+    }
     A.keys[e.code] = down;
     if (down && !e.repeat) {
       if (e.code === "KeyQ") A.passQ = true;
@@ -1609,12 +1626,13 @@ function open(cfg) {
       while (A.acc >= STEP && n < 6) {
         A.sim.step(input());
         A.passQ = false; A.shootLatch = false; A.throughQ = false; A.slideQ = false; A.skillQ = false; A.crossQ = false;
+        A.down = {}; A.up = {};
         A.acc -= STEP; n++;
       }
       if (n === 6) A.acc = 0;
       const evs = A.sim.m.events.splice(0);
       let full = false;
-      for (const ev of evs) { A.view.onEvent(ev, A.sim); if (A.view3d) A.view3d.onEvent(ev, A.sim); if (ev.type === "full") full = true; }
+      for (const ev of evs) { if (A.view3d) A.view3d.onEvent(ev, A.sim); else A.view.onEvent(ev, A.sim); if (ev.type === "full") full = true; }
       if (full) finish();
     }
     // a light check twice a second, in every screen of the match, for the host having simmed the week
@@ -1629,7 +1647,7 @@ function open(cfg) {
     }
     if (A.view3d && A.sim) {
       // 3D: the view draws the scene and, when it owns its HUD, the scoreboard and labels too
-      A.view3d.draw(A.sim, dtV, A.view.fx);
+      A.view3d.draw(A.sim, dtV, A.view.fx, A.acc / STEP);
       if (!A.view3d.ownHud) A.view.draw(A.sim, dtV, { overlay: A.view3d });
     } else A.view.draw(A.sim, dtV, {});
     A.raf = root.requestAnimationFrame(frame);
