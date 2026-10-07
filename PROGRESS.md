@@ -559,3 +559,23 @@ Final:
       (three runs in a row: vitest 81, condition 138, API 255 to 257, DOM 167, 3D 126, layout 222, site 179,
       build, boot 52, server memory 226 to 274 MB)
 - [x] F2 screenshots (match, credit line, squads), upload folder, push to GitHub, report
+
+## 3D match: the ball stays with you, loose balls and the man on the ball are yours
+
+Feedback after the rebuild: "if you have the ball while running you leave the ball and run away"; running onto a
+loose ball or into the man on the ball should win it. Measured on the old code: a lone runner making turns and
+sprints lost the ball in 30 of 30 runs (it rolled up to 2.8 m away), and running into the AI carrier won it
+5 times in 40.
+- [x] Your player carries the ball: it rides just in front of the body (0.4 to 1 m, more at a sprint) through runs,
+      sprints and sharp turns, swinging round the side on a turn, with a touch on the step beat so it still reads
+      as dribbling. Only a tackle, a slide, a shoulder or a defender in the way takes it. Space still knocks it on.
+      AI players dribble exactly as before.
+- [x] A loose ball you run onto is yours (no reading roll, a little more reach, a clean first touch on a slow
+      ball); a hard pass between two of theirs still has to be read. You win a 50 50 you get to.
+- [x] Running into the man on the ball takes it off him, decided before the bodies meet so it is never your foul,
+      and he cannot tackle straight back for 0.9 s. Your standing tackles come away with the ball.
+- [x] Battery: four new checks (no losses through turns and sprints, loose balls collected 20 of 20, the man on
+      the ball robbed 20 of 20 with no fouls, no instant tackle back); now lone runner losses 0 of 30.
+- [x] The layout test (headless Chrome) hung once overnight when its Chrome stopped answering at start up; it now
+      fails after 240 s instead of waiting for ever. Then three full runs in a row, 0 failed (vitest 81, condition
+      138, API 257, DOM 167, 3D 130, layout 222, site 179, build, boot 52, server memory 226 MB).

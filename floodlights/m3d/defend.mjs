@@ -12,7 +12,7 @@ const leg = p => p.prof.h * 0.52; // leg length
 
 // ---------- standing tackle and poke ----------
 export function startTackle(m, p, poke) {
-  if (!canPlay(p) || p.act) return false;
+  if (!canPlay(p) || p.act || p.ballLockT > m.t) return false;
   const b = m.ball;
   const d = hyp(b.x - p.x, b.y - p.y);
   const maxD = poke ? 2.3 : 1.75;
@@ -70,7 +70,8 @@ function resolveTackle(m, p, poke) {
     if (poke) win += 0.05;
     if (m.rng() < clamp(win, 0.05, 0.95)) {
       // won: a poke knocks it loose, a standing tackle takes it or blocks it away
-      const keep = !poke && m.rng() < 0.45 + tck * 0.35;
+      // the person's standing tackle comes away with the ball; a poke still just knocks it loose
+      const keep = !poke && (m.rng() < 0.45 + tck * 0.35 || !m.auto && m.ctrl === p);
       const ang = p.act.dir + (keep ? 0 : gauss(m.rng) * 0.9);
       const v = keep ? 1.8 + m.rng() * 1.5 : 3.5 + m.rng() * 4;
       b.vx = Math.cos(ang) * v + p.vx * 0.3; b.vy = Math.sin(ang) * v + p.vy * 0.3; b.vz = m.rng() < 0.2 ? 1.5 : 0;
@@ -107,7 +108,7 @@ function resolveTackle(m, p, poke) {
 
 // ---------- slide tackle ----------
 export function startSlide(m, p, dir) {
-  if (!canPlay(p) || p.act || p.mode === "stumble") return false;
+  if (!canPlay(p) || p.act || p.mode === "stumble" || p.ballLockT > m.t) return false;
   const sp = Math.max(p.spd, 3.5);
   p.act = { k: "slide", own: true, t: 0, phase: "plant", dir, v: Math.min(10.5, sp * 1.12 + 1.2), T: 0, lock: 1, busy: true, turnK: 0.2, hitBall: false, hitMan: null, sx: p.x, sy: p.y, foot: p.prof.foot > 0 ? 0 : 1 };
   m.events.push({ type: "slide", by: p.id, x: p.x, y: p.y, dir });

@@ -190,6 +190,63 @@ async function main() {
     ok("sprint dribbling pushes the ball further ahead than close control", fSprint > fClose + 0.3, [fClose, fSprint]);
   }
 
+  // ---------- the person's player: the ball goes where he goes, loose balls and the man on the ball are his ----------
+  {
+    const userInp = (mx, my, sprint) => ({ mx, my, sprint: !!sprint, held: {}, down: {}, up: {} });
+    const farAway = (m, keep) => { for (const q of m.players) if (!keep.includes(q)) { q.x = 55 * (q.team ? 1 : -1); q.y = 37 * (q.idx % 2 ? 1 : -1); q.vx = q.vy = 0; q.want.spd = 0; q.ai.think = 99; } };
+    // random sharp turns, sprinting and jogging, nobody near: he never runs away from the ball
+    let lost = 0, gapMax = 0;
+    for (let k = 0; k < 12; k++) {
+      const sim = createSim3D(setupOf(75, 75), { rng: seeded(700 + k) });
+      const m = sim.m, p = m.teams[0].players[7];
+      clearPitch(m, [p]); m.auto = false; m.ctrl = p;
+      p.x = 0; p.y = 0; p.face = 0;
+      const b = m.ball; b.x = 0.4; b.y = 0; b.ctrl = p; b.last = p; b.lastTeam = 0;
+      const r = seeded(40 + k);
+      let a = 0, spr = false;
+      for (let i = 0; i < 60 * 10; i++) {
+        if (i % 24 === 0) { a += (r() - 0.5) * (r() < 0.3 ? 5.5 : 2.2); spr = r() < 0.5; }
+        if (Math.abs(p.x) > 30 || Math.abs(p.y) > 20) a = Math.atan2(-p.y, -p.x);
+        farAway(m, [p]);
+        sim.step(userInp(Math.cos(a), Math.sin(a), spr)); m.events.length = 0;
+        if (b.ctrl !== p) { lost++; break; }
+        gapMax = Math.max(gapMax, Math.hypot(b.x - p.x, b.y - p.y));
+      }
+    }
+    ok("the person's dribbler keeps the ball through sharp turns and sprints (it stays within a metre of his feet)", lost === 0 && gapMax < 1.1, [lost, gapMax]);
+    // a loose ball last played by the other side: he runs onto it and it is his
+    let got = 0;
+    for (let k = 0; k < 20; k++) {
+      const sim = createSim3D(setupOf(75, 75), { rng: seeded(720 + k) });
+      const m = sim.m, p = m.teams[0].players[7];
+      clearPitch(m, [p]); m.auto = false; m.ctrl = p;
+      p.x = 0; p.y = 0; p.face = 0;
+      const b = m.ball; b.x = 7 + k % 5; b.y = -6; b.vx = (k % 3) - 1; b.vy = 3 + (k % 4); b.last = m.teams[1].players[6]; b.lastTeam = 1; b.touchT = 1;
+      for (let i = 0; i < 240 && b.ctrl !== p; i++) { farAway(m, [p]); sim.step(userInp(b.x + b.vx * 0.3 - p.x, b.y + b.vy * 0.3 - p.y, true)); m.events.length = 0; }
+      if (b.ctrl === p) got++;
+    }
+    ok("the person collects a loose ball he runs onto", got === 20, got);
+    // he runs into the man on the ball: he wins it, it is not a foul, and the man cannot tackle straight back
+    let won = 0, fouls = 0, lockOk = true;
+    for (let k = 0; k < 20; k++) {
+      const sim = createSim3D(setupOf(75, 75), { rng: seeded(740 + k) });
+      const m = sim.m, p = m.teams[0].players[5], c = m.teams[1].players[7];
+      clearPitch(m, [p, c]); m.auto = false; m.ctrl = p;
+      p.x = 0; p.y = 0; p.face = 0;
+      c.x = 6; c.y = (k % 5) - 2; c.face = Math.PI * (k % 2 ? 1 : 0.6);
+      const b = m.ball; b.x = c.x + Math.cos(c.face) * 0.4; b.y = c.y + Math.sin(c.face) * 0.4; b.ctrl = c; b.last = c; b.lastTeam = 1;
+      for (let i = 0; i < 180 && b.ctrl !== p; i++) {
+        farAway(m, [p, c]);
+        c.want.dx = Math.cos(c.face); c.want.dy = Math.sin(c.face); c.want.spd = 3; c.ai.think = 99;
+        sim.step(userInp(c.x - p.x, c.y - p.y, true)); m.events.length = 0;
+      }
+      if (b.ctrl === p) { won++; if (defend.startTackle(m, c, false)) lockOk = false; }
+      fouls += m.stats.fouls[0];
+    }
+    ok("running into the man on the ball wins it for the person, never as a foul", won === 20 && fouls === 0, [won, fouls]);
+    ok("the man who lost it cannot tackle straight back", lockOk, null);
+  }
+
   // ---------- first touch quality ----------
   {
     const grades = (rating, speed) => {

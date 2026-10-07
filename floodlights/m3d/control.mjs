@@ -83,12 +83,72 @@ function touchErr(m, p, base) {
   return { ang: base * f, dist: 0.07 * f };
 }
 
+// is this the player the person is steering right now
+export function isUser(m, p) { return !!p && !m.auto && m.ctrl === p; }
+
+// the person's dribbler: the ball goes where he goes. It rides just in front of the body through runs, sprints and
+// turns, with a touch on the step beat that sends it a little ahead before it settles back, so it reads as
+// dribbling. Only a tackle, a slide or a defender standing in the way at a sprint takes it off him. A knock on
+// (Space) still sends it away to be chased.
+function carry(m, p, dt) {
+  const b = m.ball, d = p.drib, W = p.want;
+  const bd = hyp(b.x - p.x, b.y - p.y);
+  if (bd > 2.8) { b.ctrl = null; return; }
+  if (W.knock && m.t - d.lastT > 0.15) {
+    // knock it on into the space ahead and run after it
+    const ux = Math.cos(p.face), uy = Math.sin(p.face);
+    const D = 3.2 + n01(p.a.spd) * 2 + p.spd * 0.6;
+    touchTo(m, p, p.x + ux * D, p.y + uy * D, clamp(D / Math.max(p.spd, 3), 0.5, 1.2), { ang: 0.03, dist: 0.05 }, "knock", p.prof.foot > 0 ? 0 : 1);
+    W.knock = false; d.knockT = m.t;
+    m.events.push({ type: "knock", by: p.id });
+    return;
+  }
+  // after a knock on the ball runs free until he is back on it
+  if (d.knockT && m.t - d.knockT < 1.6 && bd > 0.75) return;
+  d.knockT = 0;
+  if (b.z > 0.45) return; // a bouncing ball comes down first
+  const sp = p.spd, moving = sp > 0.6;
+  const ux = Math.cos(p.face), uy = Math.sin(p.face);
+  // a touch on the beat: the feet play it and it surges a little ahead
+  const beat = p.stepped >= 0;
+  d.since += beat ? 1 : 0;
+  const every = sp > p.prof.vmax * 0.8 ? 3 : 2;
+  if (moving && beat && d.since >= every && m.t - d.lastT > 0.2) {
+    const side = -uy * (b.x - p.x) + ux * (b.y - p.y);
+    const foot = side >= 0 ? 0 : 1;
+    const kind = sp > p.prof.vmax * 0.8 ? "sprint" : sp < p.prof.vmax * 0.45 ? "close" : "dribble";
+    p.touch = { t: m.t, foot, kind, x: b.x, y: b.y };
+    d.since = 0; d.lastT = m.t;
+    b.touchT = 0;
+    m.events.push({ type: "touch", by: p.id, kind, foot });
+  }
+  const since = m.t - d.lastT;
+  const surge = moving ? (0.18 + sp * 0.025) * Math.exp(-since / 0.2) : 0;
+  const L = (moving ? 0.36 + Math.min(0.42, sp * 0.05) : 0.32) + surge;
+  // standing, it sits in front of the stronger foot
+  const off = moving ? 0 : 0.1 * p.prof.foot;
+  let cx = ux, cy = uy;
+  // a ball left behind on a sharp turn goes round the side with him, never through his legs
+  const rel = angDiff(p.face, Math.atan2(b.y - p.y, b.x - p.x));
+  if (Math.abs(rel) > 1.2 && bd > 0.15) { const ta = p.face + Math.sign(rel) * 1.1; cx = Math.cos(ta); cy = Math.sin(ta); }
+  const tx = p.x + cx * L - uy * off, ty = p.y + cy * L + ux * off;
+  // a stiff spring that carries the body's own speed: no lag on a sprint, no snap on a turn
+  const k = Math.min(1, dt * 16);
+  b.vx += (p.vx + (tx - b.x) * 8 - b.vx) * k;
+  b.vy += (p.vy + (ty - b.y) * 8 - b.vy) * k;
+  if (b.z <= BALL_R + 0.02) b.vz = 0;
+  b.wx = -b.vy / BALL_R; b.wy = b.vx / BALL_R; b.wz = 0;
+  b.last = p; b.lastTeam = p.team; b.immune = p; b.immuneT = 0.1;
+  if (!moving && m.t - d.lastT > 0.6) { p.touch = { t: m.t, foot: p.prof.foot > 0 ? 0 : 1, kind: "sole", x: b.x, y: b.y }; d.lastT = m.t; b.touchT = 0; }
+}
+
 // the dribbler: decide when to touch the ball, and steer the body so it stays with it
 export function dribble(m, p, dt) {
   const b = m.ball;
   const d = p.drib;
-  d.since += p.stepped >= 0 ? 1 : 0;
   if (!canPlay(p)) return;
+  if (isUser(m, p) && b.ctrl === p) { carry(m, p, dt); return; }
+  d.since += p.stepped >= 0 ? 1 : 0;
   const W = p.want;
   const wl = hyp(W.dx, W.dy);
   const wdx = wl > 0 ? W.dx / wl : Math.cos(p.face), wdy = wl > 0 ? W.dy / wl : Math.sin(p.face);
@@ -197,6 +257,10 @@ export function firstTouch(m, p, dir) {
   q -= (1 - p.bal) * 0.2 + (1 - p.stam) * 0.05;
   if (m.wet) q -= 0.03;
   q += gauss(m.rng) * 0.11;
+  if (isUser(m, p)) {
+    q += 0.18;
+    if (inSp < 9 && b.z < 0.5) q = Math.max(q, 0.66);
+  }
   const grade = q > 0.8 ? "perfect" : q > 0.62 ? "good" : q > 0.47 ? "loose" : q > 0.34 ? "heavy" : q > 0.22 ? "awkward" : "failed";
   const side = -Math.sin(p.face) * (b.x - p.x) + Math.cos(p.face) * (b.y - p.y);
   const foot = side >= 0 ? 0 : 1;
@@ -239,6 +303,29 @@ export function firstTouch(m, p, dir) {
   if (!keep) b.ctrl = null;
   m.events.push({ type: "control", by: p.id, grade, part });
   return grade;
+}
+
+// the person's player runs into the man on the ball: he takes it off him. Checked before bodies collide, so the
+// contact that follows is on the new owner and is never a foul by the person.
+export function userWin(m) {
+  const p = m.ctrl, b = m.ball, c = b.ctrl;
+  if (m.auto || !p || p.off || !c || c.team === p.team || b.held || p.act || !canPlay(p)) return false;
+  if (b.z > 0.6) return false;
+  const dB = hyp(b.x - p.x, b.y - p.y), dC = hyp(c.x - p.x, c.y - p.y);
+  if (dB > 0.95 && dC > 0.9) return false;
+  if (p.spd < 0.8 && dB > 0.6) return false; // he has to be going at it, or right on the ball
+  // the man loses it, a little off balance, and cannot dive straight back in
+  c.bal -= 0.12; c.ballLockT = m.t + 0.9;
+  if (c.act && (c.act.k === "skill" || c.act.k === "kick")) c.act = null;
+  b.ctrl = p; b.last = p; b.lastTeam = p.team; b.touchT = 0; b.flight = null; b.immune = p; b.immuneT = 0.3;
+  b.vx = p.vx; b.vy = p.vy; b.vz = 0;
+  const foot = -Math.sin(p.face) * (b.x - p.x) + Math.cos(p.face) * (b.y - p.y) >= 0 ? 0 : 1;
+  p.drib.lastT = m.t; p.drib.since = 0; p.drib.knockT = 0;
+  p.touch = { t: m.t, foot, kind: "tackle", x: b.x, y: b.y };
+  m.events.push({ type: "tackle", by: p.id, won: true, steal: true, from: c.id });
+  m.stats.tackles[p.team]++;
+  if (m.lastShot) m.lastShot.on = false;
+  return true;
 }
 
 // can this player meet the ball now: in front of him, low enough to play, within reach

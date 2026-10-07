@@ -58,6 +58,9 @@ async function main() {
   const chrome = spawn(CHROME, ["--headless=new", "--remote-debugging-port=" + DEBUG_PORT, "--user-data-dir=" + path.join(tmp, "chrome"), "--no-first-run", "--no-default-browser-check", "--hide-scrollbars", "--force-device-scale-factor=1", "--window-size=1440,900", "about:blank"], { stdio: "ignore" });
   const stop = () => { try { server.kill(); } catch (e) {} try { chrome.kill(); } catch (e) {} };
   process.on("exit", stop);
+  // a hung Chrome must fail the run, never stall it: the whole check normally takes well under a minute
+  const guard = setTimeout(() => { console.log("FAIL: layout run timed out after 240 s (headless Chrome stopped answering)"); console.log("passed " + passed + ", failed " + (failed + 1)); stop(); process.exit(1); }, 240000);
+  guard.unref();
   try {
     ok("the Floodlights server starts", await waitFor(async () => (await fetch(BASE + "/floodlights/")).ok, 15000), null);
     ok("headless Chrome starts", await waitFor(async () => (await fetch("http://127.0.0.1:" + DEBUG_PORT + "/json/version")).ok, 15000), null);

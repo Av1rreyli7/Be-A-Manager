@@ -1399,7 +1399,7 @@ function open(cfg) {
       "<span><kbd>F</kbd> Skill move. Good dribblers beat their man, poor ones lose the ball.</span>" +
       "<span><kbd>Space</kbd> Hold when defending to close down and make a standing tackle</span>" +
       "<span><kbd>X</kbd> Slide tackle. Time it and win it clean. Miss the ball and catch the man: a foul, in your box a penalty.</span>" +
-      "<span><b>3D also has</b> <kbd>C</kbd> cross from wide or a lofted ball (light for a driven one, hard for a whipped one), <kbd>R</kbd> finesse shot that curls, <kbd>G</kbd> chip (or a lofted through ball far out), <kbd>V</kbd> flair skills, <kbd>Z</kbd> shield the ball or jockey without it, <kbd>Space</kbd> on the ball knocks it on.</span>" +
+      "<span><b>3D also has</b> <kbd>C</kbd> cross from wide or a lofted ball (light for a driven one, hard for a whipped one), <kbd>R</kbd> finesse shot that curls, <kbd>G</kbd> chip (or a lofted through ball far out), <kbd>V</kbd> flair skills, <kbd>Z</kbd> shield the ball or jockey without it, <kbd>Space</kbd> on the ball knocks it on. The ball stays at your feet until someone tackles you, and running into the man on the ball wins it.</span>" +
       "<span><b>Skills (3D)</b> F or V with a direction picks the move from where you are facing. Tap again quickly for the bigger move, Shift with F for the cuts. E then Q is a fake shot.</span>" +
       "<span><b>In the air (3D)</b> <kbd>E</kbd> heads or volleys at goal, <kbd>Q</kbd> heads to a mate. Press early for a first time pass or shot.</span>" +
       "<span><b>Set pieces (3D)</b> W A S D aim, then hold a key for power: Q short, C cross or long, E shoot, R curl. Penalties: aim and hold E. Facing one in goal, hold W or S to dive.</span>" +

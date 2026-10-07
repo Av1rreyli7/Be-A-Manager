@@ -9,7 +9,7 @@ import { clamp, hyp, angDiff, seeded, shortName, finite } from "./util.mjs";
 import { deriveAttrs, deriveProfile, assignNumbers, roleOf, n01 } from "./attrs.mjs";
 import { createBall, stepBall, predict } from "./ball.mjs";
 import { stepBody, stepCollisions, emptyWant, newGait } from "./body.mjs";
-import { dribble, firstTouch, canMeet, contest, pressureOn } from "./control.mjs";
+import { dribble, firstTouch, canMeet, canPlay, contest, pressureOn, userWin, isUser } from "./control.mjs";
 import { updateKick, startKick, planPass, planLob, SHOT_KINDS } from "./kick.mjs";
 import { updateTackle, updateSlide, tryIntercept, startSlide } from "./defend.mjs";
 import { updateKeeper, inOwnBox } from "./keeper.mjs";
@@ -120,6 +120,8 @@ export function createSim3D(setup, opts) {
     }
     // ---------- touches on the ball ----------
     if (b.ctrl && !b.ctrl.off && m.phase === "play" && !(b.ctrl.act && (b.ctrl.act.k === "skill" || b.ctrl.act.k === "kick"))) dribble(m, b.ctrl, dt);
+    // the person runs into the man on the ball: he wins it (before the bodies meet, so it is never his foul)
+    if (m.phase === "play") userWin(m);
     // ---------- bodies ----------
     for (const p of m.players) {
       if (p.off) { offPitch(m, p, dt); continue; }
@@ -192,7 +194,7 @@ function claims(m) {
     if (hyp(b.x - b.ctrl.x, b.y - b.ctrl.y) > 2.8) b.ctrl = null;
     else {
       for (const o of m.teams[1 - b.ctrl.team].players) {
-        if (o.off || o.act || o.gk) continue;
+        if (o.off || o.act || o.gk || o.ballLockT > m.t) continue;
         // an opponent standing right on the ball between touches nicks it
         const dO = hyp(b.x - o.x, b.y - o.y), dC = hyp(b.x - b.ctrl.x, b.y - b.ctrl.y);
         if (dO < 0.5 && dC > 0.75 && dO < dC * 0.6 && b.z < 0.5 && b.touchT > 0.12 && canMeet(m, o) && m.rng() < 0.35 + n01(o.a.rea) * 0.3) { take(m, o); return; }
@@ -216,8 +218,23 @@ function claims(m) {
   const cand = [];
   for (const p of m.players) {
     if (p.off || p.gk || p.act) continue;
-    if (!canMeet(m, p, p.prof.h * 0.95)) continue;
+    if (p.ballLockT > m.t) continue;
+    const you = isUser(m, p);
     if (b.immune === p && b.immuneT > 0) continue;
+    if (you) {
+      if (b.last === p && b.flight && b.touchT < 0.6) continue; // not his own pass or shot as it leaves
+      // the person's player: any ball he runs onto at foot or chest height is his, from a touch further away
+      const bd = hyp(b.x - p.x, b.y - p.y), bsp = hyp(b.vx, b.vy, b.vz);
+      const near = bd < REACH * 1.3 && b.z < Math.min(1.3, p.prof.h * 0.75) && bsp < 22;
+      const front = Math.abs(angDiff(p.face, Math.atan2(b.y - p.y, b.x - p.x))) < 2.3 || bd < 0.5;
+      if (!(canPlay(p) && near && front) && !canMeet(m, p, p.prof.h * 0.95)) continue;
+      // a hard pass between two of theirs still has to be read in time; a loose or slow ball is simply his
+      const theirPass = b.flight && b.flight.by && b.flight.by.team !== p.team && b.touchT < 2.5 && bsp > 12;
+      if (theirPass && !tryIntercept(m, p)) continue;
+      cand.push(p);
+      continue;
+    }
+    if (!canMeet(m, p, p.prof.h * 0.95)) continue;
     const meant = b.flight && b.flight.to === p;
     const mate = b.last && b.last.team === p.team && b.touchT < 2.5;
     // opponents cut it out only if they read it in time; a team mate (or the receiver) takes it
@@ -227,6 +244,17 @@ function claims(m) {
   if (!cand.length) return;
   let who = cand.sort((a, c) => hyp(b.x - a.x, b.y - a.y) - hyp(b.x - c.x, b.y - c.y))[0];
   const rival = cand.find(c => c.team !== who.team && hyp(b.x - c.x, b.y - c.y) < hyp(b.x - who.x, b.y - who.y) + 0.35);
+  // the person's player wins a 50 50 he gets to (unless the other man is clearly first to it)
+  const you = cand.find(c => isUser(m, c));
+  if (you && rival && (who === you || rival === you)) {
+    const other = who === you ? rival : who;
+    if (hyp(b.x - you.x, b.y - you.y) < hyp(b.x - other.x, b.y - other.y) + 0.45) {
+      other.bal -= 0.1;
+      m.events.push({ type: "duel", won: you.id, lost: other.id });
+      take(m, you);
+      return;
+    }
+  }
   if (rival) {
     who = contest(m, who, rival);
     const loser = who === rival ? cand[0] : rival;
