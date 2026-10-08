@@ -26,10 +26,10 @@ export default function SchedulePage() {
         sub={all ? "League-wide" : l.teams[team].fullName}
         right={
           <>
-            <select aria-label="Team" className={clsx(inputCls, "w-auto py-1.5")} value={team} onChange={(e) => (setTeam(e.target.value), setAll(false))}>
+            <select aria-label="Team" className={inputCls} style={{ width: "auto" }} value={team} onChange={(e) => (setTeam(e.target.value), setAll(false))}>
               {Object.values(l.teams).sort((a, b) => a.fullName.localeCompare(b.fullName)).map((t) => <option key={t.id} value={t.id}>{t.fullName}</option>)}
             </select>
-            <label className="flex items-center gap-1 text-sm"><input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} /> All games</label>
+            <label className="flex items-center gap-1 text-sm"><input type="checkbox" className="k-check" checked={all} onChange={(e) => setAll(e.target.checked)} /> All games</label>
           </>
         }
       />
@@ -54,7 +54,7 @@ export default function SchedulePage() {
                         <TeamBadge league={l} teamId={g.away} size="sm" /> <span className="text-mute">@</span> <TeamBadge league={l} teamId={g.home} size="sm" />
                       </>
                     )}
-                    {g.type !== "regular" && <span className="chip hidden sm:inline-flex">{g.round ?? (g.type === "cup-group" ? `Cup · ${g.cupGroup}` : g.type)}</span>}
+                    {g.type !== "regular" && <span className="hidden sm:inline"><span className="k-tag">{g.round ?? (g.type === "cup-group" ? `Cup · ${g.cupGroup}` : g.type)}</span></span>}
                   </span>
                   <span className="hidden text-xs text-dim sm:block">{g.result ? `${g.result.topHome.name.split(" ").pop()} ${g.result.topHome.pts} / ${g.result.topAway.name.split(" ").pop()} ${g.result.topAway.pts}` : ""}</span>
                   {g.result ? (

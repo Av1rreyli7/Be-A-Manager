@@ -291,7 +291,7 @@ export default function Creator({
       </section>
       <section className="pc-creator-panel">
         <header className="pc-creator-head">
-          <button type="button" className="pc-link" onClick={onBack}>
+          <button type="button" className="k-btn k-btn-ghost k-btn-sm" onClick={onBack}>
             Back
           </button>
           <p className="pc-kicker">Create your player</p>
@@ -400,7 +400,7 @@ export default function Creator({
                 <span>Preferred foot</span>
                 <div className="pc-seg">
                   {(["Right", "Left", "Both"] as const).map((f) => (
-                    <button type="button" key={f} className={clsx(form.foot === f && "is-on")} onClick={() => set("foot", f)}>
+                    <button type="button" key={f} className={clsx("k-btn k-btn-sm", form.foot === f && "k-on")} onClick={() => set("foot", f)}>
                       {f}
                     </button>
                   ))}
@@ -464,7 +464,7 @@ export default function Creator({
                   <span>Playing style</span>
                   <div className="pc-chips">
                     {styles.map((s2) => (
-                      <button type="button" key={s2} className={clsx("pc-chip", form.style === s2 && "is-on")} onClick={() => set("style", s2)}>
+                      <button type="button" key={s2} className={clsx("k-btn k-btn-sm", form.style === s2 && "k-on")} onClick={() => set("style", s2)}>
                         {s2}
                       </button>
                     ))}
@@ -534,11 +534,11 @@ export default function Creator({
                 <span>Facial hair</span>
                 <div className="pc-chips">
                   {BEARDS.map((b, i) => (
-                    <button type="button" key={b} className={clsx("pc-chip", look.beard === i && "is-on")} onClick={() => lk("beard", i)}>
+                    <button type="button" key={b} className={clsx("k-btn k-btn-sm", look.beard === i && "k-on")} onClick={() => lk("beard", i)}>
                       {b}
                     </button>
                   ))}
-                  <button type="button" className={clsx("pc-chip", look.moustache === 1 && "is-on")} onClick={() => lk("moustache", look.moustache ? 0 : 1)}>
+                  <button type="button" className={clsx("k-btn k-btn-sm", look.moustache === 1 && "k-on")} onClick={() => lk("moustache", look.moustache ? 0 : 1)}>
                     Moustache
                   </button>
                 </div>
@@ -628,14 +628,14 @@ export default function Creator({
                 <span>Graphics</span>
                 <div className="pc-seg">
                   {["Low", "Medium", "High", "Ultra"].map((g, i) => (
-                    <button type="button" key={g} className={clsx(quality === i && "is-on")} onClick={() => setQuality(i)}>
+                    <button type="button" key={g} className={clsx("k-btn k-btn-sm", quality === i && "k-on")} onClick={() => setQuality(i)}>
                       {g}
                     </button>
                   ))}
                 </div>
               </label>
               {error && <p className="pc-bad">{error}</p>}
-              <button type="button" className="k-btn k-btn-primary pc-go" disabled={busy || !okWho} onClick={() => onCreate(form, look)}>
+              <button type="button" className="k-btn k-btn-primary" disabled={busy || !okWho} onClick={() => onCreate(form, look)}>
                 {busy ? "Building your world" : "Start my career"}
               </button>
             </div>

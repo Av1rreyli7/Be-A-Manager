@@ -86,11 +86,26 @@ ok("Game Night uses the shared self hosted fonts, nothing from Google", rootLayo
 const gnRoots = ["src/app/game/layout.tsx", "src/app/gm/page.tsx", "src/app/front-office/page.tsx", "src/app/online/page.tsx"].map(read);
 ok("Game Night reads the kit palette (night ground, accent from the mode)", gcss.includes("--bg: var(--k-bg)") && gcss.includes("--accent: var(--k-accent)") && gcss.includes("[data-kmode] {") && !themeFile.includes('"--bg"') && !themeFile.includes('"--accent"'), null);
 ok("every Game Night screen runs in court mode (warm orange), the landing is not forced into it", gnRoots.every(f => f.includes('data-kmode="court"') && f.includes("useCourtMode()")) && !rootLayout.includes("data-kmode"), null);
-ok("Game Night panels have cut corners and hairlines", gcss.includes("clip-path: polygon(0 0, calc(100% - var(--cut)) 0") && gcss.includes("--line: var(--k-line)"), null);
-ok("Game Night uses the kit glass primary button and the liquid glass button", gcss.includes(".btn-glow") && gcss.includes(".btn-glass") && !gcss.includes("--k-glow-bank") && !gcss.includes("--k-glow-shadow"), null);
+ok("Game Night panels are the kit panels: cut corners and hairlines", read("public/kit.css").includes("clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px") && read("src/components/ui.tsx").includes('"k-panel"') && gcss.includes("--line: var(--k-line)"), null);
+ok("Game Night uses the kit glass primary button and the liquid glass button", read("src/components/ui.tsx").includes('variant === "primary" && "k-btn-primary"') && read("src/components/ui.tsx").includes('"k-btn",') && !gcss.includes("--k-glow-bank") && !gcss.includes("--k-glow-shadow"), null);
+{
+  // one place for every component: the kit styles Floodlights' markup and the .k-* classes with the same rules
+  const kit = read("public/kit.css");
+  const twins = [".k-btn,\n:where([data-kapp=\"fl\"]) button {", ".k-btn.k-btn-primary,\n:where([data-kapp=\"fl\"]) button.gold {", ".k-label,\n:where([data-kapp=\"fl\"]) label {", ".k-input,\n:where([data-kapp=\"fl\"]) input:not([type=checkbox]),", ".k-table,\n:where([data-kapp=\"fl\"]) table {", ".k-tabs,\n:where([data-kapp=\"fl\"]) nav.tabs {", ".k-scrim,\n:where([data-kapp=\"fl\"]) .ct-modal {", ".k-entry,\n:where([data-kapp=\"fl\"]) #lobby {", ".k-card,\n:where([data-kapp=\"fl\"]) .card {", ".k-codebox,\n:where([data-kapp=\"fl\"]) .codebox {", ".k-hubhead,\n:where([data-kapp=\"fl\"]) .hubhead {", ".k-tag,\n:where([data-kapp=\"fl\"]) .tag {", ".k-ticker,\n:where([data-kapp=\"fl\"]) .ticker {"].filter(t => !kit.includes(t));
+  ok("one component kit for Floodlights and Game Night: each rule styles both", twins.length === 0 && read("floodlights/index.html").includes('<body data-kapp="fl">'), twins);
+  const old = ["  .btn {", "  .btn-glow", "  .btn-glass {", "  .panel {", "  .label {", "  .chip {", "  .inset {", "  .card-pip {", "  .head-bar {", "  .grad-title {", "  .site-frame {", "  .site-stars {", "  .bam-dots {"].filter(t => gcss.includes(t));
+  ok("the old Game Night button, panel, label and chip styles are gone", old.length === 0, old);
+  const hlOld = [".btn{", ".btn.primary", ".panel{", ".tlabel{", "@font-face"].filter(t => hl.includes(t));
+  ok("Hardwood Legends keeps no button, panel or font styles of its own", hlOld.length === 0, hlOld);
+  const gm = read("src/app/gm/page.tsx");
+  ok("the Front Office entry is the Floodlights entry: frame, stars, two word title, stats, name, create, join, mode card", ["k-stars", "k-frame", "k-entry-in", "k-brand", "k-title", "hrise", "k-sub", "<em>", "k-stats", "k-card", "Your manager name", "k-create", "Create a game", "Or join with a code", "k-code", "k-mode"].every(t => gm.includes(t)), null);
+  ok("Front Office plays like Floodlights: create a room, friends join with the code, alone is the same room started solo", gm.includes("hostCreate(") && gm.includes("guestJoin(") && gm.includes("hostStart(") && gm.includes("k-codebox") && gm.includes("k-teampick") && read("src/lib/online/session.ts").includes("lobby.members.length === 1") && read("src/lib/online/session.ts").includes("local = true"), null);
+  ok("the Hardwood Legends entry is the Floodlights entry too", ["k-stars", "k-frame", "k-entry-in", "k-title", "k-stats", "k-card", "Create a game", "k-mode"].every(t => hl.includes(t)), null);
+  ok("inside a save the kit buttons take the franchise colours", read("src/lib/theme.ts").includes("export function kitTint") && read("src/lib/theme.ts").includes('"--k-tint"') && hl.includes("--k-tint"), null);
+}
 {
   const kit = read("public/kit.css");
-  const sel = ":is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold)";
+  const sel = ".k-btn.k-btn-primary,\n:where([data-kapp=\"fl\"]) button.gold {";
   ok("one primary button for the whole site: a tinted glass recipe in the kit, the old glow light bank gone", kit.includes(sel) && kit.includes("--k-tint") && !kit.includes("--k-glow-bank") && !kit.includes("--k-glow-shadow") && kit.includes("translateY(-1px)") && kit.includes("scale(0.97)"), null);
   const flHtml = read("floodlights/index.html"), hlHtml = read("public/games/hardwood-legends.html"), gl = read("src/app/globals.css");
   const oldGlow = ["#eef7b0", "--k-glow-bank", "--k-glow-shadow"].filter(t => flHtml.includes(t) || hlHtml.includes(t) || gl.includes(t) || kit.includes(t));
@@ -102,9 +117,9 @@ ok("old CSS entrances are gone from Game Night screens (GSAP owns them)", !walk(
 ok("Game Night is dark only: no light mode, no plain style, no theme picker, no boot script", !gcss.includes('data-mode="light"') && !gcss.includes('[data-style="plain"]') && !has("src/components/AppearancePicker.tsx") && !has("src/lib/appearance.ts") && !has("src/lib/appearanceBoot.ts") && !rootLayout.includes("BOOT_SCRIPT") && !rootLayout.includes("data-mode"), null);
 ok("every surface links the shared kit", rootLayout.includes('href="/kit.css"') && read("floodlights/index.html").includes('href="/kit.css"') && hl.includes('href="/kit.css"') && has("public/kit.css"), null);
 ok("the page entrance does not trap the full screen game: every tween clears its transform", read("public/kit-motion.js").includes('var CLEAR = "transform,opacity,visibility"') && !gcss.includes(".page-enter"), null);
-ok("Hardwood Legends uses the site fonts and the court accent from the kit", hl.includes("url(/floodlights/fonts/inter.woff2)") && hl.includes("url(/floodlights/fonts/chakra-petch-700.woff2)") && hl.includes('<html data-kmode="court">') && hl.includes("--accent:var(--k-accent)") && !hl.includes("#d0e85c") && !hl.includes("fonts.googleapis.com"), null);
+ok("Hardwood Legends uses the site fonts and the court accent from the kit", read("public/kit.css").includes("url(/floodlights/fonts/inter.woff2)") && read("public/kit.css").includes("url(/floodlights/fonts/chakra-petch-700.woff2)") && hl.includes('<html data-kmode="court">') && hl.includes("--accent:var(--k-accent)") && !hl.includes("#d0e85c") && !hl.includes("fonts.googleapis.com"), null);
 ok("Hardwood Legends menus animate with GSAP and the motion kit", hl.includes('<script src="/floodlights/vendor/gsap.min.js"></script><script src="/kit-motion.js"></script>') && hl.includes("function hlEnter()") && hl.includes("KitMotion.pulse(sc"), null);
-ok("Hardwood Legends uses the kit glass primary button and cut corner panels", !hl.includes(".btn.primary{") && hl.includes('class="btn primary') && hl.includes(".panel,.tcard{border-radius:0"), null);
+ok("Hardwood Legends uses the kit glass primary button and cut corner panels", !hl.includes(".btn.primary{") && hl.includes("k-btn k-btn-primary") && hl.includes("k-panel"), null);
 ok("the headline and both games are in the landing source", landing.includes("Be-A-Manager") && landing.includes("ORDER.map"), null);
 ok("the landing is light: no 3D scene, no three.js, no stats fetch", !has("src/landing/Backdrop3D.tsx") && !/from "three"/.test(landing) && !landing.includes("@react-three/fiber") && !landing.includes("Backdrop3D") && !landing.includes("stats.json"), null);
 ok("each game shows only its title, one short line and the enter button", landing.includes('className="bam-line">{g.line}') && !/bam-(lede|kind|blurb|inside|chips|foot|stats|mini|credit|pill|card-bg|card-art|btnflash|glowbtn)/.test(landing + css) && read("src/landing/games.ts").includes("line: "), null);
@@ -131,9 +146,9 @@ ok("the side preview card is gone from the landing", !css.includes(".bam-side") 
 
 // ---------- Floodlights page: restyle did not drop the pieces the game needs ----------
 const fl = read("floodlights/index.html");
-ok("Floodlights loads no fonts from other sites", !fl.includes("fonts.googleapis.com") && !fl.includes("fonts.gstatic.com") && fl.includes("url(fonts/inter.woff2)"), null);
+ok("Floodlights loads no fonts from other sites", !fl.includes("fonts.googleapis.com") && !fl.includes("fonts.gstatic.com") && read("public/kit.css").includes("url(/floodlights/fonts/inter.woff2)"), null);
 for (const f of ["inter.woff2", "chakra-petch-600.woff2", "chakra-petch-700.woff2", "instrument-serif-italic.woff2", "geist-mono.woff2"]) ok("font file present: " + f, has("floodlights/fonts/" + f), null);
-ok("Floodlights shares the look: frame, starfield, glass primary button, glass buttons", fl.includes("lobbyframe") && fl.includes('id="bamStars"') && fl.includes('<button id="createBtn" class="gold">') && fl.includes("button.ghost{background:linear-gradient(135deg"), null);
+ok("Floodlights shares the look: frame, starfield, glass primary button, glass buttons", fl.includes("lobbyframe") && fl.includes('id="bamStars"') && fl.includes('<button id="createBtn" class="gold">') && read("public/kit.css").includes(':where([data-kapp="fl"]) button.ghost { background: linear-gradient(135deg'), null);
 ok("Floodlights tints the glass buttons with the club colours once a save is loaded, and clears it in the lobby", fl.includes("function clubTint(kit)") && fl.includes('root.setProperty("--k-tint"') && fl.includes("clubTint(kit);") && fl.includes("clubTint(null);"), null);
 ok("Floodlights has a way back to the landing page", fl.includes('class="homelink" href="/"') && fl.includes('class="chip homechip" href="/"'), null);
 for (const id of ["lobby", "app", "createBtn", "joinBtn", "nameIn", "codeIn", "startBtn", "simBtn", "tabs", "simSeasonBtn", "tab-travel", "travelModal", "matchWrap", "matchCanvas", "matchPanel", "playStatus", "ctModal", "tickerBar", "leaveBtn"]) ok("Floodlights element still there: #" + id, fl.includes('id="' + id + '"'), null);

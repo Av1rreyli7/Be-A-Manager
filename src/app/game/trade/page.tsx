@@ -95,7 +95,7 @@ function TradeMachine() {
         <>
           <div className="flex flex-wrap items-center gap-2">
             {a.sides.map((s, i) => (
-              <select key={i} className={clsx(inputCls, "w-auto")} value={s.teamId} onChange={(e) => update((x) => { x.sides[i] = { teamId: e.target.value, players: [], picks: [], cash: 0 }; x.destinations = {}; })}>
+              <select key={i} className={inputCls} style={{ width: "auto" }} value={s.teamId} onChange={(e) => update((x) => { x.sides[i] = { teamId: e.target.value, players: [], picks: [], cash: 0 }; x.destinations = {}; })}>
                 {Object.values(l.teams).sort((p, q) => p.fullName.localeCompare(q.fullName)).filter((t) => t.id === s.teamId || !a.sides.some((y) => y.teamId === t.id)).map((t) => <option key={t.id} value={t.id}>{t.fullName}</option>)}
               </select>
             ))}
@@ -115,17 +115,17 @@ function TradeMachine() {
               ) : (
                 <>
                   <div className="overflow-x-auto scroll-thin">
-                    <table className="w-full min-w-[520px] text-sm">
-                      <thead className="label"><tr><th className="text-left">Team</th><th className="text-right">Out</th><th className="text-right">In</th><th className="text-right">Max in</th><th className="text-right">Post-trade</th><th className="text-right">Roster</th></tr></thead>
+                    <table className="k-table min-w-[520px]">
+                      <thead><tr><th>Team</th><th className="k-num">Out</th><th className="k-num">In</th><th className="k-num">Max in</th><th className="k-num">Post-trade</th><th className="k-num">Roster</th></tr></thead>
                       <tbody>
                         {v.teams.map((t) => (
-                          <tr key={t.teamId} className="border-t border-line/50">
-                            <td className="py-1.5"><TeamBadge league={l} teamId={t.teamId} size="sm" /></td>
-                            <td className="text-right num">{money(t.outgoingSalary, 2)}</td>
-                            <td className="text-right num">{money(t.incomingSalary, 2)}</td>
-                            <td className="text-right num text-dim">{t.maxIncoming >= Number.MAX_SAFE_INTEGER ? "room" : money(t.maxIncoming, 2)}</td>
-                            <td className={clsx("text-right text-xs", STATUS_COLOR[t.postApron])}>{money(t.postSalary)} · {STATUS_LABEL[t.postApron]}</td>
-                            <td className="text-right num">{t.rosterAfter}</td>
+                          <tr key={t.teamId}>
+                            <td><TeamBadge league={l} teamId={t.teamId} size="sm" /></td>
+                            <td className="k-num">{money(t.outgoingSalary, 2)}</td>
+                            <td className="k-num">{money(t.incomingSalary, 2)}</td>
+                            <td className="k-num text-dim">{t.maxIncoming >= Number.MAX_SAFE_INTEGER ? "room" : money(t.maxIncoming, 2)}</td>
+                            <td className={clsx("k-num", STATUS_COLOR[t.postApron])}>{money(t.postSalary)} · {STATUS_LABEL[t.postApron]}</td>
+                            <td className="k-num">{t.rosterAfter}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -181,7 +181,7 @@ function TradeMachine() {
         </Card>
       )}
 
-      <Modal open={!!done} onClose={() => setDone(null)} title="Trade accepted">
+      <Modal open={!!done} onClose={() => setDone(null)} kicker="Trade machine" title="Trade accepted">
         <Appear kind="celebrate" sparks className="text-center">
           <Handshake size={56} weight="duotone" className="mx-auto mb-3 text-accent drop-shadow-[0_0_18px_var(--accent)]" />
           <p className="text-sm">{done}</p>
@@ -202,16 +202,16 @@ function TeamColumn({ l, a, teamId, togglePlayer, togglePick, update }: { l: Lea
   const t = l.teams[teamId];
   const destSelect = (key: string) =>
     others.length > 1 ? (
-      <select className="ml-1 rounded-[3px] border border-line-2 bg-bg px-1 text-xs" value={destinationOf(a, key, teamId)} onClick={(e) => e.stopPropagation()} onChange={(e) => update((x) => void (x.destinations[key] = e.target.value))}>
+      <select className="k-input ml-1" style={{ width: "auto" }} value={destinationOf(a, key, teamId)} onClick={(e) => e.stopPropagation()} onChange={(e) => update((x) => void (x.destinations[key] = e.target.value))}>
         {others.map((o) => <option key={o} value={o}>→ {o}</option>)}
       </select>
     ) : null;
   return (
-    <Card className="overflow-hidden" title={<span className="flex items-center gap-2"><TeamBadge league={l} teamId={teamId} size="sm" />{t.name}</span>} right={<span className="chip">{t.strategy.mode}</span>} pad={false}>
+    <Card className="overflow-hidden" title={<span className="flex items-center gap-2"><TeamBadge league={l} teamId={teamId} size="sm" />{t.name}</span>} right={<span className="k-tag">{t.strategy.mode}</span>} pad={false}>
       <div aria-hidden className="h-1" style={{ background: `linear-gradient(90deg, ${t.colors.primary} 70%, ${t.colors.secondary} 70%)` }} />
       {(side.players.length > 0 || side.picks.length > 0) && (
         <div className="border-b border-line bg-accent/5 px-3 py-2 text-sm">
-          <div className="label mb-1 !text-accent">Sending</div>
+          <div className="k-label mb-1">Sending</div>
           {side.players.map((pid) => <div key={pid} className="flex items-center justify-between"><span>{l.players[pid].name} <span className="text-xs text-dim">{money(salaryIn(contractOf(l, l.players[pid]), l.season))}</span></span>{destSelect(`p:${pid}`)}</div>)}
           {side.picks.map((kid) => {
             const k = l.picks[kid];
@@ -220,7 +220,7 @@ function TeamColumn({ l, a, teamId, togglePlayer, togglePick, update }: { l: Lea
                 <span>{k.year} {k.originalTeam} {k.round === 1 ? "1st" : "2nd"}</span>
                 <span className="flex items-center gap-1">
                   {k.protection.kind === "none" && (
-                    <select className="rounded-[3px] border border-line-2 bg-bg px-1 text-xs" value={a.protections?.[kid] ?? 0} onChange={(e) => update((x) => { x.protections = { ...(x.protections ?? {}) }; const v = Number(e.target.value); if (v) x.protections[kid] = v; else delete x.protections[kid]; })}>
+                    <select className="k-input" style={{ width: "auto" }} value={a.protections?.[kid] ?? 0} onChange={(e) => update((x) => { x.protections = { ...(x.protections ?? {}) }; const v = Number(e.target.value); if (v) x.protections[kid] = v; else delete x.protections[kid]; })}>
                       <option value={0}>Unprotected</option>
                       {[1, 3, 4, 5, 8, 10, 14, 20].map((n) => <option key={n} value={n}>Top-{n} protected</option>)}
                     </select>
@@ -232,8 +232,8 @@ function TeamColumn({ l, a, teamId, togglePlayer, togglePick, update }: { l: Lea
           })}
         </div>
       )}
-      <div className="flex gap-1 border-b border-line px-2 pt-2">
-        {(["players", "picks"] as const).map((x) => <button key={x} onClick={() => setShow(x)} className={clsx("rounded-t px-3 py-1 text-xs font-semibold capitalize", show === x ? "bg-panel-2 text-ink" : "text-dim")}>{x}</button>)}
+      <div className="k-tabs">
+        {(["players", "picks"] as const).map((x) => <button key={x} onClick={() => setShow(x)} className={clsx(show === x && "on")}>{x}</button>)}
       </div>
       <div className="max-h-80 overflow-y-auto scroll-thin">
         {show === "players" ? (
@@ -242,7 +242,7 @@ function TeamColumn({ l, a, teamId, togglePlayer, togglePick, update }: { l: Lea
             const sel = side.players.includes(p.id);
             return (
               <button key={p.id} onClick={() => togglePlayer(teamId, p.id)} className={clsx("grid w-full grid-cols-[18px_1fr_auto_auto] items-center gap-2 border-b border-line/40 px-3 py-1.5 text-left text-sm hover:bg-ink/5", sel && "bg-accent/10")}>
-                <input type="checkbox" readOnly checked={sel} />
+                <input type="checkbox" className="k-check" readOnly checked={sel} />
                 <span className="min-w-0 truncate">{p.name} <span className="text-xs text-dim">{p.pos} · {seasonAge(p, l.season)}{c?.type === "two-way" ? " · 2W" : ""}{c?.noTradeClause ? " · NTC" : ""}</span></span>
                 <OvrPot p={p} />
                 <span className="w-24 text-right text-xs num">{money(salaryIn(c, l.season))} <span className="text-mute">{c ? `×${c.years.filter((y) => y.season >= l.season).length}` : ""}</span><br /><span className="text-mute">val {playerValue(l, p, me).toFixed(0)}</span></span>
@@ -255,7 +255,7 @@ function TeamColumn({ l, a, teamId, togglePlayer, togglePick, update }: { l: Lea
               const sel = side.picks.includes(k.id);
               return (
                 <button key={k.id} disabled={k.frozen} onClick={() => togglePick(teamId, k.id)} className={clsx("grid w-full grid-cols-[18px_1fr_auto] items-center gap-2 border-b border-line/40 px-3 py-1.5 text-left text-sm hover:bg-ink/5 disabled:opacity-40", sel && "bg-accent/10")}>
-                  <input type="checkbox" readOnly checked={sel} />
+                  <input type="checkbox" className="k-check" readOnly checked={sel} />
                   <span>{k.year} {k.round === 1 ? "1st" : "2nd"} <span className="text-xs text-dim">({k.originalTeam}){k.protection.kind !== "none" ? ` · ${k.protection.kind === "top" ? `top-${k.protection.keepTop}` : "complex"}` : ""}{k.swap ? " · swap" : ""}{k.frozen ? " · frozen" : ""}</span></span>
                   <span className="text-xs text-mute num">val {pickValue(l, k, me).toFixed(1)}</span>
                 </button>
@@ -263,20 +263,20 @@ function TeamColumn({ l, a, teamId, togglePlayer, togglePick, update }: { l: Lea
             })}
             <div className="flex flex-wrap items-center gap-2 px-3 py-2 text-xs">
               <span className="text-dim">Grant swap right:</span>
-              <select id={`sw-${teamId}`} className="rounded-[3px] border border-line-2 bg-bg px-1">
+              <select id={`sw-${teamId}`} className="k-input" style={{ width: "auto" }}>
                 {Array.from({ length: 7 }, (_, i) => ndy + i).map((y) => <option key={y} value={y}>{y} 1st</option>)}
               </select>
               <Button size="sm" onClick={() => { const y = Number((document.getElementById(`sw-${teamId}`) as HTMLSelectElement).value); update((x) => void (x.swaps = [...(x.swaps ?? []), { year: y, round: 1, from: teamId, to: others[0] }])); }}>Add swap → {others[0]}</Button>
             </div>
-            {(a.swaps ?? []).filter((s) => s.from === teamId).map((s, i) => <div key={i} className="flex justify-between px-3 py-1 text-xs"><span>Swap {s.year} 1sts with {s.to}</span><button className="text-bad" onClick={() => update((x) => void (x.swaps = (x.swaps ?? []).filter((z) => z !== (x.swaps ?? []).find((q) => q.year === s.year && q.from === s.from && q.to === s.to))))}>remove</button></div>)}
+            {(a.swaps ?? []).filter((s) => s.from === teamId).map((s, i) => <div key={i} className="flex justify-between px-3 py-1 text-xs"><span>Swap {s.year} 1sts with {s.to}</span><button className="k-btn k-btn-danger k-btn-sm" onClick={() => update((x) => void (x.swaps = (x.swaps ?? []).filter((z) => z !== (x.swaps ?? []).find((q) => q.year === s.year && q.from === s.from && q.to === s.to))))}>remove</button></div>)}
           </>
         )}
       </div>
       <div className="flex items-center gap-2 border-t border-line px-3 py-2 text-xs">
         <span className="text-dim">Cash</span>
-        <input type="number" step={500000} min={0} className="w-32 rounded-[3px] border border-line-2 bg-bg px-2 py-1" value={side.cash} onChange={(e) => update((x) => void (x.sides.find((y) => y.teamId === teamId)!.cash = Math.max(0, Number(e.target.value))))} />
+        <input type="number" step={500000} min={0} className="k-input" style={{ width: 128 }} value={side.cash} onChange={(e) => update((x) => void (x.sides.find((y) => y.teamId === teamId)!.cash = Math.max(0, Number(e.target.value))))} />
         {t.exceptions.tpes.length > 0 && (
-          <select className="rounded-[3px] border border-line-2 bg-bg px-1 py-1" value={side.tpe ?? ""} onChange={(e) => update((x) => void (x.sides.find((y) => y.teamId === teamId)!.tpe = e.target.value || undefined))}>
+          <select className="k-input" style={{ width: "auto" }} value={side.tpe ?? ""} onChange={(e) => update((x) => void (x.sides.find((y) => y.teamId === teamId)!.tpe = e.target.value || undefined))}>
             <option value="">No TPE</option>
             {t.exceptions.tpes.map((x) => <option key={x.id} value={x.id}>TPE {money(x.amount)}</option>)}
           </select>
@@ -310,7 +310,7 @@ function OffersTab({ onLoad }: { onLoad: (a: TradeAssets) => void }) {
             <ul className="mt-2 list-disc pl-5 text-xs text-dim">{o.reasoning.map((r) => <li key={r}>{r}</li>)}</ul>
             {!v.valid && <p className="mt-2 text-xs text-bad">No longer CBA-legal: {v.issues.find((i) => i.severity === "error")?.message}</p>}
             <div className="mt-3 flex gap-2">
-              <Button variant="success" disabled={!v.valid} onClick={() => { mutate((lg) => { executeTrade(lg, o.assets); lg.tradeOffers = lg.tradeOffers.filter((x) => x.id !== o.id); }); toast("Trade completed", "success"); }}>Accept</Button>
+              <Button disabled={!v.valid} onClick={() => { mutate((lg) => { executeTrade(lg, o.assets); lg.tradeOffers = lg.tradeOffers.filter((x) => x.id !== o.id); }); toast("Trade completed", "success"); }}>Accept</Button>
               <Button onClick={() => onLoad(o.assets)}>Negotiate</Button>
               <Button variant="ghost" onClick={() => mutate((lg) => void (lg.tradeOffers = lg.tradeOffers.filter((x) => x.id !== o.id)))}>Decline</Button>
             </div>

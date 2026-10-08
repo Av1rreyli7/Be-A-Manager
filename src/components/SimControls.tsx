@@ -64,7 +64,7 @@ export function SimControls() {
     return () => window.removeEventListener("keydown", onKey);
   }, [sim, advance, inSeason, fa, l.phase]);
 
-  if (guest) return <span className="chip !bg-black/30 !text-white/80" title="In an online league only the host can sim"><Pause size={12} weight="fill" /> Host controls the sim</span>;
+  if (guest) return <span className="k-tag" title="In an online league only the host can sim"><Pause size={11} weight="fill" className="mr-1 inline align-[-2px]" /> Host controls the sim</span>;
 
   return (
     <div className="flex items-center gap-1.5">
@@ -73,7 +73,7 @@ export function SimControls() {
           <Button size="sm" variant="primary" disabled={!!busy} onClick={() => sim("day")} title="Play one day (D)">
             <Play size={13} weight="fill" /> Day
           </Button>
-          <Button size="sm" disabled={!!busy} onClick={() => sim("next-user-game")} title="Sim to next game (N)" className="max-sm:hidden">
+          <Button size="sm" disabled={!!busy} onClick={() => sim("next-user-game")} title="Sim to next game (N)" className="max-sm:!hidden">
             <FastForward size={13} weight="fill" /> Next game
           </Button>
           <Button size="sm" disabled={!!busy} onClick={() => sim("week")} title="Sim a week (W)">
@@ -81,11 +81,12 @@ export function SimControls() {
           </Button>
           <details ref={more} className="group relative">
             <summary className="list-none [&::-webkit-details-marker]:hidden">
-              <span className="btn btn-sm btn-ghost !text-white/85" aria-label="More sim options">
+              <span className="k-btn k-btn-ghost k-btn-sm" aria-label="More sim options">
                 <span className="hidden sm:inline">More</span> <CaretDown size={12} weight="bold" className="transition-transform group-open:rotate-180" />
               </span>
             </summary>
-            <div className="panel menu-pop absolute right-0 z-50 mt-2 w-64 p-1.5 text-sm">
+            <div className="menu-pop absolute right-0 z-50 mt-2 w-64">
+              <div className="k-panel k-flush text-sm">
               {(
                 [
                   ["game-day", "To my next game day (G)"],
@@ -98,6 +99,7 @@ export function SimControls() {
                   {label}
                 </button>
               ))}
+              </div>
             </div>
           </details>
         </>
@@ -117,10 +119,10 @@ export function SimControls() {
           {NEXT_PHASE[l.phase]}
         </Button>
       )}
-      <button onClick={() => setHelp(true)} className="hidden h-7 w-7 place-items-center rounded-[4px] text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:grid" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">
+      <button onClick={() => setHelp(true)} className="k-btn k-btn-ghost k-btn-sm max-sm:!hidden" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">
         <Keyboard size={16} />
       </button>
-      <Modal open={help} onClose={() => setHelp(false)} title="Keyboard shortcuts">
+      <Modal open={help} onClose={() => setHelp(false)} kicker="Sim controls" title="Keyboard shortcuts">
         <ul className="grid grid-cols-2 gap-2 text-sm">
           {[
             ["D", "Play or sim one day"],

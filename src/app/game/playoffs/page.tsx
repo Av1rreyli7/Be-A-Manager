@@ -38,10 +38,10 @@ export default function PlayoffsPage() {
           <div className="grid gap-3 md:grid-cols-2">
             {(["East", "West"] as const).map((c) => (
               <div key={c} className="space-y-2">
-                <div className="label">{c}</div>
+                <div className="k-mlab">{c}</div>
                 {l.playIn.filter((g) => g.conference === c).map((g) => (
-                  <div key={g.id} className="flex items-center justify-between rounded-[4px] border border-line bg-bg/40 p-2 text-sm">
-                    <span className="chip">{g.kind === "final" ? "For the 8 seed" : g.kind === "7v8" ? "7 vs 8" : "9 vs 10"}</span>
+                  <div key={g.id} className="k-inset flex items-center justify-between p-2 text-sm">
+                    <span className="k-tag">{g.kind === "final" ? "For the 8 seed" : g.kind === "7v8" ? "7 vs 8" : "9 vs 10"}</span>
                     <span className="flex items-center gap-2"><TeamBadge league={l} teamId={g.away} size="sm" /> @ <TeamBadge league={l} teamId={g.home} size="sm" /></span>
                     <span className="text-xs">{g.winner ? <b className="text-accent">{g.winner} advance</b> : "-"}</span>
                   </div>
@@ -58,7 +58,7 @@ export default function PlayoffsPage() {
               const s = conferenceStandings(l, c);
               return (
                 <div key={c} className="space-y-2">
-                  <div className="label">{c} (projected)</div>
+                  <div className="k-mlab">{c} (projected)</div>
                   {[[0, 7], [3, 4], [2, 5], [1, 6]].map(([a, b]) => (
                     <div key={a} className="flex items-center justify-between rounded-[4px] border border-dashed border-line-2 p-2 text-sm">
                       <span className="flex items-center gap-2"><span className="text-xs text-mute">{a + 1}</span><TeamBadge league={l} teamId={s[a]} size="sm" withName /></span>
@@ -85,7 +85,7 @@ export default function PlayoffsPage() {
               <div className="space-y-12">{[0, 1].map((i) => <Series key={i} l={l} s={find("East", 2, i)} />)}</div>
               <div className="space-y-3">{[0, 1, 2, 3].map((i) => <Series key={i} l={l} s={find("East", 1, i)} />)}</div>
             </div>
-            <div className="mt-2 grid min-w-[980px] grid-cols-7 text-center label">
+            <div className="k-label mt-2 grid min-w-[980px] grid-cols-7 text-center">
               {["West R1", "West Semis", "West Finals", "", "East Finals", "East Semis", "East R1"].map((x, i) => <span key={i}>{x}</span>)}
             </div>
           </div>
@@ -110,8 +110,8 @@ export default function PlayoffsPage() {
             {l.cup.knockout.qf.length > 0 && (
               <div className="mb-4 grid gap-2 sm:grid-cols-3">
                 {[...l.cup.knockout.qf, ...l.cup.knockout.sf, ...(l.cup.knockout.final ? [l.cup.knockout.final] : [])].map((m) => (
-                  <div key={m.id} className="flex items-center justify-between rounded-[4px] border border-line bg-bg/40 p-2 text-sm">
-                    <span className="chip">{m.id.includes("qf") ? "QF" : m.id.includes("sf") ? "SF" : "Final"}</span>
+                  <div key={m.id} className="k-inset flex items-center justify-between p-2 text-sm">
+                    <span className="k-tag">{m.id.includes("qf") ? "QF" : m.id.includes("sf") ? "SF" : "Final"}</span>
                     <span className="flex items-center gap-1"><TeamBadge league={l} teamId={m.away} size="sm" /> @ <TeamBadge league={l} teamId={m.home} size="sm" /></span>
                     <span className="text-xs font-bold text-accent">{m.winner ?? "-"}</span>
                   </div>
@@ -120,15 +120,15 @@ export default function PlayoffsPage() {
             )}
             <div className="grid gap-3 md:grid-cols-3">
               {Object.keys(l.cup.groups).map((g) => (
-                <div key={g} className="rounded-[4px] border border-line bg-bg/40 p-2">
-                  <div className="label mb-1">{g}</div>
-                  <table className="w-full text-sm">
+                <div key={g} className="k-inset p-2">
+                  <div className="k-mlab mb-1">{g}</div>
+                  <table className="k-table">
                     <tbody>
                       {groupTable(l, g).map((r, i) => (
                         <tr key={r.teamId} className={i === 0 ? "text-ink" : "text-dim"}>
-                          <td className="py-0.5"><TeamBadge league={l} teamId={r.teamId} size="sm" withName /></td>
-                          <td className="text-right num">{r.w}-{r.l}</td>
-                          <td className="w-12 text-right text-xs num">{r.pd > 0 ? `+${r.pd}` : r.pd}</td>
+                          <td><TeamBadge league={l} teamId={r.teamId} size="sm" withName /></td>
+                          <td className="k-num">{r.w}-{r.l}</td>
+                          <td className="k-num w-12">{r.pd > 0 ? `+${r.pd}` : r.pd}</td>
                         </tr>
                       ))}
                     </tbody>

@@ -48,7 +48,7 @@ export default function TeamPage() {
               { key: "ovr", label: "OVR/POT", value: (p) => p.ovr, render: (p) => <OvrPot p={p} /> },
               { key: "pts", label: "PTS", value: (p) => perGame(seasonTotal(l, p.id)).pts, render: (p) => f1(perGame(seasonTotal(l, p.id)).pts), align: "right" },
               { key: "sal", label: "Salary", value: (p) => salaryIn(contractOf(l, p), l.season), render: (p) => money(salaryIn(contractOf(l, p), l.season)), align: "right" },
-              { key: "type", label: "Contract", render: (p) => <span className="chip">{contractOf(l, p)?.type}</span> },
+              { key: "type", label: "Contract", render: (p) => <span className="k-tag">{contractOf(l, p)?.type}</span> },
             ]}
           />
         </div>

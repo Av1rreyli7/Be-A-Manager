@@ -1,7 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useLeague } from "@/lib/store";
-import clsx from "clsx";
 import { Card, PageHeader, PlayerLink, Tabs, TeamBadge, inputCls } from "@/components/ui";
 import { DataTable } from "@/components/DataTable";
 import { perGame, seasonTotal } from "@/engine/season/stats";
@@ -57,7 +56,7 @@ export default function StatsPage() {
       <PageHeader
         title="Stats & Leaders"
         sub={`${l.season} · leaders require ${qual}+ games played (scales through the season) · * = original estimates`}
-        right={<select aria-label="Season type" className={clsx(inputCls, "w-auto py-1.5")} value={kind} onChange={(e) => setKind(e.target.value as "regular" | "playoffs")}><option value="regular">Regular season</option><option value="playoffs">Playoffs</option></select>}
+        right={<select aria-label="Season type" className={inputCls} style={{ width: "auto" }} value={kind} onChange={(e) => setKind(e.target.value as "regular" | "playoffs")}><option value="regular">Regular season</option><option value="playoffs">Playoffs</option></select>}
       />
       <Tabs tabs={[{ id: "leaders", label: "League leaders" }, { id: "players", label: "Player stats" }, { id: "teams", label: "Team stats" }]} value={tab} onChange={setTab} />
       {tab === "leaders" && (
@@ -70,12 +69,12 @@ export default function StatsPage() {
                   {top.map((r, i) => {
                     const tc = r.p.teamId ? l.teams[r.p.teamId]?.colors.primary : undefined;
                     return i === 0 ? (
-                      <li key={r.p.id} className="side-wash relative flex items-center justify-between gap-2 overflow-hidden px-4 py-3" style={tc ? { ["--tc-team" as string]: tc } : undefined}>
+                      <li key={r.p.id} className="flex items-center justify-between gap-2 px-4 py-3" style={tc ? { boxShadow: `inset 3px 0 0 ${tc}` } : undefined}>
                         <span className="flex min-w-0 flex-col gap-1">
                           <TeamBadge league={l} teamId={r.p.teamId} size="sm" />
                           <PlayerLink player={r.p} className="truncate font-display text-[15px] font-extrabold uppercase leading-none" />
                         </span>
-                        <span className="font-display text-[28px] font-black leading-none num">{(c.fmt ?? f1)(c.get(r))}</span>
+                        <b className="k-cmv">{(c.fmt ?? f1)(c.get(r))}</b>
                       </li>
                     ) : (
                       <li key={r.p.id} className="flex items-center justify-between gap-2 border-t border-line/60 px-4 py-1.5">

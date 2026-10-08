@@ -82,7 +82,8 @@ export class HostNet {
     peer.on("error", (e) => this.onError(friendlyError(e as never)));
     // the broker connection can drop on sleep; keep the room reachable
     peer.on("disconnected", () => {
-      if (!peer.destroyed) setTimeout(() => peer.reconnect(), 1500);
+      // closing the room also fires this, just before the peer is marked destroyed: check again when the timer runs
+      if (!peer.destroyed) setTimeout(() => !peer.destroyed && peer.reconnect(), 1500);
     });
     peer.on("connection", (conn) => {
       conn.on("open", () => {

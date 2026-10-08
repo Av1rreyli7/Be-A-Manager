@@ -43,7 +43,8 @@
 .pc *::after {
   box-sizing: border-box;
 }
-.pc button {
+/* plain career buttons take the page's type; the kit buttons keep the kit's own */
+.pc button:not(.k-btn) {
   font: inherit;
   color: inherit;
 }
@@ -64,19 +65,6 @@
   margin: 0;
   font-size: 12.5px;
   color: var(--pc-dim);
-}
-.pc-link {
-  background: none;
-  border: 0;
-  padding: 4px 0;
-  font: 700 11px/1 var(--pc-lbl) !important;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--pc-soft) !important;
-  cursor: pointer;
-}
-.pc-link:hover {
-  color: var(--pc-volt) !important;
 }
 .pc-h2 {
   margin: 0 0 14px;
@@ -390,29 +378,11 @@
   border: 3px solid #111;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
 }
+/* a row of choices: the kit's small buttons, the picked one lit (k-on) */
 .pc-seg {
   display: inline-flex;
-  border: 1px solid var(--pc-line);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.pc-seg button {
-  padding: 9px 14px;
-  background: transparent;
-  border: 0;
-  border-right: 1px solid var(--pc-line);
-  font: 700 11px/1 var(--pc-lbl) !important;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--pc-soft) !important;
-  cursor: pointer;
-}
-.pc-seg button:last-child {
-  border-right: 0;
-}
-.pc-seg button.is-on {
-  background: var(--pc-volt);
-  color: var(--pc-volt-ink) !important;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .pc-chips {
   display: flex;
@@ -440,7 +410,6 @@
   border-color: var(--pc-line2);
   color: var(--pc-ink);
 }
-.pc-chip.is-on,
 .pc-tile.is-on {
   border-color: var(--pc-volt);
   background: rgba(208, 232, 92, 0.1);
@@ -580,11 +549,6 @@
 .pc-summary p {
   margin: 0 0 6px;
 }
-.pc-go {
-  min-height: 48px;
-  font-size: 13px;
-}
-
 /* ---------- hub ---------- */
 .pc-hub {
   max-width: 1320px;
@@ -837,19 +801,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
-.pc-panel {
-  padding: 20px 22px;
-  border: 1px solid var(--pc-line);
-  background: var(--pc-panel);
-  clip-path: polygon(
-    var(--pc-cut) 0,
-    100% 0,
-    100% calc(100% - var(--pc-cut)),
-    calc(100% - var(--pc-cut)) 100%,
-    0 100%,
-    0 var(--pc-cut)
-  );
-}
 .pc-next {
   margin: 0 0 14px;
   font-size: 15px;
@@ -1016,38 +967,16 @@
   color: var(--pc-ink);
 }
 
-/* ---------- modals, offers, phone ---------- */
-.pc-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(2, 3, 4, 0.78);
-  backdrop-filter: blur(6px);
-  animation: pc-fade 0.25s ease;
+/* ---------- modals, offers, phone: the kit scrim (k-scrim) and box (k-modal), only wider here ---------- */
+.k-modal.pc-modal-in {
+  width: min(980px, 100%);
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
 }
 @keyframes pc-fade {
   from {
     opacity: 0;
   }
-}
-.pc-modal-in {
-  width: min(980px, 100%);
-  max-height: calc(100dvh - 48px);
-  overflow: auto;
-  padding: 26px;
-  border: 1px solid var(--pc-line2);
-  background: var(--pc-panel);
-  clip-path: polygon(
-    var(--pc-cut) 0,
-    100% 0,
-    100% calc(100% - var(--pc-cut)),
-    calc(100% - var(--pc-cut)) 100%,
-    0 100%,
-    0 var(--pc-cut)
-  );
 }
 .pc-choices {
   display: grid;
@@ -1137,7 +1066,7 @@
   letter-spacing: 0.04em;
   clip-path: polygon(50% 0, 100% 14%, 100% 64%, 50% 100%, 0 64%, 0 14%);
 }
-.pc-phone-wrap {
+.k-scrim.pc-phone-wrap {
   place-items: center end;
   padding-right: 4vw;
 }
@@ -1568,35 +1497,7 @@
   margin-top: 12px;
 }
 
-/* ---------- the top bar's screens ---------- */
-.pc-tabs {
-  display: flex;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--pc-line);
-  border-radius: 999px;
-}
-.pc-tabs button {
-  padding: 6px 14px;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  font: 700 11px/1 var(--pc-lbl);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--pc-soft);
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
-}
-.pc-tabs button:hover {
-  color: var(--pc-ink);
-}
-.pc-tabs button.is-on {
-  background: var(--pc-volt);
-  color: var(--pc-volt-ink);
-}
+/* ---------- the top bar's screens: the kit tabs (k-tabs) ---------- */
 
 /* ---------- the city ---------- */
 .pc-city {
@@ -1898,10 +1799,6 @@
   display: flex;
   gap: 6px;
 }
-.pc-buy .k-btn {
-  padding: 7px 12px;
-  font-size: 11px;
-}
 .pc-buy.is-done {
   outline: 1px solid rgba(208, 232, 92, 0.35);
 }
@@ -1979,10 +1876,6 @@
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 4px;
-}
-.pc-phone-btns .k-btn {
-  padding: 8px 12px;
-  font-size: 11px;
 }
 .pc-phone-empty {
   padding: 20px 8px;
@@ -2291,7 +2184,7 @@
   margin-top: 3px;
   accent-color: var(--pc-volt);
 }
-.pc-gfx-pop .pc-link {
+.pc-gfx-pop > .k-btn {
   justify-self: end;
 }
 
@@ -2391,10 +2284,7 @@
     bottom: auto;
     max-width: calc(100% - 36px);
   }
-  .pc-tabs button {
-    padding: 6px 10px;
-  }
-  .pc-phone-wrap {
+  .k-scrim.pc-phone-wrap {
     place-items: center;
     padding: 12px;
   }

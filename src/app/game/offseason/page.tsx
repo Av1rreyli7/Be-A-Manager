@@ -70,11 +70,11 @@ export default function OffseasonHub() {
           {hist.champion && <p className="mb-3 flex flex-wrap items-center gap-2 font-display text-[19px] font-black uppercase"><Trophy size={24} weight="fill" className="text-gold" /> {l.teams[hist.champion].fullName}{hist.finalsMvp && <span className="ml-2 text-base font-semibold normal-case text-dim">Finals MVP {l.players[hist.finalsMvp]?.name}</span>}</p>}
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {hist.awards.filter((a) => !a.award.startsWith("All-") && a.award !== "Finals MVP").map((a) => (
-              <div key={a.award} className="rounded-[4px] border border-line px-3 py-2 text-sm"><div className="label">{a.award}</div>{a.playerId ? <PlayerLink player={l.players[a.playerId]} /> : a.name}</div>
+              <div key={a.award} className="rounded-[4px] border border-line px-3 py-2 text-sm"><div className="k-label">{a.award}</div>{a.playerId ? <PlayerLink player={l.players[a.playerId]} /> : a.name}</div>
             ))}
           </div>
           <div className="mt-4">
-            <div className="mb-1 label">Retirements</div>
+            <div className="k-mlab mb-1">Retirements</div>
             <p className="text-sm text-dim">{Object.values(l.players).filter((p) => p.retiredSeason === l.season).sort((a, b) => b.ovr - a.ovr).slice(0, 12).map((p) => p.name).join(", ") || "None"}</p>
           </div>
         </Card>
@@ -100,12 +100,12 @@ export default function OffseasonHub() {
                     <span className="flex gap-2">
                       {d.kind === "team-option" ? (
                         <>
-                          <Button size="sm" variant="success" onClick={() => mutate((lg) => decideTeamOption(lg, d.playerId, true))}>Exercise</Button>
+                          <Button size="sm" onClick={() => mutate((lg) => decideTeamOption(lg, d.playerId, true))}>Exercise</Button>
                           <Button size="sm" variant="danger" onClick={() => mutate((lg) => decideTeamOption(lg, d.playerId, false))}>Decline</Button>
                         </>
                       ) : (
                         <>
-                          <Button size="sm" variant="success" onClick={() => mutate((lg) => extendQualifyingOffer(lg, d.playerId, true))}>Extend QO</Button>
+                          <Button size="sm" onClick={() => mutate((lg) => extendQualifyingOffer(lg, d.playerId, true))}>Extend QO</Button>
                           <Button size="sm" variant="ghost" onClick={() => mutate((lg) => extendQualifyingOffer(lg, d.playerId, false))}>Decline QO (UFA)</Button>
                         </>
                       )}

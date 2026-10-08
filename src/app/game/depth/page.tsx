@@ -60,13 +60,13 @@ export default function DepthPage() {
 
   const minutesSlider = (id: string) => (
     <div className="flex items-center gap-2">
-      <input type="range" min={0} max={48} value={d.minutes[id] ?? 0} className="w-full" onChange={(e) => edit(() => (team.depth.minutes = { ...team.depth.minutes, [id]: Number(e.target.value) }))} />
+      <input type="range" min={0} max={48} value={d.minutes[id] ?? 0} className="k-check w-full" onChange={(e) => edit(() => (team.depth.minutes = { ...team.depth.minutes, [id]: Number(e.target.value) }))} />
       <span className="w-8 text-right font-semibold num">{d.minutes[id] ?? 0}</span>
     </div>
   );
 
   const posSelect = (p: Player) => (
-    <select className="rounded-[3px] border border-line-2 bg-bg px-1 py-0.5 text-xs" value={p.pos} title="Change the player's position" onChange={(e) => setPos(p, e.target.value as Position)}>
+    <select className="k-input" style={{ width: "auto" }} value={p.pos} title="Change the player's position" onChange={(e) => setPos(p, e.target.value as Position)}>
       {SLOTS.map((s) => <option key={s}>{s}</option>)}
     </select>
   );
@@ -78,15 +78,15 @@ export default function DepthPage() {
         sub="Pick anyone for any spot: natural fits are listed first. The auto coach keeps players in position; your picks play wherever you put them."
         right={
           <>
-            <span className={clsx("chip", total === 240 ? "text-good" : "text-bad")}>{total} / 240 min</span>
+            <span className={clsx("k-tag", total === 240 ? "k-good" : "k-bad")}>{total} / 240 min</span>
             <Button size="sm" variant={d.auto ? "primary" : "default"} onClick={() => mutate(() => (team.depth = autoDepth(l, t, playoffs)))}>
               {d.auto ? <><Check size={13} weight="bold" /> Auto (coach decides)</> : "Reset to auto"}
             </Button>
           </>
         }
       />
-      {err && !d.auto && <div className="panel border-warn/40 px-4 py-2 text-sm text-warn">{err}: the coach will fill gaps automatically in games.</div>}
-      {misplaced.length > 0 && <div className="panel border-line px-4 py-2 text-xs text-dim">Playing out of position: {misplaced.map((id) => byId.get(id)!.name).join(", ")}.</div>}
+      {err && !d.auto && <div className="k-panel text-sm text-warn">{err}: the coach will fill gaps automatically in games.</div>}
+      {misplaced.length > 0 && <div className="k-panel text-xs text-dim">Playing out of position: {misplaced.map((id) => byId.get(id)!.name).join(", ")}.</div>}
 
       <Card title="Starting five" pad={false}>
         <ul>
@@ -100,7 +100,7 @@ export default function DepthPage() {
                 <span className={clsx("text-center font-num text-[19px] font-black", p && outOfPosition(p, i) ? "text-warn" : "text-accent")}>{slot}</span>
                 <div className="flex min-w-0 items-center gap-2">
                   {p && <Rating value={p.ovr} />}
-                  <select className="min-w-0 flex-1 rounded-[4px] border border-line-2 bg-bg px-2 py-1.5 text-sm" value={id ?? ""} onChange={(e) => setStarter(i, e.target.value)}>
+                  <select className="k-input min-w-0 flex-1" value={id ?? ""} onChange={(e) => setStarter(i, e.target.value)}>
                     {!id && <option value="">Pick a {slot}</option>}
                     <optgroup label={`${slot}s`}>
                       {natural.map((x) => <option key={x.id} value={x.id}>{x.name} · {x.ovr}</option>)}

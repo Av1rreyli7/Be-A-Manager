@@ -26,19 +26,19 @@ function ExtensionModal({ id, onClose }: { id: string; onClose: () => void }) {
   const left = (c?.years ?? []).filter((y) => seasonStartYear(y.season) >= seasonStartYear(l.season));
   const [reply, setReply] = useState<string | null>(null);
   return (
-    <Modal open onClose={onClose} title={`Extend ${p.name}`}>
+    <Modal open onClose={onClose} kicker="Contract extension" title={`Extend ${p.name}`}>
       <p className="text-sm text-dim">Current deal: {left.length ? `${money(left[0].salary)} · ${left.length} year${left.length === 1 ? "" : "s"} left (through ${left[left.length - 1].season})` : "expiring"} · new years start after it ends · max first year {money(info.maxFirstYear, 2)}</p>
       <p className="mt-1 text-sm">His camp prefers ~{money(ask.salary)} × {ask.years} years.</p>
       <p className={`mt-1 text-sm font-semibold ${salary >= need * 0.97 ? "text-good" : "text-warn"}`}>{salary >= need * 0.97 ? "He'd accept this offer" : `Needs about ${money(need)} per year for ${years} year${years === 1 ? "" : "s"}`}</p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <Field label={`First-year salary ${money(salary, 2)}`}>
-          <input type="range" className="w-full" min={floor} max={info.maxFirstYear} step={100000} value={salary} onChange={(e) => setSalary(Number(e.target.value))} />
+          <input type="range" className="k-check w-full" min={floor} max={info.maxFirstYear} step={100000} value={salary} onChange={(e) => setSalary(Number(e.target.value))} />
         </Field>
         <Field label="Years">
           <select className={inputCls} value={years} onChange={(e) => setYears(Number(e.target.value))}>{Array.from({ length: info.maxYears }, (_, i) => i + 1).map((y) => <option key={y}>{y}</option>)}</select>
         </Field>
       </div>
-      {reply && <p className="mt-3 rounded-[4px] border border-line px-3 py-2 text-sm">{reply}</p>}
+      {reply && <p className="k-inset mt-3 px-3 py-2 text-sm">{reply}</p>}
       <div className="mt-4 flex gap-2">
         <Button variant="primary" onClick={() => mutate((lg) => { const r = offerExtension(lg, id, salary, years); setReply(r.message); if (r.accepted) { toast(r.message, "success"); onClose(); } })}>Offer extension</Button>
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
@@ -89,7 +89,7 @@ function Contracts() {
               { key: "age", label: "Age", value: (p) => seasonAge(p, l.season), align: "right" },
               { key: "ovr", label: "OVR/POT", value: (p) => p.ovr, render: (p) => <OvrPot p={p} /> },
               { key: "sal", label: "Salary", value: (p) => salaryIn(contractOf(l, p), l.season), render: (p) => money(salaryIn(contractOf(l, p), l.season)), align: "right" },
-              { key: "type", label: "Type", render: (p) => <span className="chip">{contractOf(l, p)?.type}</span> },
+              { key: "type", label: "Type", render: (p) => <span className="k-tag">{contractOf(l, p)?.type}</span> },
               { key: "bird", label: "Bird rights", render: (p) => (p.seasonsWithTeam + 1 >= 3 ? "Full Bird" : p.seasonsWithTeam + 1 === 2 ? "Early Bird" : "Non-Bird") },
               { key: "rfa", label: "Status next summer", render: (p) => { const c = contractOf(l, p); return c && (c.type === "rookie-scale" || c.type === "second-round" || p.experience <= 3) ? "RFA if QO extended" : "UFA"; } },
             ]}

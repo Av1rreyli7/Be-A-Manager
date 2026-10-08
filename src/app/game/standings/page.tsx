@@ -10,31 +10,31 @@ function Table({ l, ids, me, seeds }: { l: League; ids: TeamId[]; me: TeamId; se
   const lead = l.standings[ids[0]] ?? emptyRecord(ids[0]);
   return (
     <div className="overflow-x-auto scroll-thin">
-      <table className="w-full min-w-[720px] text-[13px]">
+      <table className="k-table min-w-[720px]">
         <thead>
-          <tr className="border-b border-line-2 bg-panel-2">{["#", "Team", "W", "L", "PCT", "GB", "Home", "Away", "Conf", "Div", "PPG", "OPP", "Diff", "Strk", "L10"].map((h) => <th key={h} className={clsx("label whitespace-nowrap px-2 py-2", h === "Team" ? "text-left" : "text-right", (h === "W" || h === "L") && "!text-ink")}>{h}</th>)}</tr>
+          <tr>{["#", "Team", "W", "L", "PCT", "GB", "Home", "Away", "Conf", "Div", "PPG", "OPP", "Diff", "Strk", "L10"].map((h) => <th key={h} className={clsx(h !== "Team" && "k-num")}>{h}</th>)}</tr>
         </thead>
         <tbody>
           {ids.map((id, i) => {
             const r = l.standings[id] ?? emptyRecord(id);
             const g = Math.max(1, r.w + r.l);
             return (
-              <tr key={id} className={clsx("border-t border-line/50 transition-colors hover:bg-ink/[0.03]", id === me && "!bg-accent/12", seeds && i === 6 && "border-t-2 !border-t-line-2", seeds && i === 10 && "border-t-2 !border-t-line-2")}>
-                <td className={clsx("px-2 py-1.5 text-right font-display text-[14px] font-bold num", seeds ? (i < 6 ? "text-ink" : i < 10 ? "text-warn" : "text-mute") : "text-mute")} style={seeds && i < 10 ? { boxShadow: `inset 3px 0 0 ${i < 6 ? "var(--color-good)" : "var(--color-warn)"}` } : undefined}>{i + 1}</td>
-                <td className="px-2"><TeamBadge league={l} teamId={id} size="sm" withName /></td>
-                <td className="px-2 text-right font-display text-[14px] font-bold num">{r.w}</td>
-                <td className="px-2 text-right font-display text-[14px] font-bold num">{r.l}</td>
-                <td className="px-2 text-right num">{winPct(r).toFixed(3).replace(/^0/, "")}</td>
-                <td className="px-2 text-right num">{i === 0 ? "-" : gamesBack(lead, r).toFixed(1)}</td>
-                <td className="px-2 text-right num">{r.homeW}-{r.homeL}</td>
-                <td className="px-2 text-right num">{r.awayW}-{r.awayL}</td>
-                <td className="px-2 text-right num">{r.confW}-{r.confL}</td>
-                <td className="px-2 text-right num">{r.divW}-{r.divL}</td>
-                <td className="px-2 text-right num">{(r.pf / g).toFixed(1)}</td>
-                <td className="px-2 text-right num">{(r.pa / g).toFixed(1)}</td>
-                <td className={clsx("px-2 text-right num", r.pf - r.pa > 0 ? "text-good" : r.pf - r.pa < 0 ? "text-bad" : "")}>{((r.pf - r.pa) / g).toFixed(1)}</td>
-                <td className="px-2 text-right num">{r.streak > 0 ? `W${r.streak}` : r.streak < 0 ? `L${-r.streak}` : "-"}</td>
-                <td className="px-2 text-right num">{r.last10.filter((x) => x === "W").length}-{r.last10.filter((x) => x === "L").length}</td>
+              <tr key={id} className={clsx(id === me && "me")}>
+                <td className={clsx("k-num", seeds ? (i < 6 ? "text-ink" : i < 10 ? "text-warn" : "text-mute") : "text-mute")} style={seeds && i < 10 ? { boxShadow: `inset 3px 0 0 ${i < 6 ? "var(--color-good)" : "var(--color-warn)"}` } : undefined}>{i + 1}</td>
+                <td><TeamBadge league={l} teamId={id} size="sm" withName /></td>
+                <td className="k-num font-bold">{r.w}</td>
+                <td className="k-num font-bold">{r.l}</td>
+                <td className="k-num">{winPct(r).toFixed(3).replace(/^0/, "")}</td>
+                <td className="k-num">{i === 0 ? "-" : gamesBack(lead, r).toFixed(1)}</td>
+                <td className="k-num">{r.homeW}-{r.homeL}</td>
+                <td className="k-num">{r.awayW}-{r.awayL}</td>
+                <td className="k-num">{r.confW}-{r.confL}</td>
+                <td className="k-num">{r.divW}-{r.divL}</td>
+                <td className="k-num">{(r.pf / g).toFixed(1)}</td>
+                <td className="k-num">{(r.pa / g).toFixed(1)}</td>
+                <td className={clsx("k-num", r.pf - r.pa > 0 ? "text-good" : r.pf - r.pa < 0 ? "text-bad" : "")}>{((r.pf - r.pa) / g).toFixed(1)}</td>
+                <td className="k-num">{r.streak > 0 ? `W${r.streak}` : r.streak < 0 ? `L${-r.streak}` : "-"}</td>
+                <td className="k-num">{r.last10.filter((x) => x === "W").length}-{r.last10.filter((x) => x === "L").length}</td>
               </tr>
             );
           })}

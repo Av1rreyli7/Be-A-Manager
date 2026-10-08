@@ -23,7 +23,7 @@ function OfferCard({ o, rank }: { o: FinderOffer; rank?: number }) {
   if (gone) return null;
   const v = validateTrade(l, o.assets);
   return (
-    <Appear className="panel p-4">
+    <Appear className="k-panel">
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="flex items-center gap-2">{rank != null && <span className="font-num text-[17px] font-black text-mute">#{rank}</span>}<TeamBadge league={l} teamId={o.teamId} withName /></span>
         <span className="text-xs text-dim">value to you <b className="text-ink">{o.valueToMe.toFixed(1)}</b> · their meter {Math.min(100, o.meter)}%</span>
@@ -32,8 +32,8 @@ function OfferCard({ o, rank }: { o: FinderOffer; rank?: number }) {
         {(["give", "get"] as const).map((dir) => {
           const side = o.assets.sides.find((x) => (dir === "give" ? x.teamId === me : x.teamId !== me));
           return (
-            <div key={dir} className={dir === "give" ? "rounded-[4px] border border-bad/30 bg-bad/5 p-2" : "rounded-[4px] border border-good/30 bg-good/5 p-2"}>
-              <div className={dir === "give" ? "mb-1 label !text-[10px] text-bad" : "mb-1 label !text-[10px] text-good"}>{dir === "give" ? "You give" : "You get"}</div>
+            <div key={dir} className="k-inset p-2">
+              <div className={dir === "give" ? "k-label mb-1 !text-bad" : "k-label mb-1 !text-good"}>{dir === "give" ? "You give" : "You get"}</div>
               {side?.players.map((id) => <div key={id} className="truncate">{l.players[id]?.name} <span className="text-xs text-dim">{l.players[id]?.pos} · {l.players[id]?.ovr}</span></div>)}
               {side?.picks.map((id) => { const k = l.picks[id]; return <div key={id}>{k ? `${k.year} ${k.originalTeam} ${k.round === 1 ? "1st" : "2nd"}` : id}{k && k.protection.kind !== "none" ? <span className="text-xs text-dim"> ({k.protection.kind === "top" ? `top-${k.protection.keepTop}` : "prot."})</span> : null}</div>; })}
               {side?.cash ? <div>{money(side.cash)} cash</div> : null}
@@ -42,9 +42,9 @@ function OfferCard({ o, rank }: { o: FinderOffer; rank?: number }) {
           );
         })}
       </div>
-      <ul className="mt-2 flex flex-wrap gap-1">{o.reasoning.map((r) => <li key={r} className="chip">{r}</li>)}</ul>
+      <ul className="mt-2 flex flex-wrap gap-1">{o.reasoning.map((r) => <li key={r} className="k-tag">{r}</li>)}</ul>
       <div className="mt-3 flex gap-2">
-        <Button size="sm" variant="success" disabled={!v.valid} onClick={() => { mutate((lg) => void executeTrade(lg, o.assets)); toast("Trade completed", "success"); setGone(true); }}>Accept</Button>
+        <Button size="sm" disabled={!v.valid} onClick={() => { mutate((lg) => void executeTrade(lg, o.assets)); toast("Trade completed", "success"); setGone(true); }}>Accept</Button>
         <Button size="sm" onClick={() => { sessionStorage.setItem("fo:loadTrade", JSON.stringify(o.assets)); router.push("/game/trade?load=1"); }}>Open in Trade Machine</Button>
       </div>
     </Appear>
@@ -118,13 +118,13 @@ function Finder() {
     <div className="space-y-4">
       <PageHeader title="Trade Finder" sub="The AI checks all 29 teams and shows legal deals they would really take." />
       <Tabs tabs={[{ id: "shop", label: "Shop my player" }, { id: "acquire", label: "What would it take?" }, { id: "need", label: "Find a player by need" }]} value={tab} onChange={setTab} />
-      {busy && <div className="panel k-shimmer !bg-transparent px-4 py-3 text-sm">Scanning the league</div>}
+      {busy && <div className="k-panel k-shimmer text-sm">Scanning the league</div>}
 
       {tab === "shop" && (
         <>
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
             <Card title="Build your package" right={<span>{mine.length} player{mine.length === 1 ? "" : "s"} · {myPicks.length} pick{myPicks.length === 1 ? "" : "s"} selected</span>} pad={false}>
-              <div className="border-b border-line px-3 pt-3 label">Players</div>
+              <div className="k-label block border-b border-line px-3 pb-1 pt-3">Players</div>
               <div className="max-h-80 overflow-y-auto scroll-thin">
                 {roster.map((p) => {
                   const on = mine.includes(p.id);
@@ -138,7 +138,7 @@ function Finder() {
                   );
                 })}
               </div>
-              <div className="border-b border-line px-3 pt-3 label">Draft picks</div>
+              <div className="k-label block border-b border-line px-3 pb-1 pt-3">Draft picks</div>
               <div className="max-h-60 overflow-y-auto scroll-thin">
                 {picks.map((k) => {
                   const on = myPicks.includes(k.id);
@@ -161,7 +161,7 @@ function Finder() {
                     {mine.map((id) => (
                       <li key={id} className="flex items-center justify-between gap-2 rounded-[4px] bg-accent/10 px-2 py-1">
                         <span className="truncate font-semibold">{l.players[id]?.name}</span>
-                        <span className="flex items-center gap-2 text-xs text-dim">{money(salaryIn(contractOf(l, l.players[id]), l.season))}<button className="text-bad hover:text-bad" onClick={() => setMine((m) => m.filter((x) => x !== id))} aria-label="Remove"><X size={13} weight="bold" /></button></span>
+                        <span className="flex items-center gap-2 text-xs text-dim">{money(salaryIn(contractOf(l, l.players[id]), l.season))}<button className="k-btn k-btn-ghost k-btn-sm" onClick={() => setMine((m) => m.filter((x) => x !== id))} aria-label="Remove"><X size={13} weight="bold" /></button></span>
                       </li>
                     ))}
                     {myPicks.map((id) => {
@@ -169,7 +169,7 @@ function Finder() {
                       return (
                         <li key={id} className="flex items-center justify-between gap-2 rounded-[4px] bg-accent/10 px-2 py-1">
                           <span className="font-semibold">{k ? `${k.year} ${k.originalTeam} ${k.round === 1 ? "1st" : "2nd"}` : id}</span>
-                          <button className="text-xs text-bad hover:text-bad" onClick={() => setMyPicks((m) => m.filter((x) => x !== id))} aria-label="Remove"><X size={13} weight="bold" /></button>
+                          <button className="k-btn k-btn-ghost k-btn-sm" onClick={() => setMyPicks((m) => m.filter((x) => x !== id))} aria-label="Remove"><X size={13} weight="bold" /></button>
                         </li>
                       );
                     })}
@@ -201,7 +201,7 @@ function Finder() {
           <Card title="Target">
             <input className={inputCls} placeholder="Search any player on another team…" value={q} onChange={(e) => setQ(e.target.value)} />
             {candidates.length > 0 && (
-              <ul className="mt-2 divide-y divide-line rounded-[4px] border border-line">
+              <ul className="k-inset mt-2 divide-y divide-line">
                 {candidates.map((p) => (
                   <li key={p.id} className="flex items-center justify-between px-3 py-2 text-sm">
                     <span className="flex items-center gap-2"><TeamBadge league={l} teamId={p.teamId} size="sm" /> {p.name} <OvrPot p={p} /></span>
@@ -213,7 +213,7 @@ function Finder() {
             {target && <p className="mt-3 text-sm">Target: <PlayerLink player={l.players[target]} /> ({l.players[target]?.teamId})</p>}
           </Card>
           <div ref={tab === "acquire" ? results : undefined} className="scroll-mt-[calc(var(--hdr,92px)+12px)]" />
-          {take === null && <div className="panel border-bad/40 px-4 py-4 text-sm text-bad">{takeReason ?? "Not possible."}</div>}
+          {take === null && <div className="k-panel text-sm text-bad">{takeReason ?? "Not possible."}</div>}
           {take && <OfferCard o={take} />}
         </>
       )}
@@ -229,10 +229,10 @@ function Finder() {
                 </select>
               </Field>
               <Field label={`Max salary ($${need.maxSalary}M)`}>
-                <input type="range" min={2} max={60} value={need.maxSalary} onChange={(e) => setNeed({ ...need, maxSalary: Number(e.target.value) })} className="w-full" />
+                <input type="range" min={2} max={60} value={need.maxSalary} onChange={(e) => setNeed({ ...need, maxSalary: Number(e.target.value) })} className="k-check w-full" />
               </Field>
               <Field label={`Min OVR (${need.minOvr})`}>
-                <input type="range" min={55} max={90} value={need.minOvr} onChange={(e) => setNeed({ ...need, minOvr: Number(e.target.value) })} className="w-full" />
+                <input type="range" min={55} max={90} value={need.minOvr} onChange={(e) => setNeed({ ...need, minOvr: Number(e.target.value) })} className="k-check w-full" />
               </Field>
               <div className="flex items-end"><Button variant="primary" onClick={search} disabled={busy}>Search</Button></div>
             </div>

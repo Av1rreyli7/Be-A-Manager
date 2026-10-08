@@ -42,7 +42,6 @@ export default function PlayerPage() {
   const prospect = p.status === "prospect";
   const scout = prospect ? scoutedRatings(p) : null;
   const age = seasonAge(p, l.season);
-  const tc = p.teamId ? l.teams[p.teamId]?.colors ?? { primary: "#3a4150", secondary: "#1b1f27" } : { primary: "#3a4150", secondary: "#1b1f27" };
   const base = leagueBaselines(l);
   const ext = extensionInfoFor(l, p.id);
   const mine = p.teamId && isMine(l, p.teamId);
@@ -51,44 +50,39 @@ export default function PlayerPage() {
 
   return (
     <div className="space-y-4">
-      <section className="panel relative overflow-hidden">
-        <div aria-hidden className="hero-wash absolute inset-0" style={{ ["--tc-team" as string]: tc.primary }} />
-        <div aria-hidden className="stripes absolute inset-0 [mask-image:linear-gradient(90deg,black,transparent_65%)]" />
-        <span aria-hidden className="pointer-events-none absolute -bottom-10 right-2 select-none font-num text-[150px] font-black leading-none text-white/[0.07] sm:text-[210px]">{p.jersey ?? p.pos}</span>
-        <div className="relative grid gap-5 p-4 sm:p-6 md:grid-cols-[auto_1fr] md:items-end">
-          <div className="flex items-end gap-3">
-            <div className="flex flex-col items-center gap-1">
-              <Rating value={scout ? scout.ovr : p.ovr} size="xl" title="Overall" />
-              <span className="label !text-white/70">Overall</span>
-            </div>
-            <div className="flex flex-col items-center gap-1">
-              <Rating value={scout ? scout.pot : p.pot} size="md" className="opacity-80" title="Potential" />
-              <span className="label !text-white/70">Pot</span>
-            </div>
+      <section className="k-panel">
+        <header className="k-controls">
+          <h1 className="k-panel-title" style={{ marginRight: "auto" }}>{p.name}</h1>
+          {p.injury && <span className="k-tag k-bad">{p.injury.type}: {p.injury.daysOut}d</span>}
+        </header>
+        <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 text-sm text-dim">
+            {p.teamId ? <TeamBadge league={l} teamId={p.teamId} size="sm" withName /> : <span className="k-tag">{p.status === "prospect" ? "Draft prospect" : p.status === "retired" ? `Retired ${p.retiredSeason ?? ""}` : "Free agent"}</span>}
+            <span className="font-num text-[15px] font-extrabold text-ink">{p.pos}{p.jersey ? ` #${p.jersey}` : ""}</span>
+            <span>{height(p.heightIn)}</span>
+            <span>{p.weightLb} lb</span>
+            <span>Age {age}</span>
           </div>
-          <div className="min-w-0">
-            <div className="text-sm font-semibold text-white/75">{p.firstName}</div>
-            <h1 className="font-display text-[34px] font-black uppercase leading-[0.85] tracking-[0.005em] text-white sm:text-[54px]">{p.lastName}</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/80">
-              {p.teamId ? <TeamBadge league={l} teamId={p.teamId} size="sm" withName /> : <span className="chip !bg-black/30 !text-white/85">{p.status === "prospect" ? "Draft prospect" : p.status === "retired" ? `Retired ${p.retiredSeason ?? ""}` : "Free agent"}</span>}
-              <span className="font-num text-[15px] font-extrabold">{p.pos}{p.jersey ? ` #${p.jersey}` : ""}</span>
-              <span>{height(p.heightIn)}</span>
-              <span>{p.weightLb} lb</span>
-              <span>Age {age}</span>
-              {p.injury && <span className="rounded-[2px] bg-bad px-1.5 py-0.5 text-[11px] font-bold text-bg">{p.injury.type}: {p.injury.daysOut}d</span>}
-            </div>
+          <div className="k-clubmeta">
+            <span className="k-cm">
+              <span className="k-cmk">Overall</span>
+              <Rating value={scout ? scout.ovr : p.ovr} size="md" title="Overall" />
+            </span>
+            <span className="k-cm">
+              <span className="k-cmk">Potential</span>
+              <Rating value={scout ? scout.pot : p.pot} size="md" className="opacity-80" title="Potential" />
+            </span>
           </div>
         </div>
-        <div className="relative flex flex-wrap gap-2 border-t border-white/10 bg-bg/75 px-4 py-3 sm:px-6">
-  
-              {mine && <PlayerActions p={p} />}
-              {mine && <Button size="sm" onClick={() => router.push(`/game/finder?player=${p.id}`)}>Find offers</Button>}
-              {p.teamId && !mine && <Button size="sm" variant="primary" onClick={() => router.push(`/game/finder?target=${p.id}`)}>What would it take?</Button>}
-              {p.teamId && <Button size="sm" onClick={() => router.push(`/game/trade?${mine ? "mine" : "theirs"}=${p.id}`)}>Open in Trade Machine</Button>}
-              {p.status === "fa" && <Button size="sm" variant="primary" onClick={() => router.push(`/game/free-agency?player=${p.id}`)}>Make offer</Button>}
-              <Button size="sm" variant="ghost" onClick={() => router.push(`/game/compare?a=${p.id}`)}>Compare</Button>
-          </div>
       </section>
+      <div className="k-controls">
+        {mine && <PlayerActions p={p} />}
+        {mine && <Button size="sm" onClick={() => router.push(`/game/finder?player=${p.id}`)}>Find offers</Button>}
+        {p.teamId && !mine && <Button size="sm" variant="primary" onClick={() => router.push(`/game/finder?target=${p.id}`)}>What would it take?</Button>}
+        {p.teamId && <Button size="sm" onClick={() => router.push(`/game/trade?${mine ? "mine" : "theirs"}=${p.id}`)}>Open in Trade Machine</Button>}
+        {p.status === "fa" && <Button size="sm" variant="primary" onClick={() => router.push(`/game/free-agency?player=${p.id}`)}>Make offer</Button>}
+        <Button size="sm" variant="ghost" onClick={() => router.push(`/game/compare?a=${p.id}`)}>Compare</Button>
+      </div>
       <Tabs tabs={[{ id: "overview", label: "Overview" }, { id: "stats", label: "Stats" }, { id: "log", label: "Game log" }, ...(l.settings.commissioner ? [{ id: "edit" as const, label: "Commissioner edit" }] : [])]} value={tab} onChange={setTab} />
 
       {tab === "overview" && (
@@ -105,15 +99,15 @@ export default function PlayerPage() {
               {p.injury && (<><dt className="text-bad">Injury</dt><dd className="text-bad">{p.injury.type} · {p.injury.daysOut} days</dd></>)}
             </dl>
             {scout && (
-              <div className="mt-3 rounded-[4px] border border-line p-3 text-xs text-dim">
+              <div className="k-inset mt-3 p-3 text-xs text-dim">
                 Scouting {p.scouting?.revealed}% · OVR {scout.ovrRange[0]}-{scout.ovrRange[1]} · POT {scout.potRange[0]}-{scout.potRange[1]}
                 {p.scouting?.combine && <div className="mt-1">Combine: {f1(p.scouting.combine.wingspan / 12)}ft wingspan · {p.scouting.combine.vertical}&quot; vert · {p.scouting.combine.laneAgility}s lane</div>}
               </div>
             )}
             <div className="mt-4">
-              <div className="label mb-1.5">Traits</div>
+              <div className="k-label mb-1.5">Traits</div>
               <div className="flex flex-wrap gap-1">
-                {p.traits.length ? p.traits.map((t) => <span key={t} className="chip text-gold" title={TRAITS.find((x) => x.id === t)?.description}>{TRAITS.find((x) => x.id === t)?.label ?? t}</span>) : <span className="text-xs text-dim">None</span>}
+                {p.traits.length ? p.traits.map((t) => <span key={t} className="k-tag k-warn" title={TRAITS.find((x) => x.id === t)?.description}>{TRAITS.find((x) => x.id === t)?.label ?? t}</span>) : <span className="text-xs text-dim">None</span>}
               </div>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
@@ -128,7 +122,7 @@ export default function PlayerPage() {
             {p.awards.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1">
                 {Object.entries(p.awards.reduce((m, a) => ((m[a.award] = (m[a.award] ?? 0) + 1), m), {} as Record<string, number>)).map(([a, n]) => (
-                  <span key={a} className="chip text-gold">{n > 1 ? `${n}× ` : ""}{a}</span>
+                  <span key={a} className="k-tag k-warn">{n > 1 ? `${n}× ` : ""}{a}</span>
                 ))}
               </div>
             )}
@@ -141,7 +135,7 @@ export default function PlayerPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {GROUPS.map((g) => (
                   <div key={g.name}>
-                    <div className="label mb-2 border-b border-line pb-1.5 !text-dim">{g.name}</div>
+                    <div className="k-mlab mb-2 border-b border-line pb-1.5">{g.name}</div>
                     <div className="space-y-1">
                       {g.keys.map((k) => (
                         <div key={k} className="grid grid-cols-[1fr_auto] items-center gap-2 text-xs">
@@ -162,25 +156,25 @@ export default function PlayerPage() {
           <Card title="Contract" className="lg:col-span-2">
             {c ? (
               <>
-                <table className="w-full text-sm">
-                  <thead><tr className="text-left label"><th className="py-1">Season</th><th className="text-right">Salary</th><th className="text-right">Guaranteed</th><th className="text-right">Option</th></tr></thead>
+                <table className="k-table">
+                  <thead><tr><th>Season</th><th className="k-num">Salary</th><th className="k-num">Guaranteed</th><th className="k-num">Option</th></tr></thead>
                   <tbody>
                     {c.years.map((y) => (
                       <tr key={y.season} className={y.season === l.season ? "bg-accent/10" : ""}>
-                        <td className="py-1">{y.season}</td>
-                        <td className="text-right num">{money(y.salary, 2)}{y.approximate ? <span className="text-mute" title="Future years published rounded-[3px] to $0.1M"> ≈</span> : null}</td>
-                        <td className="text-right num">{money(y.guaranteed, 2)}</td>
-                        <td className="text-right">{y.option ? <span className="chip">{y.option === "player" ? "Player" : y.option === "team" ? "Team" : "ETO"}</span> : ""}</td>
+                        <td>{y.season}</td>
+                        <td className="k-num">{money(y.salary, 2)}{y.approximate ? <span className="text-mute" title="Future years published rounded to $0.1M"> ≈</span> : null}</td>
+                        <td className="k-num">{money(y.guaranteed, 2)}</td>
+                        <td className="k-num">{y.option ? <span className="k-tag">{y.option === "player" ? "Player" : y.option === "team" ? "Team" : "ETO"}</span> : ""}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 <div className="mt-2 flex flex-wrap gap-1 text-xs">
-                  <span className="chip">{c.type}</span>
-                  {c.signedWith && <span className="chip">via {c.signedWith}</span>}
-                  {c.tradeKicker && <span className="chip">Trade kicker {c.tradeKicker.pct}%</span>}
-                  {c.noTradeClause && <span className="chip text-warn">No-trade clause</span>}
-                  {c.type === "two-way" && <span className="chip">{c.twoWayGames ?? 0}/{l.cba.roster.twoWayGameLimit} games</span>}
+                  <span className="k-tag">{c.type}</span>
+                  {c.signedWith && <span className="k-tag">via {c.signedWith}</span>}
+                  {c.tradeKicker && <span className="k-tag">Trade kicker {c.tradeKicker.pct}%</span>}
+                  {c.noTradeClause && <span className="k-tag k-warn">No-trade clause</span>}
+                  {c.type === "two-way" && <span className="k-tag">{c.twoWayGames ?? 0}/{l.cba.roster.twoWayGameLimit} games</span>}
                 </div>
                 {c.notes.length > 0 && <p className="mt-2 text-xs text-mute">{c.notes.join(" · ")}</p>}
                 {mine && ext.eligible && <Link href={`/game/contracts?player=${p.id}`} className="mt-3 inline-block text-sm text-accent">Extend / re-sign (up to {money(ext.maxFirstYear)}) →</Link>}
@@ -325,7 +319,7 @@ function CommissionerEdit({ id }: { id: string }) {
                 </select>
               </div>
             ))}
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={c.noTradeClause} onChange={(e) => mutate(() => void (c.noTradeClause = e.target.checked))} /> No-trade clause</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="k-check" checked={c.noTradeClause} onChange={(e) => mutate(() => void (c.noTradeClause = e.target.checked))} /> No-trade clause</label>
           </div>
         )}
         <Button className="mt-3" variant="danger" onClick={() => mutate(() => void (p.injury = null))}>Heal injury</Button>

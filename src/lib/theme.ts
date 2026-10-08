@@ -80,13 +80,42 @@ export function chartColors(colors?: TeamColors) {
   };
 }
 
-/** Writes the team palette onto :root so body, portals and modals all pick it up. */
+const rgbOf = (hex: string) => {
+  const n = parseInt(hex.replace("#", ""), 16) || 0;
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+const lumOf = (c: number[]) => (c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114) / 255;
+function liftRgb(c: number[], minLum: number) {
+  let out = c.slice();
+  for (let i = 0; i < 12 && lumOf(out) < minLum; i++) out = out.map((v) => Math.round(v + (255 - v) * 0.18));
+  return out;
+}
+
+/**
+ * The kit buttons take the franchise's colours inside a save, the same way Floodlights tints with a club's
+ * (kit.css reads --k-tint, --k-tint-2 and --k-tint-edge as "r, g, b"). A very dark first colour swaps with the
+ * second, a colour that is still too dark is lifted toward white, and the edge is kept bright.
+ */
+export function kitTint(colors: TeamColors | null | undefined) {
+  if (!colors) return null;
+  let a = rgbOf(colors.primary);
+  let b = rgbOf(colors.secondary);
+  if (lumOf(a) < 0.14 && lumOf(b) > lumOf(a)) [a, b] = [b, a];
+  a = liftRgb(a, 0.28);
+  const edge = liftRgb(a, 0.5);
+  return { "--k-tint": a.join(", "), "--k-tint-2": b.join(", "), "--k-tint-edge": edge.join(", ") } as Record<string, string>;
+}
+
+/** Writes the team palette onto :root so body, portals and modals all pick it up. No team: the plain accent. */
 export function useTeamTheme(colors: TeamColors | null | undefined) {
   const key = colors ? colors.primary + colors.secondary : "default";
   useEffect(() => {
     const vars = teamTheme(colors ?? DEFAULT_COLORS);
     const root = document.documentElement;
     for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
+    const tint = kitTint(colors);
+    if (tint) for (const [k, v] of Object.entries(tint)) root.style.setProperty(k, v);
+    else for (const k of ["--k-tint", "--k-tint-2", "--k-tint-edge"]) root.style.removeProperty(k);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 }

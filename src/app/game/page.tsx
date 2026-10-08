@@ -7,7 +7,7 @@ import { Button, Card, CountUp, PlayerLink, Stat, TeamBadge, TeamMark } from "@/
 import { playableGame } from "@/lib/hardwood";
 import { conferenceStandings, emptyRecord, gamesBack } from "@/engine/season/standings";
 import { capStatus } from "@/engine/cap/payroll";
-import { money, PHASE_LABEL, STATUS_COLOR, STATUS_LABEL, f1 } from "@/lib/format";
+import { money, STATUS_COLOR, STATUS_LABEL, f1 } from "@/lib/format";
 import { fmtDate } from "@/engine/util/dates";
 import { teamPlayers } from "@/engine/league/helpers";
 import { perGame, seasonTotal } from "@/engine/season/stats";
@@ -17,9 +17,7 @@ export default function Dashboard() {
   const l = useLeague();
   const t = useTeamId();
   const team = l.teams[t];
-  const rec = l.standings[t] ?? emptyRecord(t);
   const conf = conferenceStandings(l, team.conference);
-  const seed = conf.indexOf(t) + 1;
   const next = l.schedule.find((g) => !g.played && (g.home === t || g.away === t));
   const recent = l.schedule.filter((g) => g.played && (g.home === t || g.away === t)).slice(-5).reverse();
   const cap = capStatus(l, t);
@@ -30,7 +28,6 @@ export default function Dashboard() {
     return { k, best };
   });
   const injured = roster.filter((p) => p.injury);
-  const gp = rec.w + rec.l;
   const opp = next ? l.teams[next.home === t ? next.away : next.home] : null;
   const gameDay = playableGame(l, t);
   const guest = useIsOnlineGuest();
@@ -42,93 +39,58 @@ export default function Dashboard() {
     <div className="space-y-5">
       <h1 className="sr-only">{team.fullName} dashboard</h1>
 
-      {/* scoreboard hero */}
-      <section className="panel relative overflow-hidden">
-        <div aria-hidden className="hero-wash absolute inset-0" />
-        <div aria-hidden className="stripes absolute inset-0 [mask-image:linear-gradient(90deg,black,transparent_60%)]" />
-        <div className="relative grid gap-6 p-4 sm:p-6 lg:grid-cols-[1.5fr_1fr] lg:items-end">
-          <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              <TeamMark id={team.id} colors={team.colors} size="xl" />
-              <div className="min-w-0">
-                <div className="truncate text-sm font-semibold text-white/75">{team.city}</div>
-                <div className="truncate font-display text-[32px] font-black uppercase leading-[0.85] tracking-[0.005em] text-white sm:text-[46px]">{team.name}</div>
-              </div>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              <span className="chip !bg-black/30 !text-white/85">{l.season}</span>
-              <span className="chip !bg-black/30 !text-white/85">{PHASE_LABEL[l.phase]}</span>
-              <span className="chip !bg-black/30 !text-white/85">{team.strategy.mode}</span>
-              <span className="chip !bg-black/30 !text-white/85">Hype {Math.round(team.hype)}</span>
-            </div>
-            <dl className="mt-5 grid max-w-xl grid-cols-[1.3fr_1fr_1fr_1fr] divide-x divide-white/15 rounded-[4px] bg-black/30 py-3 backdrop-blur-sm">
-              <div className="min-w-0 px-2.5 sm:px-4">
-                <dt className="label !text-white/60">Record</dt>
-                <dd className="whitespace-nowrap font-display text-[24px] font-black leading-none text-white num sm:text-[36px]"><CountUp value={rec.w} />-<CountUp value={rec.l} /></dd>
-              </div>
-              <div className="min-w-0 px-2.5 sm:px-4">
-                <dt className="label !text-white/60">Seed</dt>
-                <dd className="whitespace-nowrap font-display text-[24px] font-black leading-none text-white num sm:text-[36px]">{seed ? <CountUp value={seed} /> : "-"}</dd>
-              </div>
-              <div className="min-w-0 px-2.5 sm:px-4">
-                <dt className="label !text-white/60">Streak</dt>
-                <dd className={clsx("whitespace-nowrap font-display text-[24px] font-black leading-none num sm:text-[36px]", rec.streak > 0 ? "text-good" : rec.streak < 0 ? "text-bad" : "text-white")}>{rec.streak > 0 ? `W${rec.streak}` : rec.streak < 0 ? `L${-rec.streak}` : "-"}</dd>
-              </div>
-              <div className="min-w-0 px-2.5 sm:px-4">
-                <dt className="label !text-white/60">Net</dt>
-                <dd className={clsx("whitespace-nowrap font-display text-[24px] font-black leading-none num sm:text-[36px]", gp && rec.pf > rec.pa ? "text-good" : gp && rec.pf < rec.pa ? "text-bad" : "text-white")}>{gp ? <CountUp value={(rec.pf - rec.pa) / gp} format={f1} /> : "-"}</dd>
-              </div>
-            </dl>
-          </div>
+      {/* the layout's hub head already shows the team, its record and seed: here only the two facts it leaves out */}
+      <div className="k-controls">
+        <span className="k-tag">{team.strategy.mode}</span>
+        <span className="k-tag">Hype {Math.round(team.hype)}</span>
+      </div>
 
-          <div className="rounded-[6px] border border-white/10 bg-bg/70 p-4 backdrop-blur-md">
-            <div className="flex items-center justify-between">
-              <span className="grad-title font-num text-[12px] font-black uppercase tracking-[0.12em]">Up next</span>
-              {next && <span className="text-xs font-semibold text-dim">{fmtDate(next.date, { weekday: "short", month: "short", day: "numeric" })}</span>}
+      <section className="k-panel">
+        <header className="k-controls">
+          <h2 className="k-panel-title" style={{ marginRight: "auto" }}>Up next</h2>
+          {next && <span className="k-msub">{fmtDate(next.date, { weekday: "short", month: "short", day: "numeric" })}</span>}
+        </header>
+        {next && opp ? (
+          <>
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+              <MatchSide league={l} id={next.away} />
+              <span className="font-num text-[15px] font-black text-mute">@</span>
+              <MatchSide league={l} id={next.home} right />
             </div>
-            {next && opp ? (
-              <>
-                <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <MatchSide league={l} id={next.away} />
-                  <span className="font-num text-[15px] font-black text-mute">@</span>
-                  <MatchSide league={l} id={next.home} right />
-                </div>
-                <div className="mt-3 flex items-center justify-between text-xs text-dim">
-                  <span>{next.home === t ? "Home" : "Road"} game vs {opp.name}</span>
-                  {next.type !== "regular" && <span className="chip !text-accent">{next.round ?? next.type}</span>}
-                </div>
-                {inSeason && (
-                  <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-3">
-                    {gameDay?.id === next.id ? (
-                      <>
-                        <Link href={`/game/play?g=${encodeURIComponent(next.id)}`} className="btn btn-glow">
-                          <Basketball size={15} weight="fill" /> Play it
-                        </Link>
-                        {!guest && (
-                          <Button disabled={!!busy} onClick={() => void sim("day")} title="Sim today, including your game">
-                            Sim it
-                          </Button>
-                        )}
-                        <span className="w-full text-xs text-dim">Game day. Play it yourself in Hardwood Legends, or let the sim call it.</span>
-                      </>
-                    ) : guest ? (
-                      <span className="text-xs text-dim">On game day you can play this one yourself in Hardwood Legends.</span>
-                    ) : (
-                      <>
-                        <Button disabled={!!busy} onClick={() => void sim("game-day")}>
-                          <FastForward size={14} weight="fill" /> Sim to game day
-                        </Button>
-                        <span className="w-full text-xs text-dim">Stops on the morning of the game so you can play it yourself.</span>
-                      </>
+            <div className="mt-3 flex items-center justify-between text-xs text-dim">
+              <span>{next.home === t ? "Home" : "Road"} game vs {opp.name}</span>
+              {next.type !== "regular" && <span className="k-tag k-acc">{next.round ?? next.type}</span>}
+            </div>
+            {inSeason && (
+              <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-3">
+                {gameDay?.id === next.id ? (
+                  <>
+                    <Link href={`/game/play?g=${encodeURIComponent(next.id)}`} className="k-btn k-btn-primary">
+                      <Basketball size={15} weight="fill" /> Play it
+                    </Link>
+                    {!guest && (
+                      <Button disabled={!!busy} onClick={() => void sim("day")} title="Sim today, including your game">
+                        Sim it
+                      </Button>
                     )}
-                  </div>
+                    <span className="w-full text-xs text-dim">Game day. Play it yourself in Hardwood Legends, or let the sim call it.</span>
+                  </>
+                ) : guest ? (
+                  <span className="text-xs text-dim">On game day you can play this one yourself in Hardwood Legends.</span>
+                ) : (
+                  <>
+                    <Button disabled={!!busy} onClick={() => void sim("game-day")}>
+                      <FastForward size={14} weight="fill" /> Sim to game day
+                    </Button>
+                    <span className="w-full text-xs text-dim">Stops on the morning of the game so you can play it yourself.</span>
+                  </>
                 )}
-              </>
-            ) : (
-              <p className="mt-3 text-sm text-dim">No games coming up. Use the button up top to move the season on.</p>
+              </div>
             )}
-          </div>
-        </div>
+          </>
+        ) : (
+          <p className="text-sm text-dim">No games coming up. Use the button up top to move the season on.</p>
+        )}
       </section>
 
       {l.alerts.length > 0 && (
@@ -140,7 +102,7 @@ export default function Dashboard() {
                 <Link
                   href={a.href ?? "/game"}
                   className={clsx(
-                    "panel group flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:border-line-2",
+                    "k-panel group flex items-center gap-3 text-sm",
                     a.level === "danger" ? "shadow-[inset_3px_0_0_var(--color-bad)]" : a.level === "warn" ? "shadow-[inset_3px_0_0_var(--color-warn)]" : "shadow-[inset_3px_0_0_var(--color-info)]",
                   )}
                 >
@@ -162,12 +124,12 @@ export default function Dashboard() {
             const op = home ? g.result!.awayScore : g.result!.homeScore;
             const win = my > op;
             return (
-              <Link key={g.id} href={`/game/box/${encodeURIComponent(g.id)}`} className={clsx("panel lift overflow-hidden", i > 2 && "hidden sm:block")}>
-                <div className={clsx("flex items-center justify-between px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-bg", win ? "bg-gradient-to-r from-good to-teal" : "bg-gradient-to-r from-bad to-[#ff8a5b]")}>
-                  <span>{win ? "Win" : "Loss"}</span>
-                  <span className="opacity-75">{fmtDate(g.date)}</span>
+              <Link key={g.id} href={`/game/box/${encodeURIComponent(g.id)}`} className={clsx("k-panel k-flush lift block", i > 2 && "hidden sm:block")}>
+                <div className="flex items-center justify-between gap-2 px-3 pt-3">
+                  <span className={clsx("k-tag", win ? "k-good" : "k-bad")}>{win ? "Win" : "Loss"}</span>
+                  <span className="k-msub">{fmtDate(g.date)}</span>
                 </div>
-                <div className="flex items-center justify-between px-2.5 py-2">
+                <div className="flex items-center justify-between px-3 pb-3 pt-2">
                   <span className="text-xs text-dim">{home ? "vs" : "@"} <span className="font-semibold text-ink">{home ? g.away : g.home}</span></span>
                   <span className="font-num text-[17px] font-black leading-none num">{my}<span className="text-mute">-</span>{op}</span>
                 </div>
@@ -179,32 +141,32 @@ export default function Dashboard() {
 
       <div className="grid gap-5 lg:grid-cols-[1.15fr_1fr]">
         <Card title={`${team.conference} standings`} right={<Link href="/game/standings">Full table</Link>} pad={false}>
-          <table className="w-full text-sm">
+          <table className="k-table">
             <thead>
-              <tr className="border-b border-line">
-                <th className="label w-8 py-2 pl-4 text-left">#</th>
-                <th className="label py-2 text-left">Team</th>
-                <th className="label py-2 text-right">W-L</th>
-                <th className="label py-2 pr-4 text-right">GB</th>
+              <tr>
+                <th className="w-8">#</th>
+                <th>Team</th>
+                <th className="k-num">W-L</th>
+                <th className="k-num">GB</th>
               </tr>
             </thead>
             <tbody>
               {conf.slice(0, 10).map((id, i) => {
                 const r = l.standings[id] ?? emptyRecord(id);
                 return (
-                  <tr key={id} className={clsx("border-b border-line/50 last:border-0", id === t && "bg-accent/12", i === 5 && "border-b-2 !border-b-line-2")}>
-                    <td className={clsx("py-1.5 pl-4 font-display text-[14px] font-bold num", i < 6 ? "text-ink" : "text-warn")} style={{ boxShadow: `inset 3px 0 0 ${i < 6 ? "var(--color-good)" : "var(--color-warn)"}` }}>
+                  <tr key={id} className={clsx(id === t && "me")}>
+                    <td className={clsx("num", i < 6 ? "text-ink" : "text-warn")} style={{ boxShadow: `inset 3px 0 0 ${i < 6 ? "var(--color-good)" : "var(--color-warn)"}` }}>
                       {i + 1}
                     </td>
-                    <td className="max-w-0 py-1.5">
+                    <td className="max-w-0">
                       <div className="truncate">
                         <TeamBadge league={l} teamId={id} size="sm" withName />
                       </div>
                     </td>
-                    <td className="py-1.5 text-right font-semibold num">
+                    <td className="k-num">
                       {r.w}-{r.l}
                     </td>
-                    <td className="w-14 py-1.5 pr-4 text-right text-dim num">{i === 0 ? "-" : gamesBack(l.standings[conf[0]] ?? emptyRecord(conf[0]), r).toFixed(1)}</td>
+                    <td className="k-num w-14 text-dim">{i === 0 ? "-" : gamesBack(l.standings[conf[0]] ?? emptyRecord(conf[0]), r).toFixed(1)}</td>
                   </tr>
                 );
               })}
@@ -221,15 +183,15 @@ export default function Dashboard() {
             <div className="grid grid-cols-3 divide-x divide-line">
               {leaders.map(({ k, best }) => (
                 <div key={k} className="min-w-0 px-3 py-3">
-                  <div className="label">{k}</div>
+                  <div className="k-cmk">{k}</div>
                   {best ? (
                     <>
-                      <div className="font-display text-[28px] font-black leading-none num" style={{ color: k === "pts" ? "var(--k-orange-hi)" : k === "reb" ? "var(--k-teal)" : "var(--k-sky)" }}><CountUp value={best.pg[k]} format={f1} /></div>
+                      <div className="k-cmv mt-2"><CountUp value={best.pg[k]} format={f1} /></div>
                       <PlayerLink player={best.p} className="mt-1 block truncate text-xs" />
                     </>
                   ) : (
                     <>
-                      <div className="font-display text-[28px] font-black leading-none text-line-2">-</div>
+                      <div className="k-cmv mt-2 !text-line-2">-</div>
                       <div className="mt-1 text-xs text-mute">No games yet</div>
                     </>
                   )}

@@ -281,11 +281,11 @@ export default function Hub({
           Floodlights <b>Player Career</b>
         </button>
         {!state.retired && (
-          <nav className="pc-tabs" aria-label="Screens">
-            <button type="button" className={clsx(tab === "career" && "is-on")} aria-pressed={tab === "career"} onClick={() => setTab("career")}>
+          <nav className="k-tabs" aria-label="Screens">
+            <button type="button" className={clsx(tab === "career" && "on")} aria-pressed={tab === "career"} onClick={() => setTab("career")}>
               Career
             </button>
-            <button type="button" className={clsx(tab === "city" && "is-on")} aria-pressed={tab === "city"} onClick={() => setTab("city")}>
+            <button type="button" className={clsx(tab === "city" && "on")} aria-pressed={tab === "city"} onClick={() => setTab("city")}>
               {state.life.city}
             </button>
           </nav>
@@ -311,13 +311,13 @@ export default function Hub({
                 </button>
               ))}
               <label className="pc-gfx-auto">
-                <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
+                <input type="checkbox" className="k-check" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
                 <span>
                   <b>Keep it smooth</b>
                   Drop a level on its own when frames run long, so it stays near 60 a second.
                 </span>
               </label>
-              <button type="button" className="pc-link" onClick={() => setGfxOpen(false)}>
+              <button type="button" className="k-btn k-btn-ghost k-btn-sm" onClick={() => setGfxOpen(false)}>
                 Done
               </button>
             </div>
@@ -401,8 +401,10 @@ export default function Hub({
           {alerts}
 
           <div className="pc-grid">
-            <section className="pc-panel pc-week-panel pc-card-in">
-              <h3 className="pc-h3">This week</h3>
+            <section className="k-panel pc-week-panel pc-card-in">
+              <header className="k-controls">
+                <h3 className="k-panel-title">This week</h3>
+              </header>
               {state.next ? (
                 <p className="pc-next">
                   <span className="pc-dim">Week {state.next.week}</span> {state.next.comp}
@@ -437,7 +439,7 @@ export default function Hub({
               </div>
               <div className="pc-seg pc-intensity" role="group" aria-label="Intensity">
                 {state.training.intensities.map((x) => (
-                  <button type="button" key={x} className={clsx(intensity === x && "is-on")} onClick={() => savePlan(plan, x)}>
+                  <button type="button" key={x} className={clsx("k-btn k-btn-sm", intensity === x && "k-on")} onClick={() => savePlan(plan, x)}>
                     {x}
                   </button>
                 ))}
@@ -445,7 +447,7 @@ export default function Hub({
               <p className="pc-note">Hard weeks grow you faster and tire you more. Train tired and the risk of an injury climbs fast. Recovery and rest bring the fatigue down.</p>
               <div className="pc-go-row">
                 {state.seasonOver ? (
-                  <button type="button" className="k-btn k-btn-primary pc-go" disabled={busy} onClick={() => run(() => careerApi.season(saved))}>
+                  <button type="button" className="k-btn k-btn-primary" disabled={busy} onClick={() => run(() => careerApi.season(saved))}>
                     Start next season
                   </button>
                 ) : (
@@ -453,7 +455,7 @@ export default function Hub({
                     {canPlayLive && (
                       <button
                         type="button"
-                        className="k-btn k-btn-primary pc-go"
+                        className="k-btn k-btn-primary"
                         disabled={busy || !!pendingEv}
                         onClick={playLive}
                         title="Play the match yourself, in control of only your own footballer"
@@ -461,10 +463,10 @@ export default function Hub({
                         Play the match
                       </button>
                     )}
-                    <button type="button" className={clsx("k-btn pc-go", canPlayLive ? "k-btn-glass" : "k-btn-primary")} disabled={busy} onClick={() => week(1)}>
+                    <button type="button" className={clsx("k-btn", !canPlayLive && "k-btn-primary")} disabled={busy} onClick={() => week(1)}>
                       {busy ? "Playing" : canPlayLive ? "Sim the week" : "Play the week"}
                     </button>
-                    <button type="button" className="k-btn k-btn-glass" disabled={busy} onClick={() => week(8)} title="Plays on until something needs you">
+                    <button type="button" className="k-btn" disabled={busy} onClick={() => week(8)} title="Plays on until something needs you">
                       Sim to the next event
                     </button>
                   </>
@@ -512,8 +514,10 @@ export default function Hub({
               )}
             </section>
 
-            <section className="pc-panel pc-card-in">
-              <h3 className="pc-h3">Attributes</h3>
+            <section className="k-panel pc-card-in">
+              <header className="k-controls">
+                <h3 className="k-panel-title">Attributes</h3>
+              </header>
               <div className="pc-attrs">
                 {Object.entries(meta.attrs).map(([group, keys]) =>
                   group === "keeping" && state.person.pos !== "GK" ? null : (
@@ -541,8 +545,10 @@ export default function Hub({
               </div>
             </section>
 
-            <section className="pc-panel pc-card-in">
-              <h3 className="pc-h3">Season</h3>
+            <section className="k-panel pc-card-in">
+              <header className="k-controls">
+                <h3 className="k-panel-title">Season</h3>
+              </header>
               <div className="pc-stats">
                 <div>
                   <b>{S.apps}</b>
@@ -584,8 +590,10 @@ export default function Hub({
               </div>
             </section>
 
-            <section className="pc-panel pc-card-in pc-people">
-              <h3 className="pc-h3">People</h3>
+            <section className="k-panel pc-card-in pc-people">
+              <header className="k-controls">
+                <h3 className="k-panel-title">People</h3>
+              </header>
               <ul className="pc-folk">
                 {state.people.family.map((f) => (
                   <li key={f.id}>
@@ -622,11 +630,11 @@ export default function Hub({
                 {state.people.agent !== null && <Bar label="Agent" v={state.people.agent} />}
               </div>
               <div className="pc-career-btns">
-                <button type="button" className="k-btn k-btn-glass" disabled={busy || state.decisions.some((d) => d.kind === "agent")} onClick={() => run(() => careerApi.agent(saved, "find"))}>
+                <button type="button" className="k-btn" disabled={busy || state.decisions.some((d) => d.kind === "agent")} onClick={() => run(() => careerApi.agent(saved, "find"))}>
                   {state.agent ? "Look for a new agent" : "Find an agent"}
                 </button>
                 {state.agent && (
-                  <button type="button" className="k-btn k-btn-glass" disabled={busy} onClick={() => run(() => careerApi.agent(saved, "drop"))}>
+                  <button type="button" className="k-btn" disabled={busy} onClick={() => run(() => careerApi.agent(saved, "drop"))}>
                     Let {state.agent.name.split(" ")[0]} go
                   </button>
                 )}
@@ -646,8 +654,10 @@ export default function Hub({
               )}
             </section>
 
-            <section className="pc-panel pc-card-in pc-career-panel">
-              <h3 className="pc-h3">Career</h3>
+            <section className="k-panel pc-card-in pc-career-panel">
+              <header className="k-controls">
+                <h3 className="k-panel-title">Career</h3>
+              </header>
               <div className="pc-stats">
                 <div>
                   <b>{C.apps}</b>
@@ -741,7 +751,7 @@ export default function Hub({
               {state.stage === "pro" && (
                 <div className="pc-career-btns">
                   {state.player.club && !state.requested && !state.loan && (
-                    <button type="button" className="k-btn k-btn-glass" disabled={busy} onClick={() => run(() => careerApi.request(saved))} title="Tell the club you want to leave">
+                    <button type="button" className="k-btn" disabled={busy} onClick={() => run(() => careerApi.request(saved))} title="Tell the club you want to leave">
                       Ask for a transfer
                     </button>
                   )}
@@ -767,7 +777,7 @@ export default function Hub({
                         </button>
                       </span>
                     ) : (
-                      <button type="button" className="k-btn k-btn-glass" onClick={() => setConfirmRetire(true)}>
+                      <button type="button" className="k-btn" onClick={() => setConfirmRetire(true)}>
                         Retire
                       </button>
                     ))}
@@ -775,8 +785,10 @@ export default function Hub({
               )}
             </section>
 
-            <section className="pc-panel pc-card-in">
-              <h3 className="pc-h3">News</h3>
+            <section className="k-panel pc-card-in">
+              <header className="k-controls">
+                <h3 className="k-panel-title">News</h3>
+              </header>
               <ul className="pc-news">
                 {state.news.slice(0, 10).map((n, i) => (
                   <li key={i} className={"is-" + n.kind}>
@@ -798,8 +810,8 @@ export default function Hub({
         </>
       )}
       {picker && (
-        <div className="pc-modal" role="dialog" aria-modal="true" aria-label={picker.title}>
-          <div className="pc-modal-in">
+        <div className="k-scrim" role="dialog" aria-modal="true" aria-label={picker.title}>
+          <div className="k-modal pc-modal-in">
             <h2 className="pc-h2">{picker.title}</h2>
             <div className="pc-choices">
               {picker.options.map((o) => {
@@ -868,8 +880,8 @@ export default function Hub({
       )}
 
       {offersOpen && (
-        <div className="pc-modal" role="dialog" aria-modal="true" aria-label="Contract offers">
-          <div className="pc-modal-in pc-offers">
+        <div className="k-scrim" role="dialog" aria-modal="true" aria-label="Contract offers">
+          <div className="k-modal pc-modal-in pc-offers">
             <h2 className="pc-h2">Offers on the table</h2>
             <div className="pc-offer-row">
               {state.offers.map((o: Offer) => (
@@ -958,7 +970,7 @@ export default function Hub({
       )}
       {note && (
         <div
-          className="pc-modal"
+          className="k-scrim"
           role="dialog"
           aria-modal="true"
           aria-label="What happened"
@@ -969,7 +981,7 @@ export default function Hub({
             if (go) go();
           }}
         >
-          <div className="pc-modal-in pc-note">
+          <div className="k-modal pc-modal-in pc-note">
             <p>{note}</p>
             <button type="button" className="k-btn k-btn-primary">
               Carry on
@@ -1268,13 +1280,13 @@ function Retired({ state, saved, money, quality }: { state: CareerState; saved: 
         <p className="pc-dim">The same world, the same players you played with and against. Pick the club that wants you in the dugout.</p>
         <div className="rt-clubs">
           {state.managerOptions.map((club) => (
-            <button type="button" key={club} className="k-btn k-btn-glass" disabled={busy} onClick={() => manage(club)}>
+            <button type="button" key={club} className="k-btn" disabled={busy} onClick={() => manage(club)}>
               {club}
             </button>
           ))}
         </div>
         {err && <p className="pc-bad">{err}</p>}
-        <Link className="k-btn k-btn-glass rt-home" href="/">
+        <Link className="k-btn rt-home" href="/">
           Back to the home page
         </Link>
       </div>
@@ -1303,8 +1315,8 @@ function EventCard({ ev, busy, onPick, onClose }: { ev: NonNullable<CareerState[
   }, [ev.id]);
   const kicker = ev.kind === "family" ? "Family" : ev.kind === "team" ? "The dressing room" : ev.kind === "media" ? "The press" : ev.kind === "agent" ? "Your agent" : "Life";
   return (
-    <div className="pc-modal" role="dialog" aria-modal="true" aria-label={ev.title} ref={ref}>
-      <div className={"pc-modal-in pc-event is-" + ev.kind}>
+    <div className="k-scrim" role="dialog" aria-modal="true" aria-label={ev.title} ref={ref}>
+      <div className={"k-modal pc-modal-in pc-event is-" + ev.kind}>
         <div className="ev-in">
           <p className="pc-kicker">{kicker}</p>
           <h2 className="pc-h2">{ev.title}</h2>

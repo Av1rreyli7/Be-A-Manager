@@ -13,27 +13,26 @@ const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export function Card({ title, right, children, className, pad = true }: { title?: ReactNode; right?: ReactNode; children: ReactNode; className?: string; pad?: boolean }) {
   return (
-    <section data-km="block" className={clsx("panel", className)}>
+    <section data-km="block" className={clsx("k-panel", !pad && "k-flush", className)}>
       {(title || right) && (
-        <header className="card-head flex min-h-11 items-center justify-between gap-3 border-b border-line px-4 py-2">
-          <h2 className="flex min-w-0 items-center gap-2.5 font-display text-[13px] font-bold uppercase leading-none tracking-[0.07em] text-ink">
-            <span aria-hidden className="card-pip" />
+        <header className="k-controls">
+          <h2 className="k-panel-title min-w-0" style={{ marginRight: "auto" }}>
             <span className="min-w-0 truncate">{title}</span>
           </h2>
           {right && <div className="flex shrink-0 items-center gap-2 text-xs text-dim [&_a]:font-semibold [&_a]:text-accent [&_a:hover]:underline">{right}</div>}
         </header>
       )}
-      <div className={clsx(pad && "p-4")}>{children}</div>
+      {children}
     </section>
   );
 }
 
 /** Small condensed heading for sub-sections inside a card. */
 export function SectionTitle({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={clsx("label mb-2", className)}>{children}</div>;
+  return <div className={clsx("k-mlab mb-2", className)}>{children}</div>;
 }
 
-type Variant = "default" | "primary" | "ghost" | "danger" | "success";
+type Variant = "default" | "primary" | "ghost" | "danger";
 
 export function Button({ children, onClick, variant = "default", size = "md", disabled, className, title, type = "button" }: { children: ReactNode; onClick?: () => void; variant?: Variant; size?: "sm" | "md"; disabled?: boolean; className?: string; title?: string; type?: "button" | "submit" }) {
   return (
@@ -46,15 +45,13 @@ export function Button({ children, onClick, variant = "default", size = "md", di
         onClick?.();
       }}
       className={clsx(
-        // the kit buttons (.btn in globals.css is the kit recipe, layered so size utilities still win):
-        // glow for the main action, liquid glass for the rest
-        "btn",
-        size === "sm" && "btn-sm",
-        variant === "primary" && "btn-glow",
-        variant === "default" && "btn-glass",
-        variant === "ghost" && "btn-ghost",
-        variant === "danger" && "btn-danger",
-        variant === "success" && "btn-success",
+        // the kit buttons (public/kit.css), the same ones Floodlights uses: tinted glass for the main action,
+        // liquid glass for the rest
+        "k-btn",
+        size === "sm" && "k-btn-sm",
+        variant === "primary" && "k-btn-primary",
+        variant === "ghost" && "k-btn-ghost",
+        variant === "danger" && "k-btn-danger",
         className,
       )}
     >
@@ -63,19 +60,16 @@ export function Button({ children, onClick, variant = "default", size = "md", di
   );
 }
 
-/** Class string for segmented toggle buttons (mode pickers, filters). */
+/** Class string for segmented toggle buttons (mode pickers, filters): small kit buttons, the picked one lit. */
 export function seg(active: boolean) {
-  return clsx(
-    "flex-1 rounded-[6px] border px-2 py-2 text-xs font-semibold transition-colors duration-150 active:translate-y-px",
-    active ? "border-accent bg-accent/10 text-accent" : "border-line text-dim hover:border-line-2 hover:text-ink",
-  );
+  return clsx("k-btn k-btn-sm flex-1", active && "k-on");
 }
 
 export function Stat({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "good" | "bad" | "warn" }) {
   return (
     <div className="min-w-0">
-      <div className="label">{label}</div>
-      <div className={clsx("mt-1 font-display text-[24px] font-extrabold leading-none num", tone === "good" && "text-good", tone === "bad" && "text-bad", tone === "warn" && "text-warn")}>{typeof value === "number" ? <CountUp value={value} /> : value}</div>
+      <div className="k-cmk">{label}</div>
+      <div className={clsx("k-cmv mt-2", tone === "good" && "k-good", tone === "bad" && "k-bad", tone === "warn" && "!text-warn")}>{typeof value === "number" ? <CountUp value={value} /> : value}</div>
       {sub && <div className="mt-1 truncate text-xs text-dim">{sub}</div>}
     </div>
   );
@@ -88,22 +82,14 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
     const el = bar.current;
     if (!el) return;
     km.tabIndicator(el, el.querySelector<HTMLElement>('[aria-selected="true"]'));
+    el.classList.add("has-ind");
   }, [value, tabs.length]);
   return (
-    <div ref={bar} role="tablist" className="scroll-thin relative -mx-1 flex gap-1 overflow-x-auto border-b border-line px-1">
+    <div ref={bar} role="tablist" className="k-tabs">
       {tabs.map((t) => {
         const on = value === t.id;
         return (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={on}
-            onClick={() => onChange(t.id)}
-            className={clsx(
-              "relative whitespace-nowrap px-3 pb-3 pt-2.5 font-num text-[11px] font-bold uppercase leading-none tracking-[0.11em] transition-colors duration-150",
-              on ? "text-ink" : "text-mute hover:text-dim",
-            )}
-          >
+          <button key={t.id} role="tab" aria-selected={on} className={clsx(on && "on")} onClick={() => onChange(t.id)}>
             {t.label}
           </button>
         );
@@ -234,7 +220,7 @@ export function Bar({ value, max = 100, color = "bg-accent" }: { value: number; 
   );
 }
 
-export function Modal({ open, onClose, title, children, wide }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; wide?: boolean }) {
+export function Modal({ open, onClose, title, kicker, children, wide }: { open: boolean; onClose: () => void; title: ReactNode; kicker?: ReactNode; children: ReactNode; wide?: boolean }) {
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -248,16 +234,14 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   if (!open || typeof document === "undefined") return null;
   // portal to <body> so a parent with transform/filter/backdrop-filter can't trap or clip the overlay
   return createPortal(
-    <div className="k-scrim fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={onClose} role="dialog" aria-modal="true">
-      <div ref={box} className={clsx("panel modal-box max-h-[92dvh] w-full overflow-y-auto scroll-thin", wide ? "sm:max-w-4xl" : "sm:max-w-lg")} onClick={(e) => e.stopPropagation()}>
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-4 py-3">
-          <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-[image:var(--k-grad)]" />
-          <h3 className="font-display text-[15px] font-extrabold uppercase tracking-[0.06em]">{title}</h3>
-          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-[4px] text-dim transition-colors hover:bg-ink/5 hover:text-ink" aria-label="Close">
-            <X size={18} weight="bold" />
-          </button>
-        </header>
-        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">{children}</div>
+    <div className="k-scrim" onClick={onClose} role="dialog" aria-modal="true">
+      <div ref={box} className="k-modal scroll-thin max-h-[92dvh] overflow-y-auto" style={wide ? { width: "min(94vw, 896px)" } : undefined} onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="k-btn k-btn-ghost k-btn-sm k-modal-x" aria-label="Close">
+          <X size={14} weight="bold" />
+        </button>
+        {kicker && <div className="k-mlab">{kicker}</div>}
+        <h3 className="k-modal-title">{title}</h3>
+        <div className="mt-3">{children}</div>
       </div>
     </div>,
     document.body,
@@ -276,28 +260,23 @@ export function Empty({ children }: { children: ReactNode }) {
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="label mb-1.5 block">{label}</span>
+      <span className="k-label mb-1.5 block">{label}</span>
       {children}
     </label>
   );
 }
 
-/** The kit input look (k-input), as utilities so a screen can still size it. */
-export const inputCls = "w-full rounded-[6px] border border-line bg-ink/[0.035] px-3 py-2 text-sm text-ink outline-none transition-[border-color,box-shadow] placeholder:text-mute hover:border-line-2 focus:border-accent focus:ring-1 focus:ring-accent focus:shadow-[0_0_18px_-6px_var(--accent)]";
+/** The kit input (public/kit.css), the same one Floodlights uses. */
+export const inputCls = "k-input";
 
 export function PageHeader({ title, sub, right }: { title: ReactNode; sub?: ReactNode; right?: ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
-      <div className="k-head-glow min-w-0" data-km="head">
-        <h1 className="font-display text-[26px] font-black uppercase leading-none tracking-[0.02em] sm:text-[34px]">{title}</h1>
-        <span aria-hidden className="head-bar" />
-        {sub && <div className="mt-2 max-w-[75ch] text-sm text-dim">{sub}</div>}
+    <div className="mb-[18px]" data-km="head">
+      <div className="k-controls !mb-0">
+        <h1 className="k-panel-title" style={{ marginRight: "auto" }}>{title}</h1>
+        {right}
       </div>
-      {right && (
-        <div className="flex flex-wrap items-center gap-2" data-km="head">
-          {right}
-        </div>
-      )}
+      {sub && <p className="k-pickhelp !mt-1.5">{sub}</p>}
     </div>
   );
 }
@@ -309,7 +288,7 @@ export function PlayerCard({ league, player, stats, href = true, className, styl
   const body = (
     <>
       <div className="card-wash relative h-24 overflow-hidden" style={{ ["--tc-team" as string]: colors.primary }}>
-        <div className="stripes absolute inset-0" />
+        
         <span aria-hidden className="absolute -bottom-5 right-1 font-num text-[96px] font-bold leading-none text-white/10">{player.jersey ?? ""}</span>
         <div className="absolute left-3 top-3">
           <Rating value={player.ovr} size="md" />
@@ -332,7 +311,7 @@ export function PlayerCard({ league, player, stats, href = true, className, styl
           <dl className="mt-2.5 grid grid-cols-3 gap-px overflow-hidden border border-line bg-line">
             {stats.map((s) => (
               <div key={s.label} className="bg-panel px-1.5 py-1.5 text-center">
-                <dt className="label !text-[9.5px]">{s.label}</dt>
+                <dt className="k-label">{s.label}</dt>
                 <dd className="mt-0.5 font-display text-[15px] font-extrabold leading-tight num">{s.value}</dd>
               </div>
             ))}
@@ -341,7 +320,7 @@ export function PlayerCard({ league, player, stats, href = true, className, styl
       </div>
     </>
   );
-  const cls = clsx("group panel lift block overflow-hidden", className);
+  const cls = clsx("group k-panel k-flush lift block overflow-hidden", className);
   return href ? (
     <Link href={`/game/player/${player.id}`} className={cls} style={style}>
       {body}

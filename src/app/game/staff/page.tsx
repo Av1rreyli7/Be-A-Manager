@@ -11,7 +11,7 @@ function CoachRow({ c, action }: { c: Coach; action: React.ReactNode }) {
     <div className="grid grid-cols-[1fr_auto] items-center gap-3 border-b border-line/50 py-2 text-sm sm:grid-cols-[1.2fr_repeat(4,1fr)_auto]">
       <div><b>{c.name}</b> <span className="text-xs text-dim">{c.role} · age {c.age} · {money(c.salary)}/yr</span></div>
       {(["offense", "defense", "development", "motivation"] as const).map((k) => (
-        <div key={k} className="hidden sm:block"><div className="flex justify-between text-[10px] uppercase text-mute"><span>{k}</span><span>{c[k]}</span></div><Bar value={c[k]} color="bg-info" /></div>
+        <div key={k} className="hidden sm:block"><div className="k-label flex justify-between"><span>{k}</span><span>{c[k]}</span></div><Bar value={c[k]} color="bg-info" /></div>
       ))}
       <div>{action}</div>
     </div>

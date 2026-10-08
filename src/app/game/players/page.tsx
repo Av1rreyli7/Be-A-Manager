@@ -32,14 +32,14 @@ export default function PlayersPage() {
             search={(p) => `${p.name} ${p.college ?? ""} ${p.born.country ?? ""}`}
             filters={
               <>
-                <select className={`${inputCls} w-auto`} value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className={inputCls} style={{ width: "auto" }} value={status} onChange={(e) => setStatus(e.target.value)}>
                   {["active", "fa", "prospect", "retired", "all"].map((s) => <option key={s} value={s}>{s === "fa" ? "free agents" : s}</option>)}
                 </select>
-                <select className={`${inputCls} w-auto`} value={pos} onChange={(e) => setPos(e.target.value)}>
+                <select className={inputCls} style={{ width: "auto" }} value={pos} onChange={(e) => setPos(e.target.value)}>
                   <option value="">All positions</option>
                   {POSITIONS.map((p) => <option key={p}>{p}</option>)}
                 </select>
-                <select className={`${inputCls} w-auto`} value={team} onChange={(e) => setTeam(e.target.value)}>
+                <select className={inputCls} style={{ width: "auto" }} value={team} onChange={(e) => setTeam(e.target.value)}>
                   <option value="">All teams</option>
                   {Object.values(l.teams).sort((a, b) => a.fullName.localeCompare(b.fullName)).map((t) => <option key={t.id} value={t.id}>{t.fullName}</option>)}
                 </select>

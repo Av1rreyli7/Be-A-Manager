@@ -41,7 +41,7 @@ function DraftView() {
       <PageHeader
         title={`${d.year} NBA Draft`}
         sub={`Class strength ${d.classStrength >= 1.08 ? "deep" : d.classStrength <= 0.92 ? "thin" : "average"} (${d.classStrength.toFixed(2)}) · ${prospects.length} prospects available`}
-        right={<span className="chip">Scouting points: {d.scoutingPoints}</span>}
+        right={<span className="k-tag">Scouting points: {d.scoutingPoints}</span>}
       />
       <Tabs tabs={[{ id: "board", label: "Big board & scouting" }, { id: "mock", label: "Mock draft" }, { id: "live", label: "Draft room" }]} value={tab} onChange={setTab} />
 
@@ -103,12 +103,12 @@ function DraftView() {
               {cur ? (
                 <Appear key={cur.pick}>
                   <div className="flex items-center gap-3">
-                    <span className="grad-title font-num text-[36px] font-black">#{cur.pick}</span>
+                    <b className="k-cmv k-acc">#{cur.pick}</b>
                     <TeamBadge league={l} teamId={cur.owner} size="lg" />
                     {cur.originalTeam !== cur.owner && <span className="text-xs text-dim">via {cur.originalTeam}</span>}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {isMine(l, cur.owner) ? <span className="chip anim-glow !bg-accent !text-accent-ink">Your pick. Choose from the list</span> : l.online && l.userTeams.includes(cur.owner) ? <span className="chip">{l.online.members[cur.owner] ?? cur.owner} is on the clock</span> : guest ? <span className="chip">Waiting for the host to make the AI picks</span> : (
+                    {isMine(l, cur.owner) ? <span className="k-tag k-acc">Your pick. Choose from the list</span> : l.online && l.userTeams.includes(cur.owner) ? <span className="k-tag">{l.online.members[cur.owner] ?? cur.owner} is on the clock</span> : guest ? <span className="k-tag">Waiting for the host to make the AI picks</span> : (
                       <>
                         <Button variant="primary" onClick={() => mutate((lg) => void aiDraftPick(lg))}>Next pick</Button>
                         <Button onClick={simToMine} disabled={!myPicks.some((o) => !o.playerId)}>Sim to my pick</Button>

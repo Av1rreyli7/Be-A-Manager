@@ -22,7 +22,7 @@ export default function RosterPage() {
   const tw = ps.filter((p) => contractOf(l, p)?.type === "two-way");
 
   const base = [
-    { key: "name", label: "Player", value: (p: Player) => p.lastName, render: (p: Player) => <div className="flex items-center gap-2"><PlayerLink player={p} />{p.gLeague && <span className="chip">G</span>}{p.tradeRequest && <span className="chip text-warn">TR</span>}{l.tradeBlock.includes(p.id) && <span className="chip">Block</span>}</div> },
+    { key: "name", label: "Player", value: (p: Player) => p.lastName, render: (p: Player) => <div className="flex items-center gap-2"><PlayerLink player={p} />{p.gLeague && <span className="k-tag">G</span>}{p.tradeRequest && <span className="k-tag k-warn">TR</span>}{l.tradeBlock.includes(p.id) && <span className="k-tag">Block</span>}</div> },
     { key: "pos", label: "Pos", value: (p: Player) => p.pos },
     { key: "ovr", label: "OVR", value: (p: Player) => p.ovr, render: (p: Player) => <Rating value={p.ovr} />, align: "center" as const },
     { key: "pot", label: "POT", value: (p: Player) => p.pot, render: (p: Player) => <Rating value={p.pot} className="opacity-70" />, align: "center" as const },
@@ -51,7 +51,7 @@ export default function RosterPage() {
           ]
         : [
             ...base,
-            { key: "type", label: "Type", value: (p: Player) => contractOf(l, p)?.type ?? "", render: (p: Player) => <span className="chip">{contractOf(l, p)?.type ?? "-"}</span> },
+            { key: "type", label: "Type", value: (p: Player) => contractOf(l, p)?.type ?? "", render: (p: Player) => <span className="k-tag">{contractOf(l, p)?.type ?? "-"}</span> },
             { key: "sal", label: l.season, value: (p: Player) => salaryIn(contractOf(l, p), l.season), render: (p: Player) => money(salaryIn(contractOf(l, p), l.season)), align: "right" as const },
             { key: "yrs", label: "Years", value: (p: Player) => contractOf(l, p)?.years.filter((y) => y.season >= l.season).length ?? 0, align: "right" as const },
             { key: "opt", label: "Options", render: (p: Player) => <span className="text-xs text-dim">{(contractOf(l, p)?.years ?? []).filter((y) => y.option).map((y) => `${y.option === "player" ? "PO" : y.option === "team" ? "TO" : "ETO"} ${y.season}`).join(", ") || "-"}</span> },
@@ -108,7 +108,7 @@ function CardGrid({ title, players }: { title: string; players: Player[] }) {
     const sorted = [...players].sort((a, b) => b.ovr - a.ovr);
     return (
       <section>
-        <h2 className="label mb-2.5 flex items-center gap-2">
+        <h2 className="k-mlab mb-2.5">
           {title} <span className="text-ink num">{players.length}</span>
         </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5" data-km="rows">

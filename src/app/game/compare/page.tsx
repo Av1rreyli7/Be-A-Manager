@@ -19,9 +19,11 @@ function Picker({ value, onChange }: { value: string; onChange: (id: string) => 
     <div className="relative">
       <input className={inputCls} placeholder={value ? l.players[value]?.name : "Search player…"} value={q} onChange={(e) => setQ(e.target.value)} />
       {hits.length > 0 && (
-        <ul className="panel absolute z-10 mt-1 w-full">
-          {hits.map((p) => <li key={p.id}><button className="w-full px-3 py-1.5 text-left text-sm hover:bg-ink/5" onClick={() => (onChange(p.id), setQ(""))}>{p.name} <span className="text-dim">{p.teamId ?? "FA"}</span></button></li>)}
-        </ul>
+        <div className="absolute z-10 mt-1 w-full">
+          <ul className="k-panel k-flush k-nocut">
+            {hits.map((p) => <li key={p.id}><button className="w-full px-3 py-1.5 text-left text-sm hover:bg-ink/5" onClick={() => (onChange(p.id), setQ(""))}>{p.name} <span className="text-dim">{p.teamId ?? "FA"}</span></button></li>)}
+          </ul>
+        </div>
       )}
     </div>
   );
@@ -36,7 +38,7 @@ function Compare() {
   const axes = [["Shooting", (p: Player) => (p.ratings.threePoint + p.ratings.midRange + p.ratings.freeThrow) / 3], ["Finishing", (p: Player) => (p.ratings.layup + p.ratings.closeShot + p.ratings.drivingDunk) / 3], ["Playmaking", (p: Player) => (p.ratings.passVision + p.ratings.ballHandle + p.ratings.passIQ) / 3], ["Perimeter D", (p: Player) => (p.ratings.perimeterD + p.ratings.steal) / 2], ["Interior D", (p: Player) => (p.ratings.interiorD + p.ratings.block) / 2], ["Rebounding", (p: Player) => (p.ratings.offRebound + p.ratings.defRebound) / 2], ["Athleticism", (p: Player) => (p.ratings.speed + p.ratings.vertical + p.ratings.strength) / 3]] as const;
   const data = axes.map(([name, f]) => Object.fromEntries([["axis", name], ...ps.map((p) => [p.name, Math.round(f(p))])]));
   const row = (label: string, f: (p: Player) => React.ReactNode) => (
-    <tr className="border-t border-line/50"><td className="py-1.5 pr-3 text-dim">{label}</td>{ps.map((p) => <td key={p.id} className="px-3 text-right num">{f(p)}</td>)}</tr>
+    <tr><td className="text-dim">{label}</td>{ps.map((p) => <td key={p.id} className="k-num">{f(p)}</td>)}</tr>
   );
   return (
     <div className="space-y-4">
@@ -58,8 +60,8 @@ function Compare() {
             </div>
           </Card>
           <Card title="Side by side">
-            <table className="w-full text-sm">
-              <thead><tr><th />{ps.map((p, i) => <th key={p.id} className="px-3 text-right" style={{ color: C.series[i] }}><PlayerLink player={p} /></th>)}</tr></thead>
+            <table className="k-table">
+              <thead><tr><th />{ps.map((p, i) => <th key={p.id} className="k-num" style={{ color: C.series[i] }}><PlayerLink player={p} /></th>)}</tr></thead>
               <tbody>
                 {row("OVR / POT", (p) => <OvrPot p={p} />)}
                 {row("Age", (p) => seasonAge(p, l.season))}

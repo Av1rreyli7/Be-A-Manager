@@ -50,29 +50,29 @@ export default function FriendsChallenge() {
       />
       <Card title="This season" pad={false}>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-left text-[11px] uppercase tracking-wider text-mute">
-              <tr><th className="px-3 py-2">#</th><th className="px-3 py-2">Manager</th><th className="px-3 py-2">Team</th><th className="px-3 py-2 text-right">W-L</th><th className="px-3 py-2 text-right">Seed</th><th className="px-3 py-2">Playoffs</th><th className="px-3 py-2 text-right">Points</th></tr>
+          <table className="k-table">
+            <thead>
+              <tr><th>#</th><th>Manager</th><th>Team</th><th className="k-num">W-L</th><th className="k-num">Seed</th><th>Playoffs</th><th className="k-num">Points</th></tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={r.t} className={clsx("border-t border-line", r.t === me && "bg-accent/10")}>
-                  <td className="px-3 py-2 font-num text-[15px] font-bold text-mute">{i + 1}</td>
-                  <td className="px-3 py-2 font-semibold">
+                <tr key={r.t} className={clsx(r.t === me && "me")}>
+                  <td className="num text-mute">{i + 1}</td>
+                  <td className="font-semibold">
                     <span className={clsx("mr-2 inline-block h-2 w-2 rounded-full", memberOnline.get(r.t) ? "bg-good" : "bg-mute")} />
-                    {r.name}{r.t === l.online!.hostTeam && <span className="chip ml-2 text-[10px]">host</span>}
+                    {r.name}{r.t === l.online!.hostTeam && <span className="k-tag ml-2">host</span>}
                   </td>
-                  <td className="px-3 py-2"><TeamBadge league={l} teamId={r.t} size="sm" /></td>
-                  <td className="px-3 py-2 text-right tabular-nums">{r.w}-{r.l}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{r.seed ? `${r.seed} ${r.conf}` : "-"}</td>
-                  <td className="px-3 py-2 text-xs text-dim">{r.status}</td>
-                  <td className="px-3 py-2 text-right font-num text-[15px] font-bold text-accent">{r.points}</td>
+                  <td><TeamBadge league={l} teamId={r.t} size="sm" /></td>
+                  <td className="k-num">{r.w}-{r.l}</td>
+                  <td className="k-num">{r.seed ? `${r.seed} ${r.conf}` : "-"}</td>
+                  <td className="text-xs text-dim">{r.status}</td>
+                  <td className="k-num font-bold text-accent">{r.points}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="px-3 pb-3 pt-1 text-xs text-mute">Points: 1 per win · 4 per playoff series won · 10 for the championship.</p>
+        <p className="px-5 pb-4 pt-2 text-xs text-mute">Points: 1 per win · 4 per playoff series won · 10 for the championship.</p>
       </Card>
       <Card title="All-time">
         <ul className="divide-y divide-line">

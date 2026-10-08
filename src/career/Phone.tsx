@@ -152,10 +152,10 @@ export default function Phone({
               {money(o.weekly, { week: true })} for {o.weeks} weeks
             </p>
             <div className="pc-phone-btns">
-              <button type="button" className="k-btn k-btn-glass" disabled={busy} onClick={() => run(() => careerApi.sponsor(saved, o.id, false))}>
+              <button type="button" className="k-btn k-btn-sm" disabled={busy} onClick={() => run(() => careerApi.sponsor(saved, o.id, false))}>
                 No thanks
               </button>
-              <button type="button" className="k-btn k-btn-primary" disabled={busy} onClick={() => run(() => careerApi.sponsor(saved, o.id, true))}>
+              <button type="button" className="k-btn k-btn-primary k-btn-sm" disabled={busy} onClick={() => run(() => careerApi.sponsor(saved, o.id, true))}>
                 Sign
               </button>
             </div>
@@ -179,7 +179,7 @@ export default function Phone({
         {threads.some((t) => t.id === "agent") && (
           <>
             <h4 className="pc-h4">Messages</h4>
-            <button type="button" className="k-btn k-btn-glass" onClick={() => open("agent")}>
+            <button type="button" className="k-btn" onClick={() => open("agent")}>
               Open the chat
             </button>
           </>
@@ -199,7 +199,7 @@ export default function Phone({
               </div>
               <button
                 type="button"
-                className="k-btn k-btn-primary"
+                className="k-btn k-btn-primary k-btn-sm"
                 disabled={busy}
                 onClick={() =>
                   run(
@@ -291,13 +291,13 @@ export default function Phone({
         </div>
         <p className="pc-dim">Savings earn a little every week, and cover you if the account goes into the red. Living costs about {money(life.weeklyCost, { week: true })}.</p>
         <div className="pc-phone-btns">
-          <button type="button" className="k-btn k-btn-glass" disabled={busy || cash < 10} onClick={() => save(Math.floor(cash / 4))}>
+          <button type="button" className="k-btn k-btn-sm" disabled={busy || cash < 10} onClick={() => save(Math.floor(cash / 4))}>
             Save a quarter
           </button>
-          <button type="button" className="k-btn k-btn-glass" disabled={busy || cash < 10} onClick={() => save(Math.floor(cash / 2))}>
+          <button type="button" className="k-btn k-btn-sm" disabled={busy || cash < 10} onClick={() => save(Math.floor(cash / 2))}>
             Save half
           </button>
-          <button type="button" className="k-btn k-btn-glass" disabled={busy || life.savings < 1} onClick={() => take(life.savings)}>
+          <button type="button" className="k-btn k-btn-sm" disabled={busy || life.savings < 1} onClick={() => take(life.savings)}>
             Take it all out
           </button>
         </div>
@@ -315,19 +315,19 @@ export default function Phone({
   }
   const title = app === "home" ? "" : APPS.find((a) => a.id === app)?.label || "";
   return (
-    <div className="pc-modal pc-phone-wrap" role="dialog" aria-modal="true" aria-label="Phone" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="k-scrim pc-phone-wrap" role="dialog" aria-modal="true" aria-label="Phone" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="pc-phone">
         <div className="pc-phone-notch" />
         <header>
           {app !== "home" ? (
-            <button type="button" className="pc-link" onClick={back}>
+            <button type="button" className="k-btn k-btn-ghost k-btn-sm" onClick={back}>
               Back
             </button>
           ) : (
             <b>{state.week.replace(/^Season [0-9-]+, /, "")}</b>
           )}
           {title && <b>{title}</b>}
-          <button type="button" className="pc-link" onClick={onClose}>
+          <button type="button" className="k-btn k-btn-ghost k-btn-sm" onClick={onClose}>
             Close
           </button>
         </header>

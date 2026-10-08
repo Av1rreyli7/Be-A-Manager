@@ -1,81 +1,33 @@
-<!doctype html><html data-kmode="court"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="stylesheet" href="/kit.css"><script src="/floodlights/vendor/gsap.min.js"></script><script src="/kit-motion.js"></script><style>:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#04060a;color:#ffffff}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html data-kmode="court"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="stylesheet" href="/kit.css"><script src="/floodlights/vendor/gsap.min.js"></script><script src="/kit-motion.js"></script><style>:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px var(--k-f-ui);background:#04060a;color:#ffffff}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Hardwood Legends</title>
 <style>
-:root{color-scheme:dark;--accent:#ffb400;--accent2:#ff5a1f;--panel:rgba(10,14,24,.93);--line:rgba(255,255,255,.12);--text:#f2f5fa;--muted:#9aa4b8;--good:#3ddc84;--bad:#ff4d4d}
+/* ==========================================================
+   Hardwood Legends. The 3D court, the HUD drawn over it and the game all live in this file.
+   The menus are the game kit from /kit.css (the same components as Floodlights, court mode),
+   so this sheet only holds the HUD and the layout of the menu screens.
+   ========================================================== */
+:root{color-scheme:dark;--accent:var(--k-accent);--volt:var(--k-accent);--line:var(--k-line);--text:var(--k-ink);--muted:#9a9d98}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#05070c;color:var(--text);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;user-select:none;-webkit-user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--k-bg);color:var(--text);font-family:var(--k-f-ui);letter-spacing:-.005em;-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none}
+::selection{background:var(--volt);color:var(--k-accent-ink)}
 #gl{position:fixed;inset:0}
 #gl canvas{display:block}
-.disp{font-family:Impact,"Arial Black","Segoe UI Black",sans-serif;letter-spacing:.5px}
-/* ---------- screens ---------- */
-#ui{position:fixed;inset:0;z-index:30;display:none;overflow:auto}
-#ui.show{display:block}
-.scr{min-height:100%;padding:36px 48px 40px;display:flex;flex-direction:column;position:relative}
-.menu-bg{background:linear-gradient(105deg,rgba(3,5,10,.95) 0%,rgba(3,5,10,.78) 42%,rgba(3,5,10,.25) 100%)}
-.dim-bg{background:rgba(3,5,10,.86);backdrop-filter:blur(3px)}
-.streaks{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:-1}
-.streaks i{position:absolute;top:-30%;width:3px;height:160%;background:linear-gradient(transparent,rgba(255,180,0,.45),transparent);transform:rotate(24deg);animation:streak 7s linear infinite;opacity:.7}
-.streaks i:nth-child(2){animation-delay:-2s;background:linear-gradient(transparent,rgba(255,90,31,.4),transparent);width:2px}
-.streaks i:nth-child(3){animation-delay:-4.5s;width:6px;opacity:.25}
-.streaks i:nth-child(4){animation-delay:-5.7s;width:1px}
-@keyframes streak{from{left:-15%}to{left:115%}}
-.title{font-family:Impact,"Arial Black",sans-serif;font-style:italic;font-size:clamp(46px,8vw,112px);line-height:.88;background:linear-gradient(180deg,#fff 35%,#ffb400 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 24px rgba(255,160,0,.25))}
-.subtitle{color:var(--accent);font-weight:800;letter-spacing:6px;font-size:13px;margin:14px 0 36px}
-.mm{display:flex;flex-direction:column;gap:12px;max-width:340px}
-.btn{pointer-events:auto;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);padding:13px 22px;font-weight:800;font-size:15px;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;text-align:left;transition:all .15s;font-family:inherit}
-.btn:hover{background:var(--accent);color:#111;border-color:var(--accent);transform:translateX(6px)}
-.btn.sm{padding:8px 14px;font-size:12px}
-.btn.center{text-align:center}
-.btn.sel{background:var(--accent);color:#111}
-.btn:disabled{opacity:.35;pointer-events:none}
-.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.h1{font-family:Impact,"Arial Black",sans-serif;font-style:italic;font-size:44px;letter-spacing:1px;margin-bottom:6px}
-.muted{color:var(--muted)}
-.foot{margin-top:auto;padding-top:24px;display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px}
-/* team select */
-.tsel{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:18px}
-@media (max-width:900px){.tsel{grid-template-columns:1fr}.scr{padding:24px 16px}}
-.tcard{border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--panel)}
-.tcard .wm{padding:22px 20px;position:relative;min-height:128px;display:flex;flex-direction:column;justify-content:center}
-.tcard .wm .city{font-weight:800;letter-spacing:4px;font-size:13px;opacity:.9}
-.tcard .wm .nm{font-family:Impact,"Arial Black",sans-serif;font-style:italic;font-size:48px;line-height:1;text-transform:uppercase}
-.tcard .wm .ovr{position:absolute;right:18px;top:18px;text-align:center;background:rgba(0,0,0,.35);padding:6px 12px;border-radius:6px}
-.tcard .wm .ovr b{display:block;font-size:30px;font-family:Impact,"Arial Black",sans-serif}
-.tcard .wm .ovr small{font-size:10px;letter-spacing:2px}
-.tcard .body{padding:14px 18px}
-.tlabel{font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:800;margin-bottom:8px}
-.pl{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
-.pl .pos{display:inline-block;width:32px;color:var(--muted);font-weight:700}
-.ovrb{display:inline-block;min-width:34px;text-align:center;border-radius:3px;font-weight:800;font-size:13px;padding:1px 4px;color:#111}
-select{background:#141a28;color:#fff;border:1px solid var(--line);padding:8px 10px;border-radius:4px;font-weight:700;font-family:inherit;pointer-events:auto}
-/* tables */
-table.t{border-collapse:collapse;width:100%;font-size:13px}
-table.t th{position:sticky;top:0;background:#141a28;color:var(--muted);font-size:11px;letter-spacing:1px;padding:7px 6px;text-align:center;font-weight:800}
-table.t td{padding:6px;text-align:center;border-bottom:1px solid var(--line)}
-table.t td.l,table.t th.l{text-align:left}
-table.t tr:hover td{background:rgba(255,255,255,.04)}
-.tblwrap{overflow:auto;max-height:62vh;border:1px solid var(--line);border-radius:6px}
-.set-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);gap:16px;flex-wrap:wrap}
-.opt{display:flex;gap:6px;flex-wrap:wrap}
-.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
-.kv{display:flex;gap:10px;padding:5px 0;font-size:14px;align-items:baseline}
-.kv kbd,.lg kbd{display:inline-block;min-width:26px;text-align:center;background:#222a3b;border:1px solid #3a4560;border-bottom-width:3px;border-radius:4px;padding:1px 6px;font-family:inherit;font-weight:800;font-size:12px;color:#fff}
+.kv kbd,.lg kbd{display:inline-block;min-width:26px;text-align:center;background:#222a3b;border:1px solid #3a4560;border-bottom-width:3px;border-radius:4px;padding:1px 6px;font-weight:800;font-size:12px;color:#fff}
 /* ---------- HUD ---------- */
 #hud{position:fixed;inset:0;pointer-events:none;z-index:10;display:none}
-#scorebug{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);display:flex;height:48px;border-radius:6px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.55);font-family:Impact,"Arial Black",sans-serif}
+#scorebug{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);display:flex;height:48px;border-radius:6px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.55)}
 .sb-team{display:flex;align-items:center;gap:12px;padding:0 14px;min-width:132px;justify-content:space-between;color:#fff;position:relative}
 .sb-abbr{font-size:21px;letter-spacing:1px}
 .sb-score{font-size:28px;min-width:38px;text-align:right}
 .sb-fl{position:absolute;left:0;right:0;bottom:0;height:4px}
-.sb-bonus{position:absolute;top:2px;right:6px;font-size:9px;letter-spacing:1px;font-family:Arial,sans-serif;font-weight:900;color:#ffe066}
+.sb-bonus{position:absolute;top:2px;right:6px;font-size:9px;letter-spacing:1px;font-weight:900;color:#ffe066}
 .sb-poss{position:absolute;top:3px;left:5px;font-size:10px;color:#ffe066}
 .sb-mid{background:#0c111d;color:#fff;display:flex;align-items:center;gap:12px;padding:0 16px;font-size:20px}
 .sb-q{color:var(--accent)}
 .sb-shot{background:#1a1204;color:#ffb400;min-width:50px;display:flex;align-items:center;justify-content:center;font-size:24px}
 .sb-shot.low{color:#ff3b3b;background:#240707}
 #pcard{position:absolute;left:18px;bottom:18px;display:flex;align-items:stretch;background:rgba(8,11,20,.88);border:1px solid var(--line);border-radius:6px;overflow:hidden;min-width:250px}
-.pc-num{font-family:Impact,"Arial Black",sans-serif;font-size:34px;display:flex;align-items:center;justify-content:center;min-width:64px;padding:0 8px}
+.pc-num{font-size:34px;display:flex;align-items:center;justify-content:center;min-width:64px;padding:0 8px}
 .pc-info{padding:8px 12px;flex:1}
 .pc-name{font-weight:900;font-size:15px;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
 .pc-meta{font-size:11px;color:var(--muted);letter-spacing:1px;margin:2px 0 6px;font-weight:700}
@@ -92,13 +44,13 @@ table.t tr:hover td{background:rgba(255,255,255,.04)}
 .ft-zone{position:absolute;top:0;bottom:0;background:rgba(61,220,132,.8)}
 .ft-cursor{position:absolute;top:-2px;bottom:-2px;width:4px;background:#ffb400;box-shadow:0 0 8px #ffb400}
 #popups{position:absolute;left:0;right:0;top:20%;display:flex;flex-direction:column;align-items:center;gap:4px}
-.pop{font-family:Impact,"Arial Black",sans-serif;font-style:italic;font-size:54px;color:#fff;text-shadow:0 0 18px rgba(255,160,0,.9),0 4px 0 #b34700,0 8px 20px rgba(0,0,0,.6);animation:pop 1.5s ease-out forwards;white-space:nowrap}
+.pop{font-style:italic;font-size:54px;color:#fff;text-shadow:0 0 18px rgba(255,160,0,.9),0 4px 0 #b34700,0 8px 20px rgba(0,0,0,.6);animation:pop 1.5s ease-out forwards;white-space:nowrap}
 .pop.small{font-size:26px;text-shadow:0 2px 0 #000,0 0 12px rgba(0,0,0,.8)}
 .pop.blue{text-shadow:0 0 18px rgba(80,160,255,.9),0 4px 0 #0b3d91,0 8px 20px rgba(0,0,0,.6)}
 .pop.red{text-shadow:0 0 18px rgba(255,60,60,.9),0 4px 0 #7a0000,0 8px 20px rgba(0,0,0,.6)}
 @keyframes pop{0%{transform:scale(.3);opacity:0}12%{transform:scale(1.15);opacity:1}22%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-30px)}}
 #banner{position:absolute;left:0;right:0;top:38%;text-align:center;display:none}
-#banner .b1{display:inline-block;font-family:Impact,"Arial Black",sans-serif;font-style:italic;font-size:60px;padding:6px 40px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.75) 15%,rgba(0,0,0,.75) 85%,transparent)}
+#banner .b1{display:inline-block;font-style:italic;font-size:60px;padding:6px 40px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.75) 15%,rgba(0,0,0,.75) 85%,transparent)}
 #banner .b2{font-weight:800;letter-spacing:3px;color:var(--accent);margin-top:6px}
 #legend{position:absolute;right:16px;top:16px;background:rgba(8,11,20,.9);border:1px solid var(--line);border-radius:6px;padding:12px 14px;font-size:12px;display:none;max-height:calc(100% - 120px);overflow:auto}
 .lg h4{font-size:10px;letter-spacing:2px;color:var(--accent);margin:8px 0 4px}
@@ -111,175 +63,93 @@ table.t tr:hover td{background:rgba(255,255,255,.04)}
 #ticker{position:absolute;left:18px;top:16px;font-size:12px;font-weight:800;letter-spacing:1px;display:flex;flex-direction:column;gap:4px}
 #ticker div{background:rgba(8,11,20,.85);border-left:3px solid var(--accent);padding:4px 10px;animation:tick 4s forwards}
 @keyframes tick{0%{opacity:0;transform:translateX(-20px)}8%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
-#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:50;background:#05070c;font-weight:800;letter-spacing:3px}
-.subgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.subp{display:flex;justify-content:space-between;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:5px;margin-bottom:6px;cursor:pointer;pointer-events:auto;font-size:14px}
-.subp:hover{border-color:var(--accent)}
-.subp.sel{background:rgba(255,180,0,.2);border-color:var(--accent)}
-.subp.out{opacity:.4;pointer-events:none}
-.mini{height:5px;width:70px;background:#222b3c;border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle}
-.mini i{display:block;height:100%;background:#3ddc84}
-.bconf{margin-bottom:16px}
-.bhead{font-family:Impact,"Arial Black",sans-serif;font-style:italic;font-size:20px;letter-spacing:1px;margin-bottom:8px}
-.bracket{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;overflow-x:auto;padding-bottom:4px}
-.bcol{display:flex;flex-direction:column;gap:8px;min-width:0}
-.ser{border:1px solid var(--line);border-radius:6px;padding:7px 9px;background:rgba(255,255,255,.035);font-size:13px}
-.ser.me{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
-.ser.tbd{color:var(--muted);font-style:italic}
-.sr{display:flex;justify-content:space-between;align-items:center;padding:2px 0;font-weight:800;font-variant-numeric:tabular-nums}
-.sr.lose{opacity:.45}.sr.win{color:#fff}
-.sw{display:inline-block;width:9px;height:9px;border:1px solid;margin-right:6px;vertical-align:middle}
-.sd{display:inline-block;min-width:16px;color:var(--muted);font-size:11px}
-.sl{font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.5px}
-.pog{display:flex;gap:18px;align-items:center;padding:16px 20px;border-radius:8px;margin:14px 0}
-.pog .big{font-family:Impact,"Arial Black",sans-serif;font-size:38px;font-style:italic}
-
-/* ==========================================================
-   The Be-A-Manager look, shared with the landing page, Floodlights and Front Office:
-   pure black, hairlines at 13 percent white, chamfered corners, Inter for reading,
-   Chakra Petch for labels and big numbers, liquid glass buttons, and the glow
-   button for the main action. The one accent is volt.
-   Everything below only restyles the menus and the HUD. No behavior lives here,
-   and the 3D court itself is not touched.
-   ========================================================== */
-@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(/floodlights/fonts/inter.woff2) format('woff2')}
-@font-face{font-family:'Chakra Petch';font-style:normal;font-weight:600;font-display:swap;src:url(/floodlights/fonts/chakra-petch-600.woff2) format('woff2')}
-@font-face{font-family:'Chakra Petch';font-style:normal;font-weight:700;font-display:swap;src:url(/floodlights/fonts/chakra-petch-700.woff2) format('woff2')}
-:root{--accent:var(--k-accent);--accent2:var(--k-accent-2);--volt:var(--k-accent);--panel:rgba(10,14,20,.94);--line:var(--k-line);--line2:rgba(255,255,255,.24);--text:var(--k-ink);--muted:#9a9d98;--good:var(--k-good);--bad:var(--k-bad);
-  --f-ui:'Inter',system-ui,-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;--f-lbl:'Chakra Petch','Inter',system-ui,sans-serif;--cut:14px}
-html,body{background:var(--k-bg);font-family:var(--f-ui);letter-spacing:-.005em;-webkit-font-smoothing:antialiased}
-::selection{background:var(--volt);color:var(--k-accent-ink)}
-.disp{font-family:var(--f-lbl);font-weight:700;letter-spacing:.02em}
-
-/* ---------- screens ---------- */
-.scr{padding:44px 56px 44px}
-.menu-bg{background:radial-gradient(55% 45% at 88% 6%,rgba(139,108,255,.16),transparent 70%),radial-gradient(60% 50% at 10% 0%,rgba(255,138,61,.16),transparent 70%),radial-gradient(60% 45% at 40% 112%,rgba(62,230,196,.08),transparent 70%),linear-gradient(100deg,rgba(4,6,10,.96) 0%,rgba(4,6,10,.82) 42%,rgba(4,6,10,.32) 100%)}
-.dim-bg{background:radial-gradient(60% 40% at 90% 0%,rgba(255,138,61,.1),transparent 70%),rgba(4,6,10,.88);backdrop-filter:blur(4px)}
-/* the old light streaks make way for the frame from the landing page: a hairline with cut corners */
-.streaks i{display:none}
-.streaks{inset:18px;z-index:0;--fl:rgba(255,255,255,.13);--fc:22px;
-  background:
-    linear-gradient(var(--fl),var(--fl)) var(--fc) 0/calc(100% - var(--fc)*2) 1px no-repeat,
-    linear-gradient(var(--fl),var(--fl)) var(--fc) 100%/calc(100% - var(--fc)*2) 1px no-repeat,
-    linear-gradient(var(--fl),var(--fl)) 0 var(--fc)/1px calc(100% - var(--fc)*2) no-repeat,
-    linear-gradient(var(--fl),var(--fl)) 100% var(--fc)/1px calc(100% - var(--fc)*2) no-repeat,
-    linear-gradient(to bottom right,transparent calc(50% - .65px),var(--fl) calc(50% - .65px),var(--fl) calc(50% + .65px),transparent calc(50% + .65px)) top left/var(--fc) var(--fc) no-repeat,
-    linear-gradient(to bottom left,transparent calc(50% - .65px),var(--fl) calc(50% - .65px),var(--fl) calc(50% + .65px),transparent calc(50% + .65px)) top right/var(--fc) var(--fc) no-repeat,
-    linear-gradient(to bottom left,transparent calc(50% - .65px),var(--fl) calc(50% - .65px),var(--fl) calc(50% + .65px),transparent calc(50% + .65px)) bottom left/var(--fc) var(--fc) no-repeat,
-    linear-gradient(to bottom right,transparent calc(50% - .65px),var(--fl) calc(50% - .65px),var(--fl) calc(50% + .65px),transparent calc(50% + .65px)) bottom right/var(--fc) var(--fc) no-repeat}
-.scr>:not(.streaks){position:relative;z-index:1}
-.title{font-family:var(--f-ui);font-style:normal;font-weight:700;font-size:clamp(40px,7vw,96px);line-height:1;letter-spacing:.02em;text-transform:uppercase;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:transparent;background:var(--k-grad);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 6px 26px rgba(255,138,61,.28))}
-.title::first-line{color:#ffffff;-webkit-text-fill-color:#ffffff}
-.subtitle{font-family:var(--f-lbl);font-weight:700;font-size:11px;letter-spacing:.2em;margin:18px 0 34px}
-.h1{font-family:var(--f-ui);font-style:normal;font-weight:700;font-size:clamp(24px,3.4vw,36px);line-height:1.05;letter-spacing:.02em;text-transform:uppercase;margin-bottom:8px}
-.muted{color:var(--muted)}
-.mm{gap:10px;max-width:330px}
-
-/* ---------- buttons: liquid glass, and the glow button for the main action ---------- */
-.btn{position:relative;isolation:isolate;overflow:hidden;font-family:var(--f-lbl);font-weight:700;font-size:12px;letter-spacing:.1em;line-height:1.2;border-radius:6px;padding:14px 20px;color:#ffffff;
-  border:1px solid rgba(198,198,198,.42);background:linear-gradient(135deg,rgba(255,255,255,.11),rgba(0,0,0,.5) 46%,rgba(150,170,200,.09));box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
-  transition:background .35s ease,border-color .35s ease,box-shadow .35s ease,color .25s ease,filter .35s ease,transform .15s ease}
-.btn::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.4) 48%,transparent 76%);transform:translateX(-130%);transition:transform .65s ease;pointer-events:none}
-.btn:hover::after{transform:translateX(130%)}
-.btn:hover{background:linear-gradient(135deg,rgba(210,225,255,.18),rgba(0,0,0,.35) 48%,rgba(180,195,220,.16));color:#ffffff;border-color:rgba(220,230,255,.78);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 0 18px rgba(170,200,255,.16);transform:translateX(4px)}
-.btn.center:hover,.btn.sm:hover,.foot .btn:hover{transform:none}
-.btn:focus-visible{outline:2px solid var(--volt);outline-offset:3px}
-.btn.sm{padding:9px 13px;font-size:10.5px;letter-spacing:.09em;border-radius:5px}
-.btn:active{transform:scale(.97)}
-/* a picked option: volt wash, like the picked tabs in the other games */
-.btn.sel,.btn.sel:hover{background:rgba(var(--k-accent-rgb),.1);color:var(--volt);border-color:var(--volt);box-shadow:none}
-.btn.sel::after{display:none}
-
-/* ---------- surfaces: black panels, hairlines, cut corners ---------- */
-.panel,.tcard{border-radius:0;border:1px solid var(--line);background-origin:border-box;
-  background:
-    linear-gradient(to bottom left,transparent calc(50% - .65px),var(--line2) calc(50% - .65px),var(--line2) calc(50% + .65px),transparent calc(50% + .65px)) top right/var(--cut) var(--cut) no-repeat border-box,
-    linear-gradient(to bottom left,transparent calc(50% - .65px),var(--line2) calc(50% - .65px),var(--line2) calc(50% + .65px),transparent calc(50% + .65px)) bottom left/var(--cut) var(--cut) no-repeat border-box,
-    rgba(7,8,7,.94);
-  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,var(--cut) 100%,0 calc(100% - var(--cut)))}
-.tlabel{font-family:var(--f-lbl);font-size:10px;letter-spacing:.16em;font-weight:700;color:var(--volt)}
-/* team cards: the team colour stays, toned down so it reads as a light on black */
-.tcard .wm{padding:22px 22px}
-.tcard .wm::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,.6) 55%,rgba(0,0,0,.86) 100%);pointer-events:none}
-.tcard .wm>:not(.ovr){position:relative;z-index:1}
-.tcard .wm .ovr{z-index:1;border-radius:0;background:rgba(0,0,0,.5);border:1px solid var(--line)}
-.tcard .wm .city{font-family:var(--f-lbl);font-weight:700;letter-spacing:.18em;font-size:10.5px}
-.tcard .wm .nm{font-family:var(--f-ui);font-style:normal;font-weight:700;font-size:clamp(26px,3.4vw,38px);letter-spacing:.02em;margin-top:6px}
-.tcard .wm .ovr b{font-family:var(--f-lbl);font-weight:700;font-size:26px}
-.tcard .wm .ovr small{font-family:var(--f-lbl);font-weight:700;font-size:9px;letter-spacing:.14em;color:var(--muted)}
-.pl{border-bottom-color:var(--line);font-size:13.5px}
-.pl .pos{font-family:var(--f-lbl);font-size:11px;letter-spacing:.06em}
-.ovrb{font-family:var(--f-lbl);font-weight:700;font-size:12px;border-radius:0;padding:2px 5px 1px;clip-path:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,5px 100%,0 calc(100% - 5px))}
-select{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:6px;font-family:var(--f-ui);font-weight:600;font-size:13px;padding:9px 10px}
-select:focus{outline:none;border-color:var(--volt);box-shadow:0 0 0 1px var(--volt)}
-select option{background:#0a0b0a;color:#fff}
-
-/* ---------- tables ---------- */
-table.t{font-variant-numeric:tabular-nums}
-table.t th{background:#0b0c0b;font-family:var(--f-lbl);font-weight:700;font-size:10px;letter-spacing:.1em;padding:9px 6px;border-bottom:1px solid var(--line)}
-table.t td{border-bottom-color:rgba(255,255,255,.07)}
-table.t tr:hover td{background:rgba(255,255,255,.035)}
-.tblwrap{border-radius:0;border-color:var(--line);background:rgba(7,8,7,.9)}
-.set-row{border-bottom-color:var(--line)}
-.set-row b{font-weight:600}
-.kv kbd,.lg kbd{background:#101210;border:1px solid #3b3e3a;border-bottom-width:1px;border-radius:4px;font-family:var(--f-lbl);font-weight:700;font-size:11px;padding:2px 6px}
-
+.kv kbd,.lg kbd{background:#101210;border:1px solid #3b3e3a;border-bottom-width:1px;border-radius:4px;font-family:var(--k-f-lbl);font-weight:700;font-size:11px;padding:2px 6px}
 /* ---------- HUD ---------- */
-#scorebug{font-family:var(--f-lbl);font-weight:700;border-radius:0;box-shadow:0 0 0 1px rgba(255,255,255,.16),0 10px 30px rgba(0,0,0,.6)}
+#scorebug{font-family:var(--k-f-lbl);font-weight:700;border-radius:0;box-shadow:0 0 0 1px rgba(255,255,255,.16),0 10px 30px rgba(0,0,0,.6)}
 .sb-abbr{font-size:17px;letter-spacing:.08em}
 .sb-score{font-size:25px}
-.sb-bonus{font-family:var(--f-lbl);color:var(--volt)}
+.sb-bonus{font-family:var(--k-f-lbl);color:var(--volt)}
 .sb-poss{color:var(--volt)}
 .sb-mid{background:#04060a;font-size:17px;letter-spacing:.04em;box-shadow:inset 0 -2px 0 rgba(var(--k-accent-rgb),.7)}
 .sb-shot{background:#130a06;color:var(--volt);font-size:21px}
 .sb-shot.low{color:#ff5a5a;background:#1d0707}
 #pcard{background:rgba(0,0,0,.86);border-radius:0;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
-.pc-num{font-family:var(--f-lbl);font-weight:700;font-size:28px}
+.pc-num{font-family:var(--k-f-lbl);font-weight:700;font-size:28px}
 .pc-name{font-weight:700;font-size:13.5px;letter-spacing:.04em}
-.pc-meta{font-family:var(--f-lbl);font-weight:700;font-size:10px;letter-spacing:.12em}
+.pc-meta{font-family:var(--k-f-lbl);font-weight:700;font-size:10px;letter-spacing:.12em}
 .pc-stam{height:4px;background:#222422;border-radius:0}
 .pc-stam div{background:linear-gradient(90deg,var(--k-good),var(--k-teal))}
 .sm-bar{border:1px solid rgba(255,255,255,.85);border-radius:3px}
 .sm-fill{background:linear-gradient(0deg,var(--k-accent),var(--k-amber),#fff1c8)}
-.sm-label{font-family:var(--f-lbl);font-weight:700;font-size:12px;letter-spacing:.1em}
-.ft-title{font-family:var(--f-lbl);font-weight:700;font-size:12px;letter-spacing:.14em}
+.sm-label{font-family:var(--k-f-lbl);font-weight:700;font-size:12px;letter-spacing:.1em}
+.ft-title{font-family:var(--k-f-lbl);font-weight:700;font-size:12px;letter-spacing:.14em}
 .ft-bar{border:1px solid #ffffff;border-radius:3px}
 .ft-cursor{background:var(--volt);box-shadow:0 0 8px var(--volt)}
-.pop{font-family:var(--f-ui);font-style:normal;font-weight:800;font-size:48px;letter-spacing:.02em;text-transform:uppercase;text-shadow:0 0 20px rgba(var(--k-accent-rgb),.6),0 6px 20px rgba(0,0,0,.7)}
-.pop.small{font-family:var(--f-lbl);font-weight:700;font-size:20px;letter-spacing:.12em;text-shadow:0 2px 0 #000,0 0 12px rgba(0,0,0,.8)}
+.pop{font-family:var(--k-f-ui);font-style:normal;font-weight:800;font-size:48px;letter-spacing:.02em;text-transform:uppercase;text-shadow:0 0 20px rgba(var(--k-accent-rgb),.6),0 6px 20px rgba(0,0,0,.7)}
+.pop.small{font-family:var(--k-f-lbl);font-weight:700;font-size:20px;letter-spacing:.12em;text-shadow:0 2px 0 #000,0 0 12px rgba(0,0,0,.8)}
 .pop.blue{text-shadow:0 0 20px rgba(110,170,255,.75),0 6px 20px rgba(0,0,0,.7)}
 .pop.red{text-shadow:0 0 20px rgba(255,80,80,.8),0 6px 20px rgba(0,0,0,.7)}
-#banner .b1{font-family:var(--f-ui);font-style:normal;font-weight:700;font-size:52px;letter-spacing:.02em;text-transform:uppercase;background:linear-gradient(90deg,transparent,rgba(0,0,0,.8) 15%,rgba(0,0,0,.8) 85%,transparent)}
-#banner .b2{font-family:var(--f-lbl);font-weight:700;font-size:12px;letter-spacing:.2em;margin-top:10px}
+#banner .b1{font-family:var(--k-f-ui);font-style:normal;font-weight:700;font-size:52px;letter-spacing:.02em;text-transform:uppercase;background:linear-gradient(90deg,transparent,rgba(0,0,0,.8) 15%,rgba(0,0,0,.8) 85%,transparent)}
+#banner .b2{font-family:var(--k-f-lbl);font-weight:700;font-size:12px;letter-spacing:.2em;margin-top:10px}
 #legend{background:rgba(0,0,0,.88);border-radius:0;border-color:var(--line)}
-.lg h4{font-family:var(--f-lbl);font-weight:700;letter-spacing:.16em}
-#hint{font-family:var(--f-lbl);font-weight:700;font-size:10px;letter-spacing:.12em}
-#camLabel{font-family:var(--f-lbl);font-weight:700;font-size:11px;letter-spacing:.14em;border-radius:0;background:rgba(0,0,0,.7);box-shadow:0 0 0 1px var(--line)}
+.lg h4{font-family:var(--k-f-lbl);font-weight:700;letter-spacing:.16em}
+#hint{font-family:var(--k-f-lbl);font-weight:700;font-size:10px;letter-spacing:.12em}
+#camLabel{font-family:var(--k-f-lbl);font-weight:700;font-size:11px;letter-spacing:.14em;border-radius:0;background:rgba(0,0,0,.7);box-shadow:0 0 0 1px var(--line)}
 #ticker{font-weight:600;letter-spacing:.02em}
 #ticker div{background:rgba(0,0,0,.82);border-left:2px solid var(--volt)}
-#loading{background:var(--k-bg);font-family:var(--f-lbl);font-weight:700;font-size:11px;letter-spacing:.2em}
-#loading .title{font-size:clamp(34px,6vw,54px)!important;text-align:center;color:#ffffff}
 
-/* ---------- substitutions, bracket, player of the game ---------- */
-.subp{border-radius:6px;border-color:var(--line);background:rgba(255,255,255,.02)}
-.subp:hover{border-color:rgba(220,230,255,.6)}
-.subp.sel{background:rgba(var(--k-accent-rgb),.1);border-color:var(--volt)}
-.mini{height:4px;background:#222422;border-radius:0}
-.mini i{background:#5fd38d}
-.bhead{font-family:var(--f-ui);font-style:normal;font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase}
-.ser{border-radius:0;border-color:var(--line);background:rgba(255,255,255,.025)}
-.ser.me{border-color:var(--volt);box-shadow:none;background:rgba(var(--k-accent-rgb),.07)}
-.pog{border-radius:0;clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,var(--cut) 100%,0 calc(100% - var(--cut)))}
-.pog .big{font-family:var(--f-lbl);font-style:normal;font-weight:700;font-size:32px}
-table.t tr:hover td{background:rgba(var(--k-accent-rgb),.06)}
-.h1{position:relative}
-.h1::after{content:"";display:block;width:56px;height:3px;margin-top:10px;border-radius:2px;background:var(--k-grad);box-shadow:0 0 14px rgba(var(--k-accent-rgb),.5)}
-.tlabel{color:var(--k-accent-hi)}
-.tcard{position:relative}
-.tcard::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--k-grad);pointer-events:none}
-.pos-g{color:var(--k-pos-g)!important}.pos-f{color:var(--k-pos-f)!important}.pos-c{color:var(--k-pos-c)!important}
-@media (max-width:900px){.scr{padding:30px 22px}.streaks{inset:8px;--fc:14px}}
-@media (prefers-reduced-motion: reduce){.btn::after{transition:none}}
+/* ---------- loading ---------- */
+#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:50;background:var(--k-bg);text-align:center;padding:0 20px}
+#loading .k-topbar{min-height:0;padding:0 0 12px}
+
+/* ==========================================================
+   Menu screens. Every button, panel, label, table, tag, input and the modal is a
+   game kit component from /kit.css, the same ones Floodlights uses. The accent is
+   the court orange, and a franchise's colours inside a save (--k-tint). Only
+   layout lives below: the page width, grids, gaps and scrolling.
+   ========================================================== */
+#ui{position:fixed;inset:0;z-index:30;display:none;overflow:auto;overflow-x:hidden}
+#ui.show{display:block}
+.hl-wrap{max-width:1240px;margin:0 auto;padding:0 20px 84px;color:#ffffff;font-size:14px;line-height:1.5}
+.hl-wrap .k-panel{margin-bottom:16px}
+.hl-wrap .k-panel>.k-panel-title{margin-bottom:14px}
+.hl-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-bottom:16px}
+.hl-grid>.k-panel{margin-bottom:0;min-width:0}
+.hl-keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:16px}
+.hl-keys>.k-panel{margin-bottom:0}
+.hl-scroll{overflow-x:auto}
+.hl-scroll+.hl-scroll{margin-top:18px}
+.hl-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.hl-opts{display:flex;gap:6px;flex-wrap:wrap}
+.hl-setrow{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid var(--k-hair)}
+.hl-setrow:last-of-type{border-bottom:none}
+.hl-setk{font-weight:600}
+.hl-pickopts{margin:18px 0 28px}
+.hl-pickopts .k-controls{margin-bottom:10px}
+.hl-optk{min-width:96px}
+.hl-panelrow{margin:16px 0 0}
+.hl-pick{cursor:pointer}
+.hl-out{opacity:.4;pointer-events:none}
+.hl-sw{display:inline-block;width:10px;height:10px;margin-right:8px;vertical-align:-1px}
+.kv{display:flex;gap:10px;padding:5px 0;font-size:14px;align-items:baseline}
+.mini{display:inline-block;vertical-align:middle;height:4px;width:70px;background:#222422;overflow:hidden}
+.mini i{display:block;height:100%}
+/* the modal: Floodlights' title and button row */
+.hl-mbtns{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.hl-mstack{display:grid;gap:8px;margin-top:18px}
+/* the playoff bracket: columns of series */
+.bracket{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;overflow-x:auto;padding-bottom:4px}
+.bcol{display:flex;flex-direction:column;gap:8px;min-width:0}
+.ser{border:1px solid var(--k-line);border-radius:var(--k-r);padding:8px 10px;background:var(--k-panel)}
+.ser.me{border-color:var(--k-accent);background:rgba(var(--k-accent-rgb),.08)}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:2px 0;font-weight:700}
+.sr b{font-family:var(--k-f-num);font-weight:600;font-variant-numeric:tabular-nums}
+.sr.lose{opacity:.45}
+.sw{display:inline-block;width:9px;height:9px;border:1px solid;margin-right:6px;vertical-align:middle}
+.sd{display:inline-block;min-width:18px;font-family:var(--k-f-num);font-size:11px;color:var(--k-dim-2)}
+.ser .k-msub{margin-top:3px}
+@media (max-width:860px){.hl-grid{grid-template-columns:1fr}}
+@media (max-width:720px){.hl-wrap{padding:0 14px 84px}}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -304,7 +174,7 @@ table.t tr:hover td{background:rgba(var(--k-accent-rgb),.06)}
   <div id="flash"></div>
 </div>
 <div id="ui"></div>
-<div id="loading"><div class="title" style="font-size:54px">HARDWOOD LEGENDS</div><div id="loadMsg" class="muted">LOADING ARENA…</div></div>
+<div id="loading"><div class="k-topbar"><div class="k-brand"><span class="sq"></span><span class="nm">HARDWOOD LEGENDS</span></div></div><div id="loadMsg" class="k-msub">LOADING ARENA…</div></div>
 <script>
 // Fallback message if the Three.js module can't be fetched (offline / blocked CDN)
 setTimeout(function(){ if(!window.__HL_READY){ var m=document.getElementById('loadMsg'); if(m) m.innerHTML='Could not load Three.js from the CDN.<br>Check your internet connection and reload.'; } }, 12000);
@@ -2155,6 +2025,7 @@ function startGame(userIdx, oppIdx, opts={}){
      teams:[makeTeam(userIdx,0), makeTeam(oppIdx,1)], dir:[1,-1], quarter:1, clock:SETTINGS.qLen*60, shotClock:24, shotClockOn:false,
      possTeam:-1, frontEst:false, possTime:0, state:'tipoff', stateT:0, pending:null, user:null, play:{type:'motion',called:false}, help:null, autoHelp:[null,null], tipWinner:0, nextPoss:null};
   const home=G.teams[G.homeIdx], away=G.teams[1-G.homeIdx];
+  hlTint(G.teams[0].td);
   setupJerseys(home, away);
   setArenaTeams(home.td, away.td);
   for(const tm of G.teams) tm.onCourt.forEach((p,i)=>{ avatars[tm.side][i].setPlayer(p,tm); avatars[tm.side][i].group.visible=true; });
@@ -2263,134 +2134,240 @@ Object.assign(Season,{
 const _recordUserGame=Season.recordUserGame.bind(Season);
 Season.recordUserGame=function(res){ if(this.data && this.data.playoffs) this.userPlayoffGame(res); else _recordUserGame(res); };
 
-function seriesLine(s){ const A=LEAGUE.teams[s.a].abbr, B=LEAGUE.teams[s.b].abbr;
-  if(s.bestOf===1 && s.games.length){ const g=s.games[0]; return `${LEAGUE.teams[s.winner].abbr} wins ${Math.max(g.a,g.b)}-${Math.min(g.a,g.b)}`; }
-  if(s.winner!=null) return `${LEAGUE.teams[s.winner].abbr} wins ${Math.max(s.wa,s.wb)}-${Math.min(s.wa,s.wb)}`;
-  if(!s.games.length) return s.bestOf===1?'Single game':`Best of ${s.bestOf}`;
-  if(s.wa===s.wb) return `Series tied ${s.wa}-${s.wb}`;
-  return `${s.wa>s.wb?A:B} leads ${Math.max(s.wa,s.wb)}-${Math.min(s.wa,s.wb)}`; }
-function seriesCard(s,playIn){ const P=Season.data.playoffs, me=Season.data.team; const seed=t=>playIn&&P.orig?P.orig[t]:P.seedOf[t];
-  const row=(t,w)=>{ const td=LEAGUE.teams[t]; const cls=s.winner==null?'':(s.winner===t?'win':'lose');
-    return `<div class="sr ${cls}"><span><span class="sw" style="background:${td.c1};border-color:${td.c2}"></span><span class="sd">${seed(t)||''}</span>${td.abbr}</span><b>${s.bestOf===1?(s.games[0]?(t===s.a?s.games[0].a:s.games[0].b):''):w}</b></div>`; };
-  return `<div class="ser ${s.a===me||s.b===me?'me':''}">${row(s.a,s.wa)}${row(s.b,s.wb)}<div class="sl">${seriesLine(s)}</div></div>`; }
-function bracketHTML(){
-  const P=Season.data.playoffs; const col=(title,list,pi)=>`<div class="bcol"><div class="tlabel">${title}</div>${list.length?list.map(x=>seriesCard(x,pi)).join(''):'<div class="ser tbd">To be decided</div>'}</div>`;
-  const conf=c=>{ const get=r=>(P.rounds[r]||[]).filter(s=>s.conf===c);
-    return `<div class="bconf"><div class="bhead">${c.toUpperCase()}ERN CONFERENCE</div><div class="bracket">${col('Play-In',get(0).concat(get(1)),true)}${col('First Round',get(2))}${col('Semifinals',get(3))}${col('Conf. Finals',get(4))}</div></div>`; };
-  const fin=P.rounds[5]||[];
-  return conf('East')+conf('West')+`<div class="bconf"><div class="bhead">NBA FINALS</div><div class="bracket" style="grid-template-columns:minmax(170px,280px)">${fin.length?fin.map(x=>seriesCard(x)).join(''):'<div class="ser tbd">East champion vs West champion</div>'}</div></div>`;
-}
-function showPlayoffs(){
-  const d=Season.data, P=d.playoffs, td=LEAGUE.teams[d.team], r=Season.record(), st=Season.userStatus(), s=Season.userSeries();
-  let panel='';
-  if(P.champion!=null){ const ch=LEAGUE.teams[P.champion];
-    panel=`<div class="panel champ" style="background:linear-gradient(120deg,${ch.c1},${shade(ch.c1,0.45)})"><div class="tlabel" style="color:#fff">${LEAGUE.season} NBA CHAMPIONS</div><div class="h1" style="margin:0">${ch.city.toUpperCase()} ${ch.name.toUpperCase()}</div>
-      <div style="font-weight:800;margin-top:4px">${P.champion===d.team?'You won the title!':`${td.name} season over.`} Finals: ${seriesLine(P.rounds[5][0])}</div>
-      <div class="row" style="margin-top:12px"><button class="btn primary sm" data-a="seasonNew">Start New Season</button></div></div>`; }
-  else if(st==='active' && s){ const usA=s.a===d.team, opp=usA?s.b:s.a, home=Season.homeA(s)===usA, ot=LEAGUE.teams[opp];
-    const label = s.bestOf===1 ? ROUND_NAMES[P.round] : `${ROUND_NAMES[P.round]} · Game ${s.games.length+1}`;
-    panel=`<div class="panel" style="min-width:300px"><div class="tlabel">${label.toUpperCase()}</div><div style="font-size:20px;font-weight:900">${home?'vs':'@'} (${P.seedOf[opp]}) ${ot.city} ${ot.name}</div>
-      <div class="muted">${seriesLine(s)} · Opponent OVR ${teamRating(ot)}</div>
-      <div class="row" style="margin-top:12px"><button class="btn primary sm" data-a="seasonPlay">Play Game</button><button class="btn sm" data-a="seasonSim">Sim Game</button>${s.bestOf>1?'<button class="btn sm" data-a="poSimSeries">Sim Series</button>':''}</div></div>`; }
-  else { const msg = st==='missed'?`The ${td.name} missed the postseason.` : st==='out'?`The ${td.name} have been eliminated.` : 'Waiting for the next round.';
-    panel=`<div class="panel" style="min-width:300px"><div class="tlabel">${ROUND_NAMES[P.round].toUpperCase()}</div><div style="font-weight:800">${msg}</div>
-      <div class="row" style="margin-top:12px"><button class="btn primary sm" data-a="poSimRound">Sim Round</button><button class="btn sm" data-a="poSimAll">Sim to Champion</button></div></div>`; }
-  show(`<div class="row" style="justify-content:space-between;align-items:flex-end;gap:16px"><div><div class="tlabel">PLAYOFFS · ${LEAGUE.season}</div><div class="h1">${td.city.toUpperCase()} ${td.name.toUpperCase()}</div>
-    <div style="font-size:18px;font-weight:900">${r.w}-${r.l} <span class="muted" style="font-size:14px">· ${P.seedOf[d.team]?`${ordinal(P.seedOf[d.team])} seed in the ${td.conf}`:'did not qualify'}${P.bestOf>1?` · best-of-${P.bestOf} series`:' · single-game series'}</span></div></div>${panel}</div>
-    <div style="margin-top:18px">${bracketHTML()}</div>
-    <div class="foot"><button class="btn" data-a="main">◀ Main Menu</button><button class="btn" data-a="seasonReset">Abandon Season</button></div>`, 'dim-bg');
-}
-
 /* =====================================================================
    SECTION 14 - MENUS / SCREENS
+   Every screen is built from the game kit in /kit.css, the same components Floodlights uses: the entry page,
+   the room before a season, the top bar, the hub head, panels, tables, tags and the modal.
    ===================================================================== */
 const ui=document.getElementById('ui');
 let menuTeam = (Math.random()*30)|0;
 let selUser=13, selOpp=1, rosterTeam=0, rosterBack='main', settingsBack='main', controlsBack='main', subSel=null;
-function hideUI(){ ui.classList.remove('show'); ui.innerHTML=''; hlLastScreen=''; }
-function show(html, cls='menu-bg'){ ui.innerHTML=`<div class="scr ${cls}"><div class="streaks"><i></i><i></i><i></i><i></i></div>${html}</div>`; ui.classList.add('show'); ui.scrollTop=0; hlEnter(); }
+/* hlScreen names the screen on show; a redraw of the same screen keeps its scroll and skips the entrance */
+var hlScreen='', hlLastScreen='';
+function hideUI(){ ui.classList.remove('show'); ui.innerHTML=''; hlLastScreen=''; hlScreen=''; }
+function show(html, screen){
+  const keep = screen && screen===hlScreen ? ui.scrollTop : 0;
+  hlScreen = screen||'';
+  ui.innerHTML = html; ui.classList.add('show'); hlStars(); ui.scrollTop = keep; hlEnter();
+}
+const STARS='<div class="k-stars" aria-hidden="true"><i></i><i></i></div>';
+/* a full page: the starfield, then the page column like Floodlights' .wrap */
+function page(screen, html, td){ show(`${STARS}<div class="hl-wrap"${td?` style="${teamVars(td)}"`:''}>${html}</div>`, screen); }
+/* a modal over the court */
+function modal(screen, html){ show(`<div class="k-scrim"><div class="k-modal" role="dialog" aria-modal="true" style="width:min(94vw,420px)">${html}</div></div>`, screen); }
 /* every menu screen settles in with the site motion kit (public/kit-motion.js). A setting toggled on the same
    screen redraws it without the entrance, so clicking through options never replays it. */
-var hlLastScreen='';
 function hlEnter(){
-  const km=window.KitMotion, scr=ui.firstElementChild; if(!km||!scr) return;
-  const h=scr.querySelector('.title,.h1'); const key=h?h.textContent:'';
+  const km=window.KitMotion; if(!km) return;
+  const h=ui.querySelector('.k-hubhead .clubname,.k-modal-title'); const key=hlScreen+'|'+(h?h.textContent:'');
   if(key===hlLastScreen) return; hlLastScreen=key;
-  km.rise(scr.querySelectorAll('.title,.subtitle,.h1,.scr>.muted,.scr>.row>div:first-child'),{y:14,stagger:.05});
-  km.cascade(scr.querySelectorAll('.mm>.btn,.tcard,.keys>.panel,.subgrid>div,.scr>.panel,.row>.panel,.foot'),{y:12,each:.045,delay:.06});
-  km.cascade(scr.querySelectorAll('table.t tr,.subp,.ser'),{y:6,delay:.14});
+  if(!ui.querySelector('.hl-wrap')) return; // the entry page and the modal run the kit's own entrance
+  km.rise(ui.querySelectorAll('.k-topbar,.k-hubhead'),{y:14,stagger:.05});
+  km.cascade(ui.querySelectorAll('.hl-wrap>.k-panel,.hl-grid>.k-panel,.hl-keys>.k-panel,.hl-foot'),{y:12,each:.045,delay:.06});
+  km.cascade(ui.querySelectorAll('.k-table tbody tr,.ser'),{y:6,delay:.14});
 }
-function ovrB(o){ return `<span class="ovrb" style="background:${ovrColor(o)}">${o}</span>`; }
+/* the starfield: two 1px dots, each with one long box-shadow list, drawn once per visit like Floodlights */
+let hlStarList=null;
+function hlStars(){
+  const st=ui.querySelectorAll('.k-stars i'); if(st.length!==2) return;
+  if(!hlStarList){ const field=(count,blur,aMin,aMax)=>{ const out=[]; for(let i=0;i<count;i++) out.push((Math.random()*100).toFixed(2)+'vw '+(Math.random()*100).toFixed(2)+'vh '+blur+'px 0 rgba(255,255,255,'+(aMin+Math.random()*(aMax-aMin)).toFixed(2)+')'); return out.join(','); };
+    hlStarList=[field(150,0,0.05,0.3), field(18,1.2,0.35,0.7)]; }
+  st[0].style.boxShadow=hlStarList[0]; st[1].style.boxShadow=hlStarList[1];
+}
+/* the franchise tint: Floodlights' clubTint recipe on the team's two colours, cleared on the main menu */
+function hlTint(td){
+  const root=document.documentElement.style;
+  if(!td||!td.c1){ ['--k-tint','--k-tint-2','--k-tint-edge'].forEach(v=>root.removeProperty(v)); return; }
+  const L=c=>(c[0]*0.299+c[1]*0.587+c[2]*0.114)/255;
+  const lift=(c,min)=>{ let o=c.slice(); for(let i=0;i<12&&L(o)<min;i++) o=o.map(v=>Math.round(v+(255-v)*0.18)); return o; };
+  let a=hexToRgb(td.c1), b=hexToRgb(td.c2||td.c1);
+  if(L(a)<0.14 && L(b)>L(a)){ const t=a; a=b; b=t; }
+  a=lift(a,0.28); const edge=lift(a,0.5);
+  root.setProperty('--k-tint',a.join(', ')); root.setProperty('--k-tint-2',b.join(', ')); root.setProperty('--k-tint-edge',edge.join(', '));
+}
+/* a team's colours for --team: the lighter one first when the main colour is near black */
+function teamCols(td){ let a=td.c1, b=td.c2||td.c1; if(lum(a)<0.14 && lum(b)>lum(a)) [a,b]=[b,a]; return [a,b]; }
+function teamVars(td){ const [a,b]=teamCols(td); return `--team:${a};--team-2:${b}`; }
+function mgrName(){ try{ return (localStorage.getItem('hl_name')||'').trim().slice(0,20); }catch(e){ return ''; } }
+function mgrShow(){ return escHTML(mgrName()||'Coach'); }
+/* kit pieces */
+function topbar(chips, btns){
+  return `<div class="k-topbar"><div class="k-brand"><span class="sq"></span><span class="nm">HARDWOOD LEGENDS</span><span class="tg">GAME NIGHT</span></div>
+    <div class="k-chips">${FO?'':'<a class="chip" href="/front-office" data-a="hub" title="Back to Front Office">Be-A-Manager</a>'}<span class="chip">Season <b>${LEAGUE.season}</b></span>${chips||''}${btns||''}</div></div>`;
+}
+const tbBtn=(a,txt)=>`<button class="k-btn k-btn-ghost k-btn-sm" data-a="${a}">${txt}</button>`;
+const TOOLS=()=>tbBtn('rosters','Rosters')+tbBtn('settings','Settings')+tbBtn('controls','Controls');
+function hubhead(who, name, meta){
+  return `<div class="k-hubhead"><div><div class="who">${who}</div><div class="clubname">${name}</div></div>${meta&&meta.length?`<div class="k-clubmeta">${meta.map(cmeta).join('')}</div>`:''}</div>`;
+}
+function cmeta([k,v,cls]){ return `<span class="k-cm"><span class="k-cmk">${k}</span><b class="k-cmv${cls?' '+cls:''}">${v}</b></span>`; }
+const panel=(title,body,attrs='')=>`<section class="k-panel"${attrs}>${title?`<h3 class="k-panel-title">${title}</h3>`:''}${body}</section>`;
+const choice=(a,v,on,txt)=>`<button class="k-btn k-btn-ghost k-btn-sm${on?' k-on':''}" data-a="${a}" data-v="${v}">${txt}</button>`;
+const ovrN=o=>`<b style="color:${ovrColor(o)}">${o}</b>`;
+const posB=p=>`<span class="k-pos ${p[0]==='C'?'c':p.includes('G')?'g':'f'}">${p}</span>`;
+const swatch=t=>`<span class="hl-sw" style="background:${t.c1};box-shadow:inset 0 0 0 1px ${t.c2}"></span>`;
+function scoreLine(){ const [a,b]=G.teams; return `${a.td.abbr} ${a.score} - ${b.score} ${b.td.abbr}`; }
+function seasonSummary(){
+  const d=Season.data; if(!d||!d.games) return '';
+  const td=LEAGUE.teams[d.team], r=Season.record();
+  return `${td.name} · ${r.w}-${r.l}`;
+}
+
+/* ---------- the entry page: a clone of the Floodlights entry, court mode ---------- */
+const HL_TITLE_EM=11.4;
 function showMain(){
-  const hasSeason = Season.data && Season.data.gi!==undefined;
-  show(`<div style="margin:auto 0">
-    <div class="title">HARDWOOD<br>LEGENDS</div>
-    <div class="subtitle">5-ON-5 BASKETBALL · ${LEAGUE.season} ROSTERS · ALL 30 TEAMS</div>
-    <div class="mm">
-      <button class="btn primary" data-a="quick">▶ Quick Play</button>
-      <button class="btn" data-a="season">${hasSeason?'Season Mode (Continue)':'Season Mode'}</button>
-      <button class="btn" data-a="rosters">Rosters</button>
-      <button class="btn" data-a="settings">Settings</button>
-      <button class="btn" data-a="controls">Controls</button>
-      <button class="btn" data-a="hub">◀ All Games</button>
+  hlTint(null);
+  const T=LEAGUE.teams, players=T.reduce((s,t)=>s+t.players.length,0), divs=new Set(T.map(t=>t.div)).size, sum=seasonSummary();
+  show(`${STARS}<div class="k-entry">
+  <div class="k-frame" aria-hidden="true">
+    <span class="ln ln-t"></span><span class="ln ln-b"></span><span class="ln ln-l"></span><span class="ln ln-r"></span>
+    <span class="cn cn-tl"></span><span class="cn cn-tr"></span><span class="cn cn-bl"></span><span class="cn cn-br"></span>
+  </div>
+  <div class="k-entry-in">
+    <div class="k-hero">
+      <div class="k-brand"><span class="sq"></span><a class="homelink" href="/front-office" data-a="hub" title="Back to Front Office"><span class="k-dec">Be-A-Manager</span></a><span class="tg"><span class="k-dec">Game Night</span></span></div>
+      <h1 class="k-title" style="--k-title-em:${HL_TITLE_EM}"><span class="hrise">Hardwood <span>Legends</span></span></h1>
+      <p class="k-sub">Pick a real NBA team, play its games five on five on the <em>court</em> and chase the title.</p>
+      <dl class="k-stats">
+        <div><dt><span class="k-dec">Players</span></dt><dd>${players}</dd></div>
+        <div><dt><span class="k-dec">Teams</span></dt><dd>${T.length}</dd></div>
+        <div><dt><span class="k-dec">Divisions</span></dt><dd>${divs}</dd></div>
+      </dl>
     </div>
-    <div class="muted" style="margin-top:30px;font-size:12px;letter-spacing:1px">Arrow keys move · W shoot · A pass · Shift sprint · P pause · H controls</div></div>`);
+    <div class="k-card">
+      <label class="flab k-label" for="nameIn">Your manager name</label>
+      <div class="row"><input id="nameIn" class="k-input" maxlength="20" placeholder="e.g. Coach K" autocomplete="off" value="${escHTML(mgrName())}"></div>
+      <div class="row"><button class="k-btn k-btn-primary k-create" data-a="create">Create a game</button></div>
+      <div class="cardsplit"></div>
+      <label class="flab k-label" for="contIn">Or continue your season</label>
+      <div class="row"><input id="contIn" class="k-input" size="8" readonly placeholder="No season saved" value="${escHTML(sum)}"><button class="k-btn" data-a="continue"${sum?'':' disabled'}>Continue</button></div>
+      <div class="msg"></div>
+      <button class="k-mode" data-a="quick"><b>Quick Play</b><span>One game, any two teams, no season.</span><i aria-hidden="true">&rarr;</i></button>
+    </div>
+  </div>
+</div>`, 'main');
+  const nameIn=document.getElementById('nameIn');
+  nameIn.addEventListener('input',()=>{ try{ localStorage.setItem('hl_name', nameIn.value.trim()); }catch(e){} });
+  hlEntryMotion();
 }
-function teamCard(idx, side, label){
-  const td=LEAGUE.teams[idx]; const st=startersOf(td);
-  const opts=LEAGUE.teams.map((t,i)=>`<option value="${i}" ${i===idx?'selected':''}>${t.city} ${t.name}</option>`).join('');
-  const fg=colorDist(td.c2,td.c1)<110?'#fff':td.c2;
-  return `<div class="tcard"><div class="wm" style="background:linear-gradient(120deg,${td.c1},${shade(td.c1,0.55)});color:#fff">
-      <div class="city">${label} · ${td.city.toUpperCase()}</div><div class="nm" style="color:${fg}">${td.name}</div>
-      <div style="font-size:12px;opacity:.85;margin-top:4px">${td.conf}ern Conference · ${td.div} Division</div>
-      <div class="ovr"><b>${teamRating(td)}</b><small>TEAM OVR</small></div></div>
-    <div class="body"><div class="row" style="margin-bottom:12px">
-      <button class="btn sm center" data-a="prev" data-s="${side}">◀</button>
-      <select data-sel="${side}">${opts}</select>
-      <button class="btn sm center" data-a="next" data-s="${side}">▶</button>
-      <button class="btn sm center" data-a="viewRoster" data-s="${side}">View Roster</button></div>
-      <div class="tlabel">STARTING FIVE</div>
-      ${st.map(i=>{ const p=td.players[i]; return `<div class="pl"><span><span class="pos pos-${p[2][0]==='C'?'c':p[2].includes('G')?'g':'f'}">${p[2]}</span>#${p[1]} ${p[0]}</span>${ovrB(p[4])}</div>`; }).join('')}
-    </div></div>`;
+/* decode labels: each one resolves left to right in 400ms behind a short band of random letters, and the
+   numbers count up, the same as the Floodlights entry. Reduced motion gets the end state at once. */
+const HL_RM=!!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+let hlDecTok=0, hlReserve=null, hlResizeT=0;
+function hlEntryMotion(){
+  const tok=++hlDecTok, CH='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const labels=[...ui.querySelectorAll('.k-dec')];
+  labels.forEach(el=>{ el.dataset.text=el.textContent; });
+  const reserve=()=>{ labels.forEach(el=>{ el.style.width=''; }); const w=labels.map(el=>el.getBoundingClientRect().width); labels.forEach((el,i)=>{ if(w[i]>0) el.style.width=Math.ceil(w[i]*100)/100+'px'; }); };
+  const settle=el=>{ if(el._raf){ cancelAnimationFrame(el._raf); el._raf=0; } if(el._t){ clearTimeout(el._t); el._t=0; } el.textContent=el.dataset.text; };
+  const decode=el=>{
+    const text=el.dataset.text, n=text.length; settle(el);
+    if(HL_RM||!n||!el.isConnected) return;
+    const t0=performance.now(), rnd=new Array(n); let lastRoll=0;
+    const roll=()=>{ for(let i=0;i<n;i++) rnd[i]=CH.charAt((Math.random()*26)|0); };
+    roll();
+    const step=now=>{
+      const p=Math.min(1,(now-t0)/400), front=p*n; let out='';
+      if(now-lastRoll>45){ roll(); lastRoll=now; }
+      for(let i=0;i<n;i++){ const c=text.charAt(i); if(i<front) out+=c; else if(i<front+3.6) out+=(c===' '?' ':rnd[i]); else break; }
+      el.textContent=out;
+      if(p<1) el._raf=requestAnimationFrame(step); else settle(el);
+    };
+    el._raf=requestAnimationFrame(step);
+    el._t=setTimeout(()=>settle(el),900);
+  };
+  ui.querySelectorAll('.k-entry a').forEach(a=>{ const t=a.querySelector('.k-dec'); if(t) a.addEventListener('pointerenter',()=>decode(t)); });
+  const boot=()=>{
+    if(tok!==hlDecTok || !labels.length || !labels[0].isConnected) return;
+    reserve(); hlReserve=reserve;
+    if(HL_RM) return;
+    if(window.KitMotion) ui.querySelectorAll('.k-stats dd').forEach((dd,i)=>{
+      const v=parseFloat(dd.textContent.replace(/,/g,'')); if(!isFinite(v)) return;
+      setTimeout(()=>{ if(dd.isConnected) window.KitMotion.count(dd, v, {from:0, duration:1.1, format:x=>Math.round(x).toLocaleString('en-GB')}); }, 620+i*90);
+    });
+    labels.forEach((el,i)=>setTimeout(()=>decode(el),420+i*70));
+    setTimeout(()=>{ if(tok!==hlDecTok) return; labels.forEach(settle); reserve(); },2600);
+  };
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(boot); else boot();
 }
+addEventListener('resize',()=>{ clearTimeout(hlResizeT); hlResizeT=setTimeout(()=>{ if(hlScreen==='main' && hlReserve) hlReserve(); },160); });
+
+/* ---------- the room before a game: a clone of the Floodlights pre start room ---------- */
 let selectMode='quick';
 function showTeamSelect(mode){
   selectMode=mode||selectMode;
-  const season=selectMode==='season';
-  show(`<div class="h1">${season?'NEW SEASON: PICK YOUR TEAM':'QUICK PLAY: PICK YOUR TEAMS'}</div>
-    <div class="muted">${season?`Play a ${SETTINGS.seasonLen}-game season. Games you don't want to play can be simulated.`:'Choose your team and your opponent. You are the home team.'}</div>
-    <div class="tsel" style="${season?'grid-template-columns:1fr;max-width:640px':''}">${teamCard(selUser,'u','YOUR TEAM')}${season?'':teamCard(selOpp,'o','OPPONENT')}</div>
-    <div class="panel" style="margin-top:18px"><div class="row">
-      <span class="tlabel" style="margin:0">DIFFICULTY</span><span class="opt">${DIFFS.map((d,i)=>`<button class="btn sm ${SETTINGS.diff===i?'sel':''}" data-a="setDiff" data-v="${i}">${d.name}</button>`).join('')}</span>
-      <span class="tlabel" style="margin:0 0 0 14px">QUARTER</span><span class="opt">${[2,5,8,12].map(q=>`<button class="btn sm ${SETTINGS.qLen===q?'sel':''}" data-a="setQ" data-v="${q}">${q} MIN</button>`).join('')}</span>
-      ${season?`<span class="tlabel" style="margin:0 0 0 14px">GAMES</span><span class="opt">${[8,16,29].map(q=>`<button class="btn sm ${SETTINGS.seasonLen===q?'sel':''}" data-a="setLen" data-v="${q}">${q}</button>`).join('')}</span>`:''}
-    </div></div>
-    <div class="foot"><button class="btn" data-a="main">◀ Back</button><button class="btn primary" data-a="${season?'createSeason':'tipoff'}">${season?'Start Season ▶':'Tip Off ▶'}</button></div>`);
-  ui.querySelectorAll('select[data-sel]').forEach(s=>s.addEventListener('change',()=>{ const v=+s.value; if(s.dataset.sel==='u') selUser=v; else selOpp=v; showTeamSelect(); }));
+  const season=selectMode==='season', me=LEAGUE.teams[selUser], op=LEAGUE.teams[selOpp], name=mgrShow(), saved=!!(Season.data&&Season.data.games);
+  hlTint(me);
+  const pick=(a,cur,taken)=>LEAGUE.teams.slice(0,30).map((t,i)=>`<button data-a="${a}" data-v="${i}" class="${i===cur?'mine':''}${i===taken?' taken':''}"${i===taken?' disabled':''} style="--team:${teamCols(t)[0]}">${t.city} ${t.name}<br><span>${t.abbr} · OVR ${teamRating(t)}</span></button>`).join('');
+  const optRow=(label,items)=>`<div class="k-controls"><span class="k-msub hl-optk">${label}</span><span class="hl-opts">${items}</span></div>`;
+  const meta=season
+    ? [['Team OVR',teamRating(me),'k-acc'],['Best player',Math.max(...me.players.map(p=>p[4]))],['Conference',me.conf],['Games',SETTINGS.seasonLen]]
+    : [['Team OVR',teamRating(me),'k-acc'],['Opponent',op.abbr],['Opp OVR',teamRating(op)],['Quarter',SETTINGS.qLen+'m']];
+  page('select',
+    topbar(`<span class="chip">${season?'New season':'Quick play'}</span>`, tbBtn('rosters','Roster')+tbBtn('settings','Settings')+tbBtn('controls','Controls')+tbBtn('main','Leave'))
+    + hubhead(`WELCOME · ${name} · ${me.city}`, me.name, meta)
+    + `<section class="k-panel k-room">
+      <div class="k-lobbygrid">
+        <div class="k-lobbyleft">
+          <div class="k-msub">${season?(saved?'A NEW SEASON REPLACES YOUR SAVED ONE.':'YOUR SEASON IS READY. PICK A TEAM.'):'PICK YOUR TEAM AND AN OPPONENT.'}</div>
+          <div class="hl-pickopts">
+            ${optRow('DIFFICULTY',DIFFS.map((d,i)=>choice('setDiff',i,SETTINGS.diff===i,d.name)).join(''))}
+            ${optRow('QUARTER',[2,5,8,12].map(q=>choice('setQ',q,SETTINGS.qLen===q,q+' min')).join(''))}
+            ${season?optRow('GAMES',[8,16,29].map(q=>choice('setLen',q,SETTINGS.seasonLen===q,q)).join('')):''}
+          </div>
+          <div class="k-controls"><button class="k-btn k-btn-primary" data-a="${season?'createSeason':'tipoff'}">${season?'Start season &rarr;':'Tip off &rarr;'}</button><span class="k-msub">${season?'GAMES YOU SKIP ARE SIMULATED':'YOU ARE THE HOME TEAM'}</span></div>
+        </div>
+        <div class="k-lobbyright">
+          <div class="k-mgrhead"><span class="k-pulse"></span><span class="k-msub">MANAGERS · 1</span></div>
+          <div class="k-mgrow"><span class="n">01</span><div><div class="nm">${name}</div><div class="cl">${me.city} ${me.name}</div></div><span class="k-tag k-acc">YOU</span></div>
+          ${season?'':`<div class="k-mgrow"><span class="n">02</span><div><div class="nm">CPU</div><div class="cl">${op.city} ${op.name}</div></div><span class="k-tag">CPU</span></div>`}
+          <div class="k-msub" style="margin-top:18px">${season?'THE CPU RUNS THE OTHER 29 TEAMS.':'THE CPU RUNS THE OPPONENT.'}</div>
+        </div>
+      </div>
+      <div class="k-pickzone">
+        <div class="k-mlab">PICK YOUR TEAM</div>
+        <p class="k-pickhelp">All 30 teams, with the real ${LEAGUE.season} rosters. Team OVR comes from the top eight players.</p>
+        <div class="k-teampick">${pick('pickU',selUser,-1)}</div>
+      </div>
+      ${season?'':`<div class="k-pickzone">
+        <div class="k-mlab">PICK THE OPPONENT</div>
+        <p class="k-pickhelp">Any team but yours. The CPU plays it at the difficulty you set.</p>
+        <div class="k-teampick">${pick('pickO',selOpp,selUser)}</div>
+      </div>`}
+    </section>`, me);
 }
+
+/* ---------- rosters ---------- */
 function showRoster(){
   const td=LEAGUE.teams[rosterTeam];
   const opts=LEAGUE.teams.map((t,i)=>`<option value="${i}" ${i===rosterTeam?'selected':''}>${t.city} ${t.name}</option>`).join('');
   const rows=td.players.map(d=>{ const a=buildAttrs(d[0],d[3],d[4],d[5],d[6]); const ht=`${Math.floor(d[3]/12)}'${d[3]%12}"`;
-    return `<tr><td class="l">#${d[1]}</td><td class="l" style="white-space:nowrap;font-weight:700">${d[0]}</td><td>${d[2]}</td><td>${ht}</td><td>${ovrB(d[4])}</td>${ATTRS.map(k=>`<td style="color:${ovrColor(a[k])}">${a[k]}</td>`).join('')}</tr>`; }).join('');
-  show(`<div class="row" style="justify-content:space-between"><div><div class="h1" style="color:${colorDist(td.c1,'#000000')<90?td.c2:'#fff'}">${td.city.toUpperCase()} ${td.name.toUpperCase()}</div>
-    <div class="muted">${td.conf} · ${td.div} · Team OVR ${teamRating(td)}</div></div><select id="rsel">${opts}</select></div>
-    <div class="tblwrap" style="margin-top:16px"><table class="t"><tr><th class="l">#</th><th class="l">PLAYER</th><th>POS</th><th>HT</th><th>OVR</th>${ATTRS.map(k=>`<th>${ATTR_LABELS[k]}</th>`).join('')}</tr>${rows}</table></div>
-    <div class="foot"><button class="btn" data-a="rosterBack">◀ Back</button></div>`, 'dim-bg');
+    return `<tr><td class="k-num">${d[1]}</td><td style="white-space:nowrap">${d[0]}</td><td>${posB(d[2])}</td><td class="k-num">${ht}</td><td class="k-num">${ovrN(d[4])}</td>${ATTRS.map(k=>`<td class="k-num" style="color:${ovrColor(a[k])}">${a[k]}</td>`).join('')}</tr>`; }).join('');
+  page('roster',
+    topbar(`<span class="chip">Rosters</span>`, tbBtn('rosterBack','Back'))
+    + hubhead(`ROSTER · ${td.city} · ${td.conf}ERN CONFERENCE · ${td.div}`, td.name, [['Team OVR',teamRating(td),'k-acc'],['Best player',Math.max(...td.players.map(p=>p[4]))],['Players',td.players.length]])
+    + panel('', `<div class="k-controls"><h3 class="k-panel-title" style="margin-right:auto">Roster</h3><label class="k-label" for="rsel">Team</label><select id="rsel" class="k-input" style="width:auto">${opts}</select></div>
+      <div class="hl-scroll"><table class="k-table"><thead><tr><th class="k-num">#</th><th>Player</th><th>Pos</th><th class="k-num">Ht</th><th class="k-num">OVR</th>${ATTRS.map(k=>`<th class="k-num">${ATTR_LABELS[k]}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`)
+    + `<div class="hl-foot"><button class="k-btn" data-a="rosterBack">Back</button></div>`, td);
   document.getElementById('rsel').addEventListener('change',e=>{ rosterTeam=+e.target.value; showRoster(); });
 }
+
+/* ---------- settings and controls ---------- */
 function showSettings(){
-  const row=(label,items)=>`<div class="set-row"><div><b>${label}</b></div><div class="opt">${items}</div></div>`;
-  const b=(a,v,cur,txt)=>`<button class="btn sm ${cur?'sel':''}" data-a="${a}" data-v="${v}">${txt}</button>`;
-  show(`<div class="h1">SETTINGS</div><div class="panel" style="max-width:820px;margin-top:12px">
-    ${row('Quarter length',[2,5,8,12].map(q=>b('setQ',q,SETTINGS.qLen===q,q+' min')).join(''))}
-    ${row('Difficulty',DIFFS.map((d,i)=>b('setDiff',i,SETTINGS.diff===i,d.name)).join(''))}
-    ${row('Camera',CAMS.map((c,i)=>b('setCam',i,SETTINGS.cam===i,c)).join(''))}
-    ${row('Sound',b('setSound',1,SETTINGS.sound,'On')+b('setSound',0,!SETTINGS.sound,'Off'))}
-    ${row('Auto-substitutions (your team)',b('setSubs',1,SETTINGS.autoSubs,'On')+b('setSubs',0,!SETTINGS.autoSubs,'Off'))}
-    ${row('Season length',[8,16,29].map(q=>b('setLen',q,SETTINGS.seasonLen===q,q+' games')).join(''))}
-    ${G.mode==='game'?'<div class="muted" style="margin-top:10px;font-size:12px">Quarter length changes apply to the next game.</div>':''}
-    </div><div class="foot"><button class="btn" data-a="settingsBack">◀ Back</button></div>`, G.mode==='game'?'dim-bg':'menu-bg');
+  const inGame=G.mode==='game';
+  const row=(label,items)=>`<div class="hl-setrow"><span class="hl-setk">${label}</span><span class="hl-opts">${items}</span></div>`;
+  page('settings',
+    topbar(`<span class="chip">Settings</span>`, tbBtn('settingsBack','Back'))
+    + hubhead(inGame?`PAUSED · ${scoreLine()}`:`WELCOME · ${mgrShow()}`, 'Settings', [])
+    + panel('Game settings', `
+      ${row('Quarter length',[2,5,8,12].map(q=>choice('setQ',q,SETTINGS.qLen===q,q+' min')).join(''))}
+      ${row('Difficulty',DIFFS.map((d,i)=>choice('setDiff',i,SETTINGS.diff===i,d.name)).join(''))}
+      ${row('Camera',CAMS.map((c,i)=>choice('setCam',i,SETTINGS.cam===i,c)).join(''))}
+      ${row('Sound',choice('setSound',1,SETTINGS.sound,'On')+choice('setSound',0,!SETTINGS.sound,'Off'))}
+      ${row('Auto-substitutions (your team)',choice('setSubs',1,SETTINGS.autoSubs,'On')+choice('setSubs',0,!SETTINGS.autoSubs,'Off'))}
+      ${row('Season length',[8,16,29].map(q=>choice('setLen',q,SETTINGS.seasonLen===q,q+' games')).join(''))}
+      ${inGame?'<p class="k-pickhelp">Quarter length changes apply to the next game.</p>':''}`, ' style="max-width:820px"')
+    + `<div class="hl-foot"><button class="k-btn" data-a="settingsBack">Back</button></div>`);
 }
 const CONTROL_ROWS = {
   'MOVEMENT':[['←↑→↓','Move (8 directions)'],['Shift','Sprint (drains stamina, looser handle)']],
@@ -2401,104 +2378,160 @@ const CONTROL_ROWS = {
 };
 function legendHTML(){ return Object.entries(CONTROL_ROWS).map(([h,r])=>`<h4>${h}</h4>`+r.map(([k,d])=>`<div><kbd>${k}</kbd> ${d.split(' · ')[0].split(' (')[0]}</div>`).join('')).join(''); }
 function showControls(){
-  show(`<div class="h1">CONTROLS</div><div class="keys" style="margin-top:14px">${Object.entries(CONTROL_ROWS).map(([h,r])=>`<div class="panel"><div class="tlabel">${h}</div>${r.map(([k,d])=>`<div class="kv"><kbd>${k}</kbd><span>${d}</span></div>`).join('')}</div>`).join('')}</div>
-    <div class="panel" style="margin-top:18px;font-size:14px;line-height:1.6"><div class="tlabel">TIPS</div>
-    Release your jumper when the meter hits the green band for a PERFECT release. Three makes in a row puts you ON FIRE. Ratings drive everything: shooting %, speed, steals, blocks, rebounds and how often your dribble moves break ankles.
-    Free throws: press W while the cursor is in the green.</div>
-    <div class="foot"><button class="btn" data-a="controlsBack">◀ Back</button></div>`, G.mode==='game'?'dim-bg':'menu-bg');
+  page('controls',
+    topbar(`<span class="chip">Controls</span>`, tbBtn('controlsBack','Back'))
+    + hubhead(G.mode==='game'?`PAUSED · ${scoreLine()}`:`WELCOME · ${mgrShow()}`, 'Controls', [])
+    + `<div class="hl-keys">${Object.entries(CONTROL_ROWS).map(([h,r])=>panel(h, r.map(([k,d])=>`<div class="kv"><kbd>${k}</kbd><span>${d}</span></div>`).join(''))).join('')}</div>`
+    + panel('Tips', `<p class="k-pickhelp">Release your jumper when the meter hits the green band for a PERFECT release. Three makes in a row puts you ON FIRE. Ratings drive everything: shooting %, speed, steals, blocks, rebounds and how often your dribble moves break ankles.
+    Free throws: press W while the cursor is in the green.</p>`)
+    + `<div class="hl-foot"><button class="k-btn" data-a="controlsBack">Back</button></div>`);
 }
+
+/* ---------- the season ---------- */
 function showSeasonHub(){
   if(Season.data.playoffs) return showPlayoffs();
   const d=Season.data; const td=LEAGUE.teams[d.team]; const r=Season.record(); const g=d.games[d.gi];
+  hlTint(td);
   const rank=Season.confRank(td.conf).indexOf(d.team)+1;
-  const sched=d.games.map((x,i)=>{ const o=LEAGUE.teams[x.opp]; const res=x.result? `<b style="color:${x.result.us>x.result.them?'var(--k-good)':'var(--k-bad)'}">${x.result.us>x.result.them?'W':'L'} ${x.result.us}-${x.result.them}</b>${x.result.sim?' <span class="muted">(sim)</span>':''}`:(i===d.gi?'<b style="color:var(--k-accent)">NEXT</b>':'<span class="muted">-</span>');
-    return `<tr><td>${i+1}</td><td class="l">${x.home?'vs':'@'} ${o.city} ${o.name}</td><td>${teamRating(o)}</td><td>${res}</td></tr>`; }).join('');
+  const sched=d.games.map((x,i)=>{ const o=LEAGUE.teams[x.opp]; const res=x.result? `<b style="color:${x.result.us>x.result.them?'var(--k-good)':'var(--k-bad)'}">${x.result.us>x.result.them?'W':'L'}</b> ${x.result.us}-${x.result.them}${x.result.sim?' <span class="k-msub">SIM</span>':''}`:(i===d.gi?'<span class="k-tag k-acc">NEXT</span>':'<span class="k-msub">-</span>');
+    return `<tr><td class="k-num">${i+1}</td><td>${x.home?'vs':'@'} ${o.city} ${o.name}</td><td class="k-num">${teamRating(o)}</td><td class="k-num">${res}</td></tr>`; }).join('');
   const done=!g;
-  show(`<div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="tlabel">SEASON MODE · ${LEAGUE.season}</div><div class="h1">${td.city.toUpperCase()} ${td.name.toUpperCase()}</div>
-    <div style="font-size:22px;font-weight:900">${r.w}-${r.l} <span class="muted" style="font-size:14px">· ${ordinal(rank)} in the ${td.conf}</span></div></div>
-    ${done?`<div class="panel" style="min-width:300px"><div class="tlabel">REGULAR SEASON COMPLETE</div><div style="font-weight:800">${rank<=6?`Clinched the ${ordinal(rank)} seed. You are in the playoffs.`:rank<=10?`Finished ${ordinal(rank)}. You are in the play-in tournament.`:`Finished ${ordinal(rank)}. You missed the postseason, but you can still sim the playoffs.`}</div><div class="muted" style="margin:10px 0 6px;font-size:12px;letter-spacing:1px">PLAYOFF SERIES LENGTH</div><div class="row">${[7,5,3,1].map(n=>`<button class="btn sm ${n===7?'primary':''}" data-a="startPlayoffs" data-v="${n}">${n===1?'Single game':'Best of '+n}</button>`).join('')}</div></div>`:
-    `<div class="panel" style="min-width:300px"><div class="tlabel">NEXT GAME · ${d.gi+1} OF ${d.len}</div><div style="font-size:20px;font-weight:900">${g.home?'vs':'@'} ${LEAGUE.teams[g.opp].city} ${LEAGUE.teams[g.opp].name}</div><div class="muted">Opponent OVR ${teamRating(LEAGUE.teams[g.opp])}</div>
-    <div class="row" style="margin-top:12px"><button class="btn primary sm" data-a="seasonPlay">Play Game</button><button class="btn sm" data-a="seasonSim">Sim Game</button><button class="btn sm" data-a="seasonSimAll">Sim to End</button></div></div>`}</div>
-    <div class="subgrid" style="margin-top:18px"><div><div class="tlabel">SCHEDULE</div><div class="tblwrap" style="max-height:50vh"><table class="t"><tr><th>#</th><th class="l">OPPONENT</th><th>OVR</th><th>RESULT</th></tr>${sched}</table></div></div>
-    <div><div class="tlabel">STANDINGS</div>${['East','West'].map(c=>standingsTable(c)).join('')}</div></div>
-    <div class="foot"><button class="btn" data-a="main">◀ Main Menu</button><button class="btn" data-a="seasonReset">Abandon Season</button></div>`, 'dim-bg');
+  let next;
+  if(done) next=panel('Regular season complete', `<p class="k-pickhelp">${rank<=6?`Clinched the ${ordinal(rank)} seed. You are in the playoffs.`:rank<=10?`Finished ${ordinal(rank)}. You are in the play-in tournament.`:`Finished ${ordinal(rank)}. You missed the postseason, but you can still sim the playoffs.`}</p>
+      <div class="k-msub" style="margin:16px 0 10px">PLAYOFF SERIES LENGTH</div>
+      <div class="k-controls" style="margin-bottom:0">${[7,5,3,1].map(n=>`<button class="k-btn${n===7?' k-btn-primary':''}" data-a="startPlayoffs" data-v="${n}">${n===1?'Single game':'Best of '+n}</button>`).join('')}</div>`);
+  else { const o=LEAGUE.teams[g.opp];
+    next=panel(`Next game · ${d.gi+1} of ${d.len}`, `<div class="k-mgrow"><span class="n">${String(d.gi+1).padStart(2,'0')}</span><div><div class="nm">${g.home?'vs':'@'} ${o.city} ${o.name}</div><div class="cl">${g.home?'Home':'Away'} · Opponent OVR ${teamRating(o)}</div></div><span class="k-tag k-acc">NEXT</span></div>
+      <div class="k-controls hl-panelrow" style="margin-bottom:0"><button class="k-btn k-btn-primary" data-a="seasonPlay">Play Game &rarr;</button><button class="k-btn" data-a="seasonSim">Sim Game</button><button class="k-btn" data-a="seasonSimAll">Sim to End</button></div>`); }
+  page('hub',
+    topbar(`<span class="chip">Game <b>${Math.min(d.gi+1,d.len)}</b> / ${d.len}</span><span class="chip">Season mode</span>`, TOOLS()+tbBtn('main','Leave'))
+    + hubhead(`YOUR TEAM · ${td.city} · ${td.conf}ERN CONFERENCE · MANAGED BY ${mgrShow()}`, td.name, [['Record',`${r.w}-${r.l}`,'k-acc'],['Position',ordinal(rank)],['Team OVR',teamRating(td)],['Games left',d.len-d.gi]])
+    + next
+    + `<div class="hl-grid">${panel('Schedule', `<div class="hl-scroll"><table class="k-table"><thead><tr><th class="k-num">#</th><th>Opponent</th><th class="k-num">OVR</th><th class="k-num">Result</th></tr></thead><tbody>${sched}</tbody></table></div>`)}
+      ${panel('Standings', ['East','West'].map(c=>standingsTable(c)).join(''))}</div>
+    <div class="hl-foot"><button class="k-btn k-btn-danger k-btn-sm" data-a="seasonReset">Abandon Season</button></div>`, td);
 }
 function standingsTable(conf){
-  const S=Season.data.standings; const my=LEAGUE.teams[Season.data.team].abbr;
-  const list=Season.confRank(conf).map(i=>LEAGUE.teams[i]);
-  return `<div class="tblwrap" style="max-height:24vh;margin-bottom:10px"><table class="t"><tr><th>#</th><th class="l">${conf.toUpperCase()}</th><th>W</th><th>L</th><th>PCT</th></tr>${list.map((t,i)=>{ const s=S[t.abbr]; const pct=s.w+s.l?(s.w/(s.w+s.l)).toFixed(3).replace(/^0/,''):'.000'; return `<tr style="${t.abbr===my?'background:rgba(var(--k-accent-rgb),.1)':''}"><td>${i+1}</td><td class="l"><span style="display:inline-block;width:10px;height:10px;background:${t.c1};border:1px solid ${t.c2};margin-right:6px"></span>${t.city} ${t.name}</td><td>${s.w}</td><td>${s.l}</td><td>${pct}</td></tr>`; }).join('')}</table></div>`;
+  const S=Season.data.standings; const me=Season.data.team;
+  return `<div class="hl-scroll"><table class="k-table"><thead><tr><th class="k-num">#</th><th>${conf}</th><th class="k-num">W</th><th class="k-num">L</th><th class="k-num">PCT</th></tr></thead><tbody>${Season.confRank(conf).map((ti,i)=>{ const t=LEAGUE.teams[ti], s=S[t.abbr]; const pct=s.w+s.l?(s.w/(s.w+s.l)).toFixed(3).replace(/^0/,''):'.000';
+    return `<tr${ti===me?' class="me"':''}><td class="k-num">${i+1}</td><td>${swatch(t)}${t.city} ${t.name}</td><td class="k-num">${s.w}</td><td class="k-num">${s.l}</td><td class="k-num">${pct}</td></tr>`; }).join('')}</tbody></table></div>`;
 }
+function seriesLine(s){ const A=LEAGUE.teams[s.a].abbr, B=LEAGUE.teams[s.b].abbr;
+  if(s.bestOf===1 && s.games.length){ const g=s.games[0]; return `${LEAGUE.teams[s.winner].abbr} wins ${Math.max(g.a,g.b)}-${Math.min(g.a,g.b)}`; }
+  if(s.winner!=null) return `${LEAGUE.teams[s.winner].abbr} wins ${Math.max(s.wa,s.wb)}-${Math.min(s.wa,s.wb)}`;
+  if(!s.games.length) return s.bestOf===1?'Single game':`Best of ${s.bestOf}`;
+  if(s.wa===s.wb) return `Series tied ${s.wa}-${s.wb}`;
+  return `${s.wa>s.wb?A:B} leads ${Math.max(s.wa,s.wb)}-${Math.min(s.wa,s.wb)}`; }
+function seriesCard(s,playIn){ const P=Season.data.playoffs, me=Season.data.team; const seed=t=>playIn&&P.orig?P.orig[t]:P.seedOf[t];
+  const row=(t,w)=>{ const td=LEAGUE.teams[t]; const cls=s.winner==null?'':(s.winner===t?'win':'lose');
+    return `<div class="sr ${cls}"><span><span class="sw" style="background:${td.c1};border-color:${td.c2}"></span><span class="sd">${seed(t)||''}</span>${td.abbr}</span><b>${s.bestOf===1?(s.games[0]?(t===s.a?s.games[0].a:s.games[0].b):''):w}</b></div>`; };
+  return `<div class="ser ${s.a===me||s.b===me?'me':''}">${row(s.a,s.wa)}${row(s.b,s.wb)}<div class="k-msub">${seriesLine(s)}</div></div>`; }
+function bracketHTML(){
+  const P=Season.data.playoffs; const col=(title,list,pi)=>`<div class="bcol"><div class="k-label">${title}</div>${list.length?list.map(x=>seriesCard(x,pi)).join(''):'<div class="ser k-msub">To be decided</div>'}</div>`;
+  const conf=c=>{ const get=r=>(P.rounds[r]||[]).filter(s=>s.conf===c);
+    return panel(`${c}ern conference`, `<div class="bracket">${col('Play-In',get(0).concat(get(1)),true)}${col('First Round',get(2))}${col('Semifinals',get(3))}${col('Conf. Finals',get(4))}</div>`); };
+  const fin=P.rounds[5]||[];
+  return conf('East')+conf('West')+panel('NBA Finals', `<div class="bracket" style="grid-template-columns:minmax(170px,280px)">${fin.length?fin.map(x=>seriesCard(x)).join(''):'<div class="ser k-msub">East champion vs West champion</div>'}</div>`);
+}
+function showPlayoffs(){
+  const d=Season.data, P=d.playoffs, td=LEAGUE.teams[d.team], r=Season.record(), st=Season.userStatus(), s=Season.userSeries();
+  hlTint(td);
+  let status='';
+  if(P.champion!=null){ const ch=LEAGUE.teams[P.champion];
+    status=panel(`${LEAGUE.season} NBA Champions`, `<div class="k-mgrow"><span class="n">01</span><div><div class="nm">${ch.city} ${ch.name}</div><div class="cl">Finals · ${seriesLine(P.rounds[5][0])}</div></div><span class="k-tag k-acc">CHAMPIONS</span></div>
+      <p class="k-pickhelp">${P.champion===d.team?'You won the title!':`${td.name} season over.`}</p>
+      <div class="k-controls hl-panelrow" style="margin-bottom:0"><button class="k-btn k-btn-primary" data-a="seasonNew">Start New Season</button></div>`, ` style="${teamVars(ch)}"`); }
+  else if(st==='active' && s){ const usA=s.a===d.team, opp=usA?s.b:s.a, home=Season.homeA(s)===usA, ot=LEAGUE.teams[opp];
+    const label = s.bestOf===1 ? ROUND_NAMES[P.round] : `${ROUND_NAMES[P.round]} · Game ${s.games.length+1}`;
+    status=panel(label, `<div class="k-mgrow"><span class="n">${String(P.seedOf[opp]).padStart(2,'0')}</span><div><div class="nm">${home?'vs':'@'} ${ot.city} ${ot.name}</div><div class="cl">${seriesLine(s)} · Opponent OVR ${teamRating(ot)}</div></div><span class="k-tag k-acc">NEXT</span></div>
+      <div class="k-controls hl-panelrow" style="margin-bottom:0"><button class="k-btn k-btn-primary" data-a="seasonPlay">Play Game &rarr;</button><button class="k-btn" data-a="seasonSim">Sim Game</button>${s.bestOf>1?'<button class="k-btn" data-a="poSimSeries">Sim Series</button>':''}</div>`); }
+  else { const msg = st==='missed'?`The ${td.name} missed the postseason.` : st==='out'?`The ${td.name} have been eliminated.` : 'Waiting for the next round.';
+    status=panel(ROUND_NAMES[P.round], `<p class="k-pickhelp">${msg}</p>
+      <div class="k-controls hl-panelrow" style="margin-bottom:0"><button class="k-btn k-btn-primary" data-a="poSimRound">Sim Round</button><button class="k-btn" data-a="poSimAll">Sim to Champion</button></div>`); }
+  page('playoffs',
+    topbar(`<span class="chip">${ROUND_NAMES[P.round]}</span><span class="chip">Playoffs</span>`, TOOLS()+tbBtn('main','Leave'))
+    + hubhead(`PLAYOFFS · ${td.city} · ${td.conf}ERN CONFERENCE · MANAGED BY ${mgrShow()}`, td.name, [['Record',`${r.w}-${r.l}`,'k-acc'],['Seed',P.seedOf[d.team]?ordinal(P.seedOf[d.team]):'-'],['Series',P.bestOf>1?`Best of ${P.bestOf}`:'1 game']])
+    + status + bracketHTML()
+    + `<div class="hl-foot"><button class="k-btn k-btn-danger k-btn-sm" data-a="seasonReset">Abandon Season</button></div>`, td);
+}
+
+/* ---------- after the final buzzer ---------- */
 function boxTable(T){
   const pl=T.roster.filter(p=>p.stats.sec>0||T.onCourt.includes(p)).sort((a,b)=>b.stats.sec-a.stats.sec);
   const pct=(m,a)=>a?`${m}-${a}`:'0-0';
   const tot=k=>pl.reduce((s,p)=>s+p.stats[k],0);
-  return `<div class="tlabel" style="margin-top:16px;color:${colorDist(T.td.c1,'#000')<90?T.td.c2:T.td.c1};filter:brightness(1.6)">${T.td.city.toUpperCase()} ${T.td.name.toUpperCase()} - ${T.score}</div>
-  <div class="tblwrap" style="max-height:none"><table class="t"><tr><th class="l">PLAYER</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>FG</th><th>FG%</th><th>3P</th><th>3P%</th><th>FT</th><th>FT%</th><th>TO</th><th>PF</th></tr>
-  ${pl.map(p=>{ const s=p.stats; const pc=(m,a)=>a?Math.round(m/a*100)+'%':'-'; return `<tr><td class="l" style="white-space:nowrap"><b>${p.name}</b> <span class="muted">${p.pos}</span></td><td>${Math.round(s.sec/60*(12/SETTINGS.qLen))}</td><td><b>${s.pts}</b></td><td>${s.reb}</td><td>${s.ast}</td><td>${s.stl}</td><td>${s.blk}</td><td>${pct(s.fgm,s.fga)}</td><td>${pc(s.fgm,s.fga)}</td><td>${pct(s.tpm,s.tpa)}</td><td>${pc(s.tpm,s.tpa)}</td><td>${pct(s.ftm,s.fta)}</td><td>${pc(s.ftm,s.fta)}</td><td>${s.to}</td><td>${s.pf}</td></tr>`; }).join('')}
-  <tr style="font-weight:900"><td class="l">TEAM</td><td></td><td>${tot('pts')}</td><td>${tot('reb')}</td><td>${tot('ast')}</td><td>${tot('stl')}</td><td>${tot('blk')}</td><td>${tot('fgm')}-${tot('fga')}</td><td>${tot('fga')?Math.round(tot('fgm')/tot('fga')*100)+'%':'-'}</td><td>${tot('tpm')}-${tot('tpa')}</td><td>${tot('tpa')?Math.round(tot('tpm')/tot('tpa')*100)+'%':'-'}</td><td>${tot('ftm')}-${tot('fta')}</td><td>${tot('fta')?Math.round(tot('ftm')/tot('fta')*100)+'%':'-'}</td><td>${tot('to')}</td><td>${tot('pf')}</td></tr></table></div>`;
+  const n=v=>`<td class="k-num">${v}</td>`;
+  return panel(`${T.td.city} ${T.td.name} · ${T.score}`, `<div class="hl-scroll"><table class="k-table"><thead><tr><th>Player</th>${['MIN','PTS','REB','AST','STL','BLK','FG','FG%','3P','3P%','FT','FT%','TO','PF'].map(h=>`<th class="k-num">${h}</th>`).join('')}</tr></thead><tbody>
+  ${pl.map(p=>{ const s=p.stats; const pc=(m,a)=>a?Math.round(m/a*100)+'%':'-'; return `<tr><td style="white-space:nowrap">${p.name} ${posB(p.pos)}</td>${n(Math.round(s.sec/60*(12/SETTINGS.qLen)))}${n(`<b>${s.pts}</b>`)}${n(s.reb)}${n(s.ast)}${n(s.stl)}${n(s.blk)}${n(pct(s.fgm,s.fga))}${n(pc(s.fgm,s.fga))}${n(pct(s.tpm,s.tpa))}${n(pc(s.tpm,s.tpa))}${n(pct(s.ftm,s.fta))}${n(pc(s.ftm,s.fta))}${n(s.to)}${n(s.pf)}</tr>`; }).join('')}
+  <tr style="font-weight:700"><td>Team</td>${n('')}${n(tot('pts'))}${n(tot('reb'))}${n(tot('ast'))}${n(tot('stl'))}${n(tot('blk'))}${n(`${tot('fgm')}-${tot('fga')}`)}${n(tot('fga')?Math.round(tot('fgm')/tot('fga')*100)+'%':'-')}${n(`${tot('tpm')}-${tot('tpa')}`)}${n(tot('tpa')?Math.round(tot('tpm')/tot('tpa')*100)+'%':'-')}${n(`${tot('ftm')}-${tot('fta')}`)}${n(tot('fta')?Math.round(tot('ftm')/tot('fta')*100)+'%':'-')}${n(tot('to'))}${n(tot('pf'))}</tr></tbody></table></div>`);
 }
 function showBoxScore(){
   const [a,b]=G.teams; const home=G.teams[G.homeIdx], away=G.teams[1-G.homeIdx];
   const gs=p=>{ const s=p.stats; return s.pts+0.4*s.fgm-0.7*s.fga-0.4*(s.fta-s.ftm)+0.7*s.oreb+0.3*(s.reb-s.oreb)+s.stl+0.7*s.ast+0.7*s.blk-s.to-0.4*s.pf + ((a.score>b.score?a:b).roster.includes(p)?3:0); };
   const all=a.roster.concat(b.roster); const pog=all.reduce((x,y)=>gs(y)>gs(x)?y:x);
-  const pt=G.teams[pog.team];
-  const won=a.score>b.score;
-  show(`<div class="tlabel">FINAL${G.quarter>4?(G.quarter===5?' / OT':` / ${G.quarter-4}OT`):''}</div>
-    <div class="h1">${away.td.abbr} ${away.score} - ${home.score} ${home.td.abbr}</div>
-    <div style="font-weight:900;color:${won?'var(--k-good)':'var(--k-bad)'};letter-spacing:2px">${won?'VICTORY':'DEFEAT'} · ${a.td.name.toUpperCase()}</div>
-    <div class="pog" style="background:linear-gradient(90deg,${pt.td.c1},${shade(pt.td.c1,0.4)})"><div><div class="tlabel" style="color:#fff">PLAYER OF THE GAME</div><div class="big">${pog.name.toUpperCase()}</div>
-      <div style="font-weight:800">${pog.stats.pts} PTS · ${pog.stats.reb} REB · ${pog.stats.ast} AST · ${pog.stats.stl} STL · ${pog.stats.blk} BLK · ${pog.stats.fgm}-${pog.stats.fga} FG</div></div></div>
-    ${boxTable(away)}${boxTable(home)}
-    <div class="foot">${FO?'<span></span><button class="btn primary" data-a="foClose">Back to Front Office ▶</button>':'<button class="btn" data-a="main">Main Menu</button>'+(G.season?'<button class="btn primary" data-a="seasonHub">Continue Season ▶</button>':'<button class="btn primary" data-a="rematch">Rematch ▶</button>')}</div>`, 'dim-bg');
+  const won=a.score>b.score, ot=G.quarter>4?(G.quarter===5?' / OT':` / ${G.quarter-4}OT`):'', ps=pog.stats;
+  page('box',
+    topbar(`<span class="chip">Final${ot}</span><span class="chip">${FO?'Front Office':G.season?'Season mode':'Quick play'}</span>`, FO?'':tbBtn('main','Leave'))
+    + hubhead(`FINAL${ot} · ${won?'VICTORY':'DEFEAT'} · ${a.td.name}`, `${away.td.abbr} ${away.score} - ${home.score} ${home.td.abbr}`, [['Result',won?'Win':'Loss',won?'k-good':'k-bad'],[away.td.abbr,away.score],[home.td.abbr,home.score]])
+    + panel(`Player of the game · ${pog.name}`, `<div class="k-clubmeta">${[['PTS',ps.pts,'k-acc'],['REB',ps.reb],['AST',ps.ast],['STL',ps.stl],['BLK',ps.blk],['FG',`${ps.fgm}-${ps.fga}`]].map(cmeta).join('')}</div>`)
+    + boxTable(away) + boxTable(home)
+    + `<div class="hl-foot">${FO?'<span></span><button class="k-btn k-btn-primary" data-a="foClose">Back to Front Office &rarr;</button>':'<button class="k-btn" data-a="main">Main Menu</button>'+(G.season?'<button class="k-btn k-btn-primary" data-a="seasonHub">Continue Season &rarr;</button>':'<button class="k-btn k-btn-primary" data-a="rematch">Rematch &rarr;</button>')}</div>`, a.td);
 }
+
+/* ---------- pause and substitutions ---------- */
 function togglePause(){
   if(G.mode!=='game') return;
   if(G.paused){ G.paused=false; hideUI(); }
   else { G.paused=true; showPause(); }
 }
 function showPause(){
-  const [a,b]=G.teams;
-  show(`<div style="margin:auto;text-align:center;min-width:320px"><div class="h1">PAUSED</div>
-    <div class="muted" style="margin-bottom:20px">${a.td.abbr} ${a.score} - ${b.score} ${b.td.abbr} · ${qLabel(G.quarter)} ${fmtClock(G.clock)}</div>
-    <div class="mm" style="margin:0 auto">
-    <button class="btn primary center" data-a="resume">Resume</button>
-    <button class="btn center" data-a="subs">Substitutions</button>
-    <button class="btn center" data-a="pSettings">Settings</button>
-    <button class="btn center" data-a="pControls">Controls</button>
-    <button class="btn center" data-a="quitGame">${FO?"Leave game (it won't count)":"Quit to Main Menu"}</button></div></div>`, 'dim-bg');
+  modal('pause', `<div class="k-modal-kicker">Paused · ${qLabel(G.quarter)} ${fmtClock(G.clock)}</div><h3 class="k-modal-title">${scoreLine()}</h3>
+    <div class="hl-mstack">
+      <button class="k-btn k-btn-primary" data-a="resume">Resume</button>
+      <button class="k-btn" data-a="subs">Substitutions</button>
+      <button class="k-btn" data-a="pSettings">Settings</button>
+      <button class="k-btn" data-a="pControls">Controls</button>
+      <button class="k-btn k-btn-danger" data-a="quitGame">${FO?"Leave game (it won't count)":"Quit to Main Menu"}</button>
+    </div>`);
 }
 function showSubs(){
   const T=G.teams[G.userTeam];
-  const item=(p,kind,i)=>`<div class="subp ${subSel&&subSel.kind===kind&&subSel.i===i?'sel':''} ${p.fouledOut?'out':''}" data-a="subPick" data-k="${kind}" data-i="${i}">
-    <span><b>${kind==='c'?POS_ORDER[i]+' · ':''}${p.name}</b> <span class="muted">${p.pos} · ${p.ovr}</span></span>
-    <span class="muted" style="font-size:12px">${p.stats.pts} PTS · ${p.fouls} PF <span class="mini"><i style="width:${p.stamina}%;background:${p.stamina<50?'#ff9a3d':'#3ddc84'}"></i></span></span></div>`;
-  show(`<div class="h1">SUBSTITUTIONS</div><div class="muted">Click a player on the court, then a bench player to swap them. Stamina bars shown on the right.</div>
-    <div class="subgrid" style="margin-top:16px"><div><div class="tlabel">ON THE COURT</div>${T.onCourt.map((p,i)=>item(p,'c',i)).join('')}</div>
-    <div><div class="tlabel">BENCH</div>${T.bench.map((p,i)=>item(p,'b',i)).join('')}</div></div>
-    <div class="foot"><button class="btn" data-a="pauseBack">◀ Back</button><button class="btn primary" data-a="resume">Resume</button></div>`, 'dim-bg');
+  const row=(p,kind,i)=>`<tr class="hl-pick${subSel&&subSel.kind===kind&&subSel.i===i?' me':''}${p.fouledOut?' hl-out':''}" data-a="subPick" data-k="${kind}" data-i="${i}"><td style="white-space:nowrap">${kind==='c'?`<span class="k-msub">${POS_ORDER[i]}</span> `:''}${p.name} ${posB(p.pos)}</td><td class="k-num">${ovrN(p.ovr)}</td><td class="k-num">${p.stats.pts}</td><td class="k-num">${p.fouls}</td><td class="k-num"><span class="mini"><i style="width:${p.stamina}%;background:${p.stamina<50?'#ff9a3d':'#3ddc84'}"></i></span></td></tr>`;
+  const tbl=(list,kind)=>`<div class="hl-scroll"><table class="k-table"><thead><tr><th>Player</th><th class="k-num">OVR</th><th class="k-num">PTS</th><th class="k-num">PF</th><th class="k-num">Stamina</th></tr></thead><tbody>${list.map((p,i)=>row(p,kind,i)).join('')}</tbody></table></div>`;
+  page('subs',
+    topbar(`<span class="chip">${scoreLine()}</span>`, tbBtn('pauseBack','Back'))
+    + hubhead(`PAUSED · ${qLabel(G.quarter)} ${fmtClock(G.clock)} · CLICK A PLAYER ON THE COURT, THEN ONE ON THE BENCH`, 'Substitutions', [])
+    + `<div class="hl-grid">${panel('On the court', tbl(T.onCourt,'c'))}${panel('Bench', tbl(T.bench,'b'))}</div>
+    <div class="hl-foot"><button class="k-btn" data-a="pauseBack">Back</button><button class="k-btn k-btn-primary" data-a="resume">Resume</button></div>`, T.td);
 }
+/* the screen a tool screen goes back to */
+function hlFrom(){ return hlScreen==='playoffs'?'hub':hlScreen; }
+function hlBack(to){ if(to==='pause') showPause(); else if(to==='select') showTeamSelect(); else if(to==='hub') showSeasonHub(); else showMain(); }
 const ACTIONS = {
   main:()=>{ if(FO){ foPost({type:"hl:close"}); return; } if(G.mode==='post'||G.mode==='game') exitToMenu(); else showMain(); },
+  create:()=>showTeamSelect('season'),
+  continue:()=>{ if(Season.data && Season.data.games) showSeasonHub(); },
   quick:()=>showTeamSelect('quick'),
-  season:()=>{ if(Season.data && Season.data.games) showSeasonHub(); else showTeamSelect('season'); },
-  rosters:()=>{ rosterTeam=selUser; rosterBack='main'; showRoster(); },
-  settings:()=>{ settingsBack='main'; showSettings(); },
-  controls:()=>{ controlsBack='main'; showControls(); },
-  prev:(el)=>{ if(el.dataset.s==='u') selUser=(selUser+29)%30; else selOpp=(selOpp+29)%30; showTeamSelect(); },
-  next:(el)=>{ if(el.dataset.s==='u') selUser=(selUser+1)%30; else selOpp=(selOpp+1)%30; showTeamSelect(); },
-  viewRoster:(el)=>{ rosterTeam=el.dataset.s==='u'?selUser:selOpp; rosterBack='select'; showRoster(); },
-  rosterBack:()=>{ if(rosterBack==='select') showTeamSelect(); else showMain(); },
+  pickU:(el)=>{ selUser=+el.dataset.v; if(selectMode==='quick' && selUser===selOpp) selOpp=(selOpp+1)%30; showTeamSelect(); },
+  pickO:(el)=>{ const v=+el.dataset.v; if(v!==selUser){ selOpp=v; showTeamSelect(); } },
+  rosters:()=>{ rosterBack=hlFrom(); rosterTeam=rosterBack==='hub'&&Season.data?Season.data.team:selUser; showRoster(); },
+  settings:()=>{ settingsBack=hlFrom(); showSettings(); },
+  controls:()=>{ controlsBack=hlFrom(); showControls(); },
+  rosterBack:()=>hlBack(rosterBack),
   setDiff:(el)=>{ SETTINGS.diff=+el.dataset.v; saveSettings(); rerender(); },
   setQ:(el)=>{ SETTINGS.qLen=+el.dataset.v; saveSettings(); rerender(); },
   setCam:(el)=>{ SETTINGS.cam=+el.dataset.v; saveSettings(); rerender(); },
   setSound:(el)=>{ SETTINGS.sound=el.dataset.v==='1'; saveSettings(); Sound.init(); Sound.setMuted(!SETTINGS.sound); rerender(); },
   setSubs:(el)=>{ SETTINGS.autoSubs=el.dataset.v==='1'; saveSettings(); rerender(); },
   setLen:(el)=>{ SETTINGS.seasonLen=+el.dataset.v; saveSettings(); rerender(); },
-  settingsBack:()=>{ settingsBack==='pause'?showPause():showMain(); },
-  controlsBack:()=>{ controlsBack==='pause'?showPause():showMain(); },
+  settingsBack:()=>hlBack(settingsBack),
+  controlsBack:()=>hlBack(controlsBack),
   tipoff:()=>{ if(selUser===selOpp) selOpp=(selOpp+1)%30; G.lastMatch=[selUser,selOpp]; startGame(selUser,selOpp); },
   rematch:()=>{ startGame(G.teams[0].idx, G.teams[1].idx, {away:G.homeIdx===1}); },
-  createSeason:()=>{ Season.create(selUser); showSeasonHub(); },
+  createSeason:(el)=>{
+    // a saved season is only replaced on a second click, the same way Abandon Season asks twice
+    if(Season.data && Season.data.games && el.dataset.armed!=="1"){ el.dataset.armed="1"; el.textContent="Click again to replace your season"; setTimeout(()=>{ if(el.isConnected){ el.dataset.armed=""; el.innerHTML="Start season &rarr;"; } },3000); return; }
+    Season.create(selUser); showSeasonHub(); },
   seasonHub:()=>{ exitToMenuSilent(); showSeasonHub(); },
   seasonPlay:()=>{ const d=Season.data;
     if(d.playoffs){ const s=Season.userSeries(); if(!s) return showPlayoffs(); const usA=s.a===d.team, opp=usA?s.b:s.a, home=Season.homeA(s)===usA;
@@ -2527,8 +2560,8 @@ const ACTIONS = {
 };
 function exitToMenuSilent(){ const keepSeason=true; for(const a of avatars.flat()) a.group.visible=false; ballMesh.visible=false; userRing.visible=false; passRing.visible=false; userArrow.visible=false; G={mode:'menu',time:0,crowdE:0.2}; }
 let lastRender=null;
-function rerender(){ const h=ui.querySelector('.h1'); const t=h?h.textContent:''; if(t.startsWith('SETTINGS')) showSettings(); else if(t.includes('SEASON')||t.includes('QUICK PLAY')) showTeamSelect(); else showSettings(); }
-ui.addEventListener('click',e=>{ const el=e.target.closest('[data-a]'); if(!el) return; Sound.init(); const f=ACTIONS[el.dataset.a]; if(f) f(el); });
+function rerender(){ if(hlScreen==='select') showTeamSelect(); else showSettings(); }
+ui.addEventListener('click',e=>{ const el=e.target.closest('[data-a]'); if(!el) return; if(el.tagName==='A') e.preventDefault(); Sound.init(); const f=ACTIONS[el.dataset.a]; if(f) f(el); });
 
 /* =====================================================================
    FRONT OFFICE BRIDGE: opened from Front Office (?fo=1, inside an iframe), plays one
@@ -2551,7 +2584,7 @@ function foAbort(text){
   if(G.mode==='game'){ G.paused=true; G.mode='post'; }
   Sound.setMuted(true);
   document.getElementById('hud').style.display='none'; banner('','',false);
-  show(`<div style="margin:auto;text-align:center;max-width:560px"><div class="h1">GAME OVER</div><div class="muted" style="margin:10px 0 22px;font-size:16px">${escHTML(text)}</div><button class="btn primary center" data-a="foClose">Back to Front Office ▶</button></div>`, 'dim-bg');
+  modal('foOver', `<div class="k-modal-kicker">Front Office</div><h3 class="k-modal-title">Game over</h3><p class="k-lead">${escHTML(text)}</p><div class="hl-mbtns"><button class="k-btn k-btn-primary" data-a="foClose">Back to Front Office &rarr;</button></div>`);
 }
 if(FO) addEventListener('message', e=>{
   if(e.origin!==location.origin) return; const m=e.data||{};
@@ -2580,7 +2613,7 @@ function updatePlayersIdle(dt){ /* keep the court static behind the box score */
 setArenaTeams(LEAGUE.teams[menuTeam], LEAGUE.teams[(menuTeam+5)%30]);
 drawShotClockTex('24');
 selUser=menuTeam; selOpp=(menuTeam+7)%30;
-if(FO){ show('<div style="margin:auto;text-align:center"><div class="h1">TIP-OFF</div><div class="muted">Loading your matchup…</div></div>'); foPost({type:"hl:ready"}); }
+if(FO){ modal('foWait', '<div class="k-modal-kicker">Front Office</div><h3 class="k-modal-title">Tip-off</h3><p class="k-lead">Loading your matchup…</p>'); foPost({type:"hl:ready"}); }
 else showMain();
 window.__HL_READY=true;
 document.getElementById('loading').style.display='none';

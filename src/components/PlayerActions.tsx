@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Player, Position } from "@/engine/types/game";
 import { useGame, useLeague, isMine } from "@/lib/store";
-import { Button, Field, Modal, inputCls } from "./ui";
+import { Button, Field, Modal, inputCls, seg } from "./ui";
 import { SLOTS } from "@/engine/league/positions";
 import { autoDepth } from "@/engine/league/depth";
 import { contractOf, salaryIn } from "@/engine/league/helpers";
@@ -28,12 +28,12 @@ export function PlayerActions({ p, compact }: { p: Player; compact?: boolean }) 
       <Button size="sm" onClick={() => (setPos(p.pos), setJersey(p.jersey ?? ""), setEditing(true))}>
         Edit
       </Button>
-      <Modal open={editing} onClose={() => setEditing(false)} title={`Edit ${p.name}`}>
+      <Modal open={editing} onClose={() => setEditing(false)} kicker="Roster move" title={`Edit ${p.name}`}>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Position">
             <div className="flex gap-1">
               {SLOTS.map((s2) => (
-                <button key={s2} onClick={() => setPos(s2)} className={`flex-1 rounded-[6px] border px-2 py-2 text-sm font-bold ${pos === s2 ? "border-accent bg-accent/10 text-accent" : "border-line text-dim hover:border-line-2 hover:text-ink"}`}>
+                <button key={s2} onClick={() => setPos(s2)} className={seg(pos === s2)}>
                   {s2}
                 </button>
               ))}
@@ -88,7 +88,7 @@ export function PlayerActions({ p, compact }: { p: Player; compact?: boolean }) 
       <Button size="sm" variant="danger" onClick={() => setWaive(true)}>
         Waive
       </Button>
-      <Modal open={waive} onClose={() => setWaive(false)} title={`Waive ${p.name}?`}>
+      <Modal open={waive} onClose={() => setWaive(false)} kicker="Roster move" title={`Waive ${p.name}?`}>
         <p className="text-sm text-dim">
           Current salary {money(salaryIn(c, l.season))}. <b className="text-ink">{money(guaranteed)}</b> of guaranteed money remains and stays on your cap as dead money.
         </p>

@@ -29,19 +29,19 @@ export default function FinancesPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Ticket pricing">
           <Field label={`Average ticket $${f.ticketPrice} (market baseline $${base})`}>
-            <input type="range" min={Math.round(base * 0.5)} max={Math.round(base * 2)} value={f.ticketPrice} className="w-full" onChange={(e) => mutate(() => void (t.finances.ticketPrice = Number(e.target.value)))} />
+            <input type="range" min={Math.round(base * 0.5)} max={Math.round(base * 2)} value={f.ticketPrice} className="k-check w-full" onChange={(e) => mutate(() => void (t.finances.ticketPrice = Number(e.target.value)))} />
           </Field>
           <p className="mt-2 text-xs text-dim">Higher prices raise gate revenue per fan but lower attendance; hype and winning offset price.</p>
           <div className="mt-4">
-            <div className="mb-1 label">Fan hype</div>
+            <div className="k-label mb-1">Fan hype</div>
             <Bar value={t.hype} color="bg-accent" />
           </div>
         </Card>
         <Card title="Owner">
-          <div className="mb-2 label">Job security</div>
+          <div className="k-label mb-2">Job security</div>
           <Bar value={t.owner.jobSecurity} color={t.owner.jobSecurity > 60 ? "bg-good" : t.owner.jobSecurity > 30 ? "bg-warn" : "bg-bad"} />
           <p className="mt-1 text-sm">{t.owner.jobSecurity}/100 · patience {t.owner.patience}/100</p>
-          <div className="mt-3 label">Goals this season</div>
+          <div className="k-label mt-3">Goals this season</div>
           <ul className="mt-1 list-disc pl-5 text-sm text-dim">
             {t.owner.goals.map((g, i) => <li key={i}>{g.type === "win" ? `Win ${g.target}+ games` : g.type === "playoffs" ? `Reach round ${g.target} of the playoffs` : g.type === "develop" ? `Develop ${g.target} young players into rotation pieces` : "Turn a profit"}</li>)}
             {!t.owner.goals.length && <li>Goals are set on opening night.</li>}

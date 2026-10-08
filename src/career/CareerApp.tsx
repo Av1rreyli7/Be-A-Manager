@@ -122,7 +122,7 @@ export default function CareerApp() {
                   </button>
                   <button
                     type="button"
-                    className="k-btn k-btn-glass"
+                    className="k-btn"
                     onClick={() => {
                       setScreen("create");
                     }}
@@ -135,7 +135,7 @@ export default function CareerApp() {
                   Start a new career
                 </button>
               )}
-              <a className="k-btn k-btn-glass" href="/floodlights/">
+              <a className="k-btn" href="/floodlights/">
                 Manager Career
               </a>
             </div>

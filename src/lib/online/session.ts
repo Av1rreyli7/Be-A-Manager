@@ -34,6 +34,8 @@ export interface OnlineState {
   status: "connecting" | "lobby" | "playing" | "disconnected";
   lobby: Lobby | null;
   error?: string;
+  /** the room could not reach the matchmaking server: it runs on this device only, nobody can join */
+  local?: boolean;
 }
 
 type ToHost = { k: "hello"; name: string } | { k: "claim"; team: TeamId } | { k: "patch"; ops: Op[] } | { k: "played"; req: number; gameId: string; box: BoxScore };
@@ -65,10 +67,10 @@ export function savedGuestSession(): { code: string; name: string } | null {
 // ---------------------------------------------------------------- host
 
 function pushLobby() {
-  if (!lobby || !host) return;
+  if (!lobby) return;
   lobby = { ...lobby, members: [...lobby.members] };
   setOnline({ lobby });
-  void host.broadcast({ k: "lobby", lobby } satisfies ToGuest);
+  if (host) void host.broadcast({ k: "lobby", lobby } satisfies ToGuest);
 }
 
 function takenTeams(): Set<TeamId> {
@@ -169,21 +171,27 @@ function hostSink(ops: Op[]) {
   void host?.broadcast({ k: "patch", ops } satisfies ToGuest);
 }
 
-export async function hostCreate(opts: { name: string; team: TeamId; leagueName: string; salaryCap: boolean }) {
+/**
+ * Create a game: open a room with a code friends can join. Playing alone is the same room, started with nobody
+ * else in it. When the matchmaking server cannot be reached the room still opens, on this device only.
+ */
+export async function hostCreate(opts: { name: string; team?: TeamId | null; leagueName: string; salaryCap: boolean }) {
   leaveOnline();
   const code = makeCode();
-  setOnline({ role: "host", code, name: opts.name, status: "connecting", lobby: null, error: undefined });
+  setOnline({ role: "host", code, name: opts.name, status: "connecting", lobby: null, error: undefined, local: false });
   const h = new HostNet();
   wireHost(h);
+  let local = false;
   try {
     await h.start(code);
+    host = h;
   } catch (e) {
-    setOnline({ status: "disconnected", error: (e as Error).message });
-    throw e;
+    h.close();
+    local = true;
+    setOnline({ error: `${(e as Error).message} You can still play on your own.` });
   }
-  host = h;
-  lobby = { code, started: false, leagueName: opts.leagueName, salaryCap: opts.salaryCap, members: [{ connId: "host", name: opts.name, team: opts.team, online: true, host: true }] };
-  setOnline({ status: "lobby", lobby });
+  lobby = { code, started: false, leagueName: opts.leagueName, salaryCap: opts.salaryCap, members: [{ connId: "host", name: opts.name, team: opts.team ?? null, online: true, host: true }] };
+  setOnline({ status: "lobby", lobby, local });
 }
 
 export function hostSetOptions(o: Partial<Pick<Lobby, "leagueName" | "salaryCap">> & { team?: TeamId }) {
@@ -203,12 +211,28 @@ export function hostKick(connId: string) {
   pushLobby();
 }
 
-/** Create the league with every claimed team human-controlled and send it to everyone. */
-export async function hostStart(baseSettings: Settings) {
-  if (!lobby || !host) return;
+/**
+ * Start the game. With friends in the room: the league is created with every claimed team human-controlled and
+ * sent to everyone. Alone in the room: a normal league on this device (no room behind it), with the extra teams
+ * and commissioner powers a solo player may ask for. Returns "solo" or "online".
+ */
+export async function hostStart(baseSettings: Settings, solo?: { extraTeams?: TeamId[]; commissioner?: boolean }): Promise<"solo" | "online" | null> {
+  if (!lobby || !lobby.members[0].team) return null;
+  const hostTeam = lobby.members[0].team;
+  if (!host || lobby.members.length === 1) {
+    const seed = await loadSeed();
+    const userTeams = [hostTeam, ...(solo?.extraTeams ?? []).filter((t) => t !== hostTeam)];
+    const res = await callWorker({ cmd: "new", seed, userTeams, name: lobby.leagueName || "My League", settings: { ...baseSettings, salaryCap: lobby.salaryCap, commissioner: !!solo?.commissioner } });
+    const l = res.league as League;
+    await saveLeague(l);
+    store().setLeague(l);
+    localStorage.setItem("fo:lastSave", l.id);
+    leaveOnline();
+    return "solo";
+  }
+  if (!host) return null;
   const seated = lobby.members.filter((m) => m.team);
   const userTeams = [...new Set(seated.map((m) => m.team!))];
-  const hostTeam = lobby.members[0].team!;
   const seed = await loadSeed();
   const res = await callWorker({ cmd: "new", seed, userTeams: [hostTeam, ...userTeams.filter((t) => t !== hostTeam)], name: lobby.leagueName || "Friends League", settings: { ...baseSettings, salaryCap: lobby.salaryCap, commissioner: false } });
   const l = res.league as League;
@@ -223,6 +247,7 @@ export async function hostStart(baseSettings: Settings) {
   setOnline({ status: "playing" });
   pushLobby();
   for (const m of lobby.members) if (!m.host && m.online && m.team) void host.send(m.connId, { k: "league", league: l, team: m.team } satisfies ToGuest);
+  return "online";
 }
 
 /** Re-open the room for a saved online league (host only). */

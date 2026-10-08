@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -13,11 +13,9 @@ import {
   ChartPieSlice,
   ClipboardText,
   ClockCounterClockwise,
-  DotsThreeOutline,
   FileText,
   GearSix,
   IdentificationCard,
-  List,
   ListNumbers,
   Medal,
   Newspaper,
@@ -30,19 +28,18 @@ import {
   UserPlus,
   UsersFour,
   UsersThree,
-  WifiHigh,
-  X,
   type Icon,
 } from "@phosphor-icons/react";
 import { useGame, useLeague } from "@/lib/store";
 import { SimControls } from "@/components/SimControls";
-import { TeamMark } from "@/components/ui";
-import { PHASE_LABEL } from "@/lib/format";
+import { PHASE_LABEL, money } from "@/lib/format";
 import { fmtDate } from "@/engine/util/dates";
 import { guestJoin, hostResume, savedGuestSession } from "@/lib/online/session";
 import { useCourtMode, useTeamTheme } from "@/lib/theme";
-import { useEnterScreen } from "@/lib/motion";
-import { emptyRecord } from "@/engine/season/standings";
+import { km, useEnterScreen } from "@/lib/motion";
+import { conferenceStandings, emptyRecord } from "@/engine/season/standings";
+import { capStatus } from "@/engine/cap/payroll";
+import { teamPlayers } from "@/engine/league/helpers";
 
 /** Where to take the user when the league enters each phase. */
 const PHASE_ROUTE: Record<string, string> = {
@@ -93,14 +90,6 @@ const NAV: { group: string; items: NavItem[] }[] = [
   { group: "", items: [{ href: "/game/settings", label: "Settings & Saves", icon: GearSix }] },
 ];
 
-/** Phone bottom bar: the screens a GM checks most. */
-const QUICK: NavItem[] = [
-  { href: "/game", label: "Home", icon: SquaresFour },
-  { href: "/game/roster", label: "Roster", icon: UsersThree },
-  { href: "/game/trade", label: "Trade", icon: ArrowsLeftRight },
-  { href: "/game/standings", label: "Standings", icon: ListNumbers },
-];
-
 const isActive = (href: string, path: string) => (href === "/game" ? path === "/game" : path.startsWith(href));
 
 export default function GameLayout({ children }: { children: ReactNode }) {
@@ -113,7 +102,7 @@ export default function GameLayout({ children }: { children: ReactNode }) {
     if (league) return;
     // an online guest refreshed: the league lives on the host, so reconnect instead of loading a save
     if (savedGuestSession()) {
-      router.replace("/online?rejoin=1");
+      router.replace("/gm?rejoin=1");
       return;
     }
     const last = localStorage.getItem("fo:lastSave");
@@ -139,13 +128,16 @@ function BootScreen({ text }: { text: string }) {
   return (
     <div className="grid min-h-[100dvh] place-items-center">
       <div className="flex flex-col items-center gap-3">
-        <span className="flex items-center gap-3 font-num text-[15px] font-bold uppercase tracking-[0.2em]">
-          <span className="bam-dots" aria-hidden /> Front Office
-        </span>
+        <div className="k-brand">
+          <span className="sq" />
+          <span className="k-msub" style={{ letterSpacing: "0.2em", color: "#fff", fontWeight: 700 }}>
+            FRONT OFFICE
+          </span>
+        </div>
         <div className="h-px w-44 overflow-hidden bg-line">
           <div className="k-shimmer h-full w-full" />
         </div>
-        <span className="label">{text}</span>
+        <span className="k-label">{text}</span>
       </div>
     </div>
   );
@@ -157,6 +149,7 @@ function Shell({ children }: { children: ReactNode }) {
   const setTeam = useGame((s) => s.setTeam);
   const busy = useGame((s) => s.busy);
   const progress = useGame((s) => s.progress);
+  const online = useGame((s) => s.online);
   const path = usePathname();
   const router = useRouter();
   const myTeam = team ? l.teams[team] : null;
@@ -169,191 +162,161 @@ function Shell({ children }: { children: ReactNode }) {
     const to = PHASE_ROUTE[l.phase];
     if (to && path !== to) router.push(to);
   }, [l.phase, path, router]);
-  const [open, setOpen] = useState(false);
   // every screen settles in when the route changes
   const page = useRef<HTMLDivElement>(null);
   useEnterScreen(page, path);
-  // expose the header height so the sticky sidebar sits flush under it
-  const hdr = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const el = hdr.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => document.documentElement.style.setProperty("--hdr", `${el.offsetHeight}px`));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  const navGroups = l.online ? [{ group: "Online", items: [{ href: "/game/online", label: "Friends Challenge", icon: UsersFour }] }, ...NAV] : NAV;
+  // the kit indicator slides under the active tab, the same as Floodlights
+  const tabs = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const bar = tabs.current;
+    if (!bar) return;
+    const on = bar.querySelector<HTMLElement>('[aria-current="page"]');
+    km.tabIndicator(bar, on);
+    bar.classList.add("has-ind");
+    on?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [path]);
+  const items = l.online ? [{ href: "/game/online", label: "Friends Challenge", icon: UsersFour }, ...NAV.flatMap((g) => g.items)] : NAV.flatMap((g) => g.items);
   const rec = team ? l.standings[team] ?? emptyRecord(team) : null;
-
-  const nav = (
-    <nav className="flex flex-col gap-5 px-3 py-4" aria-label="Game">
-      {navGroups.map((g) => (
-        <div key={g.group || "x"}>
-          {g.group && <div className="label mb-2 px-2 !tracking-[0.16em]">{g.group}</div>}
-          {g.items.map((i) => {
-            const active = isActive(i.href, path);
-            const I = i.icon;
-            return (
-              <Link
-                key={i.href}
-                href={i.href}
-                onClick={() => setOpen(false)}
-                aria-current={active ? "page" : undefined}
-                className={clsx(
-                  "group relative flex items-center gap-2.5 rounded-[4px] px-2 py-[7px] text-[13px] font-medium transition-[color,background-color,transform] duration-200",
-                  active ? "bg-gradient-to-r from-accent/[0.14] to-transparent text-ink" : "text-dim hover:bg-ink/[0.04] hover:text-ink hover:translate-x-0.5",
-                )}
-              >
-                {active && <span aria-hidden className="nav-pip absolute -left-3 top-1/2 h-[16px] w-[3px] -translate-y-1/2" />}
-                <I size={17} weight={active ? "fill" : "regular"} className={clsx("shrink-0 transition-colors", active ? "text-accent" : "text-mute group-hover:text-dim")} />
-                <span className="truncate">{i.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      ))}
-    </nav>
-  );
+  const cap = team ? capStatus(l, team) : null;
+  const conf = myTeam ? conferenceStandings(l, myTeam.conference) : [];
+  const seed = team ? conf.indexOf(team) + 1 : 0;
+  const roster = team ? teamPlayers(l, team).length : 0;
+  const manager = l.online && team ? l.online.members[team] : null;
+  const live = online?.lobby ? online.lobby.members.filter((m) => m.online).length : 0;
 
   return (
     <div className="min-h-[100dvh]">
-      <header ref={hdr} className="sticky top-0 z-40 border-b border-line bg-bg/92 backdrop-blur-md">
-        <div className="team-band relative">
-                    <div className="relative flex items-center gap-2 px-2 py-2 sm:gap-3 sm:px-4">
-            <button className="grid h-9 w-9 place-items-center rounded-[4px] text-ink/90 hover:bg-ink/10 lg:hidden" onClick={() => setOpen(!open)} aria-label="Open menu" aria-expanded={open}>
-              <List size={22} weight="bold" />
-            </button>
-            <Link href="/gm" className="hidden shrink-0 items-center gap-2.5 font-num text-[12px] font-bold uppercase leading-none tracking-[0.2em] text-white sm:flex" title="Main menu">
-              <span className="bam-dots" aria-hidden /> Front Office
+      <div className="k-wrap">
+        <div className="k-topbar">
+          <div className="k-brand">
+            <span className="sq" />
+            <span className="nm">FRONT OFFICE</span>
+            <span className="tg">NBA FRONT OFFICE MODE</span>
+          </div>
+          <div className="k-chips">
+            <Link className="chip" href="/gm" title="Back to the Front Office main menu">
+              Main menu
             </Link>
-            <span aria-hidden className="hidden h-7 w-px bg-white/20 sm:block" />
-            <div className="flex min-w-0 items-center gap-2.5">
-              {myTeam && <TeamMark id={myTeam.id} colors={myTeam.colors} size="md" />}
-              <div className="min-w-0 leading-tight">
-                {l.userTeams.length > 1 && !l.online ? (
-                  <select aria-label="Team you are managing" className="max-w-40 rounded-[3px] border border-white/20 bg-black/30 px-1.5 py-0.5 text-[13px] font-semibold text-white" value={team ?? ""} onChange={(e) => setTeam(e.target.value)}>
-                    {l.userTeams.map((t) => (
-                      <option key={t} value={t}>
-                        {l.teams[t].fullName}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="truncate font-display text-[14px] font-extrabold uppercase leading-none tracking-[0.04em] text-white">{myTeam?.name}</div>
-                )}
-                <div className="mt-1 flex items-center gap-1.5 text-[11px] font-medium text-white/65">
-                  {rec && <span className="font-display text-[12px] font-bold text-white num">{rec.w}-{rec.l}</span>}
-                  <span className="hidden truncate sm:inline">{fmtDate(l.date, { month: "short", day: "numeric", year: "numeric" })}</span>
-                  <span className="hidden md:inline">{PHASE_LABEL[l.phase]}</span>
-                  {l.settings.commissioner && <span className="rounded-[2px] bg-gold/90 px-1 pb-px pt-[2px] font-num text-[9px] font-bold uppercase leading-none tracking-[0.08em] text-[#1a1406]">Comm</span>}
-                </div>
-              </div>
-            </div>
-            <div className="ml-auto">
-              <SimControls />
-            </div>
+            {l.online && (
+              <span className="chip">
+                Room <b className="code">{l.online.code}</b>
+              </span>
+            )}
+            <span className="chip">
+              Season <b>{l.season}</b> &middot; <b>{fmtDate(l.date, { month: "short", day: "numeric" })}</b>
+            </span>
+            <span className="chip">{PHASE_LABEL[l.phase]}</span>
+            {l.online && (
+              <span className="chip">
+                <span className="k-pulse" />
+                {live} {live === 1 ? "manager" : "managers"} live
+              </span>
+            )}
+            {l.settings.commissioner && <span className="chip">Commissioner</span>}
+            {l.userTeams.length > 1 && !l.online && (
+              <span className="chip">
+                <select aria-label="Team you are managing" className="k-input" style={{ width: "auto", padding: "4px 8px", fontSize: 12 }} value={team ?? ""} onChange={(e) => setTeam(e.target.value)}>
+                  {l.userTeams.map((t) => (
+                    <option key={t} value={t}>
+                      {l.teams[t].fullName}
+                    </option>
+                  ))}
+                </select>
+              </span>
+            )}
           </div>
         </div>
         <OnlineBar />
-        {busy ? (
-          <div className="k-shimmer flex items-center gap-2 border-t border-line px-4 py-1.5 text-xs text-dim">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
-            {busy} {progress && <span className="font-semibold text-ink">{fmtDate(progress)}</span>}
+
+        <div className="k-hubhead">
+          <div className="min-w-0">
+            <div className="who">
+              Your team &middot; {myTeam?.conference ?? ""}
+              {manager ? <> &middot; Managed by {manager}</> : null}
+            </div>
+            <div className="clubname">{myTeam?.fullName}</div>
           </div>
-        ) : (
-          <Ticker />
-        )}
-      </header>
-      <div className="flex">
-        <aside className="scroll-thin sticky top-[var(--hdr,92px)] hidden h-[calc(100dvh-var(--hdr,92px))] w-60 shrink-0 overflow-y-auto border-r border-line bg-bg/60 lg:block">{nav}</aside>
-        {open && (
-          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm lg:hidden" onClick={() => setOpen(false)}>
-            <aside className="drawer-in scroll-thin h-full w-[min(84vw,300px)] overflow-y-auto border-r border-line bg-panel" onClick={(e) => e.stopPropagation()}>
-              <div className="team-band flex items-center justify-between px-4 py-3">
-                <Link href="/gm" onClick={() => setOpen(false)} className="flex items-center gap-2.5 font-num text-[12px] font-bold uppercase tracking-[0.2em] text-white">
-                  <span className="bam-dots" aria-hidden /> Front Office
-                </Link>
-                <button onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-[4px] text-white hover:bg-ink/10" aria-label="Close menu">
-                  <X size={18} weight="bold" />
-                </button>
-              </div>
-              {nav}
-            </aside>
+          <div className="k-clubmeta">
+            <span className="k-cm">
+              <span className="k-cmk">Record</span>
+              <b className="k-cmv k-acc">{rec ? `${rec.w}-${rec.l}` : "-"}</b>
+            </span>
+            <span className="k-cm">
+              <span className="k-cmk">Seed</span>
+              <b className="k-cmv">{seed > 0 ? ordinal(seed) : "-"}</b>
+            </span>
+            <span className="k-cm">
+              <span className="k-cmk">Payroll</span>
+              <b className="k-cmv">{cap ? money(cap.salary) : "-"}</b>
+            </span>
+            <span className="k-cm">
+              <span className="k-cmk">Cap space</span>
+              <b className={clsx("k-cmv", cap && cap.room > 0 ? "k-good" : undefined)}>{cap ? money(cap.room) : "-"}</b>
+            </span>
+            <span className="k-cm">
+              <span className="k-cmk">Roster</span>
+              <b className="k-cmv">{roster}</b>
+            </span>
           </div>
-        )}
-        <main id="main" className="min-w-0 flex-1 px-3 pb-24 pt-4 sm:px-6 sm:pt-6 lg:pb-10">
-          <div key={path} ref={page} className="mx-auto max-w-[1440px]">
+        </div>
+
+        <div className="k-controls">
+          {busy ? (
+            <span className="k-msub mr-auto flex items-center gap-2">
+              <span className="k-pulse" />
+              {busy} {progress && <b className="text-white">{fmtDate(progress)}</b>}
+            </span>
+          ) : (
+            <span className="mr-auto" />
+          )}
+          <SimControls />
+        </div>
+
+        <nav ref={tabs} className="k-tabs sticky top-0 z-[6] mb-[18px]" aria-label="Game">
+          {items.map((i) => (
+            <Link key={i.href} href={i.href} aria-current={isActive(i.href, path) ? "page" : undefined}>
+              {i.label}
+            </Link>
+          ))}
+        </nav>
+
+        <main id="main" className="min-w-0">
+          <div key={path} ref={page}>
             {children}
           </div>
         </main>
       </div>
-      <BottomBar path={path} onMore={() => setOpen(true)} />
+      <Ticker />
     </div>
   );
 }
 
-function BottomBar({ path, onMore }: { path: string; onMore: () => void }) {
-  return (
-    <nav aria-label="Quick" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden">
-      {QUICK.map((q) => {
-        const on = isActive(q.href, path);
-        const I = q.icon;
-        return (
-          <Link key={q.href} href={q.href} aria-current={on ? "page" : undefined} className={clsx("relative flex flex-col items-center gap-1 py-2 font-num text-[9px] font-bold uppercase tracking-[0.1em]", on ? "text-ink" : "text-mute")}>
-            {on && <span aria-hidden className="absolute inset-x-5 top-0 h-[2px] bg-[image:var(--k-grad)]" />}
-            <I size={21} weight={on ? "fill" : "regular"} className={on ? "text-accent" : undefined} />
-            {q.label}
-          </Link>
-        );
-      })}
-      <button onClick={onMore} className="flex flex-col items-center gap-1 py-2 font-num text-[9px] font-bold uppercase tracking-[0.1em] text-mute">
-        <DotsThreeOutline size={21} />
-        More
-      </button>
-    </nav>
-  );
-}
+const ordinal = (n: number) => n + (n % 10 === 1 && n % 100 !== 11 ? "st" : n % 10 === 2 && n % 100 !== 12 ? "nd" : n % 10 === 3 && n % 100 !== 13 ? "rd" : "th");
 
-/** ESPN-style bottom line: latest final scores league-wide, then headlines. */
+/** The wire along the foot of the screen, like Floodlights: the latest final scores league wide, then headlines. */
 function Ticker() {
   const l = useLeague();
   const played = l.schedule.filter((g) => g.played && g.result);
   const scores = played.slice(-14).reverse();
   const news = l.news.slice(0, 6);
-  if (!scores.length && !news.length) return null;
-  const items = (
-    <>
-      {scores.map((g) => {
-        const r = g.result!;
-        const awayWon = r.awayScore > r.homeScore;
-        return (
-          <Link key={g.id} href={`/game/box/${encodeURIComponent(g.id)}`} className="flex shrink-0 items-center gap-2 border-r border-line px-3.5 hover:bg-ink/5">
-            <span className="label !text-[9px] !text-accent">Final</span>
-            <span className={clsx("font-num text-[12px] font-bold tracking-[0.04em]", awayWon ? "text-ink" : "text-mute")}>{g.away} <span className="num">{r.awayScore}</span></span>
-            <span className={clsx("font-num text-[12px] font-bold tracking-[0.04em]", !awayWon ? "text-ink" : "text-mute")}>{g.home} <span className="num">{r.homeScore}</span></span>
-          </Link>
-        );
-      })}
-      {news.map((n) => (
-        <Link key={n.id} href="/game/news" className="flex shrink-0 items-center gap-2 border-r border-line px-3.5 text-[12px] text-dim hover:bg-ink/5 hover:text-ink">
-          <span className="label !text-[9px] !text-ink">{n.type}</span>
-          <span className="max-w-[52ch] truncate">{n.text}</span>
-        </Link>
-      ))}
-    </>
-  );
   const count = scores.length + news.length;
   return (
-    <div className="ticker relative flex h-8 items-stretch overflow-hidden border-t border-line bg-bg text-sm">
-      <span className="z-[1] flex shrink-0 items-center gap-2 border-r border-line px-3.5 font-num text-[10px] font-bold uppercase tracking-[0.14em] text-accent sm:px-4">
-        <span aria-hidden className="h-[5px] w-[5px] rounded-full bg-accent" />
-        Around the league
-      </span>
-      <div className="relative min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_24px,black_calc(100%-24px),transparent)]">
-        <div className="ticker-track flex h-full w-max items-stretch" style={{ ["--ticker-dur" as string]: `${Math.max(30, count * 6)}s` }}>
-          <div className="flex items-stretch">{items}</div>
-          <div className="flex items-stretch" aria-hidden>{items}</div>
-        </div>
+    <div className="k-ticker" data-label="AROUND THE LEAGUE">
+      <div className="k-ticker-inner" style={{ animationDuration: `${Math.max(40, count * 6)}s` }}>
+        {count === 0 && <span>Welcome to the league. Results and news run here once the season starts.</span>}
+        {scores.map((g) => {
+          const r = g.result!;
+          return (
+            <Link key={g.id} href={`/game/box/${encodeURIComponent(g.id)}`} className="pr-6">
+              Final &middot; {g.away} {r.awayScore} &middot; {g.home} {r.homeScore}
+            </Link>
+          );
+        })}
+        {news.map((n) => (
+          <Link key={n.id} href="/game/news" className="pr-6">
+            {n.type} &middot; {n.text}
+          </Link>
+        ))}
       </div>
     </div>
   );
@@ -365,37 +328,32 @@ function OnlineBar() {
   const toast = useGame((s) => s.toast);
   const [working, setWorking] = useState(false);
   if (!l.online) return null;
-  const cls = "flex flex-wrap items-center gap-2 border-t border-line px-4 py-1.5 text-xs";
-  const btn = "btn btn-sm btn-glass !h-6";
+  const cls = "k-controls !mb-0 border-b border-line py-2.5";
   if (!online)
     return (
-      <div className={clsx(cls, "bg-warn/10 text-warn")}>
-        <WifiHigh size={14} weight="bold" /> Online league. Friends can&apos;t connect until you open the room.
-        <button disabled={working} className={btn} onClick={async () => { setWorking(true); await hostResume(); setWorking(false); }}>
-          {working ? "Opening…" : `Open room ${l.online.code}`}
+      <div className={cls}>
+        <span className="k-msub mr-auto">ONLINE LEAGUE. FRIENDS CAN&apos;T CONNECT UNTIL YOU OPEN THE ROOM.</span>
+        <button disabled={working} className="k-btn k-btn-sm" onClick={async () => { setWorking(true); await hostResume(); setWorking(false); }}>
+          {working ? "Opening" : `Open room ${l.online.code}`}
         </button>
       </div>
     );
   if (online.status === "disconnected")
     return (
-      <div className={clsx(cls, "bg-bad/10 text-bad")}>
-        {online.error ?? "Disconnected."}
+      <div className={cls}>
+        <span className="k-msub mr-auto" style={{ color: "var(--k-bad)" }}>{online.error ?? "Disconnected."}</span>
         {online.role === "guest" && (
-          <button disabled={working} className={btn} onClick={async () => { const s = savedGuestSession(); if (!s) return; setWorking(true); try { await guestJoin(s.code, s.name); } catch (e) { toast((e as Error).message, "error"); } setWorking(false); }}>
-            {working ? "Reconnecting…" : "Reconnect"}
+          <button disabled={working} className="k-btn k-btn-sm" onClick={async () => { const s = savedGuestSession(); if (!s) return; setWorking(true); try { await guestJoin(s.code, s.name); } catch (e) { toast((e as Error).message, "error"); } setWorking(false); }}>
+            {working ? "Reconnecting" : "Reconnect"}
           </button>
         )}
-        {online.role === "host" && <button className={btn} onClick={() => void hostResume()}>Re-open room</button>}
+        {online.role === "host" && <button className="k-btn k-btn-sm" onClick={() => void hostResume()}>Re-open room</button>}
       </div>
     );
-  const members = online.lobby?.members ?? [];
-  const on = members.filter((m) => m.online).length;
   return (
-    <div className={clsx(cls, "text-dim")}>
-      <WifiHigh size={14} weight="bold" className="text-good" /> Room <span className="font-num text-[13px] font-bold tracking-[0.2em] text-accent">{online.code}</span>
-      <span className="num">{on}/{members.length} online</span>
-      <span className="hidden sm:inline">{online.role === "host" ? "You're the host (you sim)" : "The host sims"}</span>
-      <Link href="/game/online" className="ml-auto font-semibold text-accent hover:underline">Friends Challenge</Link>
+    <div className={cls}>
+      <span className="k-msub mr-auto">{online.role === "host" ? "YOU ARE THE HOST: YOU RUN THE SIM" : "THE HOST RUNS THE SIM"}</span>
+      <Link href="/game/online" className="k-btn k-btn-sm">Friends Challenge</Link>
     </div>
   );
 }

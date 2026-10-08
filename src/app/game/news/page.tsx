@@ -24,8 +24,8 @@ export default function NewsPage() {
         <Card
           right={
             <>
-              <select className="rounded-[3px] border border-line-2 bg-bg px-2 py-1 text-xs" value={type} onChange={(e) => setType(e.target.value)}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select>
-              <label className="flex items-center gap-1"><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> My team</label>
+              <select className="k-input" style={{ width: "auto" }} value={type} onChange={(e) => setType(e.target.value)}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select>
+              <label className="flex items-center gap-1"><input type="checkbox" className="k-check" checked={mine} onChange={(e) => setMine(e.target.checked)} /> My team</label>
             </>
           }
           title="Feed"

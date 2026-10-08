@@ -17,23 +17,23 @@ export default function HistoryPage() {
         seasons.length === 0 ? <Empty>Finish a season to start writing history.</Empty> : (
           <Card pad={false}>
             <div className="overflow-x-auto scroll-thin">
-              <table className="w-full min-w-[760px] text-sm">
-                <thead className="label"><tr>{["Season", "Champion", "Runner-up", "Finals MVP", "MVP", "DPOY", "ROY", "NBA Cup", "#1 pick"].map((h) => <th key={h} className="px-3 py-2 text-left">{h}</th>)}</tr></thead>
+              <table className="k-table min-w-[760px]">
+                <thead><tr>{["Season", "Champion", "Runner-up", "Finals MVP", "MVP", "DPOY", "ROY", "NBA Cup", "#1 pick"].map((h) => <th key={h}>{h}</th>)}</tr></thead>
                 <tbody>
                   {seasons.map((h) => {
                     const a = (k: string) => h.awards.find((x) => x.award === k);
                     const pl = (k: string) => { const x = a(k); return x?.playerId && l.players[x.playerId] ? <PlayerLink player={l.players[x.playerId]} /> : x?.name ?? "-"; };
                     return (
-                      <tr key={h.season} className="border-t border-line/50">
-                        <td className="px-3 py-2 font-semibold">{h.season}</td>
-                        <td className="px-3">{h.champion ? <TeamBadge league={l} teamId={h.champion} size="sm" withName /> : "-"}</td>
-                        <td className="px-3">{h.runnerUp ? <TeamBadge league={l} teamId={h.runnerUp} size="sm" /> : "-"}</td>
-                        <td className="px-3">{h.finalsMvp && l.players[h.finalsMvp] ? <PlayerLink player={l.players[h.finalsMvp]} /> : "-"}</td>
-                        <td className="px-3">{pl("MVP")}</td>
-                        <td className="px-3">{pl("DPOY")}</td>
-                        <td className="px-3">{pl("ROY")}</td>
-                        <td className="px-3">{h.cupChampion ? <TeamBadge league={l} teamId={h.cupChampion} size="sm" /> : "-"}</td>
-                        <td className="px-3">{h.draftTop?.[0] ? <span>{h.draftTop[0].name} <span className="text-dim">({h.draftTop[0].teamId})</span></span> : "-"}</td>
+                      <tr key={h.season}>
+                        <td>{h.season}</td>
+                        <td>{h.champion ? <TeamBadge league={l} teamId={h.champion} size="sm" withName /> : "-"}</td>
+                        <td>{h.runnerUp ? <TeamBadge league={l} teamId={h.runnerUp} size="sm" /> : "-"}</td>
+                        <td>{h.finalsMvp && l.players[h.finalsMvp] ? <PlayerLink player={l.players[h.finalsMvp]} /> : "-"}</td>
+                        <td>{pl("MVP")}</td>
+                        <td>{pl("DPOY")}</td>
+                        <td>{pl("ROY")}</td>
+                        <td>{h.cupChampion ? <TeamBadge league={l} teamId={h.cupChampion} size="sm" /> : "-"}</td>
+                        <td>{h.draftTop?.[0] ? <span>{h.draftTop[0].name} <span className="text-dim">({h.draftTop[0].teamId})</span></span> : "-"}</td>
                       </tr>
                     );
                   })}
@@ -60,7 +60,7 @@ export default function HistoryPage() {
       {tab === "hof" && (
         <Card title="Hall of Fame">
           {hof.length === 0 ? <Empty>Legends are inducted when they retire with a Hall of Fame résumé.</Empty> : (
-            <ul className="space-y-2 text-sm">{hof.map((p) => <li key={p.id}><PlayerLink player={p} /> <span className="text-xs text-dim">- retired {p.retiredSeason}. {p.legacy}</span></li>)}</ul>
+            <ul className="space-y-2 text-sm">{hof.map((p) => <li key={p.id}><PlayerLink player={p} /> <span className="text-xs text-dim">, retired {p.retiredSeason}. {p.legacy}</span></li>)}</ul>
           )}
         </Card>
       )}

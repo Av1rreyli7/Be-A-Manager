@@ -44,7 +44,7 @@ export default function AwardsPage() {
                             <span className="w-4 text-mute">{i + 1}</span>
                             <TeamBadge league={l} teamId={x.teamId} size="sm" />
                             <PlayerLink player={l.players[x.id]} className="truncate" />
-                            {!onPace && <span className="chip text-bad" title="Not on pace for the games-played minimum">GP</span>}
+                            {!onPace && <span className="k-tag k-bad" title="Not on pace for the games-played minimum">GP</span>}
                           </span>
                           <span className="text-xs text-dim num">{f1(s.pts)}/{f1(s.reb)}/{f1(s.ast)}</span>
                         </li>
@@ -62,7 +62,7 @@ export default function AwardsPage() {
           <div className="grid gap-4 lg:grid-cols-2">
             {as.rosters ? (["East", "West"] as const).map((c) => (
               <Card key={c} title={`Team ${c}`}>
-                <ul className="space-y-1 text-sm">{as.rosters![c].map((id, i) => <li key={id} className="flex items-center gap-2">{i < 5 && <span className="chip text-accent">Starter</span>}<PlayerLink player={l.players[id]} /><span className="text-dim">{l.players[id]?.teamId}</span></li>)}</ul>
+                <ul className="space-y-1 text-sm">{as.rosters![c].map((id, i) => <li key={id} className="flex items-center gap-2">{i < 5 && <span className="k-tag k-acc">Starter</span>}<PlayerLink player={l.players[id]} /><span className="text-dim">{l.players[id]?.teamId}</span></li>)}</ul>
               </Card>
             )) : (
               <Card title="Fan vote leaders">
@@ -74,11 +74,11 @@ export default function AwardsPage() {
                 <p className="text-sm">Game MVP: <b>{as.mvp ? l.players[as.mvp].name : "-"}</b> · <Link className="text-accent" href={`/game/box/${encodeURIComponent(as.gameId)}`}>Box score</Link></p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <div>
-                    <div className="mb-1 label">3-Point Contest</div>
+                    <div className="k-mlab mb-1">3-Point Contest</div>
                     {as.threePoint?.map((e) => <div key={e.playerId} className="flex justify-between text-sm"><span className={e.playerId === as.threeWinner ? "font-bold text-accent" : ""}>{l.players[e.playerId]?.name}</span><span className="num text-dim">{e.scores.join(" / ")}</span></div>)}
                   </div>
                   <div>
-                    <div className="mb-1 label">Slam Dunk Contest</div>
+                    <div className="k-mlab mb-1">Slam Dunk Contest</div>
                     {as.dunk?.map((e) => <div key={e.playerId} className="flex justify-between text-sm"><span className={e.playerId === as.dunkWinner ? "font-bold text-accent" : ""}>{l.players[e.playerId]?.name}</span><span className="num text-dim">{e.scores.join(" / ")}</span></div>)}
                   </div>
                 </div>
@@ -93,7 +93,7 @@ export default function AwardsPage() {
             <Card key={h.season} title={h.season} right={h.champion ? <span>Champion: <b className="text-ink">{h.champion}</b></span> : null}>
               <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
                 {Object.entries(h.awards.reduce((m, a) => ((m[a.award] ??= []).push(a.name), m), {} as Record<string, string[]>)).map(([k, v]) => (
-                  <div key={k}><span className="label">{k}</span><div className="text-dim">{v.join(", ")}</div></div>
+                  <div key={k}><span className="k-label">{k}</span><div className="text-dim">{v.join(", ")}</div></div>
                 ))}
               </div>
             </Card>

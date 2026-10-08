@@ -349,7 +349,7 @@ export default function City({
           </>
         ) : (
           <>
-            <button type="button" className="k-btn k-btn-glass pc-city-back" onClick={leave}>
+            <button type="button" className="k-btn pc-city-back" onClick={leave}>
               Back to the city
             </button>
             {!panel ? (
@@ -420,7 +420,7 @@ function PlacePanel({
         {note && <span>{note}</span>}
       </div>
       {price && <em>{price}</em>}
-      <button type="button" className={clsx("k-btn", done ? "k-btn-glass" : "k-btn-primary")} disabled={busy || off} onClick={onClick}>
+      <button type="button" className={clsx("k-btn k-btn-sm", !done && "k-btn-primary")} disabled={busy || off} onClick={onClick}>
         {cta}
       </button>
     </li>
@@ -467,12 +467,12 @@ function PlacePanel({
                   </em>
                   <span className="pc-buy-btns">
                     {h.rent > 0 && (
-                      <button type="button" className="k-btn k-btn-glass" disabled={busy || here || !h.canRent} onClick={() => act("home", "move", h.id + ":rent")}>
+                      <button type="button" className="k-btn k-btn-sm" disabled={busy || here || !h.canRent} onClick={() => act("home", "move", h.id + ":rent")}>
                         Rent
                       </button>
                     )}
                     {h.buy > 0 && (
-                      <button type="button" className="k-btn k-btn-primary" disabled={busy || (here && owned) || (!owned && !h.canBuy)} onClick={() => act("home", "move", h.id + ":buy")}>
+                      <button type="button" className="k-btn k-btn-primary k-btn-sm" disabled={busy || (here && owned) || (!owned && !h.canBuy)} onClick={() => act("home", "move", h.id + ":buy")}>
                         {owned ? "Move in" : "Buy"}
                       </button>
                     )}
@@ -491,7 +491,7 @@ function PlacePanel({
             </ul>
           </>
         )}
-        <button type="button" className="k-btn k-btn-glass" onClick={() => onPhone("bank")}>
+        <button type="button" className="k-btn" onClick={() => onPhone("bank")}>
           Open the bank
         </button>
       </>
@@ -616,7 +616,7 @@ function PlacePanel({
     <div className="pc-place-panel">
       <div className="pc-place-panel-head">
         <h3 className="pc-h3">{title}</h3>
-        <button type="button" className="pc-link" onClick={close}>
+        <button type="button" className="k-btn k-btn-ghost k-btn-sm" onClick={close}>
           Close
         </button>
       </div>

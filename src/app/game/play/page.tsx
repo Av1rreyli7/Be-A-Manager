@@ -110,17 +110,14 @@ function PlayGame() {
   };
 
   if (!g) return <Empty>That game isn&apos;t on the schedule.</Empty>;
-  const opp = g.home === me ? g.away : g.home;
   const rec = (t: string) => l.standings[t] ?? emptyRecord(t);
 
   return (
     <div className="space-y-5">
       <PageHeader title="Play your game" sub={`${fmtDate(g.date, { weekday: "long", month: "long", day: "numeric" })} · ${g.round ?? (g.type === "regular" ? "Regular season" : g.type)}`} />
 
-      <section className="panel relative overflow-hidden">
-        <div aria-hidden className="hero-wash absolute inset-0" style={{ ["--tc-team" as string]: l.teams[opp]?.colors.primary }} />
-        <div aria-hidden className="stripes absolute inset-0 [mask-image:linear-gradient(90deg,black,transparent_70%)]" />
-        <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 p-5 sm:p-8">
+      <section className="k-panel">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           {[g.away, g.home].map((t, i) => (
             <div key={t} className={i === 1 ? "order-3 flex flex-col items-end text-right" : "flex flex-col items-start"}>
               <TeamMark id={t} colors={l.teams[t].colors} size="xl" />
@@ -156,7 +153,7 @@ function PlayGame() {
           <Card title="Game settings">
             <div className="space-y-4">
               <div>
-                <span className="label mb-1.5 block">Quarter length</span>
+                <span className="k-label mb-1.5 block">Quarter length</span>
                 <div className="flex gap-1">
                   {QLENS.map((q) => (
                     <button key={q} className={seg(prefs.qLen === q)} onClick={() => choose({ qLen: q })}>
@@ -167,7 +164,7 @@ function PlayGame() {
                 <p className="mt-1.5 text-xs text-mute">Stats are scaled to a full 48-minute game when they go into your season.</p>
               </div>
               <div>
-                <span className="label mb-1.5 block">Difficulty</span>
+                <span className="k-label mb-1.5 block">Difficulty</span>
                 <div className="flex gap-1">
                   {DIFFS.map((d, i) => (
                     <button key={d} className={seg(prefs.diff === i)} onClick={() => choose({ diff: i })}>
@@ -176,7 +173,7 @@ function PlayGame() {
                   ))}
                 </div>
               </div>
-              <Button variant="primary" className="h-12 w-full text-[12px]" onClick={start}>
+              <Button variant="primary" className="w-full" onClick={start}>
                 <Basketball size={15} weight="fill" /> Tip off in Hardwood Legends
               </Button>
             </div>

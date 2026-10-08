@@ -84,13 +84,18 @@
   --k-accent-wash: var(--k-volt-wash);
   --k-accent-edge: var(--k-volt-edge);
   --k-accent-rgb: 208, 232, 92;
+  --k-accent-2-rgb: 47, 210, 122;
   --k-grad: var(--k-grad-pitch);
+  /* surfaces of the game kit (Floodlights' own) */
+  --k-screen: rgba(9, 13, 19, 0.9);
+  --k-modal-bg: #070807;
 
   --k-r: 6px;
   --k-r-tag: 3px;
   --k-cut: 14px;
-  --k-f-ui: var(--font-inter, "Inter"), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --k-f-lbl: var(--font-chakra, "Chakra Petch"), "Chakra Petch", "Inter", system-ui, sans-serif;
+  --k-f-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --k-f-lbl: "Chakra Petch", var(--font-chakra, "Chakra Petch"), "Inter", system-ui, sans-serif;
+  --k-f-serif: "Instrument Serif", var(--font-instrument, "Instrument Serif"), "Times New Roman", Times, serif;
   --k-f-num: "Geist Mono", "SFMono-Regular", ui-monospace, Menlo, monospace;
   --k-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --k-ease-mask: cubic-bezier(0.16, 1, 0.3, 1);
@@ -115,6 +120,7 @@
   --k-accent-wash: var(--k-orange-wash);
   --k-accent-edge: var(--k-orange-edge);
   --k-accent-rgb: 255, 138, 61;
+  --k-accent-2-rgb: 255, 190, 74;
   --k-grad: var(--k-grad-court);
 }
 
@@ -140,83 +146,7 @@
 .k-team-bar { position: relative; }
 .k-team-bar::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(to bottom, var(--k-team, var(--k-accent)), var(--k-team-2, transparent)); }
 
-/* tables: one look for every list of rows */
-.k-table { width: 100%; border-collapse: collapse; font: 13px var(--k-f-ui); }
-.k-table th { padding: 8px 10px; text-align: left; font: 700 10px/1.2 var(--k-f-lbl); letter-spacing: 0.12em; text-transform: uppercase; color: var(--k-dim-2); border-bottom: 1px solid var(--k-line); }
-.k-table td { padding: 8px 10px; border-bottom: 1px solid var(--k-hair); }
-.k-table tbody tr { transition: background 0.15s ease; }
-.k-table tbody tr:hover { background: rgba(var(--k-accent-rgb), 0.05); }
-.k-num { font-variant-numeric: tabular-nums; text-align: right; }
-
-/* ---------- shared label face ---------- */
-.k-label { font-family: var(--k-f-lbl); font-size: 10px; font-weight: 700; line-height: 1.3; letter-spacing: 0.12em; text-transform: uppercase; color: var(--k-dim-2); }
-
-/* ---------- buttons: glow for the main action, glass for the rest ---------- */
-.k-btn { position: relative; isolation: isolate; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; height: 36px; padding: 0 16px; border: 1px solid transparent; border-radius: var(--k-r); font-family: var(--k-f-lbl); font-size: 11px; font-weight: 700; line-height: 1; letter-spacing: 0.09em; text-transform: uppercase; white-space: nowrap; cursor: pointer; user-select: none; color: var(--k-ink); transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, color 0.25s ease, filter 0.35s ease, transform 0.12s var(--k-ease); }
-.k-btn:active { transform: translateY(1px) scale(0.98); }
-.k-btn:disabled { pointer-events: none; opacity: 0.4; }
-.k-btn-glass { background: var(--k-glass); border-color: var(--k-glass-edge); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12); }
-.k-btn-glass::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.4) 48%, transparent 76%); transform: translateX(-130%); transition: transform 0.65s ease; pointer-events: none; }
-.k-btn-glass:hover::after { transform: translateX(130%); }
-.k-btn-glass:hover { background: var(--k-glass-hover); border-color: var(--k-glass-edge-hover); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 18px rgba(170, 200, 255, 0.16); }
-/* the primary button: clear glass with a faint tint, a thin clean edge and a soft inner glow.
-   The tint follows the mode accent (volt on the pitch, orange on the court). Floodlights sets --k-tint,
-   --k-tint-2 and --k-tint-edge (rgb triplets) from the club's kit once a save is loaded, so every club gets
-   its own colours. The fill stays under a third opaque over the dark ground, so the white text reads on any
-   club colour. The other names are the same button in each app: .btn-glow (Game Night), .btn.primary
-   (Hardwood Legends) and button.gold (Floodlights). */
-:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold) {
-  --t1: var(--k-tint, var(--k-accent-rgb));
-  --t2: var(--k-tint-2, var(--k-tint, var(--k-accent-rgb)));
-  --te: var(--k-tint-edge, var(--k-tint, var(--k-accent-rgb)));
-  position: relative; isolation: isolate; overflow: hidden;
-  border: 1px solid rgba(var(--te), 0.5); border-radius: 10px;
-  color: #ffffff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
-  background: linear-gradient(180deg, rgba(var(--t1), 0.2) 0%, rgba(var(--t2), 0.07) 100%), rgba(8, 11, 16, 0.42);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13), inset 0 0 14px rgba(var(--t1), 0.13), 0 1px 2px rgba(0, 0, 0, 0.35);
-  filter: none;
-  transition: transform 0.18s var(--k-ease), background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, color 0.2s ease;
-}
-:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold)::before,
-:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold)::after { content: none; display: none; }
-:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold):hover {
-  background: linear-gradient(180deg, rgba(var(--t1), 0.3) 0%, rgba(var(--t2), 0.12) 100%), rgba(8, 11, 16, 0.36);
-  border-color: rgba(var(--te), 0.78);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 18px rgba(var(--t1), 0.18), 0 8px 20px -12px rgba(var(--t1), 0.6);
-  transform: translateY(-1px);
-  filter: none;
-}
-:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold):active { transform: translateY(0) scale(0.97); }
-:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold):focus-visible { outline: 2px solid rgba(var(--te), 0.9); outline-offset: 2px; }
-:is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold):disabled { opacity: 0.4; pointer-events: none; }
-.k-btn-ghost { color: var(--k-dim); background: transparent; }
-.k-btn-ghost:hover { color: var(--k-ink); background: rgba(255, 255, 255, 0.06); }
-
-/* ---------- panel: flat black, one hairline, two cut corners ---------- */
-.k-panel { position: relative; border: 1px solid var(--k-line); background: var(--k-panel); clip-path: polygon(0 0, calc(100% - var(--k-cut)) 0, 100% var(--k-cut), 100% 100%, var(--k-cut) 100%, 0 calc(100% - var(--k-cut))); }
-.k-panel-edge::before { content: ""; position: absolute; left: 0; top: 0; width: 54px; height: 2px; background: var(--k-grad); }
-
-/* ---------- tabs with a sliding indicator ---------- */
-.k-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--k-line); }
-.k-tabs > * { position: relative; padding: 10px 12px 12px; font-family: var(--k-f-lbl); font-size: 11px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; color: var(--k-dim-2); background: none; border: 0; cursor: pointer; transition: color 0.15s; }
-.k-tabs > *::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 2px; background: var(--k-grad); transform: scaleX(0); transition: transform 0.3s var(--k-ease); }
-.k-tabs > *:hover { color: var(--k-soft); }
-.k-tabs > .on, .k-tabs > [aria-selected="true"] { color: var(--k-ink); }
-.k-tabs > .on::after, .k-tabs > [aria-selected="true"]::after { transform: scaleX(1); }
-
-/* ---------- inputs ---------- */
-.k-input { width: 100%; border: 1px solid var(--k-line); border-radius: var(--k-r); background: rgba(255, 255, 255, 0.035); padding: 8px 12px; font: 14px var(--k-f-ui); color: var(--k-ink); outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
-.k-input::placeholder { color: var(--k-ghost); }
-.k-input:hover { border-color: rgba(255, 255, 255, 0.28); }
-.k-input:focus { border-color: var(--k-accent); box-shadow: 0 0 0 1px var(--k-accent), 0 0 18px -6px rgba(var(--k-accent-rgb), 0.6); }
-
-/* ---------- modal and toast ---------- */
-.k-scrim { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: k-fade 0.2s ease both; }
-.k-modal { position: relative; width: min(94vw, 560px); border: 1px solid var(--k-line); border-top: 0; background: var(--k-panel); padding: 26px 28px 24px; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.75); clip-path: polygon(0 0, calc(100% - var(--k-cut)) 0, 100% var(--k-cut), 100% 100%, var(--k-cut) 100%, 0 calc(100% - var(--k-cut))); animation: k-pop 0.32s var(--k-ease) both; }
-.k-modal::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--k-grad); }
-.k-toast { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border: 1px solid var(--k-line); border-left: 3px solid var(--k-accent); background: rgba(6, 9, 14, 0.92); color: var(--k-ink); font: 600 13.5px var(--k-f-ui); animation: k-slide 0.38s var(--k-ease) both; }
-.k-toast.good { border-left-color: var(--k-good); }
-.k-toast.bad { border-left-color: var(--k-bad); }
+/* tables, labels, buttons, panels, tabs, inputs, modals: see THE GAME KIT at the end of this file */
 
 /* ---------- loading ---------- */
 .k-shimmer { position: relative; overflow: hidden; background: rgba(255, 255, 255, 0.04); }
@@ -291,8 +221,8 @@
 
 /* reduced motion: everything lands at once, nothing moves on its own */
 @media (prefers-reduced-motion: reduce) {
-  .k-mask > *, .k-soft, .k-rise, .k-pop, .k-drawx, .k-drawy, .k-pulse, .k-glow-pulse, .k-stagger > *, .k-shimmer::after, .k-burst::before, .k-sweep, .k-scrim, .k-modal, .k-toast { animation: none !important; }
-  .k-lift:hover, .k-press:active, .k-btn:active, :is(.k-btn-glow, .k-btn-primary, .btn-glow, .btn.primary, button.gold):is(:hover, :active) { transform: none; }
+  .k-mask > *, .k-soft, .k-rise, .k-pop, .k-drawx, .k-drawy, .k-pulse, .k-glow-pulse, .k-stagger > *, .k-shimmer::after, .k-burst::before, .k-sweep, .k-scrim, .k-modal, .k-toast, .k-entry *, .k-frame * { animation: none !important; }
+  .k-lift:hover, .k-press:active, .k-btn:active, :is(.k-btn-primary, button.gold):is(:hover, :active) { transform: none; }
   .k-sweep { background: none; -webkit-background-clip: initial; background-clip: initial; }
 }
 
@@ -300,3 +230,549 @@
 .k-tab-ind { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: var(--k-grad); border-radius: 2px; box-shadow: 0 0 10px rgba(var(--k-accent-rgb), 0.55); pointer-events: none; will-change: transform; }
 .k-ring { position: absolute; left: 50%; top: 50%; width: 160px; height: 160px; margin: -80px 0 0 -80px; border-radius: 50%; border: 2px solid rgba(var(--k-accent-rgb), 0.85); box-shadow: 0 0 40px rgba(var(--k-accent-rgb), 0.45), inset 0 0 30px rgba(var(--k-accent-rgb), 0.3); pointer-events: none; }
 .k-spark { position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 2px; pointer-events: none; }
+
+/* ==========================================================
+   THE GAME KIT
+   Floodlights' own components, one copy for every game on the site.
+   Each rule names two things: the .k-* class that Game Night (Front Office, Hardwood Legends) and Player
+   Career use, and the Floodlights markup it has always styled. The Floodlights side sits inside
+   :where([data-kapp="fl"]), which adds no specificity, so its page cascades exactly as before.
+   The accent is the only thing that changes between games: volt on the pitch, orange on the court, and a
+   club's or a franchise's colours inside a save (--k-tint, --k-tint-2, --k-tint-edge as rgb triplets).
+   ========================================================== */
+
+/* ---------- the faces: one set of files for every game ---------- */
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 100 900; font-display: swap; src: url(/floodlights/fonts/inter.woff2) format("woff2"); }
+@font-face { font-family: "Chakra Petch"; font-style: normal; font-weight: 600; font-display: swap; src: url(/floodlights/fonts/chakra-petch-600.woff2) format("woff2"); }
+@font-face { font-family: "Chakra Petch"; font-style: normal; font-weight: 700; font-display: swap; src: url(/floodlights/fonts/chakra-petch-700.woff2) format("woff2"); }
+@font-face { font-family: "Geist Mono"; font-style: normal; font-weight: 400 700; font-display: swap; src: url(/floodlights/fonts/geist-mono.woff2) format("woff2"); }
+@font-face { font-family: "Instrument Serif"; font-style: italic; font-weight: 400; font-display: swap; src: url(/floodlights/fonts/instrument-serif-italic.woff2) format("woff2"); }
+
+/* ---------- small caps labels ---------- */
+.k-label,
+:where([data-kapp="fl"]) label { font-family: var(--k-f-lbl); font-size: 11px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--k-dim-2); }
+.k-label { line-height: 1.5; }
+
+/* ---------- buttons: liquid glass for the everyday ones, tinted glass for the main action ---------- */
+.k-btn,
+:where([data-kapp="fl"]) button { position: relative; isolation: isolate; overflow: hidden; font-family: var(--k-f-lbl); font-weight: 700; font-size: 11.5px; letter-spacing: 0.09em; text-transform: uppercase; line-height: 1; white-space: nowrap; border-radius: 6px; padding: 12px 18px; cursor: pointer;
+  background: linear-gradient(180deg, #ffffff 0%, #e7e7e7 48%, #cfcfcf 100%); color: #111111; border: 1px solid #ffffff;
+  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, color 0.35s ease, filter 0.35s ease, transform 0.08s; }
+.k-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; text-decoration: none; }
+.k-btn:hover,
+:where([data-kapp="fl"]) button:hover { background: linear-gradient(180deg, #ffffff 0%, #f3f6ff 42%, #d5def2 100%); border-color: #f2f6ff; }
+.k-btn:disabled,
+:where([data-kapp="fl"]) button:disabled { opacity: 0.45; cursor: not-allowed; }
+.k-btn,
+:where([data-kapp="fl"]) button:not(nav.tabs *):not(.teampick > *):not(.reactbar *) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95); }
+.k-btn:hover,
+:where([data-kapp="fl"]) button:not(nav.tabs *):not(.teampick > *):not(.reactbar *):hover { box-shadow: inset 0 1px 0 #ffffff, 0 0 22px rgba(186, 208, 255, 0.35), 0 8px 18px rgba(255, 255, 255, 0.12); }
+/* the shine that sweeps across on hover */
+.k-btn::after,
+:where([data-kapp="fl"]) button:not(nav.tabs *):not(.teampick > *):not(.reactbar *)::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.45) 48%, transparent 76%); transform: translateX(-130%); transition: transform 0.65s ease; pointer-events: none; }
+.k-btn:hover::after,
+:where([data-kapp="fl"]) button:not(nav.tabs *):not(.teampick > *):not(.reactbar *):hover::after { transform: translateX(130%); }
+.k-btn:disabled::after,
+:where([data-kapp="fl"]) button:disabled::after { display: none; }
+.k-btn:focus-visible,
+:where([data-kapp="fl"]) button:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 3px; }
+/* ghost: the quiet glass */
+.k-btn.k-btn-ghost,
+:where([data-kapp="fl"]) button.ghost { background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.45) 50%, rgba(160, 175, 200, 0.08)); color: #ffffff; border-color: rgba(198, 198, 198, 0.45); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12) !important; }
+.k-btn.k-btn-ghost:hover,
+:where([data-kapp="fl"]) button.ghost:hover { background: linear-gradient(135deg, rgba(210, 225, 255, 0.18), rgba(0, 0, 0, 0.35) 48%, rgba(180, 195, 220, 0.16)); color: #ffffff; border-color: rgba(220, 230, 255, 0.75); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 20px rgba(170, 200, 255, 0.22) !important; }
+/* danger: red glass, and the solid red one for a hard yes */
+.k-btn.k-btn-danger,
+:where([data-kapp="fl"]) button.red { background: linear-gradient(135deg, rgba(242, 92, 92, 0.14), rgba(0, 0, 0, 0.45) 50%, rgba(242, 92, 92, 0.06)); color: #ff8f87; border-color: rgba(242, 92, 92, 0.5); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important; }
+.k-btn.k-btn-danger:hover,
+:where([data-kapp="fl"]) button.red:hover { background: linear-gradient(135deg, rgba(242, 92, 92, 0.24), rgba(0, 0, 0, 0.35) 48%, rgba(242, 92, 92, 0.14)); border-color: var(--k-bad); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 18px rgba(242, 92, 92, 0.22) !important; }
+:where([data-kapp="fl"]) button.red.hj { background: var(--k-bad); color: #1c0707; border-color: var(--k-bad); }
+:where([data-kapp="fl"]) button.red.hj:hover { background: #ff8f87; border-color: #ff8f87; }
+/* small */
+.k-btn.k-btn-sm,
+:where([data-kapp="fl"]) button.small { padding: 8px 11px; font-size: 10.5px; letter-spacing: 0.08em; }
+/* the everyday button: liquid glass */
+.k-btn:not(.k-btn-primary):not(.k-btn-ghost):not(.k-btn-danger):not(.k-btn-sm),
+:where([data-kapp="fl"]) button:not(nav.tabs *):not(.teampick > *):not(.reactbar *):not(.gold):not(.ghost):not(.red):not(.small):not(#createBtn) { background: var(--k-glass); color: #ffffff; border: 1px solid var(--k-glass-edge); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.k-btn:not(.k-btn-primary):not(.k-btn-ghost):not(.k-btn-danger):not(.k-btn-sm):hover,
+:where([data-kapp="fl"]) button:not(nav.tabs *):not(.teampick > *):not(.reactbar *):not(.gold):not(.ghost):not(.red):not(.small):not(#createBtn):hover { background: var(--k-glass-hover); border-color: var(--k-glass-edge-hover); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 18px rgba(170, 200, 255, 0.16); }
+.k-btn:active:not(:disabled),
+:where([data-kapp="fl"]) button:active:not(:disabled) { transform: translateY(1px) scale(0.97); }
+/* a small everyday button carries a faint tint of the accent */
+.k-btn.k-btn-sm:not(.k-btn-ghost):not(.k-btn-danger):not(.k-btn-primary),
+:where([data-kapp="fl"]) button.small:not(.ghost):not(.red):not(.gold) { color: #ffffff; border-color: rgba(var(--k-tint-edge, var(--k-tint, var(--k-accent-rgb))), 0.4); background: linear-gradient(180deg, rgba(var(--k-tint, var(--k-accent-rgb)), 0.13), rgba(var(--k-tint-2, var(--k-tint, var(--k-accent-rgb))), 0.04)), rgba(8, 11, 16, 0.4); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 10px rgba(var(--k-tint, var(--k-accent-rgb)), 0.1); text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4); transition: transform 0.18s var(--k-ease), background 0.25s, border-color 0.25s, box-shadow 0.25s; }
+.k-btn.k-btn-sm:not(.k-btn-ghost):not(.k-btn-danger):not(.k-btn-primary):hover,
+:where([data-kapp="fl"]) button.small:not(.ghost):not(.red):not(.gold):hover { background: linear-gradient(180deg, rgba(var(--k-tint, var(--k-accent-rgb)), 0.22), rgba(var(--k-tint-2, var(--k-tint, var(--k-accent-rgb))), 0.08)), rgba(8, 11, 16, 0.36); border-color: rgba(var(--k-tint-edge, var(--k-tint, var(--k-accent-rgb))), 0.72); transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 6px 16px -10px rgba(var(--k-tint, var(--k-accent-rgb)), 0.6) !important; }
+:where([data-kapp="fl"]) button.red.hj { background: linear-gradient(135deg, #ff6b4a, #ff3d5a); color: #1c0707; border-color: #ff6b4a; }
+/* the main action: clear glass with a faint tint of the accent (a club's or a franchise's colours inside a save) */
+.k-btn.k-btn-primary,
+:where([data-kapp="fl"]) button.gold {
+  --t1: var(--k-tint, var(--k-accent-rgb));
+  --t2: var(--k-tint-2, var(--k-tint, var(--k-accent-rgb)));
+  --te: var(--k-tint-edge, var(--k-tint, var(--k-accent-rgb)));
+  border: 1px solid rgba(var(--te), 0.5); border-radius: 10px; padding: 13px 22px;
+  color: #ffffff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(180deg, rgba(var(--t1), 0.2) 0%, rgba(var(--t2), 0.07) 100%), rgba(8, 11, 16, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13), inset 0 0 14px rgba(var(--t1), 0.13), 0 1px 2px rgba(0, 0, 0, 0.35);
+  filter: none;
+  transition: transform 0.18s var(--k-ease), background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, color 0.2s ease; }
+.k-btn.k-btn-primary::before, .k-btn.k-btn-primary::after,
+:where([data-kapp="fl"]) button.gold::before, :where([data-kapp="fl"]) button.gold::after { content: none; display: none; }
+.k-btn.k-btn-primary:hover,
+:where([data-kapp="fl"]) button.gold:hover {
+  background: linear-gradient(180deg, rgba(var(--t1), 0.3) 0%, rgba(var(--t2), 0.12) 100%), rgba(8, 11, 16, 0.36);
+  border-color: rgba(var(--te), 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 18px rgba(var(--t1), 0.18), 0 8px 20px -12px rgba(var(--t1), 0.6);
+  transform: translateY(-1px); filter: none; }
+.k-btn.k-btn-primary:active,
+:where([data-kapp="fl"]) button.gold:active { transform: translateY(0) scale(0.97); }
+.k-btn.k-btn-primary:focus-visible,
+:where([data-kapp="fl"]) button.gold:focus-visible { outline: 2px solid rgba(var(--te), 0.9); outline-offset: 2px; }
+.k-btn.k-btn-primary:disabled,
+:where([data-kapp="fl"]) button.gold:disabled { opacity: 0.4; pointer-events: none; }
+.k-btn.k-btn-primary.k-btn-sm,
+:where([data-kapp="fl"]) button.small.gold { padding: 9px 13px; border-radius: 9px; }
+/* a choice in a row of choices: the picked one lights in the accent */
+.k-btn.k-on:not(#k-none),
+.k-btn.k-on:not(#k-none):hover { background: rgba(var(--k-accent-rgb), 0.1); color: var(--k-accent); border-color: var(--k-accent); box-shadow: none !important; }
+.k-btn.k-on::after { display: none; }
+
+/* ---------- inputs ---------- */
+.k-input,
+:where([data-kapp="fl"]) input:not([type=checkbox]),
+:where([data-kapp="fl"]) select { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--k-line); color: #ffffff; border-radius: 6px; padding: 10px 12px; font-size: 14px; font-weight: 500; font-family: var(--k-f-ui); transition: border-color 0.15s, box-shadow 0.15s; }
+.k-input { width: 100%; line-height: normal; }
+select.k-input,
+:where([data-kapp="fl"]) select { appearance: none; -webkit-appearance: none; padding-right: 30px; cursor: pointer; }
+.k-input::placeholder,
+:where([data-kapp="fl"]) input::placeholder { color: var(--k-dim-2); }
+.k-input:hover,
+:where([data-kapp="fl"]) input:not([type=checkbox]):hover,
+:where([data-kapp="fl"]) select:hover { border-color: rgba(255, 255, 255, 0.26); }
+.k-input:focus,
+:where([data-kapp="fl"]) input:not([type=checkbox]):focus,
+:where([data-kapp="fl"]) select:focus { outline: none; border-color: var(--k-accent); box-shadow: 0 0 0 1px var(--k-accent), 0 0 18px -6px rgba(var(--k-accent-rgb), 0.6); }
+select.k-input option,
+:where([data-kapp="fl"]) select option { background: #0c1118; color: #ffffff; }
+.k-check,
+:where([data-kapp="fl"]) input[type=checkbox] { accent-color: var(--k-accent); }
+
+/* ---------- panels: black, one hairline, two chamfered corners, the accent line on top ---------- */
+.k-panel, .k-card, .k-modal,
+:where([data-kapp="fl"]) .card { position: relative; border: 1px solid var(--k-line); }
+.k-panel, .k-card, .k-modal,
+:where([data-kapp="fl"]) .panel, :where([data-kapp="fl"]) .card, :where([data-kapp="fl"]) .mcard, :where([data-kapp="fl"]) .ct-card, :where([data-kapp="fl"]) .lugrid { border-radius: 0; border-color: var(--k-line); background-origin: border-box;
+  background:
+    linear-gradient(to bottom left, transparent calc(50% - 0.65px), rgba(255, 255, 255, 0.2) calc(50% - 0.65px), rgba(255, 255, 255, 0.2) calc(50% + 0.65px), transparent calc(50% + 0.65px)) top right / 16px 16px no-repeat border-box,
+    linear-gradient(to bottom left, transparent calc(50% - 0.65px), rgba(255, 255, 255, 0.2) calc(50% - 0.65px), rgba(255, 255, 255, 0.2) calc(50% + 0.65px), transparent calc(50% + 0.65px)) bottom left / 16px 16px no-repeat border-box,
+    var(--k-screen);
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px)); }
+.k-panel { padding: 20px; overflow-x: auto; }
+.k-panel.k-flush { padding: 0; }
+.k-panel.k-flush > .k-controls { padding: 20px 20px 0; }
+.k-tabs > a { display: inline-flex; align-items: center; text-decoration: none; }
+.k-panel.k-nocut { clip-path: none; }
+.k-panel::before,
+:where([data-kapp="fl"]) .panel::before { content: ""; position: absolute; left: 0; top: 0; width: 72px; height: 2px; background: var(--k-grad); box-shadow: 0 0 14px rgba(var(--k-accent-rgb), 0.35); pointer-events: none; }
+/* a panel title: caps with a small block of the accent in front */
+.k-panel-title,
+:where([data-kapp="fl"]) .panel h3,
+:where([data-kapp="fl"]) .cup h3 { display: flex; align-items: center; gap: 10px; }
+.k-panel-title { margin: 0; font-family: var(--k-f-ui); font-weight: 700; font-size: 16px; line-height: 1.05; letter-spacing: 0.04em; text-transform: uppercase; color: #ffffff; }
+.k-panel-title::before,
+:where([data-kapp="fl"]) .panel h3::before,
+:where([data-kapp="fl"]) .cup h3::before { content: ""; flex: none; width: 6px; height: 7px; background: var(--k-grad); }
+
+/* ---------- modal: the scrim and the card ---------- */
+.k-scrim,
+:where([data-kapp="fl"]) .ct-modal { position: fixed; inset: 0; z-index: 9000; background: rgba(0, 0, 0, 0.74); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: grid; place-items: center; padding: 16px; }
+.k-modal,
+:where([data-kapp="fl"]) .mcard,
+:where([data-kapp="fl"]) .ct-card { border-top: 1px solid var(--k-line); box-shadow: none; background-color: var(--k-modal-bg); }
+.k-modal { padding: 26px 28px 24px; width: min(94vw, 580px); text-align: left; animation: k-pop 0.32s var(--k-ease) both; }
+.k-modal::before,
+:where([data-kapp="fl"]) .mcard::before,
+:where([data-kapp="fl"]) .ct-card::before { content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 2px; background: var(--k-grad); }
+.k-modal-title,
+:where([data-kapp="fl"]) .ct-card h3 { margin: 0 0 6px; font-size: 19px; }
+.k-modal-title { font-family: var(--k-f-ui); font-weight: 700; font-stretch: 108%; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.05; color: #ffffff; padding-right: 44px; }
+.k-modal-x { position: absolute; top: 16px; right: 16px; }
+.k-modal-kicker { font-family: var(--k-f-lbl); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; color: var(--k-accent); text-transform: uppercase; }
+
+/* ---------- tables ---------- */
+.k-table,
+:where([data-kapp="fl"]) table { width: 100%; border-collapse: collapse; }
+.k-table th,
+:where([data-kapp="fl"]) th { font-family: var(--k-f-lbl); font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--k-dim-2); text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--k-line); white-space: nowrap; }
+.k-table td,
+:where([data-kapp="fl"]) td { padding: 11px 10px; border-bottom: 1px solid var(--k-hair); font-size: 14px; vertical-align: middle; }
+.k-table tbody tr:last-child td,
+:where([data-kapp="fl"]) tbody tr:last-child td { border-bottom: none; }
+.k-table tbody tr td,
+:where([data-kapp="fl"]) tbody tr td { transition: background-color 0.15s ease; }
+.k-table tbody tr:hover td,
+:where([data-kapp="fl"]) tbody tr:hover td { background: rgba(var(--k-accent-rgb), 0.045); }
+.k-table td:first-child,
+:where([data-kapp="fl"]) td:first-child { font-weight: 600; }
+.k-table .k-num,
+:where([data-kapp="fl"]) .num { text-align: right; font-family: var(--k-f-num); font-size: 13px; font-variant-numeric: tabular-nums; }
+.k-table th.k-num,
+:where([data-kapp="fl"]) th.num { font-family: var(--k-f-ui); font-size: 10.5px; }
+.k-table tr.me,
+:where([data-kapp="fl"]) tr.me,
+:where([data-kapp="fl"]) tbody tr.me:hover { background: linear-gradient(90deg, color-mix(in srgb, var(--team, var(--k-accent)) 22%, transparent), rgba(var(--k-accent-rgb), 0.06) 55%, transparent); }
+.k-table tr.me td,
+:where([data-kapp="fl"]) tr.me td,
+:where([data-kapp="fl"]) tbody tr.me:hover td { background: none; }
+.k-table tr.me td:first-child,
+:where([data-kapp="fl"]) tr.me td:first-child { box-shadow: inset 3px 0 0 var(--team, var(--k-accent)); }
+
+/* ---------- tabs ---------- */
+.k-tabs,
+:where([data-kapp="fl"]) nav.tabs { display: flex; flex-wrap: nowrap; gap: 0; background: rgba(4, 6, 10, 0.94); border-bottom: 1px solid var(--k-line); overflow-x: auto; scrollbar-width: none; }
+.k-tabs { position: relative; }
+.k-tabs::-webkit-scrollbar,
+:where([data-kapp="fl"]) nav.tabs::-webkit-scrollbar { display: none; }
+.k-tabs > button, .k-tabs > a,
+:where([data-kapp="fl"]) nav.tabs button { overflow: visible; background: transparent; color: var(--k-dim); border: none; border-bottom: 2px solid transparent; border-radius: 0; font-family: var(--k-f-lbl); font-weight: 700; font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; line-height: 1; padding: 17px 12px 14px; white-space: nowrap; cursor: pointer; transition: color 0.2s ease; }
+.k-tabs > button:hover, .k-tabs > a:hover,
+:where([data-kapp="fl"]) nav.tabs button:hover { background: transparent; color: #ffffff; border-color: transparent; }
+.k-tabs > button:active, .k-tabs > a:active,
+:where([data-kapp="fl"]) nav.tabs button:active { transform: none; }
+.k-tabs > button:focus-visible, .k-tabs > a:focus-visible,
+:where([data-kapp="fl"]) nav.tabs button:focus-visible { outline-offset: -3px; }
+.k-tabs > button.on, .k-tabs > button[aria-selected="true"], .k-tabs > a.on, .k-tabs > a[aria-current="page"],
+:where([data-kapp="fl"]) nav.tabs button.on { color: #ffffff; border-bottom-color: var(--k-accent); }
+.k-tabs.has-ind > button.on, .k-tabs.has-ind > button[aria-selected="true"], .k-tabs.has-ind > a.on, .k-tabs.has-ind > a[aria-current="page"],
+:where([data-kapp="fl"]) nav.tabs.has-ind button.on { border-bottom-color: transparent; }
+
+/* ---------- the entry page: the frame, the starfield, the headline, the panel ---------- */
+.k-stars,
+:where([data-kapp="fl"]) #bamStars { position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(70% 45% at 50% 112%, rgba(var(--k-accent-2-rgb), 0.2), transparent 70%),
+    radial-gradient(42% 32% at 6% -4%, rgba(var(--k-accent-rgb), 0.17), transparent 72%),
+    radial-gradient(44% 34% at 94% -4%, rgba(62, 230, 196, 0.14), transparent 72%),
+    radial-gradient(38% 42% at 104% 55%, rgba(139, 108, 255, 0.11), transparent 70%),
+    radial-gradient(32% 34% at -4% 72%, rgba(79, 179, 255, 0.08), transparent 70%),
+    var(--k-bg); }
+.k-stars i,
+:where([data-kapp="fl"]) #bamStars i { position: absolute; left: 0; top: 0; width: 1px; height: 1px; border-radius: 50%; background: #fff; }
+.k-entry,
+:where([data-kapp="fl"]) #lobby { position: relative; isolation: isolate; overflow: hidden; min-height: 100dvh; display: grid; align-items: center; padding: 64px 56px; background: transparent; }
+.k-entry { color: #ffffff; font-family: var(--k-f-ui); font-size: 14px; line-height: 1.5; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+.k-frame,
+:where([data-kapp="fl"]) .lobbyframe { position: fixed; inset: 22px; z-index: 0; pointer-events: none; }
+.k-frame .ln,
+:where([data-kapp="fl"]) .lobbyframe .ln { position: absolute; background: rgba(255, 255, 255, 0.13); }
+.k-frame .ln-t,
+:where([data-kapp="fl"]) .lobbyframe .ln-t { left: 22px; right: 22px; top: 0; height: 1px; transform-origin: left center; animation: k-drawx 0.5s cubic-bezier(0.65, 0, 0.35, 1) 0.04s both; }
+.k-frame .ln-b,
+:where([data-kapp="fl"]) .lobbyframe .ln-b { left: 22px; right: 22px; bottom: 0; height: 1px; transform-origin: right center; animation: k-drawx 0.5s cubic-bezier(0.65, 0, 0.35, 1) 0.2s both; }
+.k-frame .ln-l,
+:where([data-kapp="fl"]) .lobbyframe .ln-l { top: 22px; bottom: 22px; left: 0; width: 1px; transform-origin: center top; animation: k-drawy 0.5s cubic-bezier(0.65, 0, 0.35, 1) 0.04s both; }
+.k-frame .ln-r,
+:where([data-kapp="fl"]) .lobbyframe .ln-r { top: 22px; bottom: 22px; right: 0; width: 1px; transform-origin: center bottom; animation: k-drawy 0.5s cubic-bezier(0.65, 0, 0.35, 1) 0.2s both; }
+.k-frame .cn,
+:where([data-kapp="fl"]) .lobbyframe .cn { position: absolute; width: 22px; height: 22px; animation: k-fade 0.3s linear 0.55s both; }
+.k-frame .cn-tl, .k-frame .cn-br,
+:where([data-kapp="fl"]) .lobbyframe .cn-tl, :where([data-kapp="fl"]) .lobbyframe .cn-br { background: linear-gradient(to bottom right, transparent calc(50% - 0.65px), rgba(255, 255, 255, 0.13) calc(50% - 0.65px), rgba(255, 255, 255, 0.13) calc(50% + 0.65px), transparent calc(50% + 0.65px)); }
+.k-frame .cn-tr, .k-frame .cn-bl,
+:where([data-kapp="fl"]) .lobbyframe .cn-tr, :where([data-kapp="fl"]) .lobbyframe .cn-bl { background: linear-gradient(to bottom left, transparent calc(50% - 0.65px), rgba(255, 255, 255, 0.13) calc(50% - 0.65px), rgba(255, 255, 255, 0.13) calc(50% + 0.65px), transparent calc(50% + 0.65px)); }
+.k-frame .cn-tl, :where([data-kapp="fl"]) .lobbyframe .cn-tl { left: 0; top: 0; }
+.k-frame .cn-tr, :where([data-kapp="fl"]) .lobbyframe .cn-tr { right: 0; top: 0; }
+.k-frame .cn-bl, :where([data-kapp="fl"]) .lobbyframe .cn-bl { left: 0; bottom: 0; }
+.k-frame .cn-br, :where([data-kapp="fl"]) .lobbyframe .cn-br { right: 0; bottom: 0; }
+.k-entry-in,
+:where([data-kapp="fl"]) .lobbyin { position: relative; z-index: 1; width: min(1120px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, 400px); gap: clamp(28px, 6vw, 96px); align-items: center; }
+/* the brand row: a bank of six lights, the way home, the mode */
+.k-brand,
+:where([data-kapp="fl"]) .brand { display: flex; align-items: center; gap: 12px; }
+.k-entry .k-brand,
+:where([data-kapp="fl"]) .lobbybrand { gap: 14px; }
+.k-brand .sq,
+:where([data-kapp="fl"]) .brand .sq { --u: 9px; flex: none; width: calc(var(--u) * 3); height: calc(var(--u) * 2); background: radial-gradient(circle at center, var(--k-accent) 0 calc(var(--u) * 0.3), transparent calc(var(--u) * 0.36)) 0 0 / var(--u) var(--u); filter: drop-shadow(0 0 4px rgba(var(--k-accent-rgb), 0.6)); }
+.k-entry .k-brand .sq,
+:where([data-kapp="fl"]) .lobbybrand .sq { --u: 12px; }
+.k-brand .homelink,
+:where([data-kapp="fl"]) .lobbybrand .homelink { font-family: var(--k-f-lbl); font-weight: 700; font-size: 10.5px; letter-spacing: 0.16em; color: var(--k-dim); text-decoration: none; text-transform: uppercase; padding: 6px 0; transition: color 0.25s ease; }
+.k-brand .homelink:hover,
+:where([data-kapp="fl"]) .lobbybrand .homelink:hover { color: #ffffff; }
+.k-brand .tg,
+:where([data-kapp="fl"]) .brand .tg { font-family: var(--k-f-lbl); font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; color: var(--k-dim-2); text-transform: uppercase; padding-left: 14px; border-left: 1px solid var(--k-line); }
+/* the headline: two words, the second in the accent gradient */
+.k-title,
+:where([data-kapp="fl"]) #lobby h1 { font-weight: 700; font-stretch: 125%; font-size: clamp(40px, 6.2vw, 88px); line-height: 1; letter-spacing: 0.02em; margin: 20px 0 22px; overflow: hidden; white-space: nowrap; padding: 0.06em 0 0.1em; }
+.k-title { font-family: var(--k-f-ui); text-transform: uppercase; }
+.k-title .hrise,
+:where([data-kapp="fl"]) #lobby h1 .hrise { display: block; color: #ffffff; animation: k-mask 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+.k-title .hrise > span,
+:where([data-kapp="fl"]) #lobby h1 span span { display: inline; background: var(--k-grad); -webkit-background-clip: text; background-clip: text; color: transparent; animation: k-lightson 1.1s linear 0.7s both; }
+@keyframes k-lightson { 0%, 38% { opacity: 0.16; } 40% { opacity: 1; } 46% { opacity: 0.3; } 52%, 100% { opacity: 1; } }
+.k-sub,
+:where([data-kapp="fl"]) #lobby .sub { font-size: 16px; line-height: 1.55; color: rgba(224, 232, 245, 0.84); max-width: 44ch; letter-spacing: -0.015em; animation: k-soft 0.72s cubic-bezier(0.22, 0.61, 0.36, 1) 0.6s both; }
+.k-sub { margin: 0; }
+.k-sub em,
+:where([data-kapp="fl"]) #lobby .sub em { font-family: var(--k-f-serif); font-style: italic; font-weight: 400; font-size: 1.2em; line-height: 1.1; color: #9a9a9a; padding: 0 0.04em 0.04em; }
+/* three big numbers */
+.k-stats,
+:where([data-kapp="fl"]) .lobbystats { display: flex; flex-wrap: wrap; margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--k-line); animation: k-soft 0.72s cubic-bezier(0.22, 0.61, 0.36, 1) 0.8s both; }
+.k-stats { margin-bottom: 0; }
+.k-stats div,
+:where([data-kapp="fl"]) .lobbystats div { display: flex; flex-direction: column-reverse; gap: 6px; padding-right: 30px; margin-right: 30px; border-right: 1px solid var(--k-line); }
+.k-stats div:last-child,
+:where([data-kapp="fl"]) .lobbystats div:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+.k-stats dt,
+:where([data-kapp="fl"]) .lobbystats dt { font-family: var(--k-f-lbl); font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--k-dim-2); }
+.k-stats dd,
+:where([data-kapp="fl"]) .lobbystats dd { font-family: var(--k-f-lbl); font-weight: 700; font-stretch: 68%; font-size: 36px; line-height: 1; letter-spacing: 0.01em; font-variant-numeric: tabular-nums; background: linear-gradient(180deg, #ffffff 40%, #c9d6e8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.k-stats dd { margin: 0; }
+/* the panel on the right: name, create, join */
+.k-card,
+:where([data-kapp="fl"]) .card { padding: 28px; box-shadow: none; background-color: rgba(9, 13, 19, 0.86); animation: k-soft 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) 0.7s both; }
+.k-card::before, .k-card::after,
+:where([data-kapp="fl"]) .card::before, :where([data-kapp="fl"]) .card::after { display: none; }
+.k-card .flab,
+:where([data-kapp="fl"]) .card .flab { display: block; margin-bottom: 8px; }
+.k-card .row,
+:where([data-kapp="fl"]) .card .row { display: flex; gap: 8px; margin-top: 10px; }
+.k-card .row:first-of-type,
+:where([data-kapp="fl"]) .card .row:first-of-type { margin-top: 0; }
+.k-card .k-input,
+:where([data-kapp="fl"]) .card input { flex: 1; min-width: 0; font-size: 15px; padding: 12px 13px; }
+.k-card .k-input { width: auto; }
+.k-card .k-code,
+:where([data-kapp="fl"]) .card #codeIn { font-family: var(--k-f-num); letter-spacing: 0.3em; }
+.k-card .k-code { text-transform: uppercase; }
+.k-card .k-create,
+:where([data-kapp="fl"]) .card #createBtn { flex: 1; padding: 16px 18px; }
+.k-card .cardsplit,
+:where([data-kapp="fl"]) .card .cardsplit { height: 1px; background: var(--k-line); margin: 24px -28px 22px; }
+.k-card .msg { color: var(--k-accent); min-height: 18px; font-size: 13px; font-weight: 500; }
+.k-card .msg,
+:where([data-kapp="fl"]) .card .msg { margin-top: 14px; }
+.k-card .msg:empty,
+:where([data-kapp="fl"]) .card .msg:empty { display: none; }
+/* the second way in: a mode card at the foot of the panel */
+.k-card .k-mode,
+:where([data-kapp="fl"]) .card .pcentry { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 14px; margin: 24px -28px -28px; padding: 18px 28px; border-top: 1px solid var(--k-line-2); color: inherit; text-decoration: none; background: linear-gradient(90deg, rgba(var(--k-accent-rgb), 0.07), transparent 70%); transition: background 0.2s; }
+.k-card .k-mode { width: calc(100% + 56px); border-left: 0; border-right: 0; border-bottom: 0; font: inherit; text-align: left; cursor: pointer; }
+.k-card .k-mode:hover, .k-card .k-mode:focus-visible,
+:where([data-kapp="fl"]) .card .pcentry:hover, :where([data-kapp="fl"]) .card .pcentry:focus-visible { background: linear-gradient(90deg, rgba(var(--k-accent-rgb), 0.14), transparent 80%); }
+.k-card .k-mode b,
+:where([data-kapp="fl"]) .card .pcentry b { font-weight: 800; font-size: 15px; }
+.k-card .k-mode span,
+:where([data-kapp="fl"]) .card .pcentry span { grid-column: 1; font-size: 13px; color: var(--k-soft); }
+.k-card .k-mode i,
+:where([data-kapp="fl"]) .card .pcentry i { grid-row: 1 / 3; grid-column: 2; font-style: normal; font-weight: 800; color: var(--k-accent); }
+/* decode labels: width is pinned by the script so a scramble never reflows */
+.k-dec,
+:where([data-kapp="fl"]) .dec { display: inline-block; white-space: pre; }
+@media (max-width: 860px) {
+  .k-entry,
+  :where([data-kapp="fl"]) #lobby { padding: 44px 30px; align-items: start; }
+  .k-entry-in,
+  :where([data-kapp="fl"]) .lobbyin { grid-template-columns: 1fr; gap: 34px; }
+  .k-title,
+  :where([data-kapp="fl"]) #lobby h1 { font-size: clamp(34px, 11.2vw, 88px); }
+}
+
+/* ---------- the room before the season: share the code, pick a team ---------- */
+.k-topbar,
+:where([data-kapp="fl"]) .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; min-height: 60px; padding: 8px 0; border-bottom: 1px solid var(--k-line); flex-wrap: wrap; }
+.k-topbar .nm,
+:where([data-kapp="fl"]) .brand .nm { font-family: var(--k-f-lbl); font-weight: 700; font-size: 14px; letter-spacing: 0.2em; }
+.k-topbar .tg,
+:where([data-kapp="fl"]) .topbar .brand .tg { display: none; }
+.k-chips,
+:where([data-kapp="fl"]) .topchips { margin-left: auto; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 0; }
+.k-chips .chip,
+:where([data-kapp="fl"]) .chip { display: inline-flex; align-items: center; gap: 7px; padding: 3px 12px; border-left: 1px solid var(--k-line-2); font-family: var(--k-f-lbl); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--k-dim); white-space: nowrap; }
+.k-chips .chip { text-decoration: none; }
+.k-chips .chip:first-child,
+:where([data-kapp="fl"]) .chip:first-child { border-left: none; padding-left: 0; }
+.k-chips .chip b,
+:where([data-kapp="fl"]) .chip b { color: #ffffff; font-family: var(--k-f-num); font-weight: 600; letter-spacing: 0.02em; }
+.k-chips .chip .code,
+:where([data-kapp="fl"]) .chip #hCode { color: var(--k-accent); letter-spacing: 0.24em; }
+.k-chips .k-btn,
+:where([data-kapp="fl"]) .topchips button { margin-left: 6px; }
+.k-room,
+:where([data-kapp="fl"]) #preStart { padding: 0; overflow: hidden; }
+.k-lobbygrid,
+:where([data-kapp="fl"]) .lobbygrid { display: grid; grid-template-columns: 1fr 380px; }
+.k-lobbyleft,
+:where([data-kapp="fl"]) .lobbyleft { padding: 36px 40px; border-right: 1px solid var(--k-line-2); }
+.k-msub,
+:where([data-kapp="fl"]) .msub { font-family: var(--k-f-lbl); font-size: 11.5px; letter-spacing: 0.04em; color: var(--k-dim-2); }
+.k-lobbyleft .k-msub, .k-mgrhead .k-msub,
+:where([data-kapp="fl"]) .lobbyleft .msub, :where([data-kapp="fl"]) .mgrhead .msub { color: var(--k-dim); font-weight: 600; letter-spacing: 0.1em; }
+.k-codeboxes,
+:where([data-kapp="fl"]) .codeboxes { display: flex; gap: 8px; margin: 18px 0 28px; }
+.k-codebox,
+:where([data-kapp="fl"]) .codebox { position: relative; width: min(92px, 19vw); aspect-ratio: 4 / 5; border: 1px solid var(--k-line); border-radius: 6px; display: grid; place-items: center; font-family: var(--k-f-lbl); font-weight: 700; letter-spacing: 0.01em; font-stretch: 72%; font-size: clamp(38px, 7.6vw, 62px); line-height: 1; background: linear-gradient(180deg, #0c1118, #05070b); color: var(--k-accent); text-shadow: 0 0 18px rgba(var(--k-accent-rgb), 0.45); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 30px -12px rgba(var(--k-accent-rgb), 0.6); }
+.k-codebox::after,
+:where([data-kapp="fl"]) .codebox::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--k-bg); }
+.k-controls,
+:where([data-kapp="fl"]) .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.k-lobbyright,
+:where([data-kapp="fl"]) .lobbyright { padding: 30px 28px; }
+.k-mgrhead,
+:where([data-kapp="fl"]) .mgrhead { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+.k-pulse,
+:where([data-kapp="fl"]) .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--k-good); animation: k-blink 1.6s infinite; display: inline-block; flex: none; }
+@keyframes k-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.k-mgrow,
+:where([data-kapp="fl"]) .mgrow { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--k-hair); }
+.k-mgrow .n,
+:where([data-kapp="fl"]) .mgrow .n { font-family: var(--k-f-num); font-size: 11px; color: #6f7787; }
+.k-mgrow .nm,
+:where([data-kapp="fl"]) .mgrow .nm { font-weight: 700; font-size: 16px; line-height: 1.2; }
+.k-mgrow .cl,
+:where([data-kapp="fl"]) .mgrow .cl { font-family: var(--k-f-lbl); font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; color: var(--k-dim-2); margin-top: 3px; text-transform: uppercase; }
+.k-pickzone,
+:where([data-kapp="fl"]) .pickzone { padding: 26px 40px 32px; border-top: 1px solid var(--k-line-2); }
+.k-mlab,
+:where([data-kapp="fl"]) .mlab { font-family: var(--k-f-lbl); font-weight: 700; font-size: 12px; letter-spacing: 0.09em; color: var(--k-soft); text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.k-pickhelp,
+:where([data-kapp="fl"]) .pickzone .pickhelp { color: var(--k-dim); font-size: 13.5px; margin-top: 8px; max-width: 70ch; }
+.k-teampick,
+:where([data-kapp="fl"]) .teampick { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-top: 14px; }
+.k-teampick > button,
+:where([data-kapp="fl"]) .teampick > button { overflow: visible; background: #0c1118; color: #ffffff; border: 1px solid var(--k-line); border-radius: 6px; font-family: var(--k-f-ui); font-size: 14px; font-weight: 700; letter-spacing: 0; text-transform: none; text-align: left; line-height: 1.35; white-space: normal; padding: 12px 12px 11px; box-shadow: inset 3px 0 0 var(--team, var(--k-line)); }
+.k-teampick > button { position: relative; cursor: pointer; }
+.k-teampick > button span,
+:where([data-kapp="fl"]) .teampick > button span { font-family: var(--k-f-num); font-weight: 500; letter-spacing: 0; }
+.k-teampick > button:hover,
+:where([data-kapp="fl"]) .teampick > button:hover { background: #151b25; border-color: rgba(255, 255, 255, 0.28); }
+.k-teampick > button.taken,
+:where([data-kapp="fl"]) .teampick > button.taken { opacity: 0.4; cursor: not-allowed; }
+.k-teampick > button.taken:hover,
+:where([data-kapp="fl"]) .teampick > button.taken:hover { background: #0c1118; border-color: var(--k-line); }
+.k-teampick > button.mine,
+:where([data-kapp="fl"]) .teampick > button.mine { background: linear-gradient(135deg, rgba(var(--k-accent-rgb), 0.16), rgba(var(--k-accent-2-rgb), 0.06)); border-color: var(--k-accent); color: var(--k-accent-hi); }
+@media (max-width: 860px) {
+  .k-lobbygrid,
+  :where([data-kapp="fl"]) .lobbygrid { grid-template-columns: 1fr; }
+  .k-lobbyleft,
+  :where([data-kapp="fl"]) .lobbyleft { padding: 26px 20px; border-right: none; border-bottom: 1px solid var(--k-line-2); }
+  .k-lobbyright,
+  :where([data-kapp="fl"]) .lobbyright { padding: 22px 20px; }
+  .k-pickzone,
+  :where([data-kapp="fl"]) .pickzone { padding: 22px 20px 26px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k-btn::after,
+  :where([data-kapp="fl"]) button::after { transition: none; }
+  .k-frame .ln, .k-frame .cn, .k-title .hrise, .k-title .hrise > span, .k-sub, .k-stats, .k-card,
+  :where([data-kapp="fl"]) .lobbyframe .ln, :where([data-kapp="fl"]) .lobbyframe .cn, :where([data-kapp="fl"]) #lobby h1 .hrise, :where([data-kapp="fl"]) #lobby h1 span span, :where([data-kapp="fl"]) #lobby .sub, :where([data-kapp="fl"]) .lobbystats, :where([data-kapp="fl"]) .card { animation: none; }
+  .k-pulse,
+  :where([data-kapp="fl"]) .pulse { animation: none; }
+  .k-btn, .k-input,
+  :where([data-kapp="fl"]) button, :where([data-kapp="fl"]) input, :where([data-kapp="fl"]) select { transition: none; }
+}
+
+/* ---------- the hub head: who you are, the club or the franchise, and a row of big numbers ---------- */
+.k-hubhead,
+:where([data-kapp="fl"]) .hubhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px 40px; padding: 32px 0 28px; flex-wrap: wrap; position: relative; isolation: isolate; }
+.k-hubhead::before,
+:where([data-kapp="fl"]) .hubhead::before { content: ""; position: absolute; z-index: -1; left: -8%; top: -30%; width: 62%; height: 170%; background: radial-gradient(closest-side, color-mix(in srgb, var(--team, var(--k-accent)) 26%, transparent), transparent); pointer-events: none; }
+.k-hubhead .who,
+:where([data-kapp="fl"]) .hubhead .who { font-family: var(--k-f-lbl); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: var(--k-dim-2); margin-bottom: 10px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.k-hubhead .who::before,
+:where([data-kapp="fl"]) .hubhead .who::before { content: ""; flex: none; width: 26px; height: 12px; background: linear-gradient(90deg, var(--team, var(--k-accent)) 0 62%, var(--team-2, var(--k-accent-2)) 62% 100%); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18); }
+.k-hubhead .clubname,
+:where([data-kapp="fl"]) .hubhead .clubname { font-family: var(--k-f-ui); font-weight: 700; font-stretch: 112%; font-size: clamp(30px, 4.8vw, 58px); line-height: 0.98; letter-spacing: 0.02em; text-transform: uppercase; background: linear-gradient(100deg, #ffffff 0%, #ffffff 52%, color-mix(in srgb, var(--team, var(--k-accent)) 55%, #ffffff) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.k-hubhead .clubname { margin: 0; }
+.k-clubmeta,
+:where([data-kapp="fl"]) .clubmeta { display: flex; flex-wrap: wrap; gap: 16px 0; }
+.k-cm,
+:where([data-kapp="fl"]) .cm { display: flex; flex-direction: column; gap: 8px; min-width: 96px; padding: 0 22px; border-left: 1px solid var(--k-line); }
+.k-cm:last-child,
+:where([data-kapp="fl"]) .cm:last-child { padding-right: 0; }
+.k-cmk,
+:where([data-kapp="fl"]) .cmk { font-family: var(--k-f-lbl); font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--k-dim-2); white-space: nowrap; }
+.k-cmv,
+:where([data-kapp="fl"]) .cmv { font-family: var(--k-f-lbl); font-weight: 700; letter-spacing: 0.01em; font-stretch: 70%; font-size: 32px; line-height: 1; color: #ffffff; font-variant-numeric: tabular-nums; }
+.k-cmv.k-acc,
+:where([data-kapp="fl"]) .cmv.teal { background: var(--k-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.k-cmv.k-good,
+:where([data-kapp="fl"]) .cmv.green { color: var(--k-good); }
+.k-cmv.k-bad,
+:where([data-kapp="fl"]) .cmv.red { color: var(--k-bad); }
+@media (max-width: 720px) {
+  .k-hubhead,
+  :where([data-kapp="fl"]) .hubhead { padding: 24px 0 20px; }
+  .k-clubmeta,
+  :where([data-kapp="fl"]) .clubmeta { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 0; }
+  .k-cm,
+  :where([data-kapp="fl"]) .cm { padding: 0 14px; min-width: 0; }
+  .k-cm:nth-child(3n+1),
+  :where([data-kapp="fl"]) .cm:nth-child(3n+1) { border-left: none; padding-left: 0; }
+  .k-cmv,
+  :where([data-kapp="fl"]) .cmv { font-size: 28px; }
+}
+
+/* ---------- tags: a small pill of caps ---------- */
+.k-tag,
+:where([data-kapp="fl"]) .tag { display: inline-block; vertical-align: middle; font-family: var(--k-f-lbl); font-size: 9.5px; font-weight: 700; line-height: 1; padding: 4px 8px; border: 1px solid var(--k-line); border-radius: 999px; color: var(--k-dim); letter-spacing: 0.1em; text-transform: uppercase; background: var(--k-raise); white-space: nowrap; }
+.k-tag.k-acc,
+:where([data-kapp="fl"]) .tag.human, :where([data-kapp="fl"]) .tag.listed { color: var(--k-accent-hi); border-color: var(--k-accent-edge); background: rgba(var(--k-accent-rgb), 0.1); }
+.k-tag.k-info,
+:where([data-kapp="fl"]) .tag.loan, :where([data-kapp="fl"]) .tag.train { color: var(--k-sky); border-color: rgba(79, 179, 255, 0.42); background: rgba(79, 179, 255, 0.1); }
+.k-tag.k-warn,
+:where([data-kapp="fl"]) .tag.wk, :where([data-kapp="fl"]) .tag.nego { color: var(--k-amber); border-color: rgba(255, 190, 74, 0.45); background: rgba(255, 190, 74, 0.1); }
+.k-tag.k-good,
+:where([data-kapp="fl"]) .tag.agreed { color: var(--k-good); border-color: rgba(78, 224, 143, 0.42); background: rgba(78, 224, 143, 0.1); }
+.k-tag.k-bad,
+:where([data-kapp="fl"]) .tag.inj, :where([data-kapp="fl"]) .tag.derby { background: linear-gradient(135deg, #ff6b5b, #ff3d5a); border-color: transparent; color: #1c0707; }
+
+/* ---------- a longer title still fits on one line: --k-title-em is the title's width in ems (Floodlights is 7.2) ---------- */
+.k-hero { min-width: 0; container-type: inline-size; }
+.k-title { font-size: min(clamp(40px, 6.2vw, 88px), calc(100cqw / var(--k-title-em, 7.2))); }
+@media (max-width: 860px) {
+  .k-title { font-size: min(clamp(34px, 11.2vw, 88px), calc(100cqw / var(--k-title-em, 7.2))); }
+}
+
+/* ---------- a box inside a panel: a row card, a slot, a tile (Floodlights' team and staff cards) ---------- */
+.k-inset { border: 1px solid var(--k-line-2); border-radius: 0; background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 60%), #0b0c0b; }
+a.k-inset, button.k-inset { transition: border-color 0.2s ease, background-color 0.2s ease; }
+a.k-inset:hover, button.k-inset:hover { border-color: rgba(255, 255, 255, 0.28); }
+
+/* ---------- the wire: a line of news running along the foot of the screen ---------- */
+.k-ticker,
+:where([data-kapp="fl"]) .ticker { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; align-items: stretch; height: 34px; background: rgba(4, 6, 10, 0.96); border-top: 1px solid var(--k-line); overflow: hidden; white-space: nowrap; }
+.k-ticker::before,
+:where([data-kapp="fl"]) .ticker::before { content: attr(data-label); position: relative; z-index: 1; display: flex; align-items: center; padding: 0 14px; background: var(--k-grad); color: var(--k-accent-ink); font-family: var(--k-f-lbl); font-weight: 700; font-size: 11px; letter-spacing: 0.14em; flex: none; }
+.k-ticker-inner,
+:where([data-kapp="fl"]) .ticker-inner { display: inline-flex; align-items: center; padding: 0; animation: k-tick 40s linear infinite; font-family: var(--k-f-lbl); font-size: 11.5px; font-weight: 600; letter-spacing: 0.07em; color: var(--k-soft); text-transform: uppercase; }
+.k-ticker:hover .k-ticker-inner { animation-play-state: paused; }
+.k-ticker-inner a { color: inherit; text-decoration: none; }
+.k-ticker-inner a:hover { color: #ffffff; }
+@keyframes k-tick { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .k-ticker-inner,
+  :where([data-kapp="fl"]) .ticker-inner { animation: none; padding-left: 12px; }
+}
+
+/* ---------- the page column of a room or a save ---------- */
+.k-wrap,
+:where([data-kapp="fl"]) .wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px 84px; }
+@media (max-width: 720px) {
+  .k-wrap,
+  :where([data-kapp="fl"]) .wrap { padding: 0 14px 84px; }
+  .k-panel:not(.k-room) { padding: 14px; }
+  .k-panel.k-flush { padding: 0; }
+  .k-panel.k-flush > .k-controls { padding: 14px 14px 0; }
+}
+
+/* ---------- a line of plain help text ---------- */
+.k-lead,
+:where([data-kapp="fl"]) .lead { color: var(--k-dim); font-size: 13px; }
+.k-modal .k-lead { font-size: 13.5px; line-height: 1.55; }
+
+/* ---------- a top bar chip that is a link ---------- */
+.k-chips a.chip,
+:where([data-kapp="fl"]) a.homechip { text-decoration: none; color: var(--k-dim); transition: color 0.25s ease; }
+.k-chips a.chip:hover,
+:where([data-kapp="fl"]) a.homechip:hover { color: #ffffff; }

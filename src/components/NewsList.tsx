@@ -4,16 +4,16 @@ import type { NewsItem } from "@/engine/types/game";
 import { fmtDate } from "@/engine/util/dates";
 import { Empty } from "./ui";
 
-/** Each kind of story gets its own kit chip colour. */
+/** Each kind of story gets its own kit tag colour. */
 const TYPE_TONE: Record<string, string> = {
   trade: "",
-  signing: "good",
-  extension: "good",
-  injury: "bad",
-  award: "gold",
-  milestone: "gold",
-  draft: "info",
-  request: "warn",
+  signing: "k-good",
+  extension: "k-good",
+  injury: "k-bad",
+  award: "k-warn",
+  milestone: "k-warn",
+  draft: "k-info",
+  request: "k-warn",
 };
 
 export function NewsList({ items }: { items: NewsItem[] }) {
@@ -23,7 +23,7 @@ export function NewsList({ items }: { items: NewsItem[] }) {
       {items.map((n) => (
         <li key={n.id} className={clsx("grid grid-cols-[52px_84px_1fr] items-center gap-2.5 py-2 text-sm", n.important && "font-semibold")}>
           <span className="font-num text-[10.5px] font-bold uppercase tracking-[0.08em] text-mute num">{fmtDate(n.date)}</span>
-          <span className={clsx("k-chip w-fit !h-[18px] !px-1.5 !text-[9px]", TYPE_TONE[n.type] ?? "info")}>{n.type}</span>
+          <span className={clsx("k-tag w-fit", TYPE_TONE[n.type] ?? "k-info")}>{n.type}</span>
           <span className="min-w-0 text-ink/90">{n.text}</span>
         </li>
       ))}

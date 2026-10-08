@@ -43,7 +43,7 @@ function CapSheet() {
       <PageHeader
         title="Cap Sheet"
         sub={<span className="flex items-center gap-2"><TeamBadge league={l} teamId={team} size="sm" withName /> · {l.season} {cba.status === "projected" ? "(projected figures)" : "(official figures)"}</span>}
-        right={<select className="rounded-[4px] border border-line-2 bg-panel px-2 py-1 text-sm" value={team} onChange={(e) => setTeam(e.target.value)}>{Object.values(l.teams).sort((a, b) => a.fullName.localeCompare(b.fullName)).map((x) => <option key={x.id} value={x.id}>{x.fullName}</option>)}</select>}
+        right={<select className="k-input" style={{ width: "auto" }} value={team} onChange={(e) => setTeam(e.target.value)}>{Object.values(l.teams).sort((a, b) => a.fullName.localeCompare(b.fullName)).map((x) => <option key={x.id} value={x.id}>{x.fullName}</option>)}</select>}
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card><Stat label="Team salary" value={money(st.salary, 2)} sub={<span className={STATUS_COLOR[st.status]}>{STATUS_LABEL[st.status]}</span>} /></Card>
@@ -73,48 +73,48 @@ function CapSheet() {
 
       <Card title="Contracts" pad={false}>
         <div className="overflow-x-auto scroll-thin">
-          <table className="w-full min-w-[840px] text-sm">
-            <thead className="label">
+          <table className="k-table min-w-[840px]">
+            <thead>
               <tr>
-                <th className="px-3 py-2 text-left">Player</th>
-                <th className="px-2 text-left">Type</th>
-                {seasons.map((x) => <th key={x} className="px-2 text-right">{x}</th>)}
-                <th className="px-3 text-right">Remaining</th>
+                <th>Player</th>
+                <th>Type</th>
+                {seasons.map((x) => <th key={x} className="k-num">{x}</th>)}
+                <th className="k-num">Remaining</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((c) => (
-                <tr key={c.id} className={clsx("border-t border-line/50", c.deadMoney && "text-dim")}>
-                  <td className="px-3 py-1.5">{c.playerId && l.players[c.playerId] && !c.deadMoney ? <PlayerLink player={l.players[c.playerId]} /> : <span>{c.playerName}</span>}{c.deadMoney && <span className="chip ml-2">dead</span>}{c.noTradeClause && <span className="chip ml-1">NTC</span>}{c.tradeKicker && <span className="chip ml-1">TK {c.tradeKicker.pct}%</span>}</td>
-                  <td className="px-2 text-xs text-dim">{c.type}</td>
+                <tr key={c.id} className={clsx(c.deadMoney && "text-dim")}>
+                  <td>{c.playerId && l.players[c.playerId] && !c.deadMoney ? <PlayerLink player={l.players[c.playerId]} /> : <span>{c.playerName}</span>}{c.deadMoney && <span className="k-tag ml-2">dead</span>}{c.noTradeClause && <span className="k-tag ml-1">NTC</span>}{c.tradeKicker && <span className="k-tag ml-1">TK {c.tradeKicker.pct}%</span>}</td>
+                  <td className="text-xs text-dim">{c.type}</td>
                   {seasons.map((x) => {
                     const y = c.years.find((z) => z.season === x);
                     return (
-                      <td key={x} className={clsx("px-2 text-right num", y?.option === "player" && "bg-info/10 text-info", y?.option === "team" && "bg-good/10 text-good", y?.option === "eto" && "bg-gold/10", y && y.guaranteed < y.salary && !y.option && "text-warn")}>
+                      <td key={x} className={clsx("k-num", y?.option === "player" && "bg-info/10 text-info", y?.option === "team" && "bg-good/10 text-good", y?.option === "eto" && "bg-gold/10", y && y.guaranteed < y.salary && !y.option && "text-warn")}>
                         {y ? money(y.salary, 2) : ""}
                         {y?.option && <sup className="ml-0.5 text-[9px]">{y.option === "player" ? "PO" : y.option === "team" ? "TO" : "ETO"}</sup>}
                       </td>
                     );
                   })}
-                  <td className="px-3 text-right num">{money(c.years.filter((y) => seasons.includes(y.season)).reduce((a, y) => a + y.salary, 0))}</td>
+                  <td className="k-num">{money(c.years.filter((y) => seasons.includes(y.season)).reduce((a, y) => a + y.salary, 0))}</td>
                 </tr>
               ))}
               {holds.map((h, i) => (
-                <tr key={`h${i}`} className="border-t border-line/50 text-dim">
-                  <td className="px-3 py-1.5 italic">{h.label}</td>
-                  <td className="px-2 text-xs">{h.kind}</td>
-                  <td className="px-2 text-right num">{money(h.amount, 2)}</td>
+                <tr key={`h${i}`} className="text-dim">
+                  <td className="italic">{h.label}</td>
+                  <td className="text-xs">{h.kind}</td>
+                  <td className="k-num">{money(h.amount, 2)}</td>
                   <td colSpan={5} />
                 </tr>
               ))}
-              <tr className="border-t-2 border-line-2 font-semibold">
-                <td className="px-3 py-2" colSpan={2}>Total (cap)</td>
-                {proj.map((p) => <td key={p.season} className={clsx("px-2 text-right num", STATUS_COLOR[p.status])}>{money(p.committed, 1)}</td>)}
+              <tr className="font-semibold">
+                <td colSpan={2}>Total (cap)</td>
+                {proj.map((p) => <td key={p.season} className={clsx("k-num", STATUS_COLOR[p.status])}>{money(p.committed, 1)}</td>)}
                 <td />
               </tr>
               <tr className="text-xs text-dim">
-                <td className="px-3 py-1" colSpan={2}>Projected tax</td>
-                {proj.map((p) => <td key={p.season} className="px-2 text-right num">{p.taxBill ? money(p.taxBill) : "-"}</td>)}
+                <td colSpan={2}>Projected tax</td>
+                {proj.map((p) => <td key={p.season} className="k-num">{p.taxBill ? money(p.taxBill) : "-"}</td>)}
                 <td />
               </tr>
             </tbody>
@@ -140,7 +140,7 @@ function CapSheet() {
           </ul>
           {t.exceptions.tpes.length > 0 && (
             <div className="mt-3">
-              <div className="mb-1 text-[11px] font-bold uppercase text-mute">Traded player exceptions</div>
+              <div className="k-label mb-1">Traded player exceptions</div>
               {t.exceptions.tpes.map((x) => <div key={x.id} className="flex justify-between text-sm"><span>{money(x.amount, 2)} <span className="text-xs text-dim">({x.fromPlayer})</span></span><span className="text-xs text-dim">expires {x.expires}</span></div>)}
             </div>
           )}
@@ -155,7 +155,7 @@ function CapSheet() {
                 const p = l.players[r.playerId];
                 return (
                   <li key={r.playerId} className="flex items-center justify-between gap-2">
-                    <span>{p ? <PlayerLink player={p} /> : r.playerId} <span className="chip">{r.type}</span>{p?.rfaTeam === team && <span className="chip ml-1">RFA · QO {money(p.qualifyingOffer ?? 0)}</span>}</span>
+                    <span>{p ? <PlayerLink player={p} /> : r.playerId} <span className="k-tag">{r.type}</span>{p?.rfaTeam === team && <span className="k-tag ml-1">RFA · QO {money(p.qualifyingOffer ?? 0)}</span>}</span>
                     <span className="flex items-center gap-2">
                       <span className={clsx("num", r.renounced && "line-through text-mute")}>{money(r.capHold, 2)}</span>
                       {!r.renounced && isMine(l, team) && p?.status === "fa" && <Button size="sm" variant="ghost" onClick={() => mutate((lg) => renounceRights(lg, team, r.playerId))}>Renounce</Button>}

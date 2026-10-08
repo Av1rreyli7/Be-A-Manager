@@ -35,7 +35,7 @@ function OfferModal({ p, onClose }: { p: Player; onClose: () => void }) {
   const rivals = l.freeAgency.offers.filter((o) => o.playerId === p.id && o.status === "pending" && o.teamId !== me);
   const inSeason = l.phase === "regular";
   return (
-    <Modal open onClose={onClose} title={`Offer: ${p.name}`}>
+    <Modal open onClose={onClose} kicker="Free agency" title={`Offer: ${p.name}`}>
       <div className="mb-3 flex items-center gap-3 text-sm">
         <OvrPot p={p} />
         <span className="text-dim">Age {seasonAge(p, l.season)} · {p.experience} YOS · asking <b className="text-ink">{money(ask.salary)}</b> × {ask.years}{p.rfaTeam ? ` · RFA (${p.rfaTeam} can match)` : ""}</span>
@@ -47,19 +47,19 @@ function OfferModal({ p, onClose }: { p: Player; onClose: () => void }) {
           </select>
         </Field>
         <Field label={`First-year salary ${money(salary, 2)}`}>
-          <input type="range" className="w-full" min={minSalary(l.cba, p.experience)} max={Math.max(minSalary(l.cba, p.experience), m?.maxFirstYear || 60e6)} step={50000} value={salary} onChange={(e) => setSalary(Number(e.target.value))} />
+          <input type="range" className="k-check w-full" min={minSalary(l.cba, p.experience)} max={Math.max(minSalary(l.cba, p.experience), m?.maxFirstYear || 60e6)} step={50000} value={salary} onChange={(e) => setSalary(Number(e.target.value))} />
         </Field>
         <Field label="Years">
           <select className={inputCls} value={years} onChange={(e) => setYears(Number(e.target.value))}>{[1, 2, 3, 4, 5].map((y) => <option key={y} value={y}>{y}</option>)}</select>
         </Field>
         <Field label={`Annual raise ${(raise * 100).toFixed(0)}%`}>
-          <input type="range" className="w-full" min={0} max={m?.maxRaise ?? 0.08} step={0.01} value={raise} onChange={(e) => setRaise(Number(e.target.value))} />
+          <input type="range" className="k-check w-full" min={0} max={m?.maxRaise ?? 0.08} step={0.01} value={raise} onChange={(e) => setRaise(Number(e.target.value))} />
         </Field>
         <Field label="Final-year option">
           <select className={inputCls} value={option} onChange={(e) => setOption(e.target.value as typeof option)}><option value="">None</option><option value="player">Player option</option><option value="team">Team option</option></select>
         </Field>
         <div>
-          <div className="mb-1 label">Interest</div>
+          <div className="k-label mb-1">Interest</div>
           <Bar value={interest.score} max={100} color={interest.score > 60 ? "bg-good" : interest.score > 40 ? "bg-warn" : "bg-bad"} />
           <div className="mt-1 flex flex-wrap gap-1 text-[10px] text-dim">{Object.entries(interest.parts).map(([k, v]) => <span key={k}>{k} {v.toFixed(0)}</span>)}</div>
         </div>
@@ -112,10 +112,10 @@ function FreeAgency() {
         <Card><Stat label="Free agents" value={fas.length} /></Card>
       </div>
       {sheets.map((o) => (
-        <div key={o.id} className="panel anim-glow flex flex-wrap items-center justify-between gap-2 border-bad/50 px-4 py-3 text-sm">
+        <div key={o.id} className="k-panel flex flex-wrap items-center justify-between gap-2 text-sm">
           <span><b>{l.players[o.playerId].name}</b> signed an offer sheet with {o.teamId}: {money(o.salary)} × {o.years}. Match by {o.matchDeadline}?</span>
           <span className="flex gap-2">
-            <Button variant="success" onClick={() => mutate((lg) => matchOfferSheet(lg, o.id))}>Match</Button>
+            <Button onClick={() => mutate((lg) => matchOfferSheet(lg, o.id))}>Match</Button>
             <Button variant="ghost" onClick={() => mutate((lg) => void (lg.freeAgency.offers.find((x) => x.id === o.id)!.matchDeadline = lg.date))}>Decline to match</Button>
           </span>
         </div>
@@ -126,7 +126,7 @@ function FreeAgency() {
             {myOffers.map((o) => (
               <li key={o.id} className="flex items-center justify-between">
                 <span><PlayerLink player={l.players[o.playerId]} />: {money(o.salary)} × {o.years} ({o.exception})</span>
-                <span className={clsx("chip", o.status === "accepted" && "text-good", o.status === "rejected" && "text-bad")}>{o.status}</span>
+                <span className={clsx("k-tag", o.status === "accepted" && "k-good", o.status === "rejected" && "k-bad")}>{o.status}</span>
               </li>
             ))}
           </ul>
@@ -141,7 +141,7 @@ function FreeAgency() {
             search={(p) => p.name}
             onRowClick={(p) => setSel(p.id)}
             columns={[
-              { key: "n", label: "Player", value: (p) => p.lastName, render: (p) => <span className="flex items-center gap-2"><PlayerLink player={p} />{p.rfaTeam && <span className="chip">RFA {p.rfaTeam}</span>}</span> },
+              { key: "n", label: "Player", value: (p) => p.lastName, render: (p) => <span className="flex items-center gap-2"><PlayerLink player={p} />{p.rfaTeam && <span className="k-tag k-info">RFA {p.rfaTeam}</span>}</span> },
               { key: "pos", label: "Pos", value: (p) => p.pos },
               { key: "age", label: "Age", value: (p) => seasonAge(p, l.season), align: "right" },
               { key: "ovr", label: "OVR/POT", value: (p) => p.ovr, render: (p) => <OvrPot p={p} /> },

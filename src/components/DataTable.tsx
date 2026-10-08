@@ -28,7 +28,6 @@ export function DataTable<T>({
   search,
   pageSize = 50,
   filters,
-  dense,
   onRowClick,
   empty = "Nothing to show",
   rowClassName,
@@ -41,7 +40,7 @@ export function DataTable<T>({
   search?: (row: T) => string;
   pageSize?: number;
   filters?: ReactNode;
-  dense?: boolean;
+  dense?: boolean; // kept so callers still compile: the kit table sets its own row height
   onRowClick?: (row: T) => void;
   empty?: ReactNode;
   rowClassName?: (row: T) => string | undefined;
@@ -96,22 +95,23 @@ export function DataTable<T>({
           {search && (
             <label className="relative w-full max-w-xs">
               <span className="sr-only">Search</span>
-              <MagnifyingGlass size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-mute" />
-              <input className={clsx(inputCls, "pl-8")} placeholder="Search" value={q} onChange={(e) => (setQ(e.target.value), setPage(0))} />
+              <MagnifyingGlass size={15} className="pointer-events-none absolute left-2.5 top-1/2 z-[1] -translate-y-1/2 text-mute" />
+              <input className={inputCls} style={{ paddingLeft: 32 }} placeholder="Search" value={q} onChange={(e) => (setQ(e.target.value), setPage(0))} />
             </label>
           )}
           {filters}
-          <span className="label ml-auto">{filtered.length} rows</span>
+          <span className="k-label ml-auto">{filtered.length} rows</span>
         </div>
       )}
-      <div className="data-table scroll-thin overflow-x-auto border border-line bg-ink/[0.012]">
-        <table className="w-full min-w-max border-collapse text-[13px]">
-          <thead className="sticky top-0 z-[1] bg-panel-2">
+      <div className="scroll-thin overflow-x-auto">
+        <table className="k-table min-w-max">
+          <thead>
             <tr>
               {columns.map((c) => (
                 <th
                   key={c.key}
                   title={c.title}
+                  aria-sort={sort === c.key ? (dir === "asc" ? "ascending" : "descending") : undefined}
                   onClick={() => {
                     if (!c.value) return;
                     if (sort === c.key) setDir(dir === "asc" ? "desc" : "asc");
@@ -120,13 +120,8 @@ export function DataTable<T>({
                       setDir(typeof c.value(rows[0] as T) === "string" ? "asc" : "desc");
                     }
                   }}
-                  className={clsx(
-                    "label select-none whitespace-nowrap border-b border-line px-2.5 py-2.5 transition-colors",
-                    c.value && "cursor-pointer hover:!text-ink",
-                    c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "text-left",
-                    c.hideOnMobile && "hidden md:table-cell",
-                    sort === c.key && "sorted !text-accent",
-                  )}
+                  style={{ ...(c.align === "center" ? { textAlign: "center" } : null), ...(sort === c.key ? { boxShadow: "inset 0 -2px 0 var(--k-accent)" } : null) }}
+                  className={clsx("select-none", c.value && "cursor-pointer", c.align === "right" && "k-num", c.hideOnMobile && "hidden md:table-cell")}
                 >
                   {c.label}
                   {sort === c.key && (dir === "asc" ? <CaretUp size={10} weight="fill" className="ml-0.5 inline align-[0]" /> : <CaretDown size={10} weight="fill" className="ml-0.5 inline align-[0]" />)}
@@ -136,9 +131,9 @@ export function DataTable<T>({
           </thead>
           <tbody ref={body}>
             {shown.map((r) => (
-              <tr key={rowKey(r)} onClick={onRowClick ? () => onRowClick(r) : undefined} className={clsx("border-b border-line/60 transition-colors duration-100 last:border-0 even:bg-ink/[0.018] hover:bg-accent/[0.06]", onRowClick && "cursor-pointer", rowClassName?.(r))}>
+              <tr key={rowKey(r)} onClick={onRowClick ? () => onRowClick(r) : undefined} className={clsx(onRowClick && "cursor-pointer", rowClassName?.(r))}>
                 {columns.map((c) => (
-                  <td key={c.key} className={clsx(dense ? "px-2.5 py-1" : "px-2.5 py-1.5", "num whitespace-nowrap", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "text-left", c.hideOnMobile && "hidden md:table-cell", c.className)}>
+                  <td key={c.key} className={clsx("num whitespace-nowrap", c.align === "right" ? "k-num" : c.align === "center" && "text-center", c.hideOnMobile && "hidden md:table-cell", c.className)}>
                     {c.render ? c.render(r) : c.key === "pos" && c.value?.(r) ? <PosBadge pos={String(c.value(r))} /> : String(c.value?.(r) ?? "")}
                   </td>
                 ))}
@@ -146,7 +141,7 @@ export function DataTable<T>({
             ))}
             {!shown.length && (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-10 text-center text-sm text-dim">
+                <td colSpan={columns.length} className="text-center text-dim">
                   {empty}
                 </td>
               </tr>
@@ -156,13 +151,13 @@ export function DataTable<T>({
       </div>
       {pages > 1 && (
         <div className="mt-2 flex items-center justify-end gap-1 text-xs text-dim">
-          <button className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 font-semibold transition-colors hover:bg-ink/5 hover:text-ink disabled:opacity-30" disabled={cur === 0} onClick={() => setPage(cur - 1)}>
+          <button className="k-btn k-btn-ghost k-btn-sm" disabled={cur === 0} onClick={() => setPage(cur - 1)}>
             <CaretLeft size={12} weight="bold" /> Prev
           </button>
-          <span className="px-1 font-display text-[13px] font-bold text-ink num">
+          <span className="k-msub px-1">
             {cur + 1} / {pages}
           </span>
-          <button className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 font-semibold transition-colors hover:bg-ink/5 hover:text-ink disabled:opacity-30" disabled={cur >= pages - 1} onClick={() => setPage(cur + 1)}>
+          <button className="k-btn k-btn-ghost k-btn-sm" disabled={cur >= pages - 1} onClick={() => setPage(cur + 1)}>
             Next <CaretRight size={12} weight="bold" />
           </button>
         </div>
