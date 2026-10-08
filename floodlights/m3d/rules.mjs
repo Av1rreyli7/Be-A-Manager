@@ -249,7 +249,7 @@ function restartSpot(m, p, R) {
 }
 
 // every step of a restart: walk into place, then go
-export function updateRestart(m, dt, userTeam, input) {
+export function updateRestart(m, dt, userTeam, input, aiTakes) {
   const R = m.restart;
   if (!R) return;
   R.t += dt;
@@ -294,7 +294,8 @@ export function updateRestart(m, dt, userTeam, input) {
   const boxed = R.kind === "corner" || R.kind === "freekick" && R.wall.length;
   R.ready = R.placed && (farthest < 1.5 || R.t > settle && (!boxed || farNear < 2.5 || R.t > 7)) && R.t - R.placedT > 0.25;
   if (!R.ready) return;
-  const userTakes = R.team === userTeam && !m.auto;
+  // player lock: a set piece someone else takes is the AI's, and a penalty against him is the keeper's own call
+  const userTakes = R.team === userTeam && !m.auto && !aiTakes;
   if (userTakes) {
     m.ctrl = tk;
     // a kick off goes as soon as the person touches a key or the stick
@@ -308,7 +309,7 @@ export function updateRestart(m, dt, userTeam, input) {
     return;
   }
   // the AI goalkeeper faces a penalty taken by the person: the keeper side is the person's to choose
-  if (R.kind === "penalty" && userTeam !== R.team && !m.auto) m.ctrl = m.teams[userTeam].gk;
+  if (R.kind === "penalty" && userTeam !== R.team && !m.auto && !m.lock) m.ctrl = m.teams[userTeam].gk;
   if (R.t - R.placedT > wait + m.rng() * 0.5) aiRestart(m, R, tk);
 }
 

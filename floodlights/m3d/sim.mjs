@@ -18,12 +18,15 @@ import { updateHeader, startHeader, meetPlan } from "./aerial.mjs";
 import { setupShape, teamThink, playerThink, receive } from "./ai.mjs";
 import { foul as refFoul, markOffside, touched, checkBall, startRestart, updateRestart, updateClock, minuteOf, say } from "./rules.mjs";
 import { createUser, userStep, normInput } from "./user.mjs";
+import { lockSetup, lockScan, lockTick, lockShotOn, lockPassOk, lockLine } from "./lock.mjs";
 
 export { STEP, MATCH_SECONDS, HALF_SECONDS, MAX_GOALS, DIMS, deriveAttrs, deriveProfile, assignNumbers };
 
 function makePlayer(m, row, team, idx) {
   const a = deriveAttrs(row);
   const prof = deriveProfile(row, a);
+  // player lock: the footballer the person created wears his own face, hair, build and boots
+  if (row.pc && row.look && typeof row.look === "object") Object.assign(prof, row.look);
   const role = roleOf(row);
   prof.reactT = clamp(0.3 - n01(a.rea) * 0.16 + (role === "GK" ? 0.05 - n01(a.gkr) * 0.12 : 0), 0.1, 0.36);
   const name = String(row.n || "Player");
@@ -35,7 +38,8 @@ function makePlayer(m, row, team, idx) {
     gait: newGait(), mode: "free", modeT: 0, bal: 1, stam: 1, burstE: 1, knock: 0,
     want: emptyWant(), act: null, drib: { since: 0, lastT: -9 },
     ai: { think: 0, mode: null, run: null, spot: null, mark: null, tackleCd: 0, open: 0 },
-    touch: null, recv: null, look: null, gest: null, mood: null, card: 0, off: false, stepped: -1, feinted: null
+    touch: null, recv: null, look: null, gest: null, mood: null, card: 0, off: false, stepped: -1, feinted: null,
+    pc: !!row.pc
   };
 }
 
@@ -48,7 +52,7 @@ export function createSim3D(setup, opts) {
   const m = {
     deep: true, side, t: 0, clock: 0, half: 1, phase: "restart", phaseT: 0, dead: true,
     teams: [], players: [], ball: createBall(), events: [], rng, auto: !!opts.auto,
-    score: [0, 0], goals: [], ctrl: null, userTeam: 0, restart: null, setPiece: null, aim: null, offside: null,
+    score: [0, 0], goals: [], ctrl: null, lock: null, userTeam: 0, restart: null, setPiece: null, aim: null, offside: null,
     contacts: {}, hud: {}, wet: !!setup.wet, lastPass: null, teamThinkT: 0, firstKick: 0,
     stats: { poss: [0, 0], shots: [0, 0], onTarget: [0, 0], passes: [0, 0], passOk: [0, 0], tackles: [0, 0], fouls: [0, 0], corners: [0, 0], freekicks: [0, 0], pens: [0, 0], restarts: [0, 0], saves: [0, 0], skills: [0, 0], offsides: [0, 0], yellow: [0, 0], red: [0, 0] }
   };
@@ -73,6 +77,8 @@ export function createSim3D(setup, opts) {
     p.x = s.x; p.y = s.y; p.face = T.dir > 0 ? 0 : Math.PI;
     p.gait.feet[0].x = p.x; p.gait.feet[0].y = p.y + 0.1; p.gait.feet[1].x = p.x; p.gait.feet[1].y = p.y - 0.1;
   }
+  // player lock: a row marked pc (Player Career) is the only player the person controls
+  lockSetup(m, setup);
   const U = createUser(m);
   m.firstKick = rng() < 0.5 ? 0 : 1;
   m.foul = (by, on, kind, sev) => refFoul(m, by, on, kind, sev);
@@ -91,13 +97,16 @@ export function createSim3D(setup, opts) {
     if (!I.held.E) prevHeld.Et = 0;
     if (m.phase === "full") return;
     m.userIn = I; // the keeper facing a penalty reads the person's stick
+    const ev0 = m.events.length;
     m.t += dt;
     updateClock(m, dt);
     if (m.phase === "full") return;
     const b = m.ball;
     // ---------- brains ----------
     if (m.t >= m.teamThinkT) { teamThink(m, m.teams[0]); teamThink(m, m.teams[1]); m.teamThinkT = m.t + 0.2; }
-    if (m.phase === "restart") updateRestart(m, dt, m.auto ? -1 : m.userTeam, setPieceInput(I, U, dt));
+    // in player lock the person only takes a set piece when it is his own footballer's to take
+    const notHis = m.lock && m.restart && m.restart.team === m.userTeam && m.restart.taker !== m.lock;
+    if (m.phase === "restart") updateRestart(m, dt, m.auto ? -1 : m.userTeam, setPieceInput(I, U, dt), notHis);
     else if (m.phase === "goal" || m.phase === "halftime") celebrate(m, dt);
     else {
       if (!m.auto) userStep(m, U, I, dt);
@@ -145,6 +154,7 @@ export function createSim3D(setup, opts) {
     if (m.clearSetPieceAt && m.t > m.clearSetPieceAt) { m.setPiece = null; m.clearSetPieceAt = 0; }
     for (const p of m.players) if (p.sentOff && !p.off && m.t - p.sentOff > 1.2) sendOff(m, p);
     sanity(m);
+    if (m.lock) { lockTick(m); lockScan(m, ev0); }
   }
 
   function result() {
@@ -154,6 +164,8 @@ export function createSim3D(setup, opts) {
 
   return {
     m, step, result, deep: true, engine: "m3d",
+    // player lock: his own match, for the career
+    lockLine: () => lockLine(m),
     // helpers the tests and the view use
     minute: () => minuteOf(m),
     startSlide: (p, dir) => startSlide(m, p, dir === undefined ? p.face : dir)
@@ -287,7 +299,7 @@ function take(m, p) {
   const grade = firstTouch(m, p, dir);
   // pass completed?
   // a pass is complete when a team mate is the next to control it
-  if (m.lastPass && !m.lastPass.counted && m.t - m.lastPass.t < 6) { m.lastPass.counted = true; if (m.lastPass.by.team === p.team && m.lastPass.by !== p) m.stats.passOk[p.team]++; }
+  if (m.lastPass && !m.lastPass.counted && m.t - m.lastPass.t < 6) { m.lastPass.counted = true; if (m.lastPass.by.team === p.team && m.lastPass.by !== p) { m.stats.passOk[p.team]++; lockPassOk(m, m.lastPass.by); } }
   if (b.ctrl === p) { p.ai.think = 0.1 + m.rng() * 0.15; }
 }
 
@@ -302,6 +314,7 @@ function onKick(m, p, spec, cq) {
     let on = false;
     for (const s of tr) if (Math.abs(s[1]) >= HALF_L) { if (Math.abs(s[2]) < GOAL_HALF && s[3] < BAR_H && Math.sign(s[1]) === Math.sign(gx)) { m.stats.onTarget[p.team]++; on = true; } break; }
     m.lastShot = { by: p, t: m.t, kind, on };
+    lockShotOn(m, p, on);
     p.mood = { k: "focus", t: m.t };
   } else if (spec.to) {
     if (m.lastShot) m.lastShot.on = false; // a new pass or clearance ends the shot's claim on a goal

@@ -98,6 +98,16 @@ label{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:upperca
 .card #createBtn{flex:1;padding:14px 18px}
 .card .cardsplit{height:1px;background:var(--line2);margin:24px -28px 22px}
 .card .msg{margin-top:14px}
+.pcm-fail{position:fixed;inset:0;z-index:50;display:grid;place-content:center;justify-items:start;gap:10px;padding:24px;background:var(--night)}
+.pcm-fail h2{margin:0;font-weight:900;font-size:clamp(28px,5vw,48px);text-transform:uppercase}
+.pcm-fail .pcm-k{margin:0;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--volt)}
+.pcm-fail p{max-width:48ch;margin:0;color:var(--soft)}
+.pcm-fail a{margin-top:10px;display:inline-block;padding:12px 18px;border-radius:10px;text-decoration:none}
+.card .pcentry{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 14px;margin:24px -28px -28px;padding:18px 28px;border-top:1px solid var(--line2);border-radius:0 0 var(--r-panel) var(--r-panel);color:inherit;text-decoration:none;background:linear-gradient(90deg,rgba(208,232,92,.07),transparent 70%);transition:background .2s}
+.card .pcentry:hover,.card .pcentry:focus-visible{background:linear-gradient(90deg,rgba(208,232,92,.14),transparent 80%)}
+.card .pcentry b{font-weight:800;font-size:15px}
+.card .pcentry span{grid-column:1;font-size:13px;color:var(--soft)}
+.card .pcentry i{grid-row:1/3;grid-column:2;font-style:normal;font-weight:800;color:var(--volt)}
 .card .msg:empty{display:none}
 @media(max-width:860px){
   #lobby{padding:36px 18px;align-items:start}
@@ -1093,6 +1103,7 @@ tr.shim .k-shimmer{height:26px;border-radius:4px}
       <label class="flab" for="codeIn">Or join with a code</label>
       <div class="row"><input id="codeIn" maxlength="4" placeholder="CODE" style="text-transform:uppercase"><button id="joinBtn">Join</button></div>
       <div class="msg" id="lobbyMsg"></div>
+      <a class="pcentry" href="/floodlights/career"><b>Player Career</b><span>Create one footballer and live his whole career, school to superstar.</span><i aria-hidden="true">&rarr;</i></a>
     </div>
   </div>
 </div>
@@ -3460,8 +3471,8 @@ $("mwonder").onchange = loadMarket;
 $("sqsort").onchange = () => { if (STATE) render(); };
 $("mq").addEventListener("keydown", e => { if (e.key === "Enter") loadMarket(); });
 
-// auto resume
-if (ME.name && ME.code) {
+// auto resume (not when the page was opened for a Player Career live match)
+if (ME.name && ME.code && location.hash !== "#pcmatch") {
   api("/api/state").then(()=>enter()).catch(()=>{ localStorage.removeItem("fl_code"); });
 }
 $("nameIn").value = ME.name;
@@ -3557,6 +3568,47 @@ $("nameIn").value = ME.name;
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(boot); else addEventListener("load", boot);
   var rt;
   addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(reserve, 160); });
+})();
+// Player Career: his league match, live, with only the footballer he created under control. The career page
+// (/floodlights/career) sends him here; this page owns the match overlay, so the match is the same one Manager
+// Career plays. When it ends (or he leaves) he goes straight back to his career.
+(function () {
+  "use strict";
+  if (location.hash !== "#pcmatch" || !window.FLMatch) return;
+  var code = localStorage.getItem("fl_pc_code"), name = localStorage.getItem("fl_pc_name");
+  var back = function (q) { location.replace("/floodlights/career" + (q || "")); };
+  if (!code || !name) { back(""); return; }
+  var lobby = document.getElementById("lobby");
+  if (lobby) lobby.classList.add("hidden");
+  var played = false;
+  function post(path, body) {
+    return fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ code: code, name: name }, body || {})) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || "Something went wrong."); return j; }); });
+  }
+  function fail(msg) {
+    var box = document.createElement("div");
+    box.className = "pcm-fail";
+    box.setAttribute("role", "alert");
+    box.innerHTML = '<p class="pcm-k">Player Career</p><h2>No live match</h2><p></p><a class="k-btn k-btn-primary" href="/floodlights/career">Back to your career</a>';
+    box.querySelector("p:nth-of-type(2)").textContent = msg;
+    document.body.appendChild(box);
+  }
+  post("/api/pc/matchstart").then(function (s) {
+    FLMatch.open({
+      info: { home: s.home, away: s.away, side: s.side, label: s.label, homeRating: s.homeRating, awayRating: s.awayRating },
+      lock: s.lock,
+      kickoff: function () { return Promise.resolve(s); },
+      finish: function (hg, ag, sim) {
+        var line = sim && typeof sim.lockLine === "function" ? sim.lockLine() : null;
+        return post("/api/pc/matchresult", { hg: hg, ag: ag, line: line }).then(function (r) {
+          played = true;
+          try { sessionStorage.setItem("fl_pc_report", JSON.stringify(r.reports || [])); } catch (e) { /* the career page just will not show this week's line */ }
+          return "Saved. Your match rating: " + (line ? line.rating.toFixed(1) : "-") + (line && line.instruction === true ? ". You did what the manager asked." : line && line.instruction === false ? ". The manager wanted more." : ".");
+        });
+      },
+      closed: function () { back(played ? "?played=1" : "?left=1"); }
+    });
+  }).catch(function (e) { fail(e && e.message ? e.message : "The match could not start."); });
 })();
 </script>
 

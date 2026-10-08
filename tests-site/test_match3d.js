@@ -459,6 +459,50 @@ async function main() {
     ok("dispose empties the figures and leaves a borrowed renderer alone", view.figures.size === 0 && !stubRenderer.gone, null);
   }
 
+  // ================= player lock (Player Career) =================
+  {
+    const indexHtml = fs.readFileSync(fl("index.html"), "utf8");
+    ok("player lock: the page opens a live Player Career match from #pcmatch through the same overlay", indexHtml.includes('location.hash !== "#pcmatch"') && indexHtml.includes('post("/api/pc/matchstart")') && indexHtml.includes('post("/api/pc/matchresult"') && indexHtml.includes("FLMatch.open({"), null);
+    ok("player lock: its own key strip and help, 3D only, and the finished sim goes to the page", engine.includes("const STRIP_KEYS_LOCK = ") && engine.includes("lockKeysHtml(cfg)") && engine.includes("(!!cfg.lock || readLook()") && engine.includes("cfg.finish(Math.min(MAX_GOALS, r.home), Math.min(MAX_GOALS, r.away), A.sim)"), null);
+    ok("player lock: Classic is untouched by it", !/cfg\.lock|m\.lock|lockLine|STRIP_KEYS_LOCK/.test(engine.slice(engine.indexOf("function createSim"), engine.indexOf("// LOOK"))), null);
+    ok("player lock: a normal match has no lock", createSim3D(setupOf(78, 76), { rng: seeded(3) }).m.lock === null, null);
+    const lockXI = idx => { const xi = testXI(78, "H"); xi[idx].pc = true; xi[idx].n = "Locked Man"; xi[idx].look = { skinF: 0.4, hair: 5, beard: 2, watch: "gold" }; return xi; };
+    let switched = 0, finished = 0, toHim = 0, calls = 0, setPiecesHis = 0, setPiecesOthers = 0, ratings = [], lines = [];
+    for (let k = 0; k < 3; k++) {
+      const sim = createSim3D({ home: "Home FC", away: "Away FC", side: k === 1 ? "away" : "home", homeXI: k === 1 ? testXI(76, "A") : lockXI(9), awayXI: k === 1 ? lockXI(7) : testXI(76, "A"), instruction: { kind: "shots", n: 3, text: "Get shots away" } }, { rng: seeded(900 + k) });
+      const m = sim.m, L = m.lock;
+      if (k === 0) {
+        ok("player lock: the marked row is the one he controls, in his own look", L && L.name === "Locked Man" && m.ctrl === L && L.prof.skinF === 0.4 && L.prof.watch === "gold", L && L.name);
+        ok("player lock: the manager's instruction is on the match", m.instruction && m.instruction.kind === "shots", null);
+      }
+      let steps = 0, eH = 0, lastCall = -9;
+      while (m.phase !== "full" && steps++ < 60 * 700) {
+        const b = m.ball, inp = { mx: 0, my: 0, sprint: false, held: {}, down: {}, up: {} };
+        const gx = m.teams[0].dir * C.HALF_L;
+        if (b.ctrl === L) { const dx = gx - L.x, dy = -L.y, d = Math.hypot(dx, dy); inp.mx = dx / d; inp.my = dy / d; if (d < 22) { if (eH < 0.45) { inp.held.E = true; eH += 1 / 60; } else { inp.up.E = eH; eH = 0; } } }
+        else if (b.ctrl && b.ctrl.team === 0) { const dx = b.x + m.teams[0].dir * 6 - L.x, dy = -b.y * 0.3 - L.y, d = Math.hypot(dx, dy) || 1; if (d > 2) { inp.mx = dx / d; inp.my = dy / d; } if (steps % 90 === 0) { inp.down.Q = true; calls++; lastCall = m.t; } if (steps % 400 === 200) inp.down.T = true; }
+        else { const dx = b.x - L.x, dy = b.y - L.y, d = Math.hypot(dx, dy) || 1; if (d < 20) inp.held.S = true; else { inp.mx = dx / d; inp.my = dy / d; } }
+        if (m.phase === "restart" && m.restart && m.restart.team === 0 && m.restart.ready) { if (m.restart.taker === L) setPiecesHis++; else setPiecesOthers++; }
+        sim.step(inp);
+        if (m.ctrl !== L) switched++;
+        for (const e of m.events) if (e.type === "kick" && e.to === L.id && e.by !== L.id) toHim++;
+        m.events.length = 0;
+      }
+      if (m.phase === "full") finished++;
+      const line = sim.lockLine();
+      lines.push(line);
+      ratings.push(line.rating);
+    }
+    ok("player lock: three full matches finish (home and away)", finished === 3, finished);
+    ok("player lock: control never leaves him, not even at a set piece someone else takes", switched === 0 && setPiecesOthers > 0, [switched, setPiecesOthers, setPiecesHis]);
+    ok("player lock: team mates pass to him when he calls and gets free", toHim >= 3 && calls > 10, [toHim, calls]);
+    ok("player lock: his line and live rating are sane", lines.every(l => l && [l.g, l.a, l.shots, l.passes, l.passOk, l.won, l.rating].every(Number.isFinite) && l.rating >= 3 && l.rating <= 10 && l.passOk <= l.passes && l.onTarget <= l.shots), lines);
+    const idle = createSim3D({ home: "Home FC", away: "Away FC", side: "home", homeXI: lockXI(7), awayXI: testXI(76, "A") }, { rng: seeded(77) });
+    let n2 = 0;
+    while (idle.m.phase !== "full" && n2++ < 60 * 700) { idle.step({ mx: 0, my: 0, held: {}, down: {}, up: {} }); idle.m.events.length = 0; }
+    ok("player lock: a player who does nothing gets a poor or ordinary rating, never a good one", idle.m.phase === "full" && idle.lockLine().rating <= 6.6, idle.lockLine().rating);
+  }
+
   // ================= both ends play the same =================
   {
     // the same seed twice, the second with both teams turned round and every player rotated half a turn about

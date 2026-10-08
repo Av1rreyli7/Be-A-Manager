@@ -23,6 +23,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { GAMES, ORDER, type GameId } from "./games";
 import { STARS_A, STARS_B } from "./starfield";
+import { BEAM_L, BEAM_R } from "./beams";
 import { Basketball, Football } from "./Balls";
 import { km } from "@/lib/motion";
 import "./landing.css";
@@ -242,6 +243,7 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
 
   const finish = useCallback(() => {
     markSeen();
+    rootRef.current?.removeAttribute("data-anim");
     setPhase("done");
   }, []);
 
@@ -266,6 +268,8 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
           setPhase("done");
           return;
         }
+        // the animated pieces get their own GPU layers only while the intro plays (see data-anim in the CSS)
+        root.setAttribute("data-anim", "1");
         const tl = buildIntro(root);
         tlRef.current = tl;
         // the from states are painted now, so the first paint guard can go
@@ -282,6 +286,7 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
         return () => {
           tl.kill();
           tlRef.current = null;
+          root.removeAttribute("data-anim");
         };
       });
       return () => mm.revert();
@@ -335,15 +340,18 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
       <style>{"html,body{background:#000000 !important;color:#ffffff}"}</style>
 
       <div className="bam-bg" aria-hidden="true">
-        <div className="bam-aurora" />
-        <div className="bam-stars">
-          <i style={{ boxShadow: STARS_A }} />
-          <i style={{ boxShadow: STARS_B }} />
+        {/* everything that never moves sits in one layer, painted once */}
+        <div className="bam-sky">
+          <div className="bam-aurora" />
+          <div className="bam-stars">
+            <i style={{ boxShadow: STARS_A }} />
+            <i style={{ boxShadow: STARS_B }} />
+          </div>
+          <div className="bam-scrim" />
         </div>
-        <div className="bam-scrim" />
         <div className="bam-dim" />
-        <div className="bam-beam is-l" />
-        <div className="bam-beam is-r" />
+        <div className="bam-beam is-l" style={{ backgroundImage: BEAM_L }} />
+        <div className="bam-beam is-r" style={{ backgroundImage: BEAM_R }} />
         <div className="bam-lamps is-l">
           {Array.from({ length: 6 }, (_, i) => (
             <i key={i} />

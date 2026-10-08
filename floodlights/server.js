@@ -953,7 +953,7 @@ function pickTransferTarget(game, clubName) {
   if (maxFee < 0.5) return null;
   const tipped = new Set(Object.keys((game.interestBumps || {})[clubName] || {}).map(Number));
   const base = Object.values(game.players).filter(p =>
-    !p.academy && p.club && p.club !== clubName && game.clubs[p.club] && !humanOf(game, p.club) &&
+    !p.academy && !p.pc && p.club && p.club !== clubName && game.clubs[p.club] && !humanOf(game, p.club) &&
     !p.loanOwner && !p.pendingDeal && (game.leagueFixtures || {})[p.league] &&
     game.clubs[p.club].squad.length > 16 && !tipped.has(p.id));
   const avg = Math.round(needs.xiAvg);
@@ -1464,7 +1464,7 @@ function aiToAiTransfers(game) {
     const need = aiWeakestSpot(game, buyer);
     const wantKid = buyer.budget > (buyer.baseBudget || buyer.budget) * 0.6 && Math.random() < 0.3;
     const pool = Object.values(game.players).filter(p =>
-      p.club !== buyer.name && !p.academy && !p.loanOwner && !p.pendingDeal &&
+      p.club !== buyer.name && !p.academy && !p.loanOwner && !p.pendingDeal && !p.pc &&
       !humanOf(game, p.club) && game.clubs[p.club] &&
       (game.leagueFixtures || {})[p.league] &&
       game.clubs[p.club].squad.length > 16 &&
@@ -1575,7 +1575,7 @@ function hijackPrice(game, p, viewClub) {
 }
 
 function aiFreeAgentSignings(game) {
-  const free = shuffle(Object.values(game.players).filter(p => p.club === "" && p.rating >= 64));
+  const free = shuffle(Object.values(game.players).filter(p => p.club === "" && p.rating >= 64 && !p.pc));
   if (!free.length) return;
   let done = 0;
   for (const p of free) {
@@ -1617,7 +1617,7 @@ function aiLoans(game) {
     if (loansIn >= 3) continue;
     const need = aiWeakestSpot(game, club);
     const pool = Object.values(game.players).filter(p =>
-      p.club !== club.name && !p.academy && !p.loanOwner && !p.listed && !tippedIds.has(p.id) &&
+      p.club !== club.name && !p.academy && !p.loanOwner && !p.listed && !tippedIds.has(p.id) && !p.pc &&
       !humanOf(game, p.club) && game.clubs[p.club] &&
       (game.leagueFixtures || {})[p.league] &&
       game.clubs[p.club].squad.length > 16 &&
@@ -1969,7 +1969,8 @@ function endOfSeason(game) {
   // retirements make room, regens keep the world exciting
   let retired = 0, regens = 0;
   for (const club of Object.values(game.clubs)) {
-    const leaving = club.squad.map(id => game.players[id]).filter(p => p && (p.age >= 39 || (p.age >= 37 && Math.random() < 0.5)));
+    // (the Player Career footballer decides for himself when to stop)
+    const leaving = club.squad.map(id => game.players[id]).filter(p => p && !p.pc && (p.age >= 39 || (p.age >= 37 && Math.random() < 0.5)));
     for (const p of leaving) {
       retired++;
       club.squad = club.squad.filter(id => id !== p.id);
@@ -2010,7 +2011,7 @@ function endOfSeason(game) {
     }
   }
   for (const p of Object.values(game.players)) {
-    if (p.club === "" && p.age >= 37) { delete game.players[p.id]; retired++; }
+    if (p.club === "" && p.age >= 37 && !p.pc) { delete game.players[p.id]; retired++; }
   }
   if (retired) log(game, `${retired} players retired this summer and ${regens} regens stepped up.`);
 
@@ -2066,7 +2067,7 @@ function refreshNations(game) {
     }
     const homeLeague = Object.entries(leagueCount).sort((a, b) => b[1] - a[1]).map(e => e[0])[0] || "Premier League";
     const candidates = Object.values(game.players)
-      .filter(p => p.league === homeLeague && !taken.has(p.id) && !p.academy && p.age <= 33)
+      .filter(p => p.league === homeLeague && !taken.has(p.id) && !p.academy && !p.pc && p.age <= 33)
       .sort((a, b) => b.rating - a.rating);
     const before = nation.playerIds.length;
     for (const c of candidates) {
@@ -2092,6 +2093,7 @@ app.post("/api/join", (req, res) => {
   const game = games[String(req.body.code || "").toUpperCase()];
   if (!game) return res.status(404).json({ error: "Game not found. Check the code." });
   if (!name) return res.status(400).json({ error: "Enter a manager name." });
+  if (game.mode === "player") return res.status(400).json({ error: "This code is a Player Career save. Open it from Player Career.", playerCareer: true });
   if (!game.users[name]) {
     if (Object.keys(game.users).length >= 10) return res.status(400).json({ error: "Lobby is full." });
     game.users[name] = { name, team: null, nation: null };
@@ -2142,6 +2144,8 @@ function getCtx(req, res) {
   if (!game) { res.status(404).json({ error: "Game not found." }); return null; }
   if (game.sport === "basketball") { res.status(400).json({ error: "Basketball has moved to its own game. This server is football only now." }); return null; }
   migrate(game);
+  // a Player Career save only opens through its own screens until he retires and takes a club
+  if (game.mode === "player" && !req.path.startsWith("/api/pc/")) { res.status(400).json({ error: "This code is a Player Career save. Open it from Player Career.", playerCareer: true }); return null; }
   const name = String(req.query.name || req.body.name || "");
   const user = game.users[name];
   if (!user) { res.status(403).json({ error: "You are not in this game." }); return null; }
@@ -3549,6 +3553,197 @@ app.get("/api/market", (req, res) => {
 });
 
 
+
+// ---------- Player Career: one created footballer living in this same world ----------
+// The career code lives in career/ and gets the world's own functions handed in, so the league sim, the
+// market, ageing and everything else run exactly as they do for Manager Career.
+const { makeCore: makeCareerCore } = require("./career/core");
+const PC = makeCareerCore({
+  marketValue, log, playMatchweek, endOfSeason, bestXI, makeFixtures, makeAllCups, leagueClubs, ensureRoles, tableFor, LEAGUES, poisson, geo,
+  askingPrice, windowOpen, leagueAwards,
+  // a club's (or a country's) shirt colours, the same ones the match uses, for his big day scenes
+  kitOf: name => { try { return require("./match.js").pickKits(String(name || ""), "")[0]; } catch (e) { return null; } }
+});
+function pcCtx(req, res) {
+  const ctx = getCtx(req, res); if (!ctx) return null;
+  if (ctx.game.mode !== "player" || !ctx.game.career) { res.status(400).json({ error: "This is not a Player Career save." }); return null; }
+  return ctx;
+}
+function pcReply(res, game, out) {
+  if (out && out.error) return res.status(400).json(out);
+  save();
+  res.json(Object.assign({}, out, { state: PC.view(game) }));
+}
+app.post("/api/pc/create", (req, res) => {
+  const name = String(req.body.name || "").trim().slice(0, 20);
+  if (!name) return res.status(400).json({ error: "Enter a name first." });
+  const game = newGame(name);
+  PC.setupWorld(game);
+  const out = PC.createPlayer(game, req.body.player || {});
+  if (out.error) { delete games[game.code]; return res.status(400).json(out); }
+  save();
+  res.json({ code: game.code, state: PC.view(game) });
+});
+// the creator's lists, so the page never keeps its own copy
+app.get("/api/pc/meta", (req, res) => {
+  const D = PC.D;
+  res.json({
+    countries: Object.fromEntries(Object.entries(D.COUNTRIES).map(([k, v]) => [k, { path: v.path, lang: v.lang, city: v.city }])),
+    positions: D.POSITIONS, groups: D.POS_GROUP, styles: Object.fromEntries(Object.entries(D.STYLES).map(([k, v]) => [k, v.pos])),
+    attrs: D.ATTRS, labels: D.ATTR_LABEL, sessions: D.SESSIONS, intensities: Object.keys(D.INTENSITY), slots: D.SLOTS, fx: D.FX
+  });
+});
+app.get("/api/pc/state", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  res.json({ state: PC.view(ctx.game) });
+});
+app.get("/api/pc/options", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  const kind = String(req.query.kind || "");
+  const c = ctx.game.career;
+  if (kind === "school") return res.json({ options: PC.D.SCHOOLS });
+  if (kind === "college") return res.json({ options: PC.collegeOptions(ctx.game) });
+  if (kind === "academy") return res.json({ options: PC.academyChoices(ctx.game, c.person.country) });
+  if (kind === "agent") return res.json({ options: PC.D.AGENTS.filter(a => (c.agentOffers || []).includes(a.id)) });
+  res.status(400).json({ error: "Which options?" });
+});
+app.post("/api/pc/decide", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.decide(ctx.game, String(req.body.id || ""), String(req.body.choice || "")));
+});
+app.post("/api/pc/plan", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.setPlan(ctx.game, req.body.slots, String(req.body.intensity || "")));
+});
+app.post("/api/pc/week", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  // weeks: 1, or up to 8 in a row that stop early at anything that needs the person
+  const n = Math.max(1, Math.min(8, Math.floor(Number(req.body.weeks) || 1)));
+  const reports = [];
+  let out = null;
+  for (let i = 0; i < n; i++) {
+    out = PC.advanceWeek(ctx.game);
+    if (out.error) break;
+    reports.push(out.report);
+    const st = ctx.game.career;
+    if (out.report.seasonOver || st.decisions.length || (out.report.match && out.report.match.mins && out.report.match.rating >= 8.5) || st.offers.some(o => o.status === "open") || st.cond.inj || out.report.tease) break;
+  }
+  if (!reports.length) return res.status(400).json(out);
+  pcReply(res, ctx.game, { ok: true, reports });
+});
+app.post("/api/pc/season", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.nextSeason(ctx.game));
+});
+app.post("/api/pc/negotiate", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.negotiate(ctx.game, String(req.body.offer || "")));
+});
+app.post("/api/pc/sign", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.sign(ctx.game, String(req.body.offer || "")));
+});
+// player lock: his league match this week, played live in the 3D match with only him under control.
+// The teams are built the way /api/playstart builds them; his row carries pc (the lock) and his look.
+app.post("/api/pc/matchstart", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  const game = ctx.game, c = game.career;
+  const chk = PC.liveCheck(game);
+  if (chk.error) { save(); return res.status(400).json(chk); }
+  const me = game.players[c.pid];
+  const mm = { home: chk.home, away: chk.away };
+  const nums = { [chk.home]: kitNumbers(game, chk.home), [chk.away]: kitNumbers(game, chk.away) };
+  if (nums[chk.club]) nums[chk.club][me.id] = c.person.num || nums[chk.club][me.id];
+  const look = Object.assign({}, c.look, { h: (c.person.height || 178) / 100, mass: c.person.weight || 72 });
+  const rowFor = (team, home) => p => Object.assign({ n: p.name, pos: p.pos, role: p.role || p.pos, r: Math.round(effOf(game, p, team, { home, m: mm, kind: "L", week: game.round })), base: p.rating, num: nums[team][p.id], age: p.age }, p.id === me.id ? { pc: true, look, role: c.person.pos } : {});
+  const xi = team => chosenXI(game, team).filter(Boolean).map(rowFor(team, team === chk.home));
+  save();
+  res.json({
+    ok: true, kind: "league", label: me.league + ", week " + (game.round + 1), home: chk.home, away: chk.away, side: chk.side,
+    homeRating: xiRating(game, chk.home), awayRating: xiRating(game, chk.away),
+    homeXI: xi(chk.home), awayXI: xi(chk.away), instruction: chk.instruction,
+    lock: { name: me.name, num: nums[chk.club][me.id], pos: c.person.pos, instruction: chk.instruction.text }
+  });
+});
+app.post("/api/pc/matchresult", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  const out = PC.liveResult(ctx.game, req.body.hg, req.body.ag, req.body.line);
+  if (out.error) return res.status(400).json(out);
+  pcReply(res, ctx.game, { ok: true, reports: [out.report] });
+});
+// life events: the answer to the one that was teased at the end of last week
+app.post("/api/pc/event", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.PEOPLE.answer(ctx.game, String(req.body.id || ""), String(req.body.choice || "")));
+});
+// the agent: let him go, or look for a new one (the agents that want him come back as a choice)
+app.post("/api/pc/agent", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.agentAction(ctx.game, String(req.body.action || "")));
+});
+// the life off the pitch: free time in the city, social media, sponsors and the bank
+app.post("/api/pc/act", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.LIFE.act(ctx.game, String(req.body.place || ""), String(req.body.action || ""), req.body.arg === undefined ? null : String(req.body.arg)));
+});
+app.post("/api/pc/post", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.LIFE.post(ctx.game, String(req.body.kind || "")));
+});
+app.post("/api/pc/sponsor", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.LIFE.sponsorAnswer(ctx.game, String(req.body.id || ""), req.body.yes === true));
+});
+app.post("/api/pc/bank", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.LIFE.bank(ctx.game, String(req.body.op || ""), Number(req.body.amount)));
+});
+app.post("/api/pc/request", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.PRO.requestTransfer(ctx.game));
+});
+app.post("/api/pc/retire", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.PRO.retire(ctx.game));
+});
+// the same world from the dugout: the save becomes a Manager Career save at the club he picks
+app.post("/api/pc/manage", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  const out = PC.PRO.becomeManager(ctx.game, ctx.user, String(req.body.club || ""));
+  if (out.error) return res.status(400).json(out);
+  log(ctx.game, `${ctx.user.name} hangs up the boots and takes the manager's job at ${out.club}.`);
+  save();
+  res.json({ ok: true, club: out.club, code: ctx.game.code, name: ctx.user.name });
+});
+// test hooks for the Player Career battery only (never on unless the server is started with FL_TEST_HOOKS=1)
+if (process.env.FL_TEST_HOOKS === "1") {
+  app.post("/api/pc/testset", (req, res) => {
+    const ctx = pcCtx(req, res); if (!ctx) return;
+    const c = ctx.game.career, p = ctx.game.players[c.pid];
+    const b = req.body || {};
+    if (Number.isFinite(b.age)) p.age = b.age;
+    if (Number.isFinite(b.boost)) for (const k of Object.keys(c.attrs)) c.attrs[k] = Math.min(99, c.attrs[k] + b.boost);
+    if (Number.isFinite(b.potential)) c.potential = b.potential;
+    if (Number.isFinite(b.cash)) c.money.cash = b.cash;
+    if (Number.isFinite(b.commercial)) c.rep.commercial = b.commercial;
+    if (Number.isFinite(b.form)) c.cond.form = b.form;
+    if (Number.isFinite(b.trust)) c.trust = b.trust;
+    if (typeof b.event === "string") { const f = PC.PEOPLE.force(ctx.game, b.event); if (f.error) return res.status(400).json(f); }
+    PC.refreshRating(ctx.game);
+    save();
+    res.json({ ok: true, state: PC.view(ctx.game) });
+  });
+}
+app.post("/api/pc/read", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  pcReply(res, ctx.game, PC.readThread(ctx.game, String(req.body.thread || "")));
+});
+app.post("/api/pc/moment", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  const m = (ctx.game.career.moments || {})[String(req.body.key || "")];
+  if (m) m.seen = true;
+  pcReply(res, ctx.game, { ok: true });
+});
 
 // small live numbers for the landing page stat row
 let worldSize = null;

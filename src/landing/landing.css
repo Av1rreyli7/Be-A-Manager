@@ -55,6 +55,13 @@ html:has(.bam) {
   overflow: hidden;
   pointer-events: none;
 }
+/* the sky: aurora, stars and scrim in one layer of their own, painted once and then only composited */
+.bam-sky {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  will-change: transform;
+}
 .bam-aurora {
   position: absolute;
   inset: -8%;
@@ -93,7 +100,8 @@ html:has(.bam) {
   background: #000000;
   opacity: 0;
 }
-/* two floodlight beams from above, a soft conic cone each: no blur filter, so they cost nothing to move */
+/* two floodlight beams from above: a soft cone image each (beams.ts), drawn once, no blend mode and no mask,
+   so moving and fading them is pure compositing */
 .bam-beam {
   position: absolute;
   top: -2vh;
@@ -101,20 +109,16 @@ html:has(.bam) {
   height: 120vh;
   margin-left: -45vmax;
   transform-origin: 50% 0;
-  mix-blend-mode: screen;
-  background: conic-gradient(from 164deg at 50% 0%, transparent 0deg, rgba(var(--beam), 0.16) 8deg, rgba(var(--beam), 0.3) 16deg, rgba(var(--beam), 0.16) 24deg, transparent 32deg);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 92%);
-  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 92%);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 .bam-beam.is-l {
   left: 20%;
   rotate: -24deg;
-  --beam: 230, 245, 180;
 }
 .bam-beam.is-r {
   left: 80%;
   rotate: 24deg;
-  --beam: 255, 205, 160;
 }
 /* the lamp heads the beams come from */
 .bam-lamps {
@@ -598,6 +602,20 @@ html:has(.bam) {
   height: 26vmin;
   margin: -13vmin 0 0 -13vmin;
   background: radial-gradient(closest-side, rgba(255, 255, 255, 0.5), rgba(140, 210, 255, 0.18) 45%, transparent);
+}
+
+/* ---------- while the intro plays ----------
+   Every piece GSAP moves gets its own GPU layer, so a moving letter or ball never repaints the page behind
+   it. The hint is dropped when the intro ends (data-anim goes), which hands the layer memory back. */
+.bam[data-anim] :is(.bam-dim, .bam-beam, .bam-lamps i, .bam-frame .ln, .bam-frame .cn, .bam-bloom, .bam-flare,
+  .bam-welcome .ch, .bam-welcome .rule, .bam-big, .bam-big .L, .bam-big .L .c, .bam-big .L .s, .bam-brand, .bam-card, .bam-card-glow,
+  .bam-title .ch, .bam-title, .bam-ball, .bam-ball-lift, .bam-ball-squash, .bam-ball-spin, .bam-streak, .bam-shock,
+  .bam-line, .bam-enter, .bam-by) {
+  will-change: transform, opacity;
+}
+/* the beams keep their layer for good: they are big and a re-raster costs more than the memory */
+.bam-beam {
+  will-change: transform, opacity;
 }
 
 /* ---------- smaller screens ---------- */

@@ -326,7 +326,8 @@ console.log("b5");
 
   r = await api("/api/nextseason", { code, name: "Host" });
   ok("next season starts", r.status === 200, r.j);
-  saved = await readSave(code);
+  // the server writes its save a moment after a change; wait for the season two write, not an older one
+  saved = await readSave(code, x => x.season === 2);
   g = Object.values(saved).find(x => x.code === code);
   ok("season number bumped", g.season === 2, g.season);
   let unchanged = 0, checked = 0;
@@ -849,7 +850,8 @@ console.log("b5");
       for (const lg of ["Serie A", "La Liga", "Bundesliga", "Premier League"]) {
         const m = await api(`/api/market?code=${ic}&name=Ina&league=${encodeURIComponent(lg)}`);
         st = await api(`/api/state?code=${ic}&name=Ina`);
-        cold = cold.concat(m.j.players.filter(p => p.interest.lv === 0 && p.asking <= st.j.myClub.budget && p.rating < 86 && !p.deal && !p.nego && !p.loanOwner && !(p.age <= 23 && p.rating >= 87)));
+        // under 85: a star of 85 or more can also say no because bigger clubs are circling, a different refusal
+        cold = cold.concat(m.j.players.filter(p => p.interest.lv === 0 && p.asking <= st.j.myClub.budget && p.rating < 85 && !p.deal && !p.nego && !p.loanOwner && !(p.age <= 23 && p.rating >= 87)));
       }
       cold.sort((a, b) => a.asking - b.asking);
       for (const p of cold.slice(0, 6)) {

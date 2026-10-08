@@ -18,6 +18,7 @@ import { pickSkill, startSkill } from "./skills.mjs";
 import { startHeader, startVolley } from "./aerial.mjs";
 import { receive, chase } from "./ai.mjs";
 import { canPlay } from "./control.mjs";
+import { lockCall, lockRunStart } from "./lock.mjs";
 
 const POWER_T = 0.95; // seconds of holding for full power
 
@@ -65,18 +66,21 @@ export function userStep(m, U, inp, dt) {
   }
   // ---------- who is under control ----------
   let p = m.ctrl;
-  if (!p || p.off || p.team !== team) p = m.ctrl = bestSwitch(m, team) || T.players[1];
-  if (b.ctrl && b.ctrl.team === team && b.ctrl !== p && !b.ctrl.gk) p = m.ctrl = b.ctrl;
-  if (!b.ctrl && b.flight && b.flight.to && b.flight.to.team === team && b.flight.by && b.flight.by.team === team && b.flight.to !== p && !b.flight.to.gk && m.t - b.flight.t > 0.05) p = m.ctrl = b.flight.to;
+  if (m.lock) p = m.ctrl = m.lock; // player lock: always his own footballer, never a switch
+  else {
+    if (!p || p.off || p.team !== team) p = m.ctrl = bestSwitch(m, team) || T.players[1];
+    if (b.ctrl && b.ctrl.team === team && b.ctrl !== p && !b.ctrl.gk) p = m.ctrl = b.ctrl;
+    if (!b.ctrl && b.flight && b.flight.to && b.flight.to.team === team && b.flight.by && b.flight.by.team === team && b.flight.to !== p && !b.flight.to.gk && m.t - b.flight.t > 0.05) p = m.ctrl = b.flight.to;
+  }
   const haveIt = b.ctrl === p;
   const ours = b.ctrl ? b.ctrl.team === team : b.held ? b.held.team === team : false;
   // switch on defence
-  if (!haveIt && !ours && inp.down.Q && !airborneNear(m, p)) {
+  if (!m.lock && !haveIt && !ours && inp.down.Q && !airborneNear(m, p)) {
     const nb = bestSwitch(m, team, m.t - U.switchT < 0.6 ? p : null);
     if (nb) { p = m.ctrl = nb; U.switchT = m.t; m.events.push({ type: "switch", to: p.id }); }
   }
   // auto switch: far from a loose ball that a team mate is right next to
-  if (!haveIt && !b.ctrl && !b.held) {
+  if (!m.lock && !haveIt && !b.ctrl && !b.held) {
     const nb = bestSwitch(m, team);
     if (nb && nb !== p && hyp(p.x - b.x, p.y - b.y) > 14 && hyp(nb.x - b.x, nb.y - b.y) < 6 && m.t - U.switchT > 1) { p = m.ctrl = nb; U.switchT = m.t; }
   }
@@ -168,6 +172,11 @@ export function userStep(m, U, inp, dt) {
       }
     }
   } else U.queue = null;
+  // ---------- player lock: a team mate has it, so call for it (Q) or make a run in behind (T) ----------
+  if (m.lock && ours && !coming) {
+    if (inp.down.Q) lockCall(m);
+    if (inp.down.T) lockRunStart(m);
+  }
   // ---------- defending ----------
   const carrier = b.ctrl && b.ctrl.team !== team ? b.ctrl : null;
   if (inp.held.Z) {

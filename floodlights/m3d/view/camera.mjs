@@ -18,10 +18,14 @@ export function createCamera(THREE, aspect) {
     // lead the ball in the direction it is going, and lean toward the person's player
     st.lead = damp(st.lead, clamp(b.vx * 0.45, -8, 8), 1.5, dt);
     let tx = bx + st.lead, tz = by * 0.55;
-    if (ctrlP && !ctrlP.off) { tx = tx * 0.8 + ctrlP.x * 0.2; tz = tz * 0.85 + ctrlP.y * 0.55 * 0.15; }
+    // player lock: frame him and the ball together, and pull back when they are far apart
+    const lockP = m.lock && !m.lock.off ? m.lock : null;
+    let apart = 0;
+    if (lockP) { tx = (tx + lockP.x) / 2; tz = (tz + lockP.y * 0.55) / 2; apart = clamp((Math.hypot(lockP.x - bx, lockP.y - by) - 20) / 40, 0, 1); }
+    else if (ctrlP && !ctrlP.off) { tx = tx * 0.8 + ctrlP.x * 0.2; tz = tz * 0.85 + ctrlP.y * 0.55 * 0.15; }
     // how far: wider in open play, tighter near a goal and at set pieces
     const nearGoal = clamp((Math.abs(bx) - 28) / 22, 0, 1);
-    let dist = 64 - nearGoal * 12, height = 27 - nearGoal * 4, fov = 30;
+    let dist = 64 - nearGoal * 12 + apart * 16, height = 27 - nearGoal * 4 + apart * 6, fov = 30;
     const R = m.restart;
     // set pieces near goal get the wider goal framing; a deep free kick just follows the ball like open play
     const gxR = R && m.teams[R.team] ? m.teams[R.team].dir * HALF_L : 0;

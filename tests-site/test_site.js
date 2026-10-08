@@ -25,7 +25,7 @@ function walk(dir, skip, out) {
 
 // ---------- no em dashes or en dashes anywhere ----------
 // .work holds the build checklists of parallel workers; it is local only and never uploaded
-const SKIP = new Set(["node_modules", ".next", "upload", ".git", ".work", "package-lock.json", "games.json", ".DS_Store"]);
+const SKIP = new Set(["node_modules", ".next", "upload", ".git", ".work", ".impeccable", "package-lock.json", "games.json", ".DS_Store"]);
 const all = walk(root, SKIP, []);
 const dashy = [];
 for (const f of all) {
@@ -118,7 +118,13 @@ ok("the first paint is guarded so the end state never flashes, and the guard lif
 ok("the intro moves only transform and opacity: no layout properties in the timeline", !/(width|height|top|left|margin|padding)\s*:\s*[^,}]*[,}]/.test(landing.slice(landing.indexOf("function buildIntro"), landing.indexOf("export default function Landing"))), null);
 ok("black is forced in three places", css.includes("html:has(.bam)") && landing.includes('style={{ background: "#000", color: "#fff" }}') && landing.includes("html,body{background:#000000 !important"), null);
 ok("the landing reads the shared kit: glass enter buttons tinted by pitch and court modes", landing.includes("k-btn k-btn-primary") && !landing.includes("k-btn-glow") && read("src/landing/games.ts").includes('mode: "pitch"') && read("src/landing/games.ts").includes('mode: "court"') && landing.includes("data-kmode={g.mode}") && css.includes("var(--k-grad)") && css.includes("var(--k-accent-rgb)"), null);
-ok("the floodlight beams are soft conic cones with no blur filter", /\.bam-beam \{[^}]*conic-gradient/.test(css) && !/\.bam-beam \{[^}]*filter:/.test(css), null);
+{
+  // performance: the beams are cone images drawn once (beams.ts), never blended, masked or filtered at run time
+  const beamsTs = read("src/landing/beams.ts");
+  ok("the floodlight beams are cone images drawn once, with no blend mode, mask or filter", /export const BEAM_L = beamImage/.test(beamsTs) && !/\.bam-beam[^{]*\{[^}]*(mix-blend-mode|mask-image|filter:)/.test(css), null);
+  ok("the static sky sits in one layer of its own", /\.bam-sky \{[^}]*will-change: transform/.test(css), null);
+  ok("animated pieces get their own layers only while the intro plays", /\.bam\[data-anim\] :is\([^)]*\.bam-big \.L/.test(css) && /setAttribute\("data-anim", "1"\)/.test(landing) && /removeAttribute\("data-anim"\)/.test(landing), null);
+}
 ok("the frame has chamfered corners and hairlines", css.includes(".bam-frame .cn-tl") && css.includes("--line: rgba(255, 255, 255, 0.13)"), null);
 ok("reduced motion switches every animation and transition off", css.includes("@media (prefers-reduced-motion: reduce)") && css.includes("animation: none !important"), null);
 ok("the side preview card is gone from the landing", !css.includes(".bam-side") && !css.includes("bam-mock") && !has("public/landing"), null);
@@ -181,7 +187,7 @@ if (fs.existsSync(up)) {
   const upFiles = walk(up, new Set(), []).map(f => path.relative(up, f));
   const bad = upFiles.filter(f => /(^|\/)(node_modules|\.next)\//.test(f) || /games\.json$/.test(f) || /\.DS_Store$/.test(f) || /\.tsbuildinfo$/.test(f));
   ok("the upload folder has no node_modules, .next, games.json or junk", bad.length === 0, bad.slice(0, 8));
-  for (const f of ["package.json", "package-lock.json", "server.js", "next.config.ts", "tsconfig.json", "tsconfig.build.json", "postcss.config.mjs", ".gitignore", ".node-version", "render.yaml", "README.md", "DEPLOY.md", "floodlights/server.js", "floodlights/index.html", "floodlights/match.js", "floodlights/match3d.mjs", "floodlights/match_sim3d.mjs", "floodlights/m3d/sim.mjs", "floodlights/m3d/ball.mjs", "floodlights/m3d/view/index.mjs", "floodlights/m3d/view/anim.mjs", "floodlights/squads_2026.js", "floodlights/condition.js", "floodlights/events_data.js", "floodlights/travel_data.js", "floodlights/test_condition.js", "floodlights/players.js", "floodlights/world_pack.js", "floodlights/extra_clubs.js", "floodlights/league_fill.js", "floodlights/fonts/inter.woff2", "floodlights/test_sept.js", "floodlights/test_dom_sept.js", "src/app/page.tsx", "src/app/layout.tsx", "src/landing/Landing.tsx", "src/landing/Balls.tsx", "src/landing/landing.css", "public/games/hardwood-legends.html", "data/players.json", "tests/landing.test.tsx", "tests-site/test_boot.js"]) ok("upload has " + f, upFiles.includes(f), null);
+  for (const f of ["package.json", "package-lock.json", "server.js", "next.config.ts", "tsconfig.json", "tsconfig.build.json", "postcss.config.mjs", ".gitignore", ".node-version", "render.yaml", "README.md", "DEPLOY.md", "floodlights/server.js", "floodlights/index.html", "floodlights/match.js", "floodlights/match3d.mjs", "floodlights/match_sim3d.mjs", "floodlights/m3d/sim.mjs", "floodlights/m3d/ball.mjs", "floodlights/m3d/view/index.mjs", "floodlights/m3d/view/anim.mjs", "floodlights/squads_2026.js", "floodlights/condition.js", "floodlights/events_data.js", "floodlights/travel_data.js", "floodlights/test_condition.js", "floodlights/players.js", "floodlights/world_pack.js", "floodlights/extra_clubs.js", "floodlights/league_fill.js", "floodlights/fonts/inter.woff2", "floodlights/test_sept.js", "floodlights/test_dom_sept.js", "src/app/page.tsx", "src/app/layout.tsx", "src/landing/Landing.tsx", "src/landing/Balls.tsx", "src/landing/beams.ts", "src/landing/landing.css", "public/games/hardwood-legends.html", "data/players.json", "tests/landing.test.tsx", "tests-site/test_boot.js", "floodlights/career/core.js", "floodlights/career/pro.js", "floodlights/career/data.js", "floodlights/m3d/view/hero.mjs", "floodlights/m3d/view/hairshells.mjs", "src/app/floodlights/career/page.tsx", "src/career/CareerApp.tsx", "src/career/Hub.tsx", "src/career/Creator.tsx", "src/career/Stage.tsx", "src/career/body.ts", "src/career/career.css", "tests-site/test_career.js"]) ok("upload has " + f, upFiles.includes(f), null);
   // the copy must match the working tree
   const stale = upFiles.filter(f => { const src = path.join(root, f); return !fs.existsSync(src) || !fs.readFileSync(src).equals(fs.readFileSync(path.join(up, f))); });
   ok("every file in upload matches the working tree", stale.length === 0, stale.slice(0, 8));

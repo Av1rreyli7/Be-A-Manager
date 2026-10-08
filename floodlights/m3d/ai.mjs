@@ -13,6 +13,7 @@ import { planPass, planThrough, planLob, planCross, planShot, startKick, timeToR
 import { startTackle, startSlide, shoulder } from "./defend.mjs";
 import { pickSkill, startSkill } from "./skills.mjs";
 import { predict } from "./ball.mjs";
+import { calling } from "./lock.mjs";
 
 // base slots in the team frame: x 0 is the back line, 1 the front line; y is across (+ is the left side)
 const SLOT = {
@@ -380,6 +381,8 @@ function carrier(m, p, dt) {
   const T = m.teams[p.team], b = m.ball, W = p.want, ai = p.ai, dir = T.dir;
   const gx = dir * HALF_L;
   const pr = pressureOn(m, p);
+  // player lock: a call from the person's footballer gets a quick look up
+  if (m.lock && p.team === m.lock.team && calling(m) && ai.callSeen !== m.call.t) { ai.callSeen = m.call.t; ai.think = Math.min(ai.think, 0.06); }
   // keep dribbling toward the chosen way between decisions
   if (ai.think > 0) { dribbleOn(m, p); return; }
   // near goal or pressed, decisions come quicker
@@ -544,7 +547,7 @@ function bestPass(m, p, pr) {
     if (isOffside(m, q)) continue;
     const a = Math.atan2(q.y - p.y, q.x - p.x);
     const long = d > 28;
-    const spec = long ? planLob(m, p, a, 0.5) : planPass(m, p, a, null, { to: q });
+    let spec = long ? planLob(m, p, a, 0.5) : planPass(m, p, a, null, { to: q });
     if (!spec || spec.to !== q && !long) continue;
     const v = spec.v || 14, t = d / Math.max(6, v * 0.75);
     // a long ball is a gamble unless the man is free with room around him
@@ -554,9 +557,17 @@ function bestPass(m, p, pr) {
     const prog = (q.x - p.x) * dir;
     const backPass = prog < -2 ? 0.08 : 0;
     if (long && space < 5) risk += 0.25;
+    // player lock: he called for it and the ground lane is shut, so chip it over to him instead
+    if (q === m.lock && calling(m) && !long && risk >= 0.5 && d > 10) {
+      const ls = planLob(m, p, a, 0.5);
+      const lr = 0.3 + (1 - n01(p.a.lpa)) * 0.3 + (space < 3 ? 0.25 : 0);
+      if (ls && ls.to === q && lr < risk) { spec = ls; risk = lr; }
+    }
     // a man in the box or making a run is worth more
     const qX = q.x * dir, inArea = qX > HALF_L - BOX_D - 2 && Math.abs(q.y) < BOX_HALF;
-    const score = (1 - risk) * (0.25 + clamp(prog / 30, -0.3, 0.6) + clamp(space / 12, 0, 0.35) - backPass + (inArea ? 0.2 : 0) + (q.ai.run ? 0.1 : 0)) - (q.gk ? 0.3 : 0) + (pr > 0.5 ? 0.15 : 0) + vis * 0.05 + (m.rng() - 0.5) * 0.1;
+    let score = (1 - risk) * (0.25 + clamp(prog / 30, -0.3, 0.6) + clamp(space / 12, 0, 0.35) - backPass + (inArea ? 0.2 : 0) + (q.ai.run ? 0.1 : 0)) - (q.gk ? 0.3 : 0) + (pr > 0.5 ? 0.15 : 0) + vis * 0.05 + (m.rng() - 0.5) * 0.1;
+    // player lock: he called for it, so he is the first look; only a lane that is all but closed still says no
+    if (q === m.lock && calling(m) && risk < 0.85) score += 0.3 + 0.25 * (1 - risk);
     if (!best || score > best.score) best = { spec, score, q };
   }
   // a through ball for a runner
@@ -565,7 +576,7 @@ function bestPass(m, p, pr) {
     const spec = planThrough(m, p, Math.atan2(q.y - p.y, q.x - p.x), 0.5, m.rng() < 0.25);
     if (!spec.to || !(spec.margin > 0.25)) continue;
     // only when the runner clearly wins the race; a vision player sees more of them
-    const score = 0.22 + vis * 0.25 + clamp(spec.margin, 0, 1.5) * 0.3 + (m.rng() - 0.5) * 0.12;
+    const score = 0.22 + vis * 0.25 + clamp(spec.margin, 0, 1.5) * 0.3 + (m.rng() - 0.5) * 0.12 + (q === m.lock ? 0.2 : 0);
     if (!best || score > best.score) best = { spec, score, q };
   }
   return best;

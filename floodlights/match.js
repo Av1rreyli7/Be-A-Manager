@@ -1340,7 +1340,21 @@ const STRIP_CSS = ".mx-keys{position:absolute;top:26px;right:18px;z-index:6;disp
   "@media (max-width:1180px){.mx-keys{gap:3px}.mx-keys .mx-k{gap:4px;padding:0 7px 0 3px;letter-spacing:.06em}.mx-keys.classic b{display:none}.mx-keys.classic .mx-k{padding:0 3px}}" +
   "@media (max-width:940px){.mx-keys b{display:none}.mx-keys .mx-k{padding:0 3px}.mx-keys{top:18px;max-width:calc(100% - 370px)}}" +
   "@media (prefers-reduced-motion:reduce){.mx-keys{transition:none}}";
-function keyStrip(doc, wrap, classic) {
+// player lock (Player Career): only his own footballer, so the keys without the ball call for it and make runs
+const STRIP_KEYS_LOCK = [["WASD", "Move"], ["Shift", "Sprint"], ["Q", "Pass, or call for it"], ["T", "Through, or run in behind"], ["E", "Shoot"], ["C", "Cross"], ["F", "Skill"], ["Space", "Press and tackle"], ["X", "Slide"]];
+function lockKeysHtml(cfg) {
+  const L = cfg.lock || {};
+  return '<div class="mkeys">' +
+    "<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move. <kbd>Shift</kbd> Sprint.</span>" +
+    "<span><b>On the ball</b> every key works: <kbd>Q</kbd> pass, <kbd>T</kbd> through ball, <kbd>C</kbd> cross, <kbd>E</kbd> hold to shoot, <kbd>F</kbd> skill.</span>" +
+    "<span><b>Off the ball</b> <kbd>Q</kbd> call for it, <kbd>T</kbd> make a run in behind. Get into space and your team mates find you.</span>" +
+    "<span><b>Defending</b> <kbd>Space</kbd> hold to press and tackle, <kbd>X</kbd> slide, <kbd>Z</kbd> jockey.</span>" +
+    "<span><kbd>Esc</kbd> Pause</span></div>" +
+    "<p>You are " + esc(L.name || "your player") + ", number " + esc(L.num || "") + ", " + esc(L.pos || "") + ". You control only him, the whole game. Your rating moves with every touch.</p>" +
+    (L.instruction ? '<p class="mdiff">The manager: ' + esc(L.instruction) + "</p>" : "") +
+    '<p class="mwarn">You get one go. Leave before full time and the match is simmed instead.</p>';
+}
+function keyStrip(doc, wrap, classic, lock) {
   if (!doc.getElementById("mxKeysStyle")) {
     const st = doc.createElement("style");
     st.id = "mxKeysStyle";
@@ -1353,7 +1367,7 @@ function keyStrip(doc, wrap, classic) {
   el.id = "mxKeys";
   el.className = "mx-keys" + (classic ? " classic" : "");
   el.setAttribute("aria-label", "Controls");
-  el.innerHTML = (classic ? STRIP_KEYS_CLASSIC : STRIP_KEYS).map(k => '<span class="mx-k"><kbd>' + k[0] + "</kbd><b>" + k[1] + "</b></span>").join("");
+  el.innerHTML = (lock ? STRIP_KEYS_LOCK : classic ? STRIP_KEYS_CLASSIC : STRIP_KEYS).map(k => '<span class="mx-k"><kbd>' + k[0] + "</kbd><b>" + k[1] + "</b></span>").join("");
   wrap.appendChild(el);
   return el;
 }
@@ -1368,7 +1382,8 @@ function open(cfg) {
   wrap.classList.remove("m3d");
   A.view = makeView(canvas);
   const can3d = typeof FLMatch.load3D === "function" && webglOk(doc);
-  A.want3d = can3d && readLook() === "3d";
+  // player lock is 3D only: it needs the deep engine's off the ball play
+  A.want3d = can3d && (!!cfg.lock || readLook() === "3d");
   // start fetching the 3D code as soon as it is wanted, so kick off does not wait for it
   const warm3d = () => {
     if (!A.load3d) A.load3d = Promise.resolve().then(() => FLMatch.load3D()).catch(() => null);
@@ -1391,7 +1406,7 @@ function open(cfg) {
       "<h2>" + esc(info.home) + " <span>v</span> " + esc(info.away) + "</h2>" +
       '<div class="mrow"><div><b>' + esc(Math.round(myR)) + "</b><small>YOUR TEAM</small></div><div><b>" + esc(Math.round(opR)) + "</b><small>THEIR TEAM</small></div></div>" +
       '<p class="mdiff">' + esc(diffLine(myR, opR)) + "</p>" +
-      '<div class="mkeys">' +
+      (cfg.lock ? lockKeysHtml(cfg) : '<div class="mkeys">' +
       "<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move. <kbd>Shift</kbd> Sprint, fit players last longer.</span>" +
       "<span><kbd>Q</kbd> Pass to the team mate you face, or switch player without the ball</span>" +
       "<span><kbd>T</kbd> Through ball into the space ahead of a runner</span>" +
@@ -1405,11 +1420,11 @@ function open(cfg) {
       "<span><b>Set pieces (3D)</b> W A S D aim, then hold a key for power: Q short, C cross or long, E shoot, R curl. Penalties: aim and hold E. Facing one in goal, hold W or S to dive.</span>" +
       "<span><kbd>Esc</kbd> Pause</span></div>" +
       "<p>You play as " + esc(mineName) + " and attack to the right. The game picks your player nearest the ball. The match takes about 6 minutes and you need a keyboard.</p>" +
-      '<p class="mwarn">You get one go. Once you kick off, the final score is what counts for this week. If you leave before full time, the match is simmed like normal.</p>' +
-      '<div class="mlook"><span class="mk">How it looks</span><div class="mseg">' +
+      '<p class="mwarn">You get one go. Once you kick off, the final score is what counts for this week. If you leave before full time, the match is simmed like normal.</p>') +
+      (cfg.lock ? "" : '<div class="mlook"><span class="mk">How it looks</span><div class="mseg">' +
       '<button class="small ghost' + (A.want3d ? " on" : "") + '" id="mxLook3d"' + (can3d ? "" : " disabled") + ">3D</button>" +
       '<button class="small ghost' + (A.want3d ? "" : " on") + '" id="mxLookClassic">Classic</button></div>' +
-      '<small id="mxLookNote">' + (can3d ? "3D is the full game: real players on a real pitch, every pass, shot, skill and tackle, built on each player's ratings. Classic is the simple top down match as before, with the first five keys only. If 3D runs slowly on your laptop, pick Classic." : "3D is not available in this browser, so the match plays in Classic.") + "</small></div>" +
+      '<small id="mxLookNote">' + (can3d ? "3D is the full game: real players on a real pitch, every pass, shot, skill and tackle, built on each player's ratings. Classic is the simple top down match as before, with the first five keys only. If 3D runs slowly on your laptop, pick Classic." : "3D is not available in this browser, so the match plays in Classic.") + "</small></div>") +
       (err ? '<p class="merr">' + esc(err) + "</p>" : "") +
       '<div class="mbtns"><button class="ghost" id="mxBack">Not now</button><button class="gold" id="mxGo">Kick off</button></div>'
     );
@@ -1440,9 +1455,10 @@ function open(cfg) {
           fell = !v3;
           if (active !== A || A.mode === "simmed") { if (v3) v3.dispose(); return; }
         }
+        if (cfg.lock && !v3) { showPre("Player lock needs the 3D match, and it could not start in this browser. Close this and sim the week instead."); return; }
         A.view3d = v3;
         wrap.classList.toggle("m3d", !!v3);
-        A.strip = keyStrip(doc, wrap, !v3);
+        A.strip = keyStrip(doc, wrap, !v3, !!cfg.lock);
         A.stripT = 0;
         A.stripDim = false;
         // the 3D view brings the deep sim with it (match_sim3d.mjs). Classic keeps the sim in this file.
@@ -1543,7 +1559,7 @@ function open(cfg) {
       show(body("<p>Saving your result...</p>"));
       A.saving = true;
       try {
-        const msg = await cfg.finish(Math.min(MAX_GOALS, r.home), Math.min(MAX_GOALS, r.away));
+        const msg = await cfg.finish(Math.min(MAX_GOALS, r.home), Math.min(MAX_GOALS, r.away), A.sim);
         A.saving = false;
         A.saved = true;
         if (active !== A) return;

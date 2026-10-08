@@ -579,3 +579,183 @@ sprints lost the ball in 30 of 30 runs (it rolled up to 2.8 m away), and running
 - [x] The layout test (headless Chrome) hung once overnight when its Chrome stopped answering at start up; it now
       fails after 240 s instead of waiting for ever. Then three full runs in a row, 0 failed (vitest 81, condition
       138, API 257, DOM 167, 3D 130, layout 222, site 179, build, boot 52, server memory 226 MB).
+
+## Player Career mode, next gen life sim, landing performance fix
+
+Goal: a new PLAYER CAREER mode in Floodlights where you create one footballer and live his career inside the
+same football world as Manager Career (same database, league sim, transfers and 3D match engine), plus a life
+layer (city hub with explorable 3D places, money, homes, cars, shops, phone, social media, relationships,
+family and agent drama), and first a fix for the landing page lag. The user's pasted spec is the source of
+truth for features and ambition; the user's OVERRIDES win where they conflict (city hub instead of an open
+world, fictional brands, one shared sim, player lock mode in the existing m3d engine, the shared site kit,
+60 fps on a laptop with low/medium/high/ultra graphics). Push at the end with
+"Player Career mode, next gen life sim, landing performance fix". Resume from the first unchecked box.
+
+Decisions (made at the start, change only with a note):
+- Server: Player Career saves are ordinary Floodlights games with mode "player" and a small `career` block
+  (the created player's id, pathway, life layer, phone, relationships). The world (clubs, players, fixtures,
+  weekly sim, transfers, cups, ageing) is the existing code, run unchanged; no manager user owns a club. All
+  career logic lives in new modules (floodlights/career/*.js) called from new /api/pc/* routes, so Manager
+  Career code paths are untouched. The created player is a normal record in game.players once he joins a club.
+- Client: a Next.js page at /floodlights/career (Express does not own that path, so Next serves it), React for
+  the deep UI (creator, hub, phone, social, shops) on the shared kit (public/kit.css, kit-motion, site fonts),
+  React Three Fiber for every 3D scene (creator stage, city hub, interiors). The Floodlights lobby gets a
+  PLAYER CAREER entry next to Manager Career. No new npm packages: three/addons (RoomEnvironment, post passes)
+  cover environment lighting and effects.
+- One body everywhere: the m3d rig (floodlights/m3d/view/rig.mjs) is extended with the creator's face, hair,
+  body and accessory options (old options keep their exact look, so the match is unchanged) and is used by the
+  creator, the hub, the interiors and the match, so the footballer looks the same in all of them.
+- Graphics tiers low, medium, high, ultra: pixel ratio cap, shadow map size, post effects, crowd and prop
+  counts, reflections. A frame guard steps down when frames run long. 60 fps wins over any flourish.
+- Matches: player lock mode in m3d (control only your footballer, no switching; call for the ball, runs and
+  press off the ball; manager instructions; live match rating), launched through the same FLMatch overlay.
+  Simming uses the existing server sim; the career module turns its result into your rating and stats.
+- India pathway: real school names (allowed by the user), fictional colleges and academies; other countries
+  start in a club youth academy. All product brands are invented (cars, watches, clothing, boots, phones).
+- Family layer: parents and maybe a sibling with opinions; they can disagree with the agent; at most one
+  family drama between matches, through the existing teaser then popup event flow.
+- Tests: a new Player Career battery (tests-site/test_career.js) next to the existing ones, wired into
+  test:floodlights; the match battery gains player lock checks.
+
+Checklist (commit locally after each phase; each phase is tested before the next):
+- [x] P0 landing lag: measure (frames, paints, raster and GPU time), fix, measure again, landing tests green
+      Cause: the intro moved letters, balls and lights that had no GPU layer of their own, so the browser kept
+      redrawing the whole page behind them (about 1500 raster tasks in the 4 s intro), and the two beams used a
+      screen blend plus a CSS mask, which costs a full screen blend pass every frame. Fix: the sky (aurora,
+      stars, scrim) is one static layer drawn once; the beams are cone images (src/landing/beams.ts) drawn
+      once with no blend, mask or filter; while the intro plays (data-anim on the root) every animated piece has
+      its own layer, dropped when it ends; the big letters' colour and light sweep copies sit on their own
+      layers so the glowing white letter is never redrawn. Measured in headless Chrome at 1440 by 900, old and
+      new builds side by side, the intro replayed after load, medians of interleaved runs:
+        DPR 2: 32 fps and 27 frames over 20 ms before, 59.7 fps and 2 after; GPU 693 ms to 378 ms, raster 311
+        to 191 ms. DPR 2 with the CPU slowed 4x: 28.6 fps (31 slow frames) to 58.3 fps (7). DPR 1: 59.7 to 60
+        fps, GPU 553 ms to 129 ms, raster 129 ms to 15 ms. Frames compared side by side: the look is the same.
+      The machine was heavily loaded (load average 50 to 70) during the runs, which is why old and new ran
+      interleaved in one Chrome.
+- [x] P1 career spine: data (schools, colleges, academies, agents, brands), create player (all creator
+      fields), server model and routes, India school and college pathway, training plans with fatigue and
+      injury risk, development, scouting and trials, first contract offers and the signing moment
+      Server: floodlights/career/data.js and core.js, /api/pc/* routes, guards so the world's AI market,
+      free agents, loans and retirements never move the created footballer (p.pc). Indian Super League (12
+      clubs, generated squads) and India's national pool exist only in Player Career saves. Development by
+      age curve, coaching, professionalism, fatigue and room to the hidden potential; scouts at youth games
+      by exposure; trials at 16 plus (a pass at 16 becomes a promise at 17); offers with wage, length, role,
+      signing bonus, appearance, goal, assist and clean sheet bonuses, release clauses; agents negotiate.
+      Wages: an exponential curve per league (about 420 a week for a 17 year old in India, about 27k for an
+      80 rated Premier League regular, 190k for a 93). Three test careers signed at 17 for 270 to 550 a week.
+      Client: /floodlights/career (Next page, React, R3F): title, a seven step creator next to a live stage,
+      the hub (player card with a 3D portrait, the week, training plan, decisions, attributes, season,
+      scouts, news, money, phone) and the first contract moment. Close up bodies come from the match's own
+      builder at high detail: a sculpted head with seated eyes and a painted face texture (brows, lips,
+      stubble and beards, the scalp), shell hair cut into strands by a shader (sixteen styles, smooth
+      hairlines and fades), smoothed limbs, accessories, physically based materials per part. Match players
+      are built byte for byte as before (checked with a geometry fingerprint).
+- [x] P2 pro loop: weekly cycle on the shared sim, selection and manager trust, match rating from the sim,
+      wages and bonuses, form, morale, reputation (5 kinds), transfers and loans through the shared market,
+      renewals, captaincy, national team call ups (U17, U20, U23, senior), injuries and rehab, retirement
+      summary and Continue as Manager
+      Server: floodlights/career/pro.js. Selection: the manager picks him by rating against his position
+      group, trust and form; the week's XI is handed to the world sim (club.lineup) and his minutes, goals and
+      assists come back from the sim's own appearance and scoring records. Bids in the windows from clubs he
+      would play for, priced by the market's asking price; his club says no to a key man unless the fee is
+      big, but small clubs sell to much bigger ones. Personal terms of four kinds (transfer with fee, loan,
+      free transfer, renewal), loans when a young player is not starting, a transfer request, free agency
+      when a deal runs out, the armband (trust, leadership, a season at the club), national windows in rounds
+      9, 14, 26 and 34 at the youngest level he still fits (senior once his rating is in the country's top 23),
+      league titles and cups, league awards, retirement from 32 with a career summary, and the switch to
+      Manager Career at a club of his choice in the same world. Manager Career refuses to open a Player Career
+      code until then. Client: offers by kind with the fee, a career panel (games, goals, caps by level, the
+      last internationals, honours, moves), captain, loan and transfer listed tags, a transfer request, retire
+      with a confirm step, the retirement page, and broadcast style cards for the big days (debut, first goal,
+      call ups, captaincy, first trophy, a big move). The Floodlights lobby has a Player Career entry.
+      Long test career: 17 to 25, about 190 games, 36 senior caps, several moves, trophies, money in the
+      millions, no stuck states. test:all green (career battery 58 passed).
+- [x] P3 life layer: Player Career entry in the lobby, the career page, character creator stage, city hub
+      (per city look), explorable places (home, training ground, stadium, shops, restaurant, gym, mall),
+      homes to buy, cars, shops with fictional brands, money and bank, the phone (messages, agent, social,
+      news, calendar, bank, team chat), social media followers and posts
+      Server: floodlights/career/life.js and life_data.js. Three slots of free time a week (rest, the gym,
+      a meal out, extra sessions, meeting fans); shopping is free of time. Homes from the family home and a
+      hostel room to a hilltop mansion (rent or buy, one per city, sold back at market price, moves follow
+      the club), seven made up cars from a scooter at fifteen to a hypercar, shops (Northline, Kurobe, Lumen,
+      Pixelforge in the mall; Arden, Solenne, Halcyon, Celestor, Maison Orrè on the high street) whose watches,
+      chains and earrings go on him in 3D, meals, gym sessions that train real attributes, weekly bills, a
+      savings account, followers that follow fame, one post a week with fan comments and a backlash risk,
+      commercial reputation, sponsors (food, drinks, sportswear, tech, a bank, gaming, cars, watches and three
+      boot brands; a boot deal puts their boots on him), weather per city and month, the team group chat.
+      Client: a City tab next to Career. The city is drawn from shapes and shaders: lit windows worked out in
+      the shader, one instanced mesh for the buildings, traffic, trees, a sky dome with the low sun and stars,
+      rain, snow, fog and lightning, the hour moving through dusk week to week, and the seven places with their
+      own buildings (the home changes with the home he has). Each place is a room he walks around as himself
+      (click to walk or WASD, a blended walk cycle), with glowing spots to use things, walls that drop when
+      they block the camera, a view of the city's own skyline out of the window, his trophies in the cabinet
+      and his car in the bay of a big house. The phone has seven apps (messages, agent and sponsors, social,
+      team chat, news, calendar, bank). Measured in headless Chrome on High: 60 fps in the city and in every
+      place, worst frame 17 ms.
+- [x] P4 relationships, family and events: teammates, coach, manager, agent (and changing agents), friends,
+      family characters with opinions, family against agent choice events, dynamic life events with real
+      consequences, teaser and popup flow, rate limits
+      Server: floodlights/career/people.js. Mum and Dad, a brother or a sister in about two families in three,
+      an oldest friend from home, a best mate picked from each new dressing room, the dressing room, the coach
+      or manager and the agent, each with a relationship that moves. The family texts after games (proud,
+      kind or blunt), turns up in the stands now and then, and its mood lifts or weighs on his morale. The
+      agent takes his cut of wages and sponsor money, can be let go or replaced, and walks away if ignored too
+      long. Twenty one life events, most with the family and the agent pulling different ways (a move abroad,
+      the agent's fee, Dad wanting to do the deals, exams against a paid shoot, a camp against the family trip,
+      a wedding back home, a transfer request against fighting for the shirt, money for a brother or sister,
+      Mum seeing a lifestyle post, a betting sponsor), plus the dressing room, the press, the hospital visit,
+      a mentoring request, a hamstring scare and more. Choices move relationships, morale, confidence, form,
+      fatigue, money, reputation, traits and the career itself (offers abroad turned down, the agent gone or
+      cheaper, a transfer request handed in, an injury risk taken). Round the table: a family meeting that
+      works or blows up depending on how the family feels and how well he leads. The flow is Manager Career's:
+      an event is decided at the end of a week and only teased in the week report; the popup comes before the
+      next week can be played, and the week carries on once it is answered. At most one family event between
+      two of his matches (checked by the battery), one event every two weeks at most.
+      Client: the teaser in the week report and the alerts, the event popup, a note when a family meeting
+      goes well or badly, a People panel (family, friend, best mate, dressing room, coach or manager, agent,
+      find or drop an agent, the choices he made).
+- [x] P5 player lock match mode: lock to your footballer, off ball calls and runs, manager instructions,
+      live rating, your look on the pitch, results back into the career, headless battery checks
+      Engine: floodlights/m3d/lock.mjs plus small hooks guarded by m.lock (null in every Manager match). A
+      setup row marked pc is the only player the person controls: no switching, set pieces only when they are
+      his to take (the AI takes the rest, the AI keeper faces penalties). Without the ball Q calls for it and T
+      makes a run; a team mate on the ball looks up quickly, rates him first, and chips it over when the ground
+      lane is shut, but never plays into a lane that is all but closed. His own match is counted from the
+      engine's events (touches, passes and completed passes, shots on and off target, goals, assists, tackles
+      won, skills, the ball lost) into a live rating from 3 to 10 that counts each habit less the more there
+      is of it. The manager's instruction comes by position (shots for a striker, runs for a winger, passes
+      for a midfielder, tackles for a defender) and doing it or not moves the rating and his trust. His face,
+      hair, build and boots come with the row. The broadcast camera frames him and the ball together. Checked:
+      Manager matches are identical byte for byte (same seeded scores, stats, ball position and event hash
+      before and after), Classic is untouched.
+      Flow: Play the match on the career hub opens the Floodlights page at #pcmatch, which runs the same
+      FLMatch overlay (lock help, lock key strip, 3D only, rating card on the HUD). /api/pc/matchstart checks he
+      starts this week (fit, picked, no event or choice waiting, one go a week) and builds both teams the way
+      Manager kickoffs do; /api/pc/matchresult puts the score in game.plays so the week's sim uses it, his line
+      replaces the sim's (and the league's scoring records are put in line), and the week plays on. Leaving
+      early sims the match. Keepers' matches are simmed. Browser check: 60 fps in the live match on High.
+- [x] P6 cinematics and polish: first contract signing, debut, first goal, call up, big transfer, trophy,
+      captaincy, retirement; graphics settings menu, frame guard, weather in the hub, screenshots
+      The big days are scenes now: his own 3D body turning under the lights in the shirt of the day (his
+      club's colours, or his country's for a call up, the same colours the match uses), a gold cup floating
+      beside him for a first trophy, the broadcast card sliding in next to him. The first contract keeps its
+      signing on paper. The retirement page stands him in his last club's kit beside the career numbers.
+      A graphics menu (Low, Medium, High, Ultra, each said in plain words) with a Keep it smooth switch for the
+      frame guard, remembered in the browser. Close up bodies get real hands (a palm, four curled fingers, a
+      thumb) and a rounded cap where the sleeve meets the shoulder; match bodies keep their exact geometry
+      (the same fingerprint as before).
+- [x] F1 all batteries 0 failed three times (typecheck, vitest, condition, API, DOM, 3D, layout, career,
+      site, build, boot), memory under 400 MB idle, screenshots (creator, hub, home interior, phone, player
+      lock match)
+      test:all three times in a row, every battery 0 failed: typecheck, vitest 81, condition 138, API 257,
+      DOM 167, 3D match 144 (with player lock), layout 222, Player Career 111, site 195, build, boot 52. The
+      career battery is now part of test:floodlights. Two old flaky checks in the API battery were fixed in the
+      test (a save read that raced the server's delayed write; a pick that could land on a star whose refusal
+      is a different, correct path). Runs that stalled turned out to be the machine sleeping; the final runs
+      used caffeinate. Memory: 78 MB at boot, 213 MB idle with a Manager game and two Player Careers loaded.
+      A Player Career save is about 2.55 MB against 2.28 MB for a Manager save; the career itself is 19 KB,
+      the rest is the Indian league those worlds carry. Screenshots taken in headless Chrome on the production
+      build: the creator (all seven steps), the career hub, the city (rain and clear), every place (home, gym,
+      restaurant, mall, the shops, training ground, stadium), the phone (home, social, bank), life events,
+      the People panel, the big day scenes, the retirement page, the graphics menu and a player lock match.
+- [x] F2 upload folder, push with the given message, report

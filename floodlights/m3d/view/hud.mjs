@@ -53,6 +53,14 @@ const CSS = `
 #m3dHud .m3h-clk{display:flex;align-items:center;justify-content:center;min-width:56px;padding:0 13px 0 12px;box-shadow:inset 1px 0 0 var(--m3h-line);font:500 13px/1 var(--m3h-num);color:var(--m3h-acc);font-variant-numeric:tabular-nums;white-space:nowrap}
 #m3dHud .m3h-st{--c:5px;display:flex;align-items:center;height:18px;padding:0 10px;font:600 9.5px/1 var(--m3h-lbl);letter-spacing:.16em;text-transform:uppercase;color:var(--m3h-dim)}
 #m3dHud .m3h-st.hot{color:var(--m3h-acc)}
+#m3dHud .m3h-lock{--c:7px;position:absolute;top:88px;left:18px;display:flex;flex-direction:column;gap:5px;min-width:160px;padding:8px 12px 9px}
+#m3dHud .m3h-lr{display:flex;align-items:baseline;gap:8px}
+#m3dHud .m3h-lk{font:600 9.5px/1 var(--m3h-lbl);letter-spacing:.16em;text-transform:uppercase;color:var(--m3h-dim)}
+#m3dHud .m3h-lv{font:600 20px/1 var(--m3h-num);color:var(--m3h-acc);font-variant-numeric:tabular-nums}
+#m3dHud .m3h-lcall{margin-left:auto;font:700 9.5px/1 var(--m3h-lbl);letter-spacing:.14em;text-transform:uppercase;color:var(--m3h-acc);opacity:0;transition:opacity .15s ease}
+#m3dHud .m3h-lock.call .m3h-lcall{opacity:1}
+#m3dHud .m3h-li{max-width:230px;font:500 11.5px/1.35 var(--m3h-lbl);letter-spacing:.02em;color:var(--m3h-soft)}
+#m3dHud .m3h-li:empty{display:none}
 
 #m3dHud .m3h-tag{position:absolute;left:0;top:0;width:0;height:0;opacity:0;visibility:hidden;transition:opacity .18s ease,visibility 0s linear .18s;will-change:transform}
 #m3dHud .m3h-tag.on{opacity:1;visibility:visible;transition:opacity .18s ease}
@@ -713,10 +721,30 @@ export function createHud(doc, wrap, ctx) {
       S.named = true;
     }
     scoreBug(sim, m);
+    lockCard(m);
     playerTag(m, info);
     setPieceHint(m);
     timers();
     drawRadar(m);
+  }
+
+  // player lock: his live match rating, the manager's instruction, and a cue when he calls or runs
+  let lockEl = null, lockV = null, lockC = null, lastR = -1;
+  function lockCard(m) {
+    if (!m.lock || !m.lockStats) return;
+    if (!lockEl) {
+      lockEl = el("div", "m3h-lock m3h-g m3h-blur");
+      const r = el("div", "m3h-lr", lockEl);
+      el("span", "m3h-lk", r, "Your rating");
+      lockV = el("b", "m3h-lv", r, "6.0");
+      lockC = el("span", "m3h-lcall", r, "Calling");
+      el("div", "m3h-li", lockEl, m.instruction && m.instruction.text ? "Manager: " + m.instruction.text : "");
+    }
+    const r = m.lockStats.rating;
+    if (r !== lastR) { lastR = r; lockV.textContent = r.toFixed(1); }
+    const calling = !!(m.call && m.t - m.call.t < 1.6), running = !!m.lockRun;
+    lockEl.classList.toggle("call", calling || running);
+    if (calling || running) lockC.textContent = calling ? "Calling" : "Running";
   }
 
   function event(ev, sim) {
