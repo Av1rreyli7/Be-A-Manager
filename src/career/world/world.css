@@ -27,10 +27,8 @@
   position: absolute;
   inset: 0;
   touch-action: none;
-  cursor: grab;
-}
-.pc-world-canvas:active {
-  cursor: grabbing;
+  /* a click captures the mouse for looking round (see look.ts) */
+  cursor: pointer;
 }
 .pc-world-hud {
   position: absolute;
@@ -418,4 +416,117 @@
   .pc-world-flash.is-on {
     animation: none;
   }
+}
+/* the mouse is captured for looking round: a quiet note that Esc frees it */
+.pc-world-lockhint {
+  position: absolute;
+  right: 16px;
+  bottom: 18px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(6, 8, 12, 0.6);
+  border: 1px solid var(--k-line);
+  color: var(--k-dim);
+  font: 600 12px/1 var(--k-f-ui);
+  pointer-events: none;
+}
+.pc-world-lockhint kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  font: 700 10px/1 var(--k-f-lbl);
+  letter-spacing: 0.06em;
+  color: #ffffff;
+}
+.pc-world {
+  overscroll-behavior: contain;
+}
+
+/* a date: the plan under the corner chips, and the card while it happens */
+.pc-world-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  padding: 5px 6px 5px 10px;
+  border-radius: 999px;
+  background: rgba(40, 10, 24, 0.78);
+  border: 1px solid rgba(255, 122, 168, 0.45);
+  color: #ffd6e4;
+  font-size: 13px;
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+.pc-world-date svg {
+  color: #ff7aa8;
+}
+.pc-date {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  z-index: 6;
+  width: min(440px, calc(100% - 24px));
+  transform: translateX(-50%);
+}
+.pc-date-card.k-panel {
+  border-color: rgba(255, 122, 168, 0.4);
+}
+.pc-date-steps {
+  display: flex;
+  gap: 4px;
+}
+.pc-date-steps i {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.pc-date-steps i.is-done {
+  background: #ff7aa8;
+}
+.pc-date-steps i.is-now {
+  background: rgba(255, 122, 168, 0.5);
+}
+.pc-date-result {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.pc-date-result.is-great {
+  color: #ffd6e4;
+}
+.pc-date-result.is-bad {
+  color: #a8ada4;
+}
+.pc-date-card.is-yes,
+.pc-date-card.is-wedding {
+  border-color: rgba(232, 196, 106, 0.6);
+  box-shadow: 0 0 0 1px rgba(232, 196, 106, 0.2), 0 18px 60px rgba(232, 196, 106, 0.12);
+}
+.pc-date-yes {
+  margin: 2px 0 0;
+  font: 700 26px/1.1 var(--k-f-lbl);
+  letter-spacing: 0.04em;
+  color: #e8c46a;
+}
+/* the wedding day: the banner that takes him there */
+.pc-world-wed {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: start;
+  padding: 7px 8px 7px 12px;
+  border-radius: 999px;
+  background: rgba(40, 30, 8, 0.82);
+  border: 1px solid rgba(232, 196, 106, 0.55);
+  color: #f6e6b8;
+  font-size: 13.5px;
+  pointer-events: auto;
 }

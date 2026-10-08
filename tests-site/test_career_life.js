@@ -67,7 +67,7 @@ const car = (st, id) => st.life.catalog.cars.find(x => x.id === id);
 
 async function main() {
   // ---------- static: the house rules and the catalog itself ----------
-  for (const f of ["floodlights/career/life_data.js", "floodlights/career/life.js", "floodlights/career/people.js", "floodlights/career/data.js", "tests-site/test_career_life.js"]) {
+  for (const f of ["floodlights/career/life_data.js", "floodlights/career/life.js", "floodlights/career/people.js", "floodlights/career/data.js", "floodlights/career/social.js", "floodlights/career/social_data.js", "floodlights/career/campus.js", "tests-site/test_career_life.js"]) {
     const t = fs.readFileSync(path.join(root, f), "utf8");
     ok(f + " has no em or en dashes", !t.includes(EM) && !t.includes(EN), null);
   }
@@ -181,7 +181,8 @@ async function main() {
     ok("Starbucks and an Indian coffee chain", cafes.includes("Starbucks") && cafes.some(n => /Blue Tokai|Third Wave/.test(n)), cafes);
     ok("the restaurant sits on the seafront", place(st, "restaurant").where === "seafront", place(st, "restaurant"));
     ok("the nightclub is eighteen and over", place(st, "club").minAge === 18, place(st, "club"));
-    ok("a clinic, a gym, a training ground and a stadium", ["clinic", "gym", "training", "stadium"].every(id => place(st, id)) && place(st, "stadium").name === "Mumbai Football Arena", place(st, "stadium"));
+    const stad = lw.places.find(p => p.kind === "stadium");
+    ok("a clinic, a gym, a training ground and a stadium (the city club's, a schoolboy plays on his school pitch)", ["clinic", "gym"].every(id => place(st, id)) && lw.places.some(p => p.kind === "training") && stad && stad.name === "Mumbai Football Arena", stad);
     ok("all four dealers in a big city", ["dealer:everyday", "dealer:prestige", "dealer:super", "dealer:bikes"].every(id => place(st, id)), null);
     ok("his family home is in his home town, and every home to buy is a place", place(st, "home:family") && place(st, "home:family").living === true && ["shared", "apartment", "penthouse", "villa", "mansion"].every(h => place(st, "home:" + h) && place(st, "home:" + h).homeId === h), lw.places.filter(p => p.kind === "home").map(p => p.id));
     ok("Mumbai homes are real neighbourhoods", place(st, "home:mansion").name.includes("Malabar Hill") && place(st, "home:penthouse").name.includes("Worli"), place(st, "home:mansion").name);
@@ -431,6 +432,287 @@ async function main() {
     st = await E.state();
     ok("an English career starts in Manchester", st.life.city === "Manchester" && place(st, "mall").name === "Trafford Centre" && place(st, "home:mansion").name.includes("Alderley Edge"), [st.life.city, place(st, "mall") && place(st, "mall").name]);
     ok("an English supermarket and coffee", /Tesco|Sainsbury/.test(place(st, "supermarket").name) && st.life.world.places.some(p => p.name === "Starbucks"), place(st, "supermarket").name);
+
+    // ---------- the schools, colleges and clubs as places with their own grounds (campus.js) ----------
+    const G = await career("Grounds");
+    st = await G.state();
+    const ownP = st.life.world.places.find(p => p.inst && p.inst.mine);
+    ok("his own school is a place on the map, in its own colours", ownP && ownP.id === "school" && ownP.kind === "school" && ownP.name === "American School of Bombay" && ownP.inst.cols.length === 2 && /^#/.test(ownP.style.accent), ownP);
+    const otherSchools = st.life.world.places.filter(p => p.kind === "school" && !p.inst.mine);
+    ok("more of the city's schools have grounds too (a few, not all)", otherSchools.length >= 2 && otherSchools.length <= 4 && otherSchools.every(p => p.id.startsWith("school:")), otherSchools.map(p => p.id));
+    ok("no made up training pitches when he has a school pitch", !st.life.world.places.some(p => p.id === "training" && !p.inst), null);
+    ok("the city's club has its training ground and its stadium", st.life.world.places.some(p => p.kind === "training" && p.inst && !p.inst.mine) && st.life.world.places.some(p => p.kind === "stadium" && p.inst), null);
+    const t0 = st.life.time;
+    r = await G.act("school", "class");
+    ok("a class at school uses free time", r.status === 200 && r.j.state.life.time === t0 - 1, r.j.error);
+    await G.act("school", "class");
+    r = await G.act("school", "class");
+    ok("two classes a week at most", r.status === 400, r.j);
+    r = await G.act("school", "canteen");
+    ok("lunch in the school canteen", r.status === 200, r.j.error);
+    r = await G.act("school", "canteen");
+    ok("the canteen once a week", r.status === 400, r.j);
+    r = await G.act("training", "physio");
+    ok("no physio room at a school", r.status === 400, r.j);
+    r = await G.act(otherSchools[0].id, "class");
+    ok("classes only at his own school", r.status === 400, r.j);
+    // a live school match: at his school when at home, at the other school when away
+    let venue = null, fxHome = null;
+    for (let i = 0; i < 14 && !venue; i++) {
+      const s3 = await G.state();
+      if (s3.play && s3.play.can) {
+        const pk = await G.P("/api/pc/matchstart", { peek: true });
+        if (pk.status === 200) { venue = pk.j.venue || (pk.j.setup && pk.j.setup.venue); fxHome = pk.j.home || (pk.j.setup && pk.j.setup.home); }
+        break;
+      }
+      await G.week();
+    }
+    ok("a school match is at the home side's school, a field in daylight", venue && venue.kind === "school" && venue.host === fxHome && venue.daylight === true && venue.crowd > 0 && venue.crowd < 1, [venue, fxHome]);
+    // the rules on their own: standing, venues by kind, home and away
+    {
+      const { makeCampus } = require("../floodlights/career/campus");
+      const game = { clubs: { "Man City": {}, "Man United": {}, Brighton: {} } };
+      const cc = { stage: "college", college: "wifc", person: {}, city: "Pune" };
+      const K = { C: () => cc, me: () => ({ club: null }), clubLevel: (g, n) => ({ "Man City": 86, "Man United": 80, Brighton: 74 })[n] || 62, cityOf: (g, n) => (n === "Brighton" ? "Brighton" : "Manchester"), trainOne: () => 0, msg() {}, money() {} };
+      const CM = makeCampus(K, { kitOf: n => (n === "Man City" ? ["#6cabdd", "#1c2c5b"] : null) });
+      ok("a school's standing follows its facilities and fees", CM.school("dais").standing > CM.school("local").standing + 3, [CM.school("dais").standing, CM.school("local").standing]);
+      ok("a college's standing follows its reputation and facilities", CM.college("ncfe").standing >= CM.college("mccs").standing + 2, [CM.college("ncfe").standing, CM.college("mccs").standing]);
+      ok("a bigger club has the bigger ground, the real names for the big ones", CM.club(game, "Man City").standing > CM.club(game, "Brighton").standing && CM.club(game, "Man City").ground === "City Football Academy" && CM.club(game, "Man United").ground === "Carrington" && CM.club(game, "Man City").cols[0] === "#6cabdd", [CM.club(game, "Man City"), CM.club(game, "Brighton").standing]);
+      const v1 = CM.venueFor(game, "Western India Football College", "Goa University");
+      ok("a college home game is at his college, in daylight", v1.kind === "college" && v1.name === "Western India Football College" && v1.daylight, v1);
+      const v2 = CM.venueFor(game, "Christ University", "Western India Football College");
+      ok("an away college game is at the other side's ground", v2.kind === "college" && v2.host === "Christ University" && v2.seed !== v1.seed, v2);
+      cc.stage = "academy"; cc.academy = { club: "Man City" };
+      const v3 = CM.venueFor(game, "Brighton U18", "Man City U18");
+      ok("an academy game is at the home club's training ground", v3.kind === "academy" && /academy pitch/.test(v3.name) && v3.host === "Brighton U18", v3);
+      cc.stage = "pro";
+      const v4 = CM.venueFor(game, "Man United", "Man City", { pro: true });
+      ok("a pro game is at the home club's stadium under the lights, with a big crowd", v4.kind === "pro" && v4.name === "Old Trafford" && !v4.daylight && v4.crowd > 0.8, v4);
+      cc.stage = "school"; cc.school = "asb"; cc.city = "Mumbai";
+      const ms = CM.places(game, "Mumbai");
+      ok("Mumbai shows his school and four more", ms.filter(p => p.kind === "school").length === 5 && ms.find(p => p.id === "school").inst.mine, ms.map(p => p.id));
+      cc.stage = "academy";
+      const mc = CM.places(game, "Manchester");
+      ok("Manchester: his academy's training ground and its stadium keep the old ids, the other club has both too", mc.some(p => p.id === "training" && p.inst.academy) && mc.some(p => p.id === "stadium" && p.name === "Etihad Stadium") && mc.some(p => p.id === "training:manunited" && p.name === "Carrington") && mc.some(p => p.id === "stadium:manunited"), mc.map(p => p.id + " " + p.name));
+    }
+
+    // ---------- friends (social.js): classmates on the grounds, talking, numbers, texts, hang outs, events ----------
+    {
+      const Fr = await career("Pals");
+      let s = await Fr.state();
+      const here = s.social.present.school || [];
+      ok("classmates on his school grounds this week, real people with names and looks", here.length >= 3 && here.every(p => p.name && p.look && p.outfit && p.h > 140 && p.role === "Classmate"), here.map(p => p.name));
+      ok("the class sits in the classroom and the canteen has people too", (s.social.present["school/classroom"] || []).length >= 4 && (s.social.present["school/canteen"] || []).length >= 2, Object.keys(s.social.present));
+      const all = here.concat(s.social.present["school/classroom"] || []);
+      ok("a school is mixed, everyone in its uniform", all.some(p => p.fem) && all.some(p => !p.fem) && all.every(p => p.outfit.shirt === "#f4f4f4"), all.map(p => [p.fem, p.outfit.shirt]));
+      const who = here[0], w2 = here[1];
+      r = await Fr.act("school", "talk", who.id);
+      const talk = r.j.state && r.j.state.social.talk;
+      ok("walking up to someone starts a chat: their line and three things to say", r.status === 200 && talk && talk.line && talk.choices.length === 3 && talk.id === who.id, r.j.error || talk);
+      r = await Fr.act("school", "say", "good");
+      const t2 = r.j.state.social.talk;
+      ok("listening to what they are into goes well", r.status === 200 && t2.said && t2.result && t2.rel > 30, t2);
+      ok("a chat takes no free time", r.j.state.life.time === s.life.time, [r.j.state.life.time, s.life.time]);
+      r = await Fr.act("school", "talk", "s:nobody:1");
+      ok("you cannot talk to someone who is not there", r.status === 400, r.j);
+      await Fr.act("school", "talk", w2.id);
+      await Fr.act("school", "say", "football");
+      r = await Fr.act("school", "number", w2.id);
+      ok("no swapping numbers with someone you just met", r.status === 400, r.j);
+      for (let i = 0; i < 4; i++) { await Fr.act("school", "talk", who.id); await Fr.act("school", "say", "good"); }
+      s = await Fr.state();
+      const f = s.social.friends.find(x => x.id === who.id);
+      ok("talking again builds a friendship (the first chat of the week counts most)", f && f.rel >= 40 && f.rel < 70 && f.level === "Friend", f);
+      ok("friends are in the People panel with a role and a level", f && f.role === "Classmate" && f.trait && f.likes.length === 2, f);
+      r = await Fr.act("school", "say", "number");
+      ok("then you swap numbers and their chat appears on the phone", r.status === 200 && r.j.state.phone.threads.some(t => t.id === "f:" + who.id), r.j.error);
+      const tBefore = r.j.state.life.time;
+      r = await Fr.act("school", "hang", who.id);
+      ok("hanging out takes a free evening and brings you closer", r.status === 200 && r.j.state.life.time === tBefore - 1 && /^With /.test(r.j.text || "") && r.j.state.social.friends.find(x => x.id === who.id).rel > f.rel, r.j.error || r.j.text);
+      r = await Fr.act("school", "hang", who.id);
+      ok("one hang out with the same friend a week", r.status === 400, r.j);
+      let txt = null;
+      for (let i = 0; i < 10 && !txt; i++) {
+        await Fr.week();
+        s = await Fr.state();
+        const th = s.phone.threads.find(t => t.id === "f:" + who.id);
+        const m = th ? th.msgs.findIndex(x => x.replies && x.answered === undefined && !x.expired) : -1;
+        if (m >= 0) txt = { m };
+      }
+      ok("a friend with your number texts you, with replies to pick from", !!txt, null);
+      if (txt) {
+        r = await Fr.act("phone", "text", "f:" + who.id + "|" + txt.m + "|0");
+        const th2 = r.j.state && r.j.state.phone.threads.find(t => t.id === "f:" + who.id);
+        ok("answering puts your reply in the chat", r.status === 200 && th2.msgs[th2.msgs.length - 1].mine && th2.msgs[txt.m].answered === 0, r.j.error);
+        r = await Fr.act("phone", "text", "f:" + who.id + "|" + txt.m + "|1");
+        ok("a text is answered once", r.status === 400, r.j);
+      }
+      // the life events know his closest friend
+      s = await Fr.state();
+      const close = s.social.friends[0];
+      if (close.rel < 55) { for (let i = 0; i < 3; i++) { const p0 = (await Fr.state()).social.present; const at = Object.keys(p0).find(k => p0[k].some(x => x.id === close.id)); if (at) { await Fr.act(at, "talk", close.id); await Fr.act(at, "say", "good"); } await Fr.week(); } }
+      s = await Fr.state();
+      r = await Fr.set({ event: "friendparty" });
+      s = await Fr.state();
+      const pend = s.people.pending;
+      const top = s.social.friends[0];
+      ok("a life event about his closest friend names them", r.status === 200 && pend && pend.id === "friendparty" && pend.title.includes(top.name.split(" ")[0]), [r.j.error, pend && pend.title, top]);
+      if (pend && pend.id === "friendparty") {
+        r = await Fr.P("/api/pc/event", { id: "friendparty", choice: "all" });
+        ok("going to the party brings that friend closer, the same relationship numbers", r.status === 200 && r.j.state.social.friends.find(x => x.id === top.id).rel > top.rel, r.j.error);
+      }
+      ok("friends and chats have no NaN", !hasNaN(s.social), null);
+      // an academy boy's people are his teammates, in the club's training kit
+      const dE = (await E.state()).decisions.find(d => d.kind === "academy");
+      if (dE) await E.P("/api/pc/decide", { id: dE.id, choice: dE.options[0] });
+      const se = await E.state();
+      const lads = se.social.present.training || [];
+      ok("at the academy the people are teammates in training kit", lads.length >= 3 && lads.every(p => p.kind === "teammate" && !p.fem && p.role === "Teammate" && p.outfit.shirt === lads[0].outfit.shirt), lads.map(p => [p.name, p.role, p.outfit.shirt]));
+      ok("the dressing room has the lads in it", (se.social.present["training/changing"] || []).length >= 4, Object.keys(se.social.present));
+    }
+
+    // ---------- dating (social.js): college onwards and eighteen, meeting, her number, dates, stages ----------
+    {
+      let s = await (async () => { const x = await career("Pals2"); return { x, st: await x.state() }; })();
+      ok("no dating at school or under eighteen", s.st.social.dating.eligible === false && !Object.values(s.st.social.present).some(l => l.some(p => p.kind === "date")), s.st.social.dating.eligible);
+      // the pool on its own: 240 different women in each part of the world
+      {
+        const { makeSocial } = require("../floodlights/career/social");
+        for (const reg of ["in", "w"]) {
+          const SO = makeSocial({ C: () => ({ city: reg === "in" ? "Mumbai" : "Manchester", person: { country: reg === "in" ? "India" : "England" }, stage: "college" }), me: () => ({ age: 19 }), msg() {} });
+          const ppl = Array.from({ length: 240 }, (_, i) => SO.find({}, "d:" + reg + ":" + i));
+          ok("240 distinct women to meet (" + reg + "): names, looks and personalities all different", new Set(ppl.map(p => p.name)).size === 240 && ppl.every(p => p.fem && p.look.fem && p.look.hair >= 0 && p.trait && p.likes.length === 2) && new Set(ppl.map(p => JSON.stringify(p.look))).size === 240 && new Set(ppl.map(p => p.trait)).size >= 7, ppl.slice(0, 3).map(p => p.name));
+          ok("varied looks: long and short hair, skirts, dresses and trousers (" + reg + ")", new Set(ppl.map(p => p.look.hair)).size >= 6 && new Set(ppl.map(p => p.outfit.bottom)).size >= 3, null);
+        }
+      }
+      const dE = (await E.state()).decisions.find(d => d.kind === "academy");
+      if (dE) await E.P("/api/pc/decide", { id: dE.id, choice: dE.options[0] });
+      await E.set({ age: 19, cash: 80000 });
+      let st = await E.state();
+      const dz = st.social.dating;
+      const venues = Object.entries(st.social.present).filter(([k, l]) => l.some(p => p.kind === "date"));
+      ok("from eighteen, away from school: women to meet at the cafes, the mall, the gym, the restaurant and the club", dz.eligible && venues.length >= 4 && venues.every(([k, l]) => /^(cafe:|mall|club|restaurant|gym)/.test(k)) && venues.every(([k, l]) => l.filter(p => p.kind === "date").every(p => p.fem && p.age >= 18)), venues.map(([k]) => k));
+      // meet someone and get her number (it can take a few tries)
+      let her = null, at = null;
+      for (const [place, l] of venues) {
+        for (const p of l.filter(x => x.kind === "date")) {
+          r = await E.act(place, "talk", p.id);
+          if (r.status !== 200) continue;
+          await E.act(place, "say", "good");
+          for (let i = 0; i < 2; i++) { await E.act(place, "talk", p.id); await E.act(place, "say", "good"); }
+          const t = (await E.state()).social.talk;
+          if (t && t.follow.some(x => x.id === "number")) {
+            r = await E.act(place, "say", "number");
+            await E.act(place, "bye");
+            st = await E.state();
+            if (st.social.dating.contacts.some(x => x.id === p.id)) { her = p; at = place; break; }
+          } else await E.act(place, "bye");
+        }
+        if (her) break;
+      }
+      ok("chatting her up well and asking: her number, her chat on the phone", !!her && st.phone.threads.some(t => t.id === "f:" + her.id), at);
+      if (her) {
+        // a few more chats so she says yes to a first date
+        for (let i = 0; i < 3; i++) { const p0 = (await E.state()).social.present; const pl = Object.keys(p0).find(k => p0[k].some(x => x.id === her.id)); if (pl) { await E.act(pl, "talk", her.id); await E.act(pl, "say", "good"); await E.act(pl, "bye"); } }
+        await E.act("_test", "social", her.id + "|talking|60");
+        await E.act("_test", "week");
+        r = await E.act("phone", "askout", her.id + "|restaurant|25|0|18");
+        ok("a date has to be later today on the city clock", r.status === 400, r.j);
+        const t0 = (await E.state()).life.time;
+        r = await E.act("phone", "askout", her.id + "|restaurant|20|0|18");
+        const plan = r.j.state && r.j.state.social.dating.plan;
+        ok("asking her out over text: a place and a time, her yes on the phone, a free evening booked", r.status === 200 && plan && plan.place === "restaurant" && plan.hour === 20 && plan.status === "set" && r.j.state.life.time === t0 - 1, r.j.error || plan);
+        r = await E.act("phone", "askout", her.id + "|cafe|21|0|18");
+        ok("one date a week", r.status === 400, r.j);
+        r = await E.act("mall", "date", "20");
+        ok("the date is where you said", r.status === 400, r.j);
+        const cash0 = (await E.state()).money.cash;
+        r = await E.act("restaurant", "date", "20.2");
+        let sc = r.j.state && r.j.state.social.dating.scene;
+        ok("at the restaurant the date starts: her line and three things to say", r.status === 200 && sc && sc.beat && sc.beat.choices.length === 3 && sc.keys.length === 4, r.j.error || sc);
+        for (const pick of ["compliment", "order:150", "ask", "again"]) { r = await E.act("restaurant", "datesay", pick); }
+        sc = r.j.state.social.dating.scene;
+        ok("a good date: it went well, dinner was paid, and now you are seeing each other", sc.result && sc.result.res !== "bad" && r.j.state.money.cash < cash0 && r.j.state.social.dating.partner && r.j.state.social.dating.partner.id === her.id && r.j.state.social.dating.partner.stage === "dating", [sc.result, r.j.state.social.dating.partner]);
+        await E.act("restaurant", "dateend");
+        // a present from the shops for her
+        st = await E.state();
+        const item = st.life.catalog.items.find(x => !x.owned && x.price < 2000 && x.store && x.store.startsWith("store:"));
+        const rel0 = st.social.dating.partner.rel, c0 = st.money.cash;
+        r = await E.act(item.store, "gift", item.id);
+        ok("a present for her: paid for, not in your wardrobe, and she loves it", r.status === 200 && r.j.state.money.cash === c0 - item.price && !r.j.state.life.catalog.items.find(x => x.id === item.id).owned && r.j.state.social.dating.partner.rel > rel0, r.j.error);
+        // a life event about her
+        r = await E.set({ event: "moretime" });
+        st = await E.state();
+        const pend = st.people.pending;
+        ok("life events about her: she wants more of your time", r.status === 200 && pend && pend.title.includes(her.first), [r.j.error, pend && pend.title]);
+        if (pend) { const rb = st.social.dating.partner.rel; r = await E.P("/api/pc/event", { id: "moretime", choice: "no" }); ok("telling her football always comes first hurts", r.status === 200 && r.j.state.social.dating.partner.rel < rb, r.j.error); }
+        // stood up: a date that never happens
+        await E.act("_test", "week");
+        st = await E.state();
+        r = await E.act("phone", "askout", her.id + "|cafe|21|0|18");
+        const relB = (await E.state()).social.dating.partner.rel;
+        await E.week();
+        st = await E.state();
+        ok("forgetting a date: she waited, she is hurt, and she says so", st.social.dating.plan === null && st.social.dating.partner.rel < relB - 8 && st.phone.threads.find(t => t.id === "f:" + her.id).msgs.some(m => /waited/.test(m.text)), [relB, st.social.dating.partner && st.social.dating.partner.rel]);
+        // ending it
+        r = await E.act("phone", "breakup", her.id);
+        ok("ending it: she is an ex and nobody is your partner", r.status === 200 && r.j.state.social.dating.partner === null && !r.j.state.social.dating.contacts.some(x => x.id === her.id), r.j.error);
+        ok("dating has no NaN", !hasNaN(r.j.state.social), null);
+      }
+      // ---------- the ring, the question, the wedding, married life ----------
+      {
+        st = await E.state();
+        const two = Object.values(st.social.present).flat().find(p => p.kind === "date" && (!her || p.id !== her.id));
+        r = await E.act("watches", "ring", "halo");
+        ok("no ring while nobody is serious", r.status === 400, r.j);
+        await E.act("_test", "social", two.id + "|serious|90|5|8");
+        await E.act("_test", "week");
+        await E.set({ cash: 900000 });
+        r = await E.act("watches", "ring", "solitaire");
+        ok("the ring from the boutique, once it is serious", r.status === 200 && r.j.state.social.dating.ring && r.j.state.social.dating.ring.id === "solitaire" && r.j.state.money.cash === 900000 - 6500, r.j.error);
+        r = await E.act("watches", "ring", "graff");
+        ok("one ring in the pocket at a time", r.status === 400, r.j);
+        r = await E.act("phone", "askout", two.id + "|restaurant|20|0|18");
+        r = await E.act("restaurant", "date", "20");
+        for (const pick of ["compliment", "order:150", "ask"]) r = await E.act("restaurant", "datesay", pick);
+        const close = r.j.state.social.dating.scene.beat;
+        ok("at the end of a date with a ring in your pocket: take it out", close && close.choices.some(c => c.id === "propose"), close);
+        r = await E.act("restaurant", "datesay", "propose");
+        const res = r.j.state.social.dating.scene.result;
+        ok("she says yes: engaged, in the news, the ring on her hand", res && res.proposal === "yes" && r.j.state.social.dating.partner.stage === "engaged" && !r.j.state.social.dating.ring && r.j.state.news.some(n => /engaged/.test(n.text)), res);
+        await E.act("restaurant", "dateend");
+        st = await E.state();
+        r = await E.act("phone", "wedding", "huge");
+        ok("a wedding costs real money: too big for the bank says no", st.money.cash < 400000 ? r.status === 400 : r.status === 200, [st.money.cash, r.j.error]);
+        if (r.status === 400) r = await E.act("phone", "wedding", "big");
+        const fol0 = (await E.state()).life.followers, cashW = (await E.state()).money.cash;
+        ok("the wedding is booked for today, with guests: family first", r.status === 200 && r.j.state.social.dating.wedding.status === "today" && (r.j.state.social.present.wedding || []).length >= 10 && r.j.state.social.present.wedding[0].name === "Mum", r.j.error);
+        r = await E.act("wedding", "wedstart");
+        for (const pick of ["watch", "own", "slow"]) r = await E.act("wedding", "wedsay", pick);
+        st = r.j.state;
+        ok("married: paid for, in the news, more followers, a happier man", st.social.dating.partner.stage === "married" && st.money.cash < cashW && st.news.some(n => /marries/.test(n.text)) && st.life.followers > fol0 && st.social.dating.wscene.result, [st.social.dating.partner.stage, st.money.cash, cashW]);
+        await E.act("wedding", "wedend");
+        st = await E.state();
+        const homeP = Object.entries(st.social.present).find(([k, v]) => k.startsWith("home:") && v.some(p => p.id === two.id));
+        ok("his wife lives at home with him: she is there when he walks in", !!homeP && homeP[1][0].role === "Your wife", Object.keys(st.social.present));
+        r = await E.act(homeP ? homeP[0] : "home", "talk", two.id);
+        ok("and they talk at home", r.status === 200 && r.j.state.social.talk && r.j.state.social.talk.line, r.j.error);
+        await E.act(homeP ? homeP[0] : "home", "bye");
+        r = await E.set({ event: "wifemum" });
+        st = await E.state();
+        ok("married life in the drama: Mum and his wife disagree", r.status === 200 && st.people.pending && st.people.pending.id === "wifemum" && st.people.pending.title.includes(two.first), [r.j.error, st.people.pending && st.people.pending.title]);
+        if (st.people.pending) {
+          const rb = st.social.dating.partner.rel, mb = st.people.family.find(f => f.id === "mum").rel;
+          r = await E.P("/api/pc/event", { id: "wifemum", choice: "wife" });
+          ok("backing his wife: she is closer (or as close as can be), Mum is not pleased", r.status === 200 && (r.j.state.social.dating.partner.rel > rb || rb === 100) && r.j.state.people.family.find(f => f.id === "mum").rel < mb, [rb, r.j.error]);
+        }
+        r = await E.act("phone", "breakup", two.id);
+        ok("a marriage is not ended with a text", r.status === 400, r.j);
+        for (let i = 0; i < 3; i++) await E.week();
+        st = await E.state();
+        ok("weeks of married life: still married, texts from her, no NaN", st.social.dating.partner && st.social.dating.partner.stage === "married" && st.phone.threads.find(t => t.id === "f:" + two.id).msgs.length >= 3 && !hasNaN(st.social), null);
+      }
+    }
 
     // ---------- nothing is NaN, no dashes in the text ----------
     for (const [n, x] of [["Mumbai", A], ["Nobody", B], ["Manchester", E]]) {

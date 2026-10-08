@@ -122,6 +122,8 @@ export function homeRoom(k: Kit, p: WorldPlace): Room {
   const head = k.wall(doorX + gap / 2, D / 2, doorX - gap / 2, D / 2, H, wallM, { solid: false, low: 2.2 });
   k.mount(head, rbox(gap + 0.16, 0.1, 0.22, 0.02), trim, 0, 2.2, 0);
   k.spot("door", "Way out", doorX, D / 2 - 0.55, { r: 0.9, y: 1.6 });
+  // where his wife is when he comes home
+  if (his) k.crowd(doorX - 1.7, D / 2 - 2.6, 0.3, { sx: doorX - 1.4, sz: D / 2 - 1.6 });
   if (outdoor) k.block(doorX, D / 2 + 0.5, gap / 2 + 0.3, 0.3);
   // ---------- furniture by the size of the home ----------
   const sofaCol = tier >= 3 ? "#e8e2d6" : tier === 2 ? "#4a5560" : "#6a5a4a";

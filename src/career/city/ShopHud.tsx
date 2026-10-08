@@ -137,7 +137,7 @@ export default function ShopHud({
   }, [flash]);
 
   const card = useMemo<Card | null>(() => {
-    if (!near) return null;
+    if (!near || state.social?.dating?.scene) return null;
     const cash = state.money.cash;
     const age = state.player.age;
     const short = (price: number) => (cash < price ? "Not enough money. You have " + money(cash) + "." : "");
@@ -155,6 +155,7 @@ export default function ShopHud({
     ).week;
     const [kind, ...rest] = near.split(":");
     const arg = rest.join(":");
+    const partner = state.social?.dating?.partner || null;
     const pid = place?.id || "";
     const homeId = pid.replace(/\/garage$/, "");
     // ---------- things for sale ----------
@@ -187,6 +188,8 @@ export default function ShopHud({
                 run: () => run("home", "wear", it.id),
               }
             : undefined,
+        // a present for the one he is with (Q, then Q again to be sure)
+        second: partner && state.money.cash >= it.price ? { label: "Buy it for " + partner.first, confirm: "Buy for " + partner.first + ": " + money(it.price), run: () => run(it.store || pid, "gift", it.id) } : undefined,
       };
     }
     if (kind === "car" || kind === "drive") {
@@ -418,18 +421,65 @@ export default function ShopHud({
         tags: [],
       };
     }
+    // ---------- the schools, colleges and clubs: their grounds and the rooms inside ----------
+    const campusBase = pid.split("/")[0];
+    const isCampusPlace = !!place?.inst && (place.kind === "school" || place.kind === "college" || place.kind === "training");
+    const mineHere = !!place?.inst?.mine;
+    const notMine = place?.kind === "training" ? "This is not your club." : "This is not your " + (place?.kind === "college" ? "college" : "school") + ".";
     if (kind === "session") {
       const s = state.training.sessions[arg];
       if (!s) return null;
-      const lock = state.cond.inj && arg !== "recovery" ? "The physio says recovery work only." : noTime;
+      const lock = isCampusPlace && !mineHere ? notMine : state.cond.inj && arg !== "recovery" ? "The physio says recovery work only." : noTime;
       return {
         kicker: place?.name || "Training",
         title: s.label,
         sub: s.grows ? "Works on " + s.grows.join(", ") + "." : "Feel better.",
         tags: [{ t: "Takes a free evening", tone: "warn" }],
         lock,
-        main: { label: "Do it", off: !!lock, run: () => run("training", arg) },
+        main: { label: "Do it", off: !!lock, run: () => run(isCampusPlace ? campusBase : "training", arg) },
       };
+    }
+    if (kind === "enter" && isCampusPlace) {
+      const names: Record<string, [string, string]> = {
+        corridor: [place!.kind === "college" ? "The lecture block" : "The classrooms", "Corridors, lockers, notice boards."],
+        canteen: [place!.kind === "college" ? "The student cafe" : place!.kind === "training" ? "The canteen" : "The canteen", "Lunch, and everyone in one room."],
+        classroom: [place!.kind === "college" ? "Lecture room 2" : "Class 2", "Your seat is the free one in the middle."],
+        gym: ["The gym", "Racks, treadmills and the fitness coach's board."],
+        changing: ["The dressing room", "Your shirt is on its peg."],
+        physio: ["Physio and recovery", "Tables, ice baths and the cryo chamber."],
+      };
+      const [title, sub2] = names[arg] || [arg, ""];
+      return { kicker: place!.name.split(", ")[0], title, sub: sub2, tags: [], main: { label: "Go in", run: () => onLeave({ to: campusBase + "/" + arg }) } };
+    }
+    if (kind === "back" && isCampusPlace)
+      return {
+        kicker: place!.name.split(", ")[0],
+        title: arg === "corridor" ? "Back to the corridor" : "Back outside",
+        tags: [],
+        main: { label: "Go", run: () => onLeave({ to: arg ? campusBase + "/" + arg : campusBase }) },
+      };
+    if ((kind === "class" || kind === "canteen" || kind === "physio" || kind === "clubgym" || kind === "changing") && isCampusPlace) {
+      const C2: Record<string, { title: string; sub: string; time: boolean; label: string; action: string }> = {
+        class: { title: place!.kind === "college" ? "The lecture" : "The lesson", sub: "Two a week at most. Mum likes this one.", time: true, label: "Take part", action: "class" },
+        canteen: { title: place!.kind === "training" ? "Team lunch" : "Lunch", sub: "Once a week. Good for the mood, better for the squad.", time: false, label: "Eat", action: "canteen" },
+        physio: { title: "The physio", sub: "Fatigue down a lot. Now and then a week off an injury.", time: true, label: "Get on the table", action: "physio" },
+        clubgym: { title: "Gym session", sub: "Strength, stamina and pace work with the fitness coach.", time: true, label: "Train", action: "gym" },
+        changing: { title: "The dressing room", sub: "Time with the squad and your best mate.", time: false, label: "Sit down", action: "changing" },
+      };
+      const c2 = C2[kind];
+      const lock = !mineHere ? notMine : c2.time ? noTime : "";
+      return {
+        kicker: place!.name.split(", ")[0],
+        title: c2.title,
+        sub: c2.sub,
+        tags: c2.time ? [{ t: "Takes a free evening", tone: "warn" }] : [],
+        lock,
+        main: { label: c2.label, off: !!lock, run: () => run(campusBase, c2.action) },
+      };
+    }
+    if (kind === "mycar" && isCampusPlace) {
+      const car = state.life.car;
+      return { kicker: place!.name, title: car ? car.brand + " " + car.model : "Your car", sub: "In its bay with the rest of the squad's.", tags: [{ t: "Yours", tone: "good" }] };
     }
     if (kind === "gym") {
       const g = life.gym.find((x) => x.id === arg);
@@ -457,6 +507,41 @@ export default function ShopHud({
           run: () => run("stadium", "fans"),
         },
       };
+    // ---------- an engagement ring ----------
+    if (kind === "ring") {
+      const d = state.social?.dating;
+      const ring = d?.rings?.find((x) => x.id === arg);
+      if (!ring) return null;
+      const pt = d?.partner;
+      const lock = d?.ring ? "You already have a ring in your pocket: the " + d.ring.label.toLowerCase() + "." : !pt ? "For when there is someone." : pt.stage === "engaged" || pt.stage === "married" ? pt.first + " already wears yours." : pt.stage !== "serious" ? "Not yet. It has to be serious with " + pt.first + " first." : short(ring.price);
+      return {
+        kicker: ring.brand + " · Engagement ring",
+        title: ring.label,
+        price: money(ring.price),
+        sub: ring.note + (pt && pt.stage === "serious" ? " Then pick the moment: the end of a good date, somewhere special." : ""),
+        tags: pt && pt.stage === "serious" ? [{ t: "For " + pt.first, tone: "acc" }] : [],
+        lock,
+        main: { label: "Buy the ring", off: !!lock, run: () => run("watches", "ring", ring.id) },
+      };
+    }
+    // ---------- people: classmates, teammates ----------
+    if (kind === "talk") {
+      if (state.social?.talk) return null;
+      const p = (state.social?.present?.[pid] || []).find((x) => x.id === arg);
+      if (!p) return null;
+      const fr = state.social?.friends.find((f) => f.id === arg);
+      const dt = p.kind === "date" ? [state.social?.dating?.partner, ...(state.social?.dating?.contacts || [])].find((x) => x && x.id === p.id) : null;
+      const tags: Card["tags"] = dt ? [{ t: dt.stageWord, tone: "good" }] : fr ? [{ t: fr.level, tone: "good" }] : [{ t: p.kind === "date" && p.rel !== null ? "You have met" : "Not met yet" }];
+      if (fr?.num || dt) tags.push({ t: "Has your number", tone: "acc" });
+      return {
+        kicker: p.role,
+        title: p.kind === "date" && p.age ? p.name + ", " + p.age : p.name,
+        sub: p.trait + ". Into " + p.likes.join(" and ") + ".",
+        tags,
+        main: { label: "Talk", run: () => run(pid, "talk", arg) },
+        second: fr && fr.rel >= 40 && !fr.hung ? { label: "Hang out", confirm: "Hang out: takes a free evening", run: () => run(pid, "hang", arg) } : undefined,
+      };
+    }
     // ---------- ways out ----------
     if (kind === "door")
       return {
@@ -489,19 +574,48 @@ export default function ShopHud({
     return null;
   }, [near, state, life, cat, place, money, run, onLeave]);
 
-  // E does the main button
+  // E does the main button; Q the second one (once to ask, again to be sure), so the card works with the mouse
+  // captured for looking round
   const main = card?.main;
+  const second = card?.second;
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (t && (t.tagName === "INPUT" || t.tagName === "SELECT" || t.tagName === "TEXTAREA")) return;
-      if (e.key.toLowerCase() !== "e" || e.repeat) return;
+      if (e.repeat) return;
+      const key = e.key.toLowerCase();
+      if (key === "q" && second && !busy && !moment) {
+        if (sure === near) second.run();
+        else setSure(near);
+        return;
+      }
+      if (key !== "e") return;
       if (moment) return setMoment(null);
       if (main && !main.off && !busy) main.run();
     };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
-  }, [main, busy, moment]);
+  }, [main, second, busy, moment, sure, near]);
+
+  // a chat in progress: 1, 2 and 3 pick what he says, Esc says goodbye
+  const talk = state.social?.talk || null;
+  const talkOpts = useMemo(() => (talk ? (talk.said ? talk.follow : talk.choices) : []), [talk]);
+  const sayIt = useCallback((id: string) => run(talk?.place || place?.id || "", "say", id), [run, talk, place]);
+  useEffect(() => {
+    if (!talk) return;
+    const k = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        if (!busy) sayIt("bye");
+        return;
+      }
+      const n = Number(e.key);
+      if (n >= 1 && n <= talkOpts.length && !busy && !e.repeat) sayIt(talkOpts[n - 1].id);
+    };
+    window.addEventListener("keydown", k, true);
+    return () => window.removeEventListener("keydown", k, true);
+  }, [talk, talkOpts, busy, sayIt]);
 
   const closeMoment = () => {
     if (moment?.id) act("moments", "seen", moment.id);
@@ -573,15 +687,42 @@ export default function ShopHud({
                 {card.second &&
                   (sure === near ? (
                     <button type="button" className="k-btn k-btn-danger k-btn-sm" disabled={busy} onClick={card.second.run}>
+                      <kbd aria-hidden="true">Q</kbd>
                       {card.second.confirm || card.second.label}
                     </button>
                   ) : (
                     <button type="button" className="k-btn k-btn-ghost k-btn-sm" disabled={busy} onClick={() => setSure(near)}>
+                      <kbd aria-hidden="true">Q</kbd>
                       {card.second.label}
                     </button>
                   ))}
               </div>
             )}
+          </div>
+        )}
+        {talk && (
+          <div className="pc-talk k-panel" role="dialog" aria-label={"Talking to " + talk.name}>
+            <p className="k-label">{talk.role}</p>
+            <h3 className="pc-shop-title">{talk.name}</h3>
+            <p className="pc-talk-line">{talk.line}</p>
+            {talk.said && <p className="pc-talk-me">{talk.said}</p>}
+            {talk.result && <p className="pc-talk-result">{talk.result}</p>}
+            {talk.said && talk.level && (
+              <p className="pc-talk-rel">
+                <span className="k-tag k-good">{talk.level}</span>
+                <span className="pc-talk-bar" aria-hidden="true">
+                  <i style={{ width: (talk.rel ?? 0) + "%" }} />
+                </span>
+              </p>
+            )}
+            <div className="pc-talk-opts">
+              {talkOpts.map((o, i) => (
+                <button key={o.id} type="button" className={clsx("k-btn k-btn-sm", i === 0 && !talk.said && "k-btn-primary")} disabled={busy} onClick={() => sayIt(o.id)}>
+                  <kbd aria-hidden="true">{i + 1}</kbd>
+                  {o.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         {flash && (

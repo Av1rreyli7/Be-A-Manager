@@ -116,7 +116,9 @@ class Builder {
         else { x = r.cx + r.w * ca; y = r.y; z = r.cz + r.d * sa; }
         const c = typeof r.col === "function" ? r.col(x, y, z, a) : r.col;
         const uv = r.uv ? r.uv(x, y, z, a) : null;
-        this.vert(x, y, z, c, r.b0, r.b1, r.w1, uv ? uv[0] : undefined, uv ? uv[1] : undefined);
+        const bw = r.bf ? r.bf(x, y, z, a) : null;
+        if (bw) this.vert(x, y, z, c, bw[0], bw[1], bw[2], uv ? uv[0] : undefined, uv ? uv[1] : undefined);
+        else this.vert(x, y, z, c, r.b0, r.b1, r.w1, uv ? uv[0] : undefined, uv ? uv[1] : undefined);
       }
     }
     for (let k = 0; k < rings.length - 1; k++) {
@@ -172,7 +174,8 @@ class Builder {
         let sx = rx, sy = ry, sz = rz;
         if (shapeFn) { const s = shapeFn(x, y, z); sx *= s[0]; sy *= s[1]; sz *= s[2]; }
         const c = typeof col === "function" ? col(x, y, z) : col;
-        this.vert(cx + x * sx, cy + y * sy, cz + z * sz, c, b0, b0, 0);
+        if (this.blend) this.vert(cx + x * sx, cy + y * sy, cz + z * sz, c, b0, this.blend[0], this.blend[1]);
+        else this.vert(cx + x * sx, cy + y * sy, cz + z * sz, c, b0, b0, 0);
       }
     }
     for (let i = 0; i < latN; i++) for (let j = 0; j < lonN; j++) {
@@ -235,32 +238,59 @@ function smoothRings(rings, sub, axis) {
 // look, so match players are built exactly as before): skinF, faceW, jaw, chin, cheeks, eyes, eyeCol (index),
 // brows, nose, mouth, ears, hairline, moustache (0 or 1), muscle, shoulders, legs, and accessories as finish
 // names from ACC_COL: watch, bracelet, necklace, earrings, headband, gloves, compression (sleeves and tights).
+// The career's other people add, also optional and never set for a match player: fem (a woman's figure: narrower
+// shoulders and waist, wider hips, a softer face), bottom ("shorts" as now, "trousers", "skirt", "dress" in the
+// top's colour, "gown" to the floor), top ("vest" for bare arms; sleeve still makes long sleeves), plain (no kit
+// side panels), shoe ([upper, sole] colours in place of the boots), tights (a colour for bare legs), and hair
+// styles 16 to 21 (long, ponytail, bob, long curls, a plait, a top knot).
 // opts: { detail: 1 for the match, 2 for close ups; groups: true splits the mesh by material }
+export const FEM_LOOK = { jaw: 0.22, chin: 0.3, brows: 0.3, nose: 0.3, cheeks: 0.62 };
+// a woman's figure: width and depth of the torso by height (hips out, waist in, a narrower ribcage and neck)
+const FEM_W = [[0.4, 1.1], [0.5, 1.1], [0.55, 0.97], [0.6, 0.86], [0.645, 0.87], [0.69, 0.92], [0.77, 0.92], [0.833, 0.86]];
+const FEM_D = [[0.4, 1.07], [0.5, 1.04], [0.6, 0.92], [0.69, 0.98], [0.75, 1.0], [0.795, 0.93], [0.833, 0.88]];
+// and a gentle fullness at the front of the chest, as a forward shift of the ring
+const FEM_Z = [[0.66, 0], [0.7, 0.007], [0.735, 0.012], [0.77, 0.008], [0.8, 0]];
+function tab(T, y) {
+  if (y <= T[0][0]) return T[0][1];
+  for (let i = 1; i < T.length; i++) if (y <= T[i][0]) { const a = T[i - 1], b = T[i]; return a[1] + (b[1] - a[1]) * (y - a[0]) / (b[0] - a[0]); }
+  return T[T.length - 1][1];
+}
 export function buildBody(THREE, look, opts) {
+  if (look.fem) look = Object.assign({}, FEM_LOOK, look);
+  const fem = !!look.fem;
+  const bottom = look.bottom || "shorts";
+  const trousers = bottom === "trousers";
+  // where a skirt, a dress or a gown ends, as a fraction of height (0 for shorts and trousers)
+  const skirtHem = bottom === "skirt" ? 0.34 : bottom === "dress" ? 0.3 : bottom === "gown" ? 0.012 : 0;
+  const vest = look.top === "vest";
   const det = (opts && opts.detail) || 1;
   const seg = n => (det === 1 ? n : Math.max(3, Math.round(n * det)));
   const h = look.h;
   const bulk = Math.max(0.9, Math.min(1.14, Math.sqrt(look.mass / (22.6 * h * h)))); // build relative to a 22.6 BMI
   const S = v => v * h;
   const W = v => v * h * bulk;
-  const musc = knob(look.muscle, 0.93, 1.09), shoulder = knob(look.shoulders, 0.93, 1.08), legK = knob(look.legs, 0.93, 1.08);
+  const musc = fem ? knob(look.muscle, 0.93, 1.09) * 0.86 : knob(look.muscle, 0.93, 1.09), shoulder = fem ? knob(look.shoulders, 0.93, 1.08) * 0.9 : knob(look.shoulders, 0.93, 1.08), legK = knob(look.legs, 0.93, 1.08);
   const acc = name => tag(hexToRgb(ACC_COL[name] || ACC_COL.black), name === "black" || name === "white" || name === "navy" || name === "volt" || name === "red" || name === "blue" || name === "orange" || name === "pink" || name === "green" ? MAT.cloth : MAT.metal);
   const skin = tag(skinAt(look), MAT.skin);
   const skinD = tag(mixc(skin, [0, 0, 0], 0.18), MAT.skin);
   const shirt = hexToRgb(look.kit[0]), trim = hexToRgb(look.kit[1]);
   const shorts = hexToRgb(look.shorts), socks = hexToRgb(look.socks);
-  const boots = BOOTS[look.boot % BOOTS.length], bootC = tag(hexToRgb(boots[0]), MAT.boot), bootS = tag(hexToRgb(boots[1]), MAT.boot);
+  const boots = look.shoe || BOOTS[look.boot % BOOTS.length], bootC = tag(hexToRgb(boots[0]), MAT.boot), bootS = tag(hexToRgb(boots[1]), MAT.boot);
   const hairC = tag(hexToRgb(HAIR_COL[look.hairCol % HAIR_COL.length]), MAT.hair);
   const glove = look.gk ? hexToRgb(look.kit[1]) : look.gloves ? tag(hexToRgb(ACC_COL[look.gloves] || ACC_COL.black), MAT.cloth) : skin;
   const comp = look.compression ? tag(hexToRgb(ACC_COL[look.compression] || ACC_COL.black), MAT.cloth) : null;
-  const armSkin = comp || skin, legSkin = comp || skin;
+  const armSkin = comp || skin, legSkin = comp || (look.tights ? tag(hexToRgb(look.tights), MAT.cloth) : skin);
+  // below the waist: shorts (or the skirt) in the shorts colour, a dress and a gown in the top's
+  const lowC = bottom === "dress" || bottom === "gown" ? shirt : shorts;
   const bd = new Builder();
   if (det > 1) bd.sub = 3;
   const cell = look.cell; // [u0, v0, u1, v1] on the team's number sheet, or null
   // ---------- torso (shorts below, shirt above), skinned up the spine ----------
   // broader shoulders and more muscle widen the upper chest only; both are exactly 1 for match players
   const chestK = y => 1 + (shoulder - 1) * Math.max(0, Math.min(1, (y - 0.66) / 0.13)) + (musc - 1) * 0.6 * (y >= 0.69 ? 1 : 0);
-  const torsoRing = (y, w, d, col, b0, b1, w1, cz) => ({ y: S(y), w: W(w) * chestK(y), d: W(d) * (1 + (musc - 1) * 0.5 * (y >= 0.69 ? 1 : 0)), cx: 0, cz: S(cz || 0), col, b0, b1, w1 });
+  const torsoRing = fem
+    ? (y, w, d, col, b0, b1, w1, cz) => ({ y: S(y), w: W(w) * chestK(y) * tab(FEM_W, y), d: W(d) * (1 + (musc - 1) * 0.5 * (y >= 0.69 ? 1 : 0)) * tab(FEM_D, y), cx: 0, cz: S((cz || 0) + tab(FEM_Z, y)), col, b0, b1, w1 })
+    : (y, w, d, col, b0, b1, w1, cz) => ({ y: S(y), w: W(w) * chestK(y), d: W(d) * (1 + (musc - 1) * 0.5 * (y >= 0.69 ? 1 : 0)), cx: 0, cz: S(cz || 0), col, b0, b1, w1 });
   // the back panel carries the name and number; the chest a small number
   const panel = (x, y, z) => {
     if (!cell) return null;
@@ -282,14 +312,15 @@ export function buildBody(THREE, look, opts) {
     // a trim at the collar and a side panel
     const yy = y / h;
     if (yy > 0.805) return trim;
+    if (look.plain) return shirt;
     if (Math.abs(x) > W(0.095) && yy < 0.75 && yy > 0.56) return mixc(shirt, trim, 0.35);
     return shirt;
   };
   // the torso: athletic V shape (broad chest and shoulders, narrow waist), glutes inside the shorts
   const rings = [
-    torsoRing(0.44, 0.1, 0.07, shorts, B.hips, B.hips, 0, -0.004),
-    torsoRing(0.47, 0.106, 0.078, shorts, B.hips, B.hips, 0, -0.008),
-    torsoRing(0.5, 0.108, 0.075, shorts, B.hips, B.hips, 0, -0.004),
+    torsoRing(0.44, 0.1, 0.07, lowC, B.hips, B.hips, 0, -0.004),
+    torsoRing(0.47, 0.106, 0.078, lowC, B.hips, B.hips, 0, -0.008),
+    torsoRing(0.5, 0.108, 0.075, lowC, B.hips, B.hips, 0, -0.004),
     Object.assign(torsoRing(0.51, 0.111, 0.077, shirtCol, B.hem, B.hips, 0.2), { uv: panel }),
     Object.assign(torsoRing(0.55, 0.104, 0.07, shirtCol, B.hips, B.spine1, 0.5), { uv: panel }),
     Object.assign(torsoRing(0.6, 0.097, 0.066, shirtCol, B.spine1, B.spine1, 0), { uv: panel }),
@@ -303,10 +334,26 @@ export function buildBody(THREE, look, opts) {
     torsoRing(0.833, 0.046, 0.041, trim, B.chest, B.neck, 0.6)
   ];
   // close ups: the shorts taper and round off between the thighs instead of ending in a flat cap
-  if (det > 1) rings.unshift(torsoRing(0.405, 0.05, 0.04, shorts, B.hips, B.hips, 0, 0), torsoRing(0.42, 0.082, 0.06, shorts, B.hips, B.hips, 0, -0.003));
+  if (det > 1) rings.unshift(torsoRing(0.405, 0.05, 0.04, lowC, B.hips, B.hips, 0, 0), torsoRing(0.42, 0.082, 0.06, lowC, B.hips, B.hips, 0, -0.003));
   bd.tube(rings, seg(20), "y", true, false);
+  if (skirtHem) {
+    // a skirt, a dress or a gown: a flared tube from the hips to the hem, lined inside; its lower edge follows
+    // each leg part of the way, so walking moves it
+    const ys = bottom === "gown" ? [0.5, 0.45, 0.38, 0.3, 0.22, 0.14, 0.06, skirtHem] : [0.5, 0.465, 0.42, 0.38, skirtHem];
+    const hipW = 0.108 * (fem ? 1.1 : 1), flare = bottom === "gown" ? 0.2 : bottom === "dress" ? 0.15 : 0.142;
+    const ring = (y, k) => {
+      const t = (0.5 - y) / (0.5 - skirtHem), w = (hipW + (flare - hipW) * Math.pow(t, 0.85)) * k;
+      return { y: S(y), w: W(w) * 1.03, d: W(w) * 0.82, cx: 0, cz: S(-0.004), col: lowC, b0: B.hips, b1: B.hips, w1: 0,
+        bf: x => [B.hips, x > 0 ? B.thighL : B.thighR, Math.min(1, Math.abs(x) / (W(w) * 0.8)) * t * (bottom === "gown" ? 0.35 : 0.55)] };
+    };
+    bd.tube(ys.map(y => ring(y, 1)), seg(22), "y", false, false);
+    const i0 = bd.idx.length;
+    bd.tube(ys.map(y => ring(y, 0.97)), seg(22), "y", false, false);
+    for (let k = i0; k < bd.idx.length; k += 3) { const t = bd.idx[k + 1]; bd.idx[k + 1] = bd.idx[k + 2]; bd.idx[k + 2] = t; }
+  }
   // shoulder caps (the deltoids) round off where the arm meets the body
-  for (const side of [1, -1]) bd.blob(side * W(0.104) * shoulder, S(0.79), 0, W(0.04) * musc, W(0.036) * musc, W(0.038) * musc, shirt, side > 0 ? B.armL : B.armR, seg(6), seg(12));
+  const capK = fem ? musc * 0.86 : musc;
+  for (const side of [1, -1]) bd.blob(side * W(0.104) * shoulder, S(0.79), 0, W(0.04) * capK, W(0.036) * capK, W(0.038) * capK, vest ? armSkin : shirt, side > 0 ? B.armL : B.armR, seg(6), seg(12));
   // the neck, with the trapezius slope from the shoulders
   bd.tube([
     { y: S(0.818), w: W(0.05), d: W(0.042), cx: 0, cz: S(-0.002), col: skinD, b0: B.neck, b1: B.chest, w1: 0.4 },
@@ -383,13 +430,13 @@ export function buildBody(THREE, look, opts) {
     const ax = side * W(0.114) * shoulder, ay = S(0.792);
     const arm = side > 0 ? B.armL : B.armR, fore = side > 0 ? B.foreL : B.foreR, hand = side > 0 ? B.handL : B.handR, clav = side > 0 ? B.clavL : B.clavR;
     const longSleeve = look.gk || look.sleeve;
-    const sleeveEnd = longSleeve ? 2 : 0.52;
+    const sleeveEnd = longSleeve ? 2 : vest ? 0 : 0.52;
     const upY = [0.0, 0.025, 0.06, 0.09, 0.12, 0.15, 0.18];
     const upR = [0.043, 0.042, 0.04, 0.037, 0.034, 0.03, 0.027];
     const up = upY.map((yy, i) => {
       const sl = yy / 0.18 < sleeveEnd;
       const hem = !longSleeve && yy / 0.18 >= sleeveEnd - 0.1 && sl;
-      return { y: ay - S(yy), w: W(upR[i]) * musc * (sl ? 1.1 : 1), d: W(upR[i]) * musc * (sl ? 1.06 : 0.96), cx: ax, cz: 0, col: sl ? (hem ? trim : shirt) : armSkin, b0: i === 0 ? clav : arm, b1: i === 0 ? arm : i === upY.length - 1 ? fore : arm, w1: i === 0 ? 0.7 : i === upY.length - 1 ? 0.5 : 0 };
+      return { y: ay - S(yy), w: W(upR[i]) * musc * (sl ? (look.plain ? 1.05 : 1.1) : 1), d: W(upR[i]) * musc * (sl ? (look.plain ? 1.03 : 1.06) : 0.96), cx: ax, cz: 0, col: sl ? (hem ? trim : shirt) : armSkin, b0: i === 0 ? clav : arm, b1: i === 0 ? arm : i === upY.length - 1 ? fore : arm, w1: i === 0 ? 0.7 : i === upY.length - 1 ? 0.5 : 0 };
     });
     bd.tube(up, seg(14), "y", false, false);
     // close up: a rounded cap over the shoulder joint, so the sleeve meets the body without a step
@@ -399,7 +446,7 @@ export function buildBody(THREE, look, opts) {
     const fr = [0.027, 0.029, 0.028, 0.024, 0.02, 0.018];
     bd.tube(fr.map((r, i) => ({ y: fy - S(fyy[i]), w: W(r) * musc, d: W(r) * musc * 0.86, cx: ax, cz: 0, col: longSleeve ? (i === fr.length - 1 && look.gk ? glove : shirt) : armSkin, b0: i === 0 ? arm : fore, b1: i === 0 ? fore : i === fr.length - 1 ? hand : fore, w1: i === 0 ? 0.5 : i === fr.length - 1 ? 0.3 : 0 })), seg(12), "y", false, false);
     // the hand: a rounded mitten with a thumb; gloves are bigger and bolder
-    const hs = look.gk ? 1.3 : 1;
+    const hs = look.gk ? 1.3 : fem ? 0.9 : 1;
     if (det > 1 && !look.gk) {
       // close up: a palm, four fingers in two curled pieces (index at the front, little finger at the back,
       // the palm facing the thigh) and a thumb across the front
@@ -430,17 +477,20 @@ export function buildBody(THREE, look, opts) {
   }
   // ---------- legs: shorts over the thigh, the knee, a calf in the sock, the boot ----------
   for (const side of [1, -1]) {
-    const lx = side * W(0.056), ly = S(0.502);
+    const lx = fem ? side * W(0.056) * 1.07 : side * W(0.056), ly = S(0.502);
     const thigh = side > 0 ? B.thighL : B.thighR, shin = side > 0 ? B.shinL : B.shinR, foot = side > 0 ? B.footL : B.footR, toe = side > 0 ? B.toeL : B.toeR;
     const tY = [0, 0.03, 0.06, 0.09, 0.112, 0.118, 0.15, 0.18, 0.21, 0.238];
     const tR = [0.066, 0.066, 0.063, 0.06, 0.057, 0.054, 0.05, 0.046, 0.041, 0.037];
     const thighK = legK * (1 + (musc - 1) * 0.5);
     bd.tube(tY.map((yy, i) => {
       const inShorts = yy < 0.115;
-      return { y: ly - S(yy), w: W(tR[i]) * thighK * (inShorts ? 1.1 : 0.96), d: W(tR[i]) * thighK * (inShorts ? 1.08 : 1.02), cx: lx + (inShorts ? side * W(0.004) : 0), cz: S(i > 4 && i < 8 ? 0.006 : 0.003), col: inShorts ? (yy > 0.1 ? mixc(shorts, trim, 0.45) : shorts) : legSkin, b0: i === 0 ? B.hips : thigh, b1: i === 0 ? thigh : i === tY.length - 1 ? shin : thigh, w1: i === 0 ? 0.65 : i === tY.length - 1 ? 0.5 : 0 };
+      // under a skirt the thigh wears the skirt's colour, so a stride never shows through it
+      const under = skirtHem && ly - S(yy) > S(skirtHem) - S(0.01);
+      const col = trousers ? shorts : inShorts && !skirtHem ? (yy > 0.1 ? mixc(shorts, trim, 0.45) : shorts) : under ? lowC : legSkin;
+      return { y: ly - S(yy), w: W(tR[i]) * thighK * (inShorts ? 1.1 : trousers ? 1.05 : 0.96), d: W(tR[i]) * thighK * (inShorts ? 1.08 : trousers ? 1.05 : 1.02), cx: lx + (inShorts ? side * W(0.004) : 0), cz: S(i > 4 && i < 8 ? 0.006 : 0.003), col, b0: i === 0 ? B.hips : thigh, b1: i === 0 ? thigh : i === tY.length - 1 ? shin : thigh, w1: i === 0 ? 0.65 : i === tY.length - 1 ? 0.5 : 0 };
     }), seg(14), "y", false, false);
     // the knee cap
-    bd.blob(lx, ly - S(0.236), S(0.03), W(0.022) * legK, W(0.024) * legK, W(0.012) * legK, legSkin, shin, seg(4), seg(8));
+    bd.blob(lx, ly - S(0.236), S(0.03), W(0.022) * legK, W(0.024) * legK, W(0.012) * legK, trousers ? shorts : skirtHem && ly - S(0.236) > S(skirtHem) ? lowC : legSkin, shin, seg(4), seg(8));
     const kneeY = ly - S(0.238);
     const sockTop = look.sock ? 0.0 : 0.035;
     const sY = [0, 0.025, 0.05, 0.075, 0.1, 0.13, 0.16, 0.19, 0.21, 0.222];
@@ -450,6 +500,12 @@ export function buildBody(THREE, look, opts) {
       const band = yy >= sockTop && yy < sockTop + 0.02;
       // the calf bulges at the back
       const calf = i > 1 && i < 6 ? 0.006 : 0;
+      if (trousers || skirtHem) {
+        // trousers to the ankle, a little wider at the hem; bare legs (or tights) under a skirt or a dress
+        const k = trousers ? 1.12 + yy * 0.5 : fem ? 0.93 : 1;
+        const col = trousers ? shorts : kneeY - S(yy) > S(skirtHem) ? lowC : legSkin;
+        return { y: kneeY - S(yy), w: W(sR[i]) * legK * k, d: W(sR[i]) * legK * k, cx: lx, cz: trousers ? 0 : -S(calf), col, b0: i === 0 ? thigh : shin, b1: i === 0 ? shin : i === sY.length - 1 ? foot : shin, w1: i === 0 ? 0.5 : i === sY.length - 1 ? 0.4 : 0 };
+      }
       return { y: kneeY - S(yy), w: W(sR[i]) * legK * (sock ? 1.05 : 1), d: W(sR[i]) * legK * (sock ? 1.05 : 1), cx: lx, cz: -S(calf), col: band ? trim : sock ? socks : legSkin, b0: i === 0 ? thigh : shin, b1: i === 0 ? shin : i === sY.length - 1 ? foot : shin, w1: i === 0 ? 0.5 : i === sY.length - 1 ? 0.4 : 0 };
     }), seg(13), "y", false, false);
     // the boot: from the heel to the toe along +Z, a darker sole, a soft rounded toe
@@ -457,7 +513,8 @@ export function buildBody(THREE, look, opts) {
     const fz = [-0.036, -0.026, -0.005, 0.025, 0.055, 0.085, 0.11, 0.128, 0.136];
     const fw = [0.02, 0.028, 0.032, 0.034, 0.035, 0.033, 0.029, 0.021, 0.01];
     const fh = [0.022, 0.03, 0.031, 0.026, 0.021, 0.018, 0.016, 0.013, 0.008];
-    bd.tube(fz.map((zz, i) => ({ z: S(zz), w: S(fw[i]), d: S(fh[i]), cx: lx, cy: ankY - S(0.03) + S(fh[i] * 0.85), col: (x, y, z) => y < ankY - S(0.027) ? bootS : bootC, b0: zz < 0.075 ? foot : toe, b1: zz < 0.075 ? (zz > 0.045 ? toe : foot) : toe, w1: zz > 0.045 && zz < 0.075 ? 0.4 : 0 })), seg(12), "z", true, true);
+    const fk = fem ? 0.86 : 1;
+    bd.tube(fz.map((zz, i) => ({ z: S(zz), w: fem ? S(fw[i]) * fk : S(fw[i]), d: S(fh[i]), cx: lx, cy: ankY - S(0.03) + S(fh[i] * 0.85), col: (x, y, z) => y < ankY - S(0.027) ? bootS : bootC, b0: zz < 0.075 ? foot : toe, b1: zz < 0.075 ? (zz > 0.045 ? toe : foot) : toe, w1: zz > 0.045 && zz < 0.075 ? 0.4 : 0 })), seg(12), "z", true, true);
   }
   return bd.geometry(THREE, !!(opts && opts.groups));
 }
@@ -469,6 +526,34 @@ function hairStyle(bd, style, hy, hz, rx, S, col, seg, hairline) {
   hy += hl * S(0.012); hz -= hl * S(0.012);
   const top = (sy, yMin, shape) => bd.blob(0, hy + S(0.008), hz - S(0.004), rx * 1.06, S(0.064) * sy, S(0.063), col, B.head, seg(6), seg(14), 0, shape);
   const cap = (k) => bd.blob(0, hy + S(0.012), hz - S(0.006), rx * (k || 1.02), S(0.058), S(0.06), col, B.head, seg(5), seg(14), 0, (x, y, z) => [1, y < -0.1 ? 0.2 : 1, z > 0.6 && y < 0.4 ? 0.9 : 1]);
+  if (style >= 16 && style <= 21) {
+    // the long styles (the career's other people; never a match player)
+    const lumpy = (x, y, z) => { const b = 1 + 0.08 * Math.sin(x * 17) * Math.sin(y * 13); return [b, 1, b]; };
+    if (style === 16 || style === 19) {
+      // long, straight or curly, past the shoulders and down the back
+      top(1.06, 0, (x, y, z) => [1.03, y < -0.3 && z > 0.2 ? 0.25 : 1, 1]);
+      bd.blob(0, hy - S(0.05), hz - S(0.058), rx * (style === 19 ? 1.3 : 1.14), S(0.075), S(0.03), col, B.head, seg(5), seg(12), 0, style === 19 ? lumpy : null);
+      bd.blob(0, hy - S(0.15), hz - S(0.075), rx * (style === 19 ? 1.25 : 1.05), S(0.06), S(0.022), col, B.hair, seg(5), seg(12), 0, style === 19 ? lumpy : null);
+    } else if (style === 17) {
+      // a ponytail from the back of the head
+      top(1.02, 0, (x, y, z) => [1, y < 0 ? 0.3 : 1, 1]);
+      bd.blob(0, hy + S(0.01), hz - S(0.062), S(0.016), S(0.016), S(0.016), col, B.head, seg(4), seg(8));
+      bd.blob(0, hy - S(0.06), hz - S(0.078), S(0.018), S(0.065), S(0.018), col, B.hair, seg(4), seg(8));
+    } else if (style === 18) {
+      // a bob to the jaw, over the ears
+      top(1.07, 0, (x, y, z) => [1.04, y < -0.3 && z > 0.2 ? 0.25 : 1, 1]);
+      bd.blob(0, hy - S(0.016), hz - S(0.022), rx * 1.17, S(0.05), S(0.052), col, B.head, seg(5), seg(14));
+    } else if (style === 20) {
+      // a plait down the back
+      cap(1.03);
+      for (let i = 0; i < 6; i++) bd.blob((i % 2 ? 1 : -1) * S(0.004), hy - S(0.05) - i * S(0.03), hz - S(0.066) - Math.min(i, 3) * S(0.006), S(0.016) * (1 - i * 0.07), S(0.02), S(0.015), col, i < 2 ? B.head : B.hair, seg(4), seg(8));
+    } else {
+      // a top knot
+      cap(1.03);
+      bd.blob(0, hy + S(0.072), hz - S(0.022), S(0.024), S(0.021), S(0.024), col, B.hair, seg(4), seg(8));
+    }
+    return;
+  }
   switch (style % 16) {
     case 0: // buzz cut: a thin cap
       cap();

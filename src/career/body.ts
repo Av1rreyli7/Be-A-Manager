@@ -12,10 +12,21 @@ import type { Look, Person } from "./types";
 export interface Outfit {
   shirt: string;
   trim: string;
+  /** the shorts, trousers or skirt */
   shorts: string;
   socks: string;
   sleeve?: boolean;
   longSocks?: boolean;
+  /** everyday clothes: what is worn below the waist (shorts as a kit by default; a dress and a gown take the shirt's colour) */
+  bottom?: "shorts" | "trousers" | "skirt" | "dress" | "gown";
+  /** "vest" leaves the arms bare */
+  top?: "tee" | "vest";
+  /** no kit side panels */
+  plain?: boolean;
+  /** shoes in place of boots: [upper, sole] */
+  shoe?: [string, string];
+  /** a colour for bare legs */
+  tights?: string;
 }
 
 export const OUTFITS: Record<string, Outfit> = {
@@ -68,7 +79,24 @@ export function rigLook(look: Partial<Look>, person: Pick<Person, "height" | "we
     hairCol: look.hairCol ?? 0,
     beard: look.beard ?? 0,
     boot: look.boot ?? 6,
+    bottom: outfit.bottom,
+    top: outfit.top,
+    plain: outfit.plain,
+    shoe: outfit.shoe,
+    tights: outfit.tights,
   };
+}
+
+// the people round him share one set of materials per quality, so a room of them adds no shaders
+const shared = new Map<number, THREE.Material[]>();
+export function sharedMaterials(quality: number) {
+  let m = shared.get(quality);
+  if (!m) {
+    m = bodyMaterials(quality);
+    m[6] = m[1];
+    shared.set(quality, m);
+  }
+  return m;
 }
 
 /** materials by part, in the rig's MAT order: cloth, skin, hair, boot, eye, metal (the face, 6, is made per body) */
@@ -131,12 +159,22 @@ export interface BodyRig {
   idle: (t: number) => void;
   /** one frame: the idle, or a walk at the given speed, with the body easing round towards turnTo */
   tick: (dt: number, turnTo: number, speed?: number) => void;
+  /** sitting: the root goes on the seat (its top, at the back of the seat), the legs bend over the front edge */
+  sit: (on: boolean) => void;
 }
 
-export function makeBody(look: Partial<Look>, person: Pick<Person, "height" | "weight" | "pos">, outfit: Outfit, quality: number, materials?: THREE.Material[]): BodyRig {
+/** lite: the match's light head and hair, no face texture or hair shells, shared materials (the people round
+ *  him); seed: where the idle starts, so a group never breathes in step */
+export interface BodyOpts {
+  lite?: boolean;
+  seed?: number;
+}
+
+export function makeBody(look: Partial<Look>, person: Pick<Person, "height" | "weight" | "pos">, outfit: Outfit, quality: number, materials?: THREE.Material[], bo?: BodyOpts): BodyRig {
   const rl = rigLook(look, person, outfit);
+  const lite = !!bo?.lite;
   const geo = buildBody(THREE, rl, {
-    detail: quality >= 2 ? 2 : 1.5,
+    detail: lite ? 1 : quality >= 2 ? 2 : 1.5,
     groups: true,
   }) as THREE.BufferGeometry;
   // the builder writes colours as they look on screen (sRGB); these scenes light in linear space
@@ -145,10 +183,10 @@ export function makeBody(look: Partial<Look>, person: Pick<Person, "height" | "w
   for (let i = 0; i < col.array.length; i++) (col.array as Float32Array)[i] = lin(col.array[i]);
   col.needsUpdate = true;
   const bones = buildSkeleton(THREE, rl.h) as THREE.Bone[];
-  const mats = (materials || bodyMaterials(quality)).slice();
+  const mats = (lite ? sharedMaterials(quality) : materials || bodyMaterials(quality)).slice();
   // the face: a painted texture (brows, lips, stubble, the scalp under the hair) over the skin colour
   let faceTex: THREE.CanvasTexture | null = null;
-  if (typeof document !== "undefined") {
+  if (!lite && typeof document !== "undefined") {
     const size = quality >= 3 ? 2048 : quality >= 1 ? 1024 : 512;
     const cv = paintFace(document, rl, skinAt(rl), hexToRgb(HAIR_COL[rl.hairCol % HAIR_COL.length]), size) as HTMLCanvasElement | null;
     const scalp = paintScalp(document, rl, size / 2) as HTMLCanvasElement | null;
@@ -166,7 +204,7 @@ export function makeBody(look: Partial<Look>, person: Pick<Person, "height" | "w
       faceTex.anisotropy = 8;
     }
   }
-  mats[6] = new THREE.MeshPhysicalMaterial({
+  if (!lite) mats[6] = new THREE.MeshPhysicalMaterial({
     vertexColors: true,
     map: faceTex,
     roughness: 0.5,
@@ -183,9 +221,11 @@ export function makeBody(look: Partial<Look>, person: Pick<Person, "height" | "w
   mesh.bind(new THREE.Skeleton(bones));
   mesh.frustumCulled = false;
   // short and medium hair as shells on the head bone
-  const hair = makeHairShells(THREE, rl, rl.h, {
-    layers: [10, 14, 20, 26][quality] || 14,
-  }) as { mesh: THREE.Mesh; dispose: () => void } | null;
+  const hair = lite
+    ? null
+    : (makeHairShells(THREE, rl, rl.h, {
+        layers: [10, 14, 20, 26][quality] || 14,
+      }) as { mesh: THREE.Mesh; dispose: () => void } | null);
   if (hair) bones[B.head].add(hair.mesh);
   const root = new THREE.Group();
   root.add(mesh);
@@ -253,12 +293,30 @@ export function makeBody(look: Partial<Look>, person: Pick<Person, "height" | "w
       turn(ANIM[k], a[0] + (b[0] - a[0]) * w, a[1] + (b[1] - a[1]) * w, a[2] + (b[2] - a[2]) * w);
     }
   };
+  // sitting: thighs level, shins down, a straight back, hands forward (on a table or in the lap)
+  const sitPose = (P: number[][], t: number) => {
+    const br = Math.sin(t * 1.6) * 0.5 + 0.5;
+    put(P, 0, 0, 0, 0);
+    put(P, 1, -0.03 + br * 0.01, 0, 0);
+    put(P, 2, -br * 0.02, 0, 0);
+    put(P, 3, 0.04, Math.sin(t * 0.31) * 0.1, 0);
+    put(P, 4, Math.sin(t * 0.23) * 0.05, Math.sin(t * 0.27 + 1) * 0.14, 0);
+    put(P, 5, -0.38, 0, 0.12);
+    put(P, 6, -0.38, 0, -0.12);
+    put(P, 7, -0.95, 0, 0);
+    put(P, 8, -0.95, 0, 0);
+    put(P, 9, -1.5, 0.05, 0.02);
+    put(P, 10, -1.5, -0.05, -0.02);
+    put(P, 11, 1.5, 0, 0);
+    put(P, 12, 1.5, 0, 0);
+  };
+  let sitting = false;
   const idle = (t: number) => {
-    idlePose(poseA, t);
+    (sitting ? sitPose : idlePose)(poseA, t);
     apply(0);
   };
   idle(0);
-  let clock = 3.7;
+  let clock = 3.7 + (bo?.seed || 0) * 2.3;
   let phase = 0;
   let gait = 0;
   // one frame: speed in metres a second (0 standing); the body eases round to face turnTo
@@ -267,6 +325,14 @@ export function makeBody(look: Partial<Look>, person: Pick<Person, "height" | "w
     gait += (Math.min(1.4, speed / 1.6) - gait) * Math.min(1, dt * 7);
     const stride = 0.62 + 0.16 * Math.min(speed, 4);
     phase += dt * (speed / (2 * stride)) * Math.PI * 2;
+    if (sitting) {
+      sitPose(poseA, clock);
+      apply(0);
+      // the backs of the thighs on the seat
+      mesh.position.y = -0.47 * rl.h;
+      root.rotation.y += (turnTo - root.rotation.y) * Math.min(1, dt * 8);
+      return;
+    }
     idlePose(poseA, clock);
     const w = Math.min(1, gait);
     if (w > 0.01) walkPose(poseB, phase, Math.min(1, Math.max(0, gait - 0.4) * 1.6));
@@ -281,9 +347,17 @@ export function makeBody(look: Partial<Look>, person: Pick<Person, "height" | "w
     height: rl.h,
     idle,
     tick,
+    sit: (on: boolean) => {
+      sitting = on;
+      if (!on) mesh.position.y = 0;
+      idle(clock);
+      if (on) mesh.position.y = -0.47 * rl.h;
+    },
     dispose: () => {
       geo.dispose();
-      if (!materials) mats.forEach((m) => m.dispose());
+      if (lite) {
+        /* the shared materials stay */
+      } else if (!materials) mats.forEach((m) => m.dispose());
       else mats[6].dispose();
       faceTex?.dispose();
       hair?.dispose();

@@ -46,6 +46,7 @@ function makePeople(K, deps) {
     if (who === "team") pp.team = clamp(pp.team + d, 0, 100);
     else if (who === "agent") pp.agent = clamp(pp.agent + d, 0, 100);
     else if (who === "coach") { const c = C(game); if (c.stage === "pro") c.trust = clamp(c.trust + d, 0, 100); else c.coachRel = clamp(c.coachRel + d, 0, 100); }
+    else if (who.startsWith("f:")) { const f = (pp.friends || {})[who.slice(2)]; if (f) f.rel = clamp(f.rel + d, 0, 100); }
     else if (pp[who]) pp[who].rel = clamp(pp[who].rel + d, 0, 100);
   };
   const familyMood = game => { const pp = P0(game); const xs = [pp.mum.rel, pp.dad.rel].concat(pp.sib ? [pp.sib.rel] : []); return xs.reduce((a, b) => a + b, 0) / xs.length; };
@@ -343,6 +344,129 @@ function makePeople(K, deps) {
         { id: "push", label: "Push through. It is nothing.", fx: { injuryRisk: 0.3, rel: { coach: 2 } } },
         { id: "rest", label: "Tell the physio and rest.", fx: { fatigue: -15, form: -0.1, rel: { coach: -1 } } }
       ]
+    },
+    // ---------- his friends (floodlights/career/social.js): who is the closest friend he has ----------
+    {
+      id: "friendexam", kind: "friend", weight: 2, who: g => K.social && K.social.closest(g, 55),
+      when: (g, c) => c.stage === "school" || c.stage === "college",
+      tease: (g, c, f) => f.first + " has sent you five messages about the exam.",
+      title: (g, c, f) => f.first + " is panicking about exams",
+      text: (g, c, f) => f.first + " is sure they are going to fail and asks you to study with them all evening. You have a game at the weekend and Coach wants you rested.",
+      choices: [
+        { id: "study", label: "Study with them all evening.", fx: { rel: { fr: 10, mum: 2 }, fatigue: 6, disc: 1 } },
+        { id: "notes", label: "Send them your notes and a good luck text.", fx: { rel: { fr: 4 } } },
+        { id: "rest", label: "Tell them you need to rest for the game.", fx: { rel: { fr: -6 }, fatigue: -3 } }
+      ]
+    },
+    {
+      id: "friendparty", kind: "friend", weight: 2, who: g => K.social && K.social.closest(g, 55),
+      when: (g, c, p) => p.age >= 15,
+      tease: (g, c, f) => f.first + " has a birthday coming up. So do you, kind of: a game.",
+      title: (g, c, f) => f.first + "'s birthday party",
+      text: (g, c, f) => f.first + " is having a party the night before your next game. Everyone will be there and " + f.first + " says it will not be the same without you.",
+      choices: [
+        { id: "all", label: "Go, and stay until the end.", fx: { rel: { fr: 10 }, morale: 3, fatigue: 12, disc: -2 } },
+        { id: "hour", label: "Show up for an hour, then home.", fx: { rel: { fr: 5 }, morale: 1, fatigue: 4 } },
+        { id: "gift", label: "Skip it and send a present.", fx: { rel: { fr: -4 }, cash: -40, prof: 1 } }
+      ]
+    },
+    {
+      id: "friendloan", kind: "friend", weight: 1, who: g => K.social && K.social.closest(g, 60),
+      when: (g, c) => c.money.cash >= 3000,
+      tease: (g, c, f) => f.first + " wants to talk. It sounds serious.",
+      title: (g, c, f) => f.first + " needs money",
+      text: (g, c, f) => f.first + " is behind on rent and asks to borrow some money. They promise to pay you back when they can.",
+      choices: [
+        { id: "lend", label: "Lend it. That is what friends are for.", fx: { rel: { fr: 9 }, cash: -1000 } },
+        { id: "half", label: "Lend half and help them make a plan.", fx: { rel: { fr: 3 }, cash: -500 } },
+        { id: "no", label: "Say no. Money and friends do not mix.", fx: { rel: { fr: -8 } } }
+      ]
+    },
+    // ---------- the one he is with ----------
+    {
+      id: "jealous", kind: "partner", weight: 2, who: g => K.social && K.social.partner(g, 0),
+      when: (g, c) => c.life && c.life.followers > 20000,
+      tease: (g, c, f) => f.first + " has been reading the comments under your posts.",
+      title: (g, c, f) => f.first + " and the comments",
+      text: (g, c, f) => "Your posts are full of messages from fans, some of them very forward. " + f.first + " says it does not bother her. It clearly bothers her.",
+      choices: [
+        { id: "post", label: "Post a photo of the two of you.", fx: { rel: { pt: 8 }, followers: 0.02 } },
+        { id: "talk", label: "Talk it through over dinner.", fx: { rel: { pt: 6 }, cash: -80, morale: 1 } },
+        { id: "shrug", label: "Tell her it comes with the job.", fx: { rel: { pt: -9 } } }
+      ]
+    },
+    {
+      id: "moretime", kind: "partner", weight: 2, who: g => K.social && K.social.partner(g, 0),
+      when: (g, c) => true,
+      tease: (g, c, f) => f.first + " sent a long message. It starts with \"We need to talk\".",
+      title: (g, c, f) => f.first + " wants more of your time",
+      text: (g, c, f) => f.first + " says she feels like she comes after training, the gym, the physio and your phone. She wants one evening a week that is just the two of you.",
+      choices: [
+        { id: "yes", label: "Promise her one evening a week, no phones.", fx: { rel: { pt: 9 }, time: 1, morale: 2 } },
+        { id: "season", label: "Ask her to give it until the end of the season.", fx: { rel: { pt: -3 }, prof: 1 } },
+        { id: "no", label: "Tell her football comes first. It always will.", fx: { rel: { pt: -12 }, prof: 2 } }
+      ]
+    },
+    {
+      id: "parents", kind: "partner", weight: 2, who: g => K.social && K.social.partner(g, 0),
+      when: (g, c) => { const f = K.social.partner(g, 0); return f && f.stage === "serious"; },
+      tease: (g, c, f) => f.first + "'s parents are coming to town.",
+      title: (g, c, f) => "Meeting " + f.first + "'s parents",
+      text: (g, c, f) => f.first + "'s parents want to have dinner with you on Saturday. You have a game on Sunday. Her dad, she warns you, supports your biggest rivals.",
+      choices: [
+        { id: "charm", label: "Go, bring flowers, talk about anything but football.", fx: { rel: { pt: 10, mum: 2 }, cash: -60 } },
+        { id: "banter", label: "Go, and wind her dad up about his team.", fx: { rel: { pt: 3 }, morale: 2 } },
+        { id: "skip", label: "Ask to move it. The game comes first.", fx: { rel: { pt: -8 }, prof: 1 } }
+      ]
+    },
+    // ---------- married life ----------
+    {
+      id: "wifemum", kind: "family", weight: 2, who: g => K.social && K.social.partner(g, 0),
+      when: (g, c) => { const f = K.social.partner(g, 0); return f && f.stage === "married"; },
+      tease: (g, c, f) => "Mum and " + f.first + " were very polite to each other at lunch. Too polite.",
+      title: (g, c, f) => "Mum and " + f.first + " disagree",
+      text: (g, c, f) => "Mum wants everyone at hers for the holidays, like always. " + f.first + " wants your first holidays as a married couple to be at your place, with her family too. Both of them are waiting for you to say something.",
+      choices: [
+        { id: "wife", label: "Back your wife. Holidays at yours.", fx: { rel: { pt: 8, mum: -8 } } },
+        { id: "mum", label: "Back Mum. Tradition is tradition.", fx: { rel: { mum: 6, pt: -10 } } },
+        { id: "both", label: "Book a big holiday for both families.", fx: { rel: { mum: 3, pt: 4, dad: 2 }, cash: -2500, morale: 2 } }
+      ]
+    },
+    {
+      id: "wifeagent", kind: "family", weight: 2, who: g => K.social && K.social.partner(g, 0),
+      when: (g, c) => { const f = K.social.partner(g, 0); return f && f.stage === "married" && !!c.agent; },
+      tease: (g, c, f) => "Your agent and " + f.first + " are not speaking.",
+      title: (g, c, f) => "The agent's summer plans",
+      text: (g, c, f) => "Your agent has lined up a paid summer tour of sponsor events abroad. " + f.first + " says you promised her the summer at home, and that the agent treats you like a product.",
+      choices: [
+        { id: "tour", label: "Do the tour. The money is good.", fx: { rel: { agent: 6, pt: -9 }, cash: 3000, commercial: 2 } },
+        { id: "home", label: "Summer at home with her.", fx: { rel: { pt: 8, agent: -6 }, morale: 2 } },
+        { id: "both", label: "Do the tour, and take her with you.", fx: { rel: { pt: 4, agent: 2 }, fatigue: 5, cash: 1500 } }
+      ]
+    },
+    {
+      id: "abroadwife", kind: "family", weight: 3, who: g => K.social && K.social.partner(g, 0),
+      when: (g, c, p) => { const f = K.social.partner(g, 0); return f && (f.stage === "married" || f.stage === "engaged") && c.offers.some(o => o.status === "open" && o.league !== (D.COUNTRIES[c.person.country] || {}).league); },
+      tease: (g, c, f) => f.first + " found the offer letter on the table.",
+      title: (g, c, f) => "An offer from abroad, and " + f.first,
+      text: (g, c, f) => "There is an offer from a club abroad. " + f.first + " would have to leave her job, her friends and her family. She says she will support you, but her face says something else.",
+      choices: [
+        { id: "ask", label: "Ask her, properly, to come with you.", fx: { rel: { pt: 2 }, morale: 1 } },
+        { id: "stay", label: "Turn it down for her.", fx: { rel: { pt: 9, agent: -6 }, act: "abroadNo" } },
+        { id: "alone", label: "Go first, and she can follow later.", fx: { rel: { pt: -12 }, conf: 2 } }
+      ]
+    },
+    {
+      id: "ladsnight", kind: "friend", weight: 2, who: g => K.social && K.social.closest(g, 45),
+      when: (g, c, p) => c.stage === "pro" && p.age >= 18,
+      tease: "The squad group chat is very busy tonight.",
+      title: "A night out with the lads",
+      text: (g, c, f) => "After the win the lads want a night out, and " + f.first + " is the one organising it. Two days until the next game.",
+      choices: [
+        { id: "go", label: "Go out with them.", fx: { rel: { fr: 6, team: 4 }, morale: 3, fatigue: 8, disc: -1 } },
+        { id: "dinner", label: "Dinner with them, home before midnight.", fx: { rel: { fr: 4, team: 2 }, morale: 2, fatigue: 2 } },
+        { id: "home", label: "Stay in and recover.", fx: { rel: { fr: -3, team: -2 }, prof: 1, fatigue: -3 } }
+      ]
     }
   ];
 
@@ -355,7 +479,7 @@ function makePeople(K, deps) {
     if (weekIndex(game) - pp.lastEvent < 2) return;
     if (rnd() > EVENT_RATE) return;
     const familyOk = pp.fixtures > pp.lastFamily;
-    const ok = E.filter(e => (e.kind !== "family" || familyOk) && !(e.id === "sibmoney" && !pp.sib) && safe(() => e.when(game, c, p)) && !(pp.log.slice(0, 6).some(x => x.id === e.id)));
+    const ok = E.filter(e => (e.kind !== "family" || familyOk) && !(e.id === "sibmoney" && !pp.sib) && (!e.who || safe(() => e.who(game))) && safe(() => e.when(game, c, p)) && !(pp.log.slice(0, 6).some(x => x.id === e.id)));
     if (!ok.length) return;
     let total = ok.reduce((s, e) => s + e.weight, 0), r = rnd() * total, ev = ok[0];
     for (const e of ok) { r -= e.weight; if (r <= 0) { ev = e; break; } }
@@ -363,8 +487,12 @@ function makePeople(K, deps) {
   }
   function queue(game, ev, report) {
     const c = C(game), pp = P0(game);
-    const f = v => (typeof v === "function" ? v(game, c) : v);
+    // an event about a friend names the one it is about
+    const who = ev.who ? ev.who(game) : null;
+    if (ev.who && !who) return;
+    const f = v => (typeof v === "function" ? v(game, c, who) : v);
     pp.pending = { id: ev.id, kind: ev.kind, s: game.season, w: game.round, fx: pp.fixtures, tease: f(ev.tease), title: f(ev.title), text: f(ev.text), choices: ev.choices.map(x => ({ id: x.id, label: x.label })) };
+    if (who) pp.pending.who = who.id;
     pp.lastEvent = weekIndex(game);
     if (ev.kind === "family") pp.lastFamily = pp.fixtures;
     if (report) report.tease = pp.pending.tease;
@@ -374,6 +502,7 @@ function makePeople(K, deps) {
     const ev = E.find(e => e.id === id);
     if (!ev) return { error: "No such event." };
     if (ev.id === "sibmoney" && !P0(game).sib) return { error: "No brother or sister in this family." };
+    if (ev.who && !ev.who(game)) return { error: "No close friend for that one." };
     queue(game, ev, null);
     return { ok: true };
   }
@@ -389,6 +518,8 @@ function makePeople(K, deps) {
     const ch = ev && ev.choices.find(x => x.id === choice);
     if (!ch) return { error: "Pick one of the choices." };
     let fx = Object.assign({}, ch.fx);
+    // "fr" is the friend the event is about, "pt" the one he is with
+    for (const key of ["fr", "pt"]) if (fx.rel && fx.rel[key] !== undefined) { const rel = Object.assign({}, fx.rel); if (pend.who) rel["f:" + pend.who] = rel[key]; delete rel[key]; fx.rel = rel; }
     let note = "";
     // round the table: it goes well when the family trusts him and he can lead a room
     if (fx.table) {
@@ -471,7 +602,7 @@ function makePeople(K, deps) {
     };
   }
 
-  return { P0, afterWeek, afterMatch, answer, blocker, weekly, view, newClub, force, EVENTS: E };
+  return { P0, afterWeek, afterMatch, answer, blocker, weekly, view, newClub, force, rel: R, EVENTS: E };
 }
 
 module.exports = { makePeople };

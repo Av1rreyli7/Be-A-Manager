@@ -1450,7 +1450,7 @@ function open(cfg) {
         if (A.want3d) {
           try {
             const make = await warm3d();
-            if (make) v3 = make({ wrap, canvas, FL: FLMatch });
+            if (make) v3 = make({ wrap, canvas, FL: FLMatch, venue: (setup && setup.venue) || cfg.venue || null });
           } catch (e3) { v3 = null; }
           fell = !v3;
           if (active !== A || A.mode === "simmed") { if (v3) v3.dispose(); return; }

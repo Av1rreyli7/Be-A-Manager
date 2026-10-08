@@ -180,9 +180,15 @@ function makeLife(K) {
     // health and football
     add({ id: "clinic", kind: "clinic", name: ci.clinic, where: "suburb", style: L.PLACE_STYLE.clinic });
     add({ id: "gym", kind: "gym", name: info.gym || ci.gym, brand: info.gym || ci.gym, where: "street", style: L.PLACE_STYLE.gym });
+    // the schools, colleges and clubs: his own grounds and a few more of the city's own (campus.js). His club
+    // keeps the old ids "training" and "stadium"; a city with no club of its own still has its stadium.
     const club = who && who.club;
-    add({ id: "training", kind: "training", name: club ? club + " training ground" : (who && who.team ? who.team + " training pitches" : "The training pitches"), where: "outskirts", style: L.PLACE_STYLE.training });
-    add({ id: "stadium", kind: "stadium", name: club ? (L.STADIUMS[club] || club + " Stadium") : info.stadium || city + " Stadium", where: "suburb", style: L.PLACE_STYLE.stadium });
+    const campus = (who && who.campus) || [];
+    for (const cp of campus) add(Object.assign({}, cp, { style: campusStyle(cp) }));
+    if (!campus.some(cp => cp.inst && cp.inst.mine))
+      add({ id: "training", kind: "training", name: club ? club + " training ground" : (who && who.team ? who.team + " training pitches" : "The training pitches"), where: "outskirts", style: L.PLACE_STYLE.training });
+    if (!campus.some(cp => cp.kind === "stadium"))
+      add({ id: "stadium", kind: "stadium", name: club ? (L.STADIUMS[club] || club + " Stadium") : info.stadium || city + " Stadium", where: "suburb", style: L.PLACE_STYLE.stadium });
     // the car dealers: everyday cars and bikes everywhere, the prestige dealer in a big city, supercars where the money is
     add({ id: "dealer:everyday", kind: "dealer", name: ci.everyday || "Toyota and Honda", brand: "Toyota", where: "outskirts", style: L.PLACE_STYLE["dealer:everyday"] });
     add({ id: "dealer:bikes", kind: "dealer", name: ci.bikes || "Ducati and Vespa", brand: "Ducati", where: "street", style: L.PLACE_STYLE["dealer:bikes"] });
@@ -190,12 +196,19 @@ function makeLife(K) {
     if (tier >= 3 || (tier === 2 && !L.NO_SUPERCARS.includes(country))) add({ id: "dealer:super", kind: "dealer", name: ci.super || "Ferrari and Lamborghini", brand: "Ferrari", where: "luxury", style: L.PLACE_STYLE["dealer:super"] });
     return { seed, tier, places };
   }
+  // a campus in its institution's colours
+  function campusStyle(cp) {
+    const [a, b] = (cp.inst && cp.inst.cols) || ["#1e3a8a", "#ffffff"];
+    if (cp.kind === "stadium") return Object.assign({}, L.PLACE_STYLE.stadium, { accent: a, trim: b });
+    if (cp.kind === "training") return Object.assign({}, L.PLACE_STYLE.training, { accent: a, trim: b });
+    return { floor: "#c9c1b2", wall: cp.kind === "school" ? "#e9e2d2" : "#ece8df", accent: a, trim: b, vibe: cp.kind };
+  }
   function whoOf(game) {
     const c = C(game), p = me(game), life = L0(game);
     const college = c.college ? (D.COLLEGES.find(x => x.id === c.college) || {}).name : null;
     const school = c.school ? (D.SCHOOLS.find(x => x.id === c.school) || {}).name : null;
     const team = c.stage === "pro" ? null : c.stage === "academy" && c.academy ? c.academy.club + " academy" : c.stage === "centre" && c.centre ? c.centre.name : c.stage === "college" ? college : school;
-    return { hometown: hometown(c), home: life.home, owned: life.owned, club: c.stage === "pro" ? p.club : null, team };
+    return { hometown: hometown(c), home: life.home, owned: life.owned, club: c.stage === "pro" ? p.club : null, team, campus: K.campus ? K.campus.places(game, c.city) : [] };
   }
   function world(game) {
     const c = C(game);
@@ -509,6 +522,7 @@ function makeLife(K) {
       if (action === "injure") { const w = Math.max(1, Math.round(Number(arg) || 3)); c.cond.inj = { name: "Hamstring strain", part: "hamstring", weeks: w, total: w, s: game.season, w: game.round }; p.inj = w; return { ok: true }; }
       if (action === "city") { c.city = String(arg || c.city); return { ok: true }; }
       if (action === "week") { life.wk = { at: -1 }; life.time = FREE_TIME; return { ok: true }; }
+      if (action === "social" && K.social) return K.social.testSet(game, String(arg || ""));
       return { error: "No such hook." };
     }
     const w = world(game);
@@ -526,6 +540,10 @@ function makeLife(K) {
       if (action !== "seen") return { error: "Nothing to do there." };
       for (const m of life.moments) if (arg === "all" || m.id === arg) m.seen = true;
       return { ok: true };
+    }
+    // the people he meets: talk, answer, swap numbers, hang out, text back (floodlights/career/social.js)
+    if (["talk", "say", "bye", "number", "hang", "text", "askout", "pickup", "date", "datesay", "dateend", "breakup", "gift", "ring", "wedding", "wedstart", "wedsay", "wedend"].includes(action) && K.social) {
+      return K.social.act(game, place, action, arg, { useTime: n => useTime(game, n), spend: (a, l) => spend(game, a, l), out });
     }
     if (place === "street") {
       if (action !== "fan") return { error: "Nothing to do there." };
@@ -687,6 +705,11 @@ function makeLife(K) {
       const item = ITEM[arg];
       if (!item || item.store !== place || !soldHere(w, item)) return { error: "They do not sell that here." };
       return done(purchase(game, item));
+    }
+    // his school or college, and the training ground's rooms (physio, the club gym, the canteen, the dressing room)
+    if (place === "school" || place === "college" || (place === "training" && ["physio", "gym", "canteen", "changing"].includes(action))) {
+      if (!K.campus) return { error: "No such place." };
+      return K.campus.act(game, place, action, { useTime: n => useTime(game, n), out, life, week: week(game) });
     }
     if (place === "training") {
       const sid = action;

@@ -239,6 +239,10 @@ function placeFront(m: Mesher, s: PlaceSpot, sign: (text: string, lx: number, ly
     sign(s.place.name, 0, H + 1.8, front + 0.5, 2.4);
     return;
   }
+  if ((kind === "school" || kind === "college" || kind === "training") && s.place.inst) {
+    campusFront(L, s, sign, flav);
+    return;
+  }
   if (kind === "training") {
     L.box("#2f7d43", 0, 0.1, 0, fw - 2, 0.1, fd - 2);
     for (let k = -4; k <= 4; k++) L.box("#348a4a", k * (fw / 10), 0.11, 0, fw / 20, 0.1, fd - 2);
@@ -298,6 +302,133 @@ function placeFront(m: Mesher, s: PlaceSpot, sign: (text: string, lx: number, ly
     if (id === "shared" || id === "family") L.roof("#3a3f46", 0, H, 0, fw, 2.4, fd);
     door(1.8, 2.6);
     return;
+  }
+}
+
+/**
+ * A school, a college or a club's training ground from the street: its wall or fence and gate with the name over
+ * it, its buildings and its pitch, scaled by how good it is. The grounds themselves open when he walks in.
+ */
+/** a campus from afar: its ground, its wall, its main buildings and its pitch as plain blocks */
+function campusFar(L: ReturnType<typeof local>, s: PlaceSpot, flav: CityPlan["flavor"]) {
+  const { fw, fd } = L;
+  const inst = s.place.inst!;
+  const kind = s.place.kind;
+  const sd = inst.standing;
+  const [ca] = inst.cols;
+  L.box(kind === "training" ? "#3f7a3a" : "#6f9a5c", 0, 0.08, 0, fw, 0.1, fd);
+  if (kind === "training") {
+    const bh = 4 + Math.min(4, sd * 0.45);
+    L.box("#e9ece8", -4, bh / 2, -fd / 2 + 7, fw * 0.6, bh, 10);
+    L.box(ca, -4, bh + 0.25, -fd / 2 + 7, fw * 0.61, 0.5, 10.4);
+    L.box("#4f8a45", 0, 0.12, 4, fw - 14, 0.06, 26);
+    return;
+  }
+  const floors = kind === "college" ? 3 + (sd >= 8 ? 1 : 0) : 2 + (sd >= 7 ? 1 : 0);
+  const bh = floors * 3.4;
+  const wall = kind === "college" ? "#ece8df" : flav === "uk" ? "#8a5a44" : flav === "india" ? "#e8dcc4" : "#d8cdb8";
+  L.box(wall, -2, bh / 2, -fd / 2 + 8, fw - 10, bh, 11);
+  L.box(ca, -2, bh + 0.2, -fd / 2 + 8, fw - 9.7, 0.4, 11.3);
+  L.box(wall, fw / 2 - 8, 3, 6, 9, 6, 12);
+  L.box(sd <= 3 && kind === "school" ? "#a8875a" : "#4f8a45", -7, 0.12, 9, kind === "college" ? 30 : 26, 0.06, kind === "college" ? 20 : 18);
+}
+
+function campusFront(L: ReturnType<typeof local>, s: PlaceSpot, sign: (text: string, lx: number, ly: number, lz: number, h: number) => void, flav: CityPlan["flavor"]) {
+  const { fw, fd } = L;
+  const inst = s.place.inst!;
+  const kind = s.place.kind;
+  const sd = inst.standing;
+  const [ca, cb] = inst.cols;
+  const front = fd / 2;
+  const grass = sd <= 3 && kind === "school" ? "#a8875a" : "#4f8a45";
+  L.box(kind === "training" ? "#3f7a3a" : "#6f9a5c", 0, 0.08, 0, fw, 0.1, fd);
+  // a pitch: grass (dust at the poorest schools), stripes, white lines, two goals
+  const pitch = (cx: number, cz: number, pw: number, pd: number) => {
+    L.box(grass, cx, 0.12, cz, pw, 0.06, pd);
+    if (grass !== "#a8875a") for (let k = 0; k < 6; k++) if (k % 2) L.box("#5a9850", cx - pw / 2 + (k + 0.5) * (pw / 6), 0.13, cz, pw / 6, 0.06, pd);
+    const ln = (x: number, z: number, w: number, d: number) => L.box("#f2f2ee", cx + x, 0.16, cz + z, w, 0.02, d);
+    ln(0, -pd / 2 + 0.6, pw - 1.2, 0.12);
+    ln(0, pd / 2 - 0.6, pw - 1.2, 0.12);
+    ln(-pw / 2 + 0.6, 0, 0.12, pd - 1.2);
+    ln(pw / 2 - 0.6, 0, 0.12, pd - 1.2);
+    ln(0, 0, pw - 1.2, 0.12);
+    for (const sz of [-1, 1]) {
+      const gz = cz + sz * (pd / 2 - 0.6);
+      L.box("#f4f4f4", cx, 2.0, gz, 6, 0.12, 0.12);
+      for (const sx of [-1, 1]) L.box("#f4f4f4", cx + sx * 3, 1.0, gz, 0.12, 2.0, 0.12);
+    }
+  };
+  if (kind === "training") {
+    // a tall green fence, pitches across the front, the main building at the back, the car park on one side
+    for (const [x, z, w, d] of [
+      [0, -fd / 2 + 0.3, fw, 0.15],
+      [-fw / 2 + 0.3, 0, 0.15, fd],
+      [fw / 2 - 0.3, 0, 0.15, fd],
+    ] as [number, number, number, number][])
+      L.box("#3d5a3a", x, 1.8, z, w, 3.6, d);
+    for (const sx of [-1, 1]) L.box("#3d5a3a", sx * (fw / 4 + 3), 1.8, front - 0.3, fw / 2 - 6, 3.6, 0.15);
+    const n = sd >= 8 ? 3 : 2;
+    const pw = (fw - 14) / n - 2;
+    for (let i = 0; i < n; i++) pitch(-fw / 2 + 4 + pw / 2 + i * (pw + 2), 4, pw, 26);
+    const bh = 4 + Math.min(4, sd * 0.45);
+    L.box("#e9ece8", -4, bh / 2, -fd / 2 + 7, fw * 0.6, bh, 10);
+    L.box(GLASS, -4, bh / 2, -fd / 2 + 12.05, fw * 0.56, bh - 1.4, 0.08, { glow: 0.6 });
+    L.box(ca, -4, bh + 0.25, -fd / 2 + 7, fw * 0.61, 0.5, 10.4);
+    sign(s.place.name, -4, bh + 1.2, -fd / 2 + 12.3, 1.1);
+    // the car park: bays and the squad's cars
+    L.box("#2b2e33", fw / 2 - 8, 0.12, -fd / 2 + 8, 12, 0.06, 14);
+    const cols = sd >= 7 ? ["#111111", "#f4f4f4", "#c8102e", "#2b3b55", "#9aa0a6"] : ["#9aa0a6", "#2b3b55", "#e8e4dc", "#5a5f66"];
+    for (let i = 0; i < 6; i++) L.box(cols[i % cols.length], fw / 2 - 11 + (i % 2) * 6, 0.75, -fd / 2 + 3 + Math.floor(i / 2) * 4.2, 1.9, 1.3, 4.2);
+    L.box("#0b0d10", 0, 1.5, front + 0.06, 6, 3, 0.12);
+    L.box(ca, 0, 3.4, front + 0.1, 7.4, 0.5, 0.3, { glow: 0.5, day: 0.25 });
+    return;
+  }
+  // a school or a college: a wall (railings at a college) with the gate in the middle of the street side
+  const wallH = kind === "school" ? 1.8 : 1.4;
+  const wallC = kind === "school" ? (flav === "uk" ? "#7a4c3a" : "#d8cdb8") : "#2f3338";
+  for (const [x, z, w, d] of [
+    [0, -fd / 2 + 0.3, fw, 0.3],
+    [-fw / 2 + 0.3, 0, 0.3, fd],
+    [fw / 2 - 0.3, 0, 0.3, fd],
+  ] as [number, number, number, number][])
+    L.box(wallC, x, wallH / 2, z, w, wallH, d);
+  for (const sx of [-1, 1]) L.box(wallC, sx * (fw / 4 + 2.5), wallH / 2, front - 0.3, fw / 2 - 5, wallH, 0.3);
+  for (const sx of [-1, 1]) {
+    L.box(ca, sx * 3.3, 2.2, front - 0.3, 0.7, 4.4, 0.7);
+    L.box(cb, sx * 3.3, 4.5, front - 0.3, 0.9, 0.2, 0.9);
+  }
+  L.box(ca, 0, 4.9, front - 0.3, 7.4, 0.9, 0.3);
+  sign(s.place.name, 0, 4.9, front - 0.1, 0.7);
+  // the buildings at the back: more floors and more glass the better the place is
+  const floors = kind === "college" ? 3 + (sd >= 8 ? 1 : 0) : 2 + (sd >= 7 ? 1 : 0);
+  const bh = floors * 3.4;
+  const bw = fw - 10;
+  const bz = -fd / 2 + 8;
+  const wall = kind === "college" ? "#ece8df" : flav === "uk" ? "#8a5a44" : flav === "india" ? "#e8dcc4" : "#d8cdb8";
+  L.box(wall, -2, bh / 2, bz, bw, bh, 11);
+  for (let f = 0; f < floors; f++) {
+    if (kind === "college" && sd >= 6) L.box(GLASS, -2, 1.7 + f * 3.4, bz + 5.53, bw - 2, 2.6, 0.08, { glow: 0.55 });
+    else for (let k = 0; k < 8; k++) L.box(GLASS, -2 - bw / 2 + (k + 0.5) * (bw / 8), 1.8 + f * 3.4, bz + 5.53, bw / 8 - 1.4, 1.6, 0.08, { glow: 0.5 });
+  }
+  L.box(ca, -2, bh + 0.2, bz, bw + 0.3, 0.4, 11.3);
+  if (flav === "uk" || flav === "euro" || flav === "med") L.roof(flav === "med" ? "#b4553a" : "#4a3f3a", -2, bh + 0.4, bz, bw, 2.4, 11);
+  // the canteen or hall on one side
+  L.box(wall, fw / 2 - 8, 3, 6, 9, 6, 12);
+  L.box(GLASS, fw / 2 - 12.55, 2.4, 6, 0.08, 2.6, 9, { glow: 0.5 });
+  // the pitch in front of the buildings, and at a college a small stand along it
+  const pw = kind === "college" ? 30 : 26,
+    pd = kind === "college" ? 20 : 18;
+  pitch(-7, 9, pw, pd);
+  if (kind === "college") {
+    for (let r = 0; r < 4; r++) L.box(r % 2 ? cb : ca, -7, 0.4 + r * 0.45, 9 - pd / 2 - 2 - r * 0.7, pw * 0.5, 0.45, 0.7);
+    if (sd >= 7) L.box("#c8ccd2", -7, 3.4, 9 - pd / 2 - 3.2, pw * 0.52, 0.15, 3.6);
+  }
+  // trees inside the wall
+  for (let k = 0; k < 6; k++) {
+    const tx = -fw / 2 + 3 + (k % 3) * 2.2,
+      tz = front - 4 - Math.floor(k / 3) * 7;
+    L.cyl("#5b4636", tx, 1.4, tz, 0.15, 2.8);
+    L.ball("#3d6b35", tx, 3.6, tz, 1.6);
   }
 }
 
@@ -559,8 +690,23 @@ export function buildBuildings(plan: CityPlan, night: { value: number }, quality
 export function buildPlaces(plan: CityPlan, night: { value: number }) {
   const m = new Mesher();
   const signs: { text: string; fg: string; bg: string; x: number; y: number; z: number; ry: number; h: number }[] = [];
+  // the schools, colleges and training grounds are big and detailed: each streams like the city's chunks, every
+  // detail close up, just the blocks further out, nothing past the far distance
+  const campuses: { x: number; z: number; r: number; nearM: Mesher; farM: Mesher }[] = [];
   for (const s of plan.places) {
     const L = local(new Mesher(), s);
+    if ((s.place.kind === "school" || s.place.kind === "college" || s.place.kind === "training") && s.place.inst) {
+      const nearM = new Mesher(),
+        farM = new Mesher();
+      campusFront(local(nearM, s), s, (text, lx, ly, lz, h) => {
+        const [x, z] = L.at(lx, lz);
+        const st = s.place.style;
+        signs.push({ text, fg: st.trim === st.wall ? "#ffffff" : st.trim, bg: st.accent === st.trim ? st.wall : st.accent, x, y: ly, z, ry: L.ry, h });
+      }, plan.flavor);
+      campusFar(local(farM, s), s, plan.flavor);
+      campuses.push({ x: s.x, z: s.z, r: Math.hypot(s.w, s.d) / 2, nearM, farM });
+      continue;
+    }
     placeFront(
       m,
       s,
@@ -629,14 +775,35 @@ export function buildPlaces(plan: CityPlan, night: { value: number }) {
   const signMesh = new THREE.Mesh(sg, smat);
   const group = new THREE.Group();
   group.add(mesh, signMesh);
+  const lods = campuses.map((c) => {
+    const near = new THREE.Mesh(c.nearM.build(), mat);
+    near.castShadow = true;
+    near.receiveShadow = true;
+    const far = new THREE.Mesh(c.farM.build(), mat);
+    far.receiveShadow = true;
+    group.add(near, far);
+    return { x: c.x, z: c.z, r: c.r, near, far };
+  });
   return {
     group,
+    /** campuses: every detail within 150 m, the blocks out to the far distance, nothing beyond */
+    stream: (x: number, z: number, farD: number) => {
+      for (const c of lods) {
+        const d = Math.hypot(c.x - x, c.z - z) - c.r;
+        c.near.visible = d < 150;
+        c.far.visible = d >= 150 && d < farD;
+      }
+    },
     dispose: () => {
       geo.dispose();
       mat.dispose();
       sg.dispose();
       smat.dispose();
       atlas.tex.dispose();
+      for (const c of lods) {
+        c.near.geometry.dispose();
+        c.far.geometry.dispose();
+      }
     },
   };
 }

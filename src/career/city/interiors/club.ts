@@ -117,6 +117,11 @@ export function clubRoom(k: Kit, p: WorldPlace): Room {
     crowd.push({ x, z, ry: R() * 6.28, col: ["#e8e4dc", "#111111", pink, "#2a3a5a", "#c8c8c8", violet][Math.floor(R() * 6)] });
   }
   people(k, "crowd", crowd);
+  // two by the bar, away from the dance floor
+  if (old) {
+    k.crowd(W / 2 - 2.3, 0.9, Math.PI / 2 + 0.3, { sx: W / 2 - 3.4, sz: 1.3 });
+    k.crowd(W / 2 - 2.4, 2.5, Math.PI / 2 - 0.2, { sx: W / 2 - 3.5, sz: 2.7 });
+  }
   const beams: THREE.Object3D[] = [];
   const bcol = [pink, violet, "#2ad8ff", "#ffffff", pink, violet];
   for (let i = 0; i < 6; i++) {

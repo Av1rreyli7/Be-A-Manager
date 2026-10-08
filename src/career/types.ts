@@ -28,6 +28,10 @@ export interface Look {
   gloves: string | null;
   compression: string | null;
   boot: number;
+  /** the people round him (never his own creator look): a woman's figure */
+  fem?: boolean;
+  /** a lip colour */
+  lips?: string;
 }
 
 export interface PersonForm {
@@ -172,7 +176,139 @@ export interface Thread {
     w: number;
     read: boolean;
     offer?: string;
+    /** replies he can send (a friend's text); answered is the one he picked, expired if he never did */
+    replies?: { label: string; d: number }[];
+    answered?: number;
+    expired?: boolean;
+    /** his own reply */
+    mine?: boolean;
   }[];
+}
+
+/** someone at one of his places this week (a classmate, a teammate), with what they look like */
+export interface SocialPerson {
+  id: string;
+  name: string;
+  first: string;
+  kind: string;
+  role: string;
+  fem: boolean;
+  look: Partial<Look> & Record<string, unknown>;
+  outfit: { shirt: string; trim: string; shorts: string; socks: string; bottom?: "shorts" | "trousers" | "skirt" | "dress" | "gown"; top?: "tee" | "vest"; plain?: boolean; shoe?: [string, string]; tights?: string; sleeve?: boolean };
+  h: number;
+  w: number;
+  rel: number | null;
+  num: boolean;
+  trait: string;
+  likes: string[];
+  age?: number;
+}
+export interface Friend {
+  id: string;
+  name: string;
+  role: string;
+  level: string;
+  rel: number;
+  num: boolean;
+  fem: boolean;
+  trait: string;
+  likes: string[];
+  hung: boolean;
+}
+/** a chat in progress: what they said, what he can say, how it went, and what next */
+export interface Talk {
+  id: string;
+  place: string;
+  name: string;
+  first: string;
+  role: string;
+  line: string;
+  choices: { id: string; label: string }[];
+  said: string | null;
+  result: string | null;
+  rel?: number;
+  level?: string;
+  follow: { id: string; label: string }[];
+}
+/** someone he is seeing, or talking to */
+export interface DateWho {
+  id: string;
+  name: string;
+  first: string;
+  stage: "met" | "talking" | "dating" | "serious" | "engaged" | "married" | "ex";
+  stageWord: string;
+  rel: number;
+  dates: number;
+  age: number;
+  trait: string;
+  likes: string[];
+  look: SocialPerson["look"];
+  outfit: SocialPerson["outfit"];
+  night: SocialPerson["outfit"];
+  h: number;
+  w: number;
+  /** picks which building in the city is hers */
+  seed: number;
+}
+export interface DatePlan {
+  id: string;
+  venue: string;
+  place: string;
+  hour: number;
+  pickup: boolean;
+  byCar: boolean;
+  /** the week it was planned for */
+  w: number;
+  status: "set" | "together" | "on" | "done";
+  late: number;
+  who: DateWho;
+  label: string;
+  at: string;
+}
+export interface DateScene {
+  id: string;
+  name: string;
+  first: string;
+  venue: string;
+  step: number;
+  keys: string[];
+  beat: { t: string; choices: { id: string; label: string }[] } | null;
+  said: string[];
+  result: { res: "great" | "good" | "bad"; text: string; rel: number; stage: string; proposal?: "yes" | "no" } | null;
+}
+export interface Ring {
+  id: string;
+  brand: string;
+  label: string;
+  price: number;
+  note?: string;
+}
+export interface WedScene {
+  step: number;
+  said: string[];
+  beat: { t: string; choices: { id: string; label: string }[] } | null;
+  result: { res: "great" | "good" | "bad"; text: string; rel: number; stage: string } | null;
+  size: string;
+}
+export interface Dating {
+  eligible: boolean;
+  partner: (DateWho & { ring?: string | null }) | null;
+  contacts: DateWho[];
+  plan: DatePlan | null;
+  scene: DateScene | null;
+  venues: { id: string; label: string }[];
+  /** the ring in his pocket, and the ones in the boutique */
+  ring?: Ring | null;
+  rings?: Ring[];
+  weddings?: { id: string; label: string; cost: number }[];
+  wedding?: { size: string; cost: number; status: "today" | "on" | "done"; w: number; who: string } | null;
+  wscene?: WedScene | null;
+}
+export interface Social {
+  friends: Friend[];
+  present: Record<string, SocialPerson[]>;
+  talk: Talk | null;
+  dating?: Dating;
 }
 
 export interface LifeHome {
@@ -285,7 +421,19 @@ export interface LifeWeek {
 }
 
 export type PlaceKind = "store" | "mall" | "supermarket" | "cafe" | "restaurant" | "club" | "clinic" | "gym" | "training"
-  | "stadium" | "dealer" | "watches" | "home";
+  | "stadium" | "dealer" | "watches" | "home" | "school" | "college" | "wedding";
+/** a school, college or club behind a place: how good it is (1 to 10), its seed and colours, whether it is his */
+export interface PlaceInst {
+  key: string;
+  kind: "school" | "college" | "club" | "centre";
+  standing: number;
+  seed: number;
+  cols: [string, string];
+  mine: boolean;
+  academy?: boolean;
+  ground: string;
+  team: string;
+}
 export interface PlaceStyle { floor: string; wall: string; accent: string; trim: string; vibe: string }
 export interface WorldPlace {
   id: string;
@@ -300,6 +448,7 @@ export interface WorldPlace {
   owned?: boolean;
   living?: boolean;
   price?: number;
+  inst?: PlaceInst;
 }
 export interface CatalogItem {
   id: string;
@@ -471,6 +620,8 @@ export interface CareerState {
     log: Record<string, unknown>[];
   };
   phone: { threads: Thread[]; unread: number };
+  /** friends, who is where this week, a chat in progress (older servers send none) */
+  social?: Social;
   news: { s: number; w: number; text: string; kind: string }[];
   moments: Record<
     string,

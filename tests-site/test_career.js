@@ -332,7 +332,8 @@ async function main() {
         if (w.status !== 200) { await answerEvent(w, bc, "Bnch"); continue; }
         const wm = w.j.reports[0].match;
         const expect = bs.play.can ? "start" : bs.play.code === "bench" ? "sub" : bs.play.code === "out" ? "out" : null;
-        if (md && wm && expect) { simmed++; if (wm.role === expect) agree++; }
+        // an injury in that week's training (after the sheet was picked) takes him out: not a different sheet
+        if (md && wm && expect && wm.role !== "injured") { simmed++; if (wm.role === expect) agree++; }
       }
       ok("left out or on the bench, PLAY is closed with the reason and the kick off is refused", seenBench && seenBench.play.can === false && /bench|left you out/.test(seenBench.play.why) && seenBench.start === 400 && seenBench.bench === true && seenBench.err === seenBench.play.why, seenBench);
       ok("the team sheet the hub shows is the one the sim plays", simmed >= 3 && agree === simmed, [agree, simmed]);

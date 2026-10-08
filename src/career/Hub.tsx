@@ -644,6 +644,28 @@ export default function Hub({
                     <RelBar v={state.people.best.rel} />
                   </li>
                 )}
+                {state.social?.dating?.partner && (
+                  <li>
+                    <span className="pc-avatar pc-avatar-love">{state.social.dating.partner.name.slice(0, 1)}</span>
+                    <span>
+                      <b>{state.social.dating.partner.name}</b>
+                      <em>{state.social.dating.partner.stageWord}</em>
+                    </span>
+                    <RelBar v={state.social.dating.partner.rel} />
+                  </li>
+                )}
+                {(state.social?.friends || []).map((f) => (
+                  <li key={f.id}>
+                    <span className="pc-avatar">{f.name.slice(0, 1)}</span>
+                    <span>
+                      <b>{f.name}</b>
+                      <em>
+                        {f.level}, {f.role.toLowerCase()}
+                      </em>
+                    </span>
+                    <RelBar v={f.rel} />
+                  </li>
+                ))}
               </ul>
               <div className="pc-conds">
                 <Bar label="Dressing room" v={state.people.team} />

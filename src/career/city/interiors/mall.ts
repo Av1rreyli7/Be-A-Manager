@@ -124,6 +124,8 @@ export function mallRoom(k: Kit, p: WorldPlace): Room {
     col: ["#2a3a5a", "#c8202a", "#e8e4dc", "#3a5a3a", "#111111", "#d8a878"][Math.floor(R() * 6)],
   })).filter((c) => Math.hypot(c.x, c.z - fz) > 4 && Math.abs(c.z - 8.4) > 0.8 && Math.abs(c.x) < 10);
   people(k, "shopper", crowd);
+  // someone browsing near the benches he might get talking to
+  k.crowd(4.2, 6.2, -Math.PI / 2 + 0.4, { sx: 3.1, sz: 6.6 });
   for (const c of crowd) k.circle(c.x, c.z, 0.3);
   return k.finish({
     w: W,

@@ -498,6 +498,37 @@ async function main() {
     ok("dispose empties the figures and leaves a borrowed renderer alone", view.figures.size === 0 && !stubRenderer.gone, null);
   }
 
+  // ================= the venue (Player Career): school, college and academy grounds, in the day =================
+  {
+    const THREE = await import("../node_modules/three/build/three.module.js");
+    const { createGround } = await import("../floodlights/m3d/view/ground.mjs");
+    const { createView3D } = await import("../floodlights/match3d.mjs");
+    const g1 = createGround(THREE, { venue: { kind: "school", standing: 6, seed: 11, cols: ["#1e3a8a", "#ffffff"], crowd: 0.2, daylight: true } });
+    const g2 = createGround(THREE, { venue: { kind: "college", standing: 8, seed: 12, cols: ["#7a1f2b", "#ffffff"], crowd: 0.5, daylight: true } });
+    const g3 = createGround(THREE, { venue: { kind: "academy", standing: 9, seed: 13, cols: ["#6cabdd", "#1c2c5b"], crowd: 0.4, daylight: true } });
+    ok("a school ground: no stand, a few people standing along the touchlines", g1.info.kind === "school" && g1.info.seats === 0 && g1.info.people >= 14 && g1.info.people <= 32, g1.info);
+    ok("a college ground: a small stand, partly full", g2.info.kind === "college" && g2.info.seats > 100 && g2.info.people > 30 && g2.info.people < g2.info.seats, g2.info);
+    ok("an academy ground: the training ground with a small stand", g3.info.kind === "academy" && g3.info.seats > 0 && g3.info.people > 18, g3.info);
+    const finite = g => g.group.children.filter(o => o.isInstancedMesh).every(im => [...im.instanceMatrix.array].every(Number.isFinite));
+    for (const g of [g1, g2, g3]) { g.react("goal", 1); for (let i = 0; i < 90; i++) g.update(1 / 60); }
+    ok("the people jump for a goal and nothing goes NaN", [g1, g2, g3].every(finite), null);
+    ok("a ground is cheap: the scenery is one mesh and the people two", [g1, g2, g3].every(g => g.group.children.length === 3), [g1, g2, g3].map(g => g.group.children.length));
+    for (const g of [g1, g2, g3]) g.dispose();
+    const stub = () => ({ setSize() {}, render() {}, dispose() {}, setPixelRatio() {}, shadowMap: {}, info: { render: { calls: 0, triangles: 0 } } });
+    const vV = createView3D(THREE, { FL, renderer: stub(), width: 1280, height: 720, document: null, venue: { kind: "school", name: "A School", standing: 5, seed: 3, cols: ["#1e3a8a", "#ffffff"], crowd: 0.2, daylight: true } });
+    const sV = createSim3D(setupOf(70, 70), { rng: seeded(77), auto: true });
+    for (let i = 0; i < 900; i++) { sV.step({ mx: 0, my: 0 }); for (const e of sV.m.events.splice(0)) vV.onEvent(e, sV); vV.draw(sV, 1 / 60, {}, 1); }
+    ok("a Player Career match with a school venue is played at the school ground", vV.stats().venue === "school" && vV.stats().ground === "school", vV.stats());
+    vV.dispose();
+    const vM = createView3D(THREE, { FL, renderer: stub(), width: 1280, height: 720, document: null });
+    const sM = createSim3D(setupOf(70, 70), { rng: seeded(78), auto: true });
+    for (let i = 0; i < 120; i++) { sM.step({ mx: 0, my: 0 }); vM.draw(sM, 1 / 60, {}, 1); }
+    ok("a Manager Career match (no venue) keeps the stadium under the lights", vM.stats().venue === null && vM.stats().ground === "stadium", vM.stats());
+    vM.dispose();
+    const engine2 = fs.readFileSync(fl("match.js"), "utf8");
+    ok("the venue goes from the career page to the 3D view only (Classic's sim never sees it)", engine2.includes("venue: (setup && setup.venue) || cfg.venue || null") && !/venue/.test(engine2.slice(engine2.indexOf("function createSim"), engine2.indexOf("// LOOK"))), null);
+  }
+
   // ================= player lock (Player Career) =================
   {
     const indexHtml = fs.readFileSync(fl("index.html"), "utf8");

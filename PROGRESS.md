@@ -958,3 +958,241 @@ keepers on SIM with a clean disabled PLAY, take the acceptance screenshots, test
       Louis Vuitton, the watch boutique, the prestige and supercar dealers, the mall, the penthouse, the garage
       with his Porsche, driving it out, buying and wearing a tee, the keeper's matchday, a live school match.
       Copies in Be-A-Manager/acceptance_shots (next to site and github, not in the repo).
+
+## Campuses, relationships to marriage, venue correct matches, camera fix
+
+Goal (the user's pasted spec is the source of truth): every school, college and club has walkable grounds on the
+city map (school campus with classrooms, corridors, a canteen and a plain pitch; a nicer college with a small
+stand; a Carrington style training ground with pitches, gym, changing rooms, physio and recovery, canteen and a
+car park, the stadium a separate place); friends at school; dating from college on (200 and more partners, texts,
+picking her up in the car, dates as real outings with choices, stages from talking to married, gifts, rows and
+break ups, a ring, a proposal, a wedding, married life); every match at the right ground (school, college, pro)
+with sound that fits; and the free roam camera driven by the mouse or a trackpad glide, not zoom. Push at the end
+with "Campuses, relationships to marriage, venue correct matches, camera fix". Resume from the first unchecked box.
+
+Decisions (made at the start, change only with a note):
+- Grounds work the way the training ground and stadium already do: on the city map each campus takes a whole
+  block and shows from the street as what it is (fence and gate, its buildings, its pitch with goals, the small
+  stand at a college, the pitches and car park at a training ground). Walking through the gate opens its grounds
+  as their own outdoor scene, bigger than the block, and its buildings are rooms inside that (the way the garage
+  is a room of a home): corridors, classrooms, canteen, the club's gym, changing room, physio and recovery. So the
+  street keeps its chunks and LOD and a campus costs nothing until he walks in.
+- Which grounds a city has: his own school, college or academy and his club's training ground and stadium, plus
+  the other schools, colleges and clubs based in that city, up to a cap so the map stays readable (four more
+  schools, two more colleges, two more clubs). Every other school, college and club still gets its own ground
+  for matches, worked out from its name, so an away game is always at the other side's ground.
+- Each institution looks like itself: a seed from its name, scaled by its standing (school facilities and
+  fees, college reputation and facilities, club budget and league). Bigger and nicer means more and better
+  buildings, a better pitch, a bigger stand, more pitches.
+- Daily life flows through them: classes at school and college, training sessions at the training ground, the
+  physio and recovery room there, the club gym, the canteen. They plug into the existing free time, training and
+  condition numbers.
+- One people system: friends and partners are new members of the existing cast in floodlights/career/people.js
+  (relationship numbers, texts through msg(), events through the existing teaser then popup flow, morale), with
+  the dating and marriage rules in a new module beside it (floodlights/career/love.js). No second phone, no
+  second event system. The phone gains replies: a thread from a friend or a partner can be answered with a few
+  choices, and dates are planned there (a place and a time).
+- School age is friendships only. Dating opens at college or later once he is 18, and every partner is an adult
+  close to his own age. Everything stays tasteful: talk, texts, dates, gifts and story moments.
+- The partner pool: over 200 distinct women made from a seed per career and city (names by country, looks,
+  personality, interests, what she does), met on campus, in cafes, at events and later at clubs.
+- Dates run on the city clock: a date has a place and an hour. Picking her up means driving to her place, where
+  she waits outside and gets into the passenger seat; on foot she walks with him. Late or forgotten hurts. A
+  date is a small scene at the place (the seaside restaurant, a cafe, the mall, the club when old enough) or out in
+  the city (a walk, a drive) with dialogue choices that decide how it went.
+- Bodies: the rig gets a woman's figure, long hair styles and clothes (tops, skirts, dresses, jeans) as options
+  that are off for every match player, so match bodies stay byte for byte the same (the geometry fingerprint).
+- Venues: the server says where each live match is (kind school, college, academy or pro, home or away, which
+  institution, its standing and colours). The match view builds that ground: a school field with no stands, a
+  few people on the touchline and school buildings in daylight; a college pitch with a small stand partly full and
+  the campus behind; an academy pitch at the club's training ground; the pro stadium as now. Match sound is new
+  and comes with the venue (shouts and a whistle at school, a murmur and claps at college, a roar in the pros);
+  Manager Career matches pass no venue and stay exactly as they are.
+- Camera: one look controller for the street, the rooms and the car. A click on the view captures the mouse
+  (pointer lock) and moving it orbits him; a two finger glide on a trackpad orbits too; a plain mouse wheel and a
+  pinch are a gentle zoom that never fights the look; pinch never zooms the page. Esc frees the mouse. Dragging
+  still works as a fallback and on touch screens. In the car the camera is a slight chase cam he can look round
+  with, easing back behind the car.
+
+Checklist (commit locally after each phase; each phase is tested before the next):
+- [x] W1 camera: look controller on the street, inside places and in the car; no page zoom; help text
+      src/career/world/look.ts, hosted once by City.tsx on the view and handed whatever is active (the street,
+      the room, the car). A click captures the mouse and moving it turns the camera; a two finger glide turns
+      it; a wheel notch (lines, or round steps of 120) and a pinch are a gentle zoom; every wheel over the view is
+      kept from the page and a pinch anywhere over the world never zooms it (Safari's gesture events too). Rooms
+      gained a camera that turns and tilts (WalkCtl.pitch; the default view is where it was). In the car the
+      camera eases back behind it 1.4 s after he stops looking, with a slight chase. Esc with the mouse captured
+      only frees it, the next Esc leaves a place; P opens the phone, M the map, and Q does the shop card's second
+      action, so nothing needs the mouse freed. A click while captured never walks him to a stale point.
+      Checked: tests/look.test.ts (8, jsdom) and in Chrome on the real City tab (11 of 11: glide turns and tilts
+      without zoom, wheel and pinch zoom, no page zoom even over the HUD, drag still turns, the same in a room,
+      the car cam looks round and eases back). Headless Chrome does not grant pointer lock; the unit tests cover it.
+- [x] W2 institutions on the server: data and standing, places per city, the venue for every fixture, daily life
+      actions at campuses, life battery checks
+      floodlights/career/campus.js: an institution for every school (the six with real numbers, the rival schools),
+      college (the six, the university sides by city), club (strength from its best fourteen, its kit, real
+      training ground names for the big ones: Carrington, City Football Academy, Cobham, Milanello...), academy
+      and centre, with a standing from 1 to 10, a seed and colours. A city's world shows his own grounds (his
+      school is "school", his college "college", his club or academy keeps "training" and "stadium") and up to
+      four more schools, two colleges and two clubs of its own (training ground and stadium each); the made up
+      "training pitches" are gone once he has real grounds. venueFor() says where any match is: the home side's
+      school, college or academy pitch in daylight with a small crowd, or the home club's stadium under the
+      lights with a crowd by its standing; live youth setups and the pro match start (peek and kick off) send it.
+      Daily life at his own grounds: classes (two a week, free time, discipline, the family pleased), the canteen,
+      extra sessions on the school or college pitch, and at the training ground the physio (fatigue down, now and
+      then a week off an injury), the club gym, the canteen and the dressing room (the squad and his best mate).
+      Life battery 183 (17 new: places, actions and limits, the live venue, standing, every venue kind, caps).
+- [x] W3 grounds you walk: campus fronts on the street, school, college and training ground scenes with their
+      rooms (corridor, classroom, canteen, gym, changing room, physio), his car in the club car park
+      Street: schools sit in the suburbs and colleges in the middle of town on whole blocks (52 by 52 m), with a
+      front by kind (a wall with gate pillars and the name, a block with window rows, a pitch with goals, dust on
+      the poorer ones, a stand at college; the training ground behind a fence with two or three pitches, a glass
+      main building and a car park). The map has its own colours and labels for schools, colleges, training
+      grounds and stadiums. Inside: src/career/city/interiors/campus.ts builds the grounds by standing and seed,
+      so every school and college looks different: a school is about 90 by 80 m (classroom block, canteen, a
+      proper pitch with lines, nets and flags but no stands, a court at the better ones); a college is about
+      130 by 100 m (lecture block, student cafe, library, a quad, a pitch with a small stand, a roof on it from
+      standing 7, a running track from 8). A training ground is 150 to 180 m wide: two to four pitches,
+      floodlights at the bigger clubs, a glass main building in the club's colours, a crest, and a car park with
+      the squad's cars by club size and his own daily car first in the row. Rooms are sub rooms of the place
+      (school/corridor, training/physio): the corridor (lockers, notice board, trophy cabinet, doors), a
+      classroom or lecture room with desks in rows and his seat, the canteen, the club gym (racks with bars and
+      plates, dumbbells, treadmills, bikes, a mirror and the club band), the dressing room (wooden cubbies round
+      three walls, shirts on hangers with numbers, padded benches in the club colours, his name over his own peg,
+      the crest on the floor) and the physio room (tables, ice baths, the cryo chamber). Weather greys and dims
+      the light outdoors. Walking is quicker on big grounds (3 m/s, 6.2 with shift, a cruise on long clicks);
+      far labels fade past 40 m so doors across a ground do not pile up.
+      Checked in Chrome on the real City tab: a school (gate, classroom block, corridor, class, back out, the
+      canteen), a college in Goa (lecture block, lecture room, student cafe) and City Football Academy (gym,
+      dressing room, physio, canteen), each action giving its card and result. Rooms open in under a second;
+      frame medians on Medium 1.6 to 2.2 ms on the grounds and 1.7 to 5 ms in rooms; 19 to 52 draw calls.
+- [x] W4 a woman's figure in the rig: shape, long hair, clothes; match bodies unchanged
+      floodlights/m3d/view/rig.mjs and hero.mjs: look.fem gives a woman's figure (narrower shoulders and waist,
+      wider hips, slimmer arms, calves and feet, a gentle fullness at the chest, a softer face with longer lashes
+      and a lip colour). Everyday clothes for anyone: bottom trousers, skirt, dress (the top's colour), gown (to
+      the floor, lined, for the wedding), a bare armed top, plain tops without kit panels, shoes in any colours,
+      tights. A skirt's hem follows each leg part of the way and the thigh under it wears its colour, so a stride
+      never shows through. Six long styles (16 to 21: long, ponytail, bob, long curls, a plait, a top knot) at
+      both details; in close up long hair falls behind the shoulders and down the back, moving more with the
+      body than the head. src/career/body.ts: outfits carry the clothes; a light body (the match's head and hair,
+      no face texture or hair shells, shared materials, about 10k triangles) for the people round him, a seed so
+      a group never breathes in step, and a sitting pose (passenger seat, restaurant table).
+      tests/rig.test.ts: fingerprints of 60 match players and 32 career bodies taken before the change are byte
+      for byte the same; every new option changes the body; a gown hides the legs and a skirt shows them.
+- [x] W5 friends: classmates and teammates you meet and talk to on campus, friendships, texts, hanging out,
+      friends in events, the People panel
+      floodlights/career/social.js (data in social_data.js), its state kept with the rest of his people
+      (people.js): the same relationship numbers ("f:<id>" in the same rel()), the same phone threads, the same
+      life events, the same morale. Each school and college has a class of twelve (mixed at school and
+      college, lads at an academy or centre; Indian names in India, international ones elsewhere); a pro club's
+      people are its real squad. Everyone has a personality (funny, driven, quiet, outgoing, creative, sporty,
+      bookish, kind), two things they are into, a body from a seed (light bodies, W4) and clothes: the school
+      uniform in its colours, training kit at the club, their own clothes at college. Each week some are on
+      the grounds (by the doors, on a bench, by the pitch), the class sits in the classroom, a few eat in the
+      canteen, the lads sit on the dressing room benches, and friends turn up more than strangers.
+      Walking up to someone: a card with who they are, E to talk. They open with something about what they
+      are into; he picks one of three replies (listening to what they said, a joke, a plan, or turning it to
+      football) and it lands well or badly by who they are; the first chat of a week counts most. At 40 they
+      are a friend: swap numbers (their chat appears on the phone), hang out (a free evening, a little morale).
+      Friends text with replies to pick from; a text left a week costs a little; months out of touch fades.
+      The closest friends lift his mood. Life events about the closest friend: exams, a birthday party the
+      night before a game, a loan, a night out with the lads (their name in it, the answer moves that
+      friendship). Friends from school stay friends ("Friend from <school>") when he moves on.
+      The People panel lists friends with their level and a bar; names over people fade in near him, no rings.
+      Checked: life battery 207 (24 new), career battery 150; in Chrome at a school (five classmates on the
+      grounds, the class seated, a chat with the numbered answers, Esc says goodbye without leaving) and at
+      City Football Academy (the lads on the dressing room benches); frames 2.2 to 2.6 ms with them there.
+- [x] W6 dating: the partner pool, meeting, her number, texts with replies, asking her out, planning a date,
+      picking her up, dates as scenes with choices, stages, gifts, rows and break ups
+      Open from eighteen, away from school (college, an academy, the pros). 240 women per part of the world
+      (Indian names in India, international elsewhere, a few of each in both), every one with her own name,
+      face, body, hair, clothes for the day and for the evening, a personality and two interests; each week one
+      or two are at each cafe, the mall, the gym, the restaurant bar, two at the club, and some on the college
+      grounds. The chat is the friends' chat with her own openers by place ("Is this seat taken?"); at 35 he can
+      ask for her number (her yes depends on how it went and on how well known he is; a no waits a week).
+      Her texts have replies; going quiet costs, more so once together. Asking her out is on her phone chat:
+      the restaurant, the cafe, the mall, a walk, a drive or the club, a time later today on the city clock, and
+      whether he picks her up in the car (a walk and a drive start from her door). It books a free evening.
+      Her door is one of the homes in the middle of town or the suburbs, the same one every time; a pink marker
+      shows it and "Show the way" points there. Pulling up outside (or walking up for a walk) she comes out,
+      walks to the car and gets in; on foot she walks a step behind his shoulder; when he gets out she gets out
+      on her side. At the place, as he walks in, the date starts: at the restaurant a candlelit table for two on
+      the terrace by the water (and a table in the cafe) where they both sit and the camera comes in over his
+      shoulder; at the mall and the club she stands with him; a walk or a drive turns into the date after a
+      while together. Four moments (arriving, the place, "tell me something nobody knows", goodbye), three
+      answers each, judged by who she is and what she likes; late costs. Dinner and the club cost real money (a
+      card that bounces is remembered). A good first date and you are seeing each other; weeks of good dates
+      and she is serious (her mum wants to meet you); she ends it if things get bad; he can end it from the
+      phone. Presents: anything in the shops, bought for her (a thoughtful present beats an expensive one).
+      Chasing someone else while with her, she can find out. Events: the comments under his posts, wanting
+      more of his time, meeting her parents. She texts after his games. Being with someone good lifts morale.
+      Checked: life battery 226 (19 new: no dating at school or under 18, 240 distinct women per region with
+      varied looks, venues, her number, a date has to be later today, one a week, at the right place, the four
+      moments, paid, now dating, a present, an event about her, stood up, ending it, no NaN); career battery 0
+      failed; in Chrome: her number, the planner on the phone, the pick up at her door (she walks out to the
+      car), the drive, out of the car, into Thalassa, the table for two by the water, the four moments, the end.
+- [x] W7 the ring, the proposal, the wedding scene, married life (at home, texts, big matches, events, moves abroad)
+      The watch boutique has an engagement ring case (Tiffany & Co. solitaire, Cartier halo, Graff three stone),
+      sold only once it is serious with someone, one ring in his pocket at a time. At the end of a date with the
+      ring on him the last moment has "Take out the ring"; her answer weighs how she feels, how long it has been
+      serious, the ring, the place (the restaurant by the water best, the club worst) and how the night went.
+      Yes: engaged, "She said yes" in gold, the news, Mum's message, followers. No: it hurts, the ring stays.
+      Engaged, her phone chat plans the wedding: small (family and closest friends), big (and the squad) or
+      huge (a destination wedding by the sea, magazine cover), each with its real cost; it is booked for today
+      and a banner in the city takes him there. The venue is a place of its own: a garden (or a terrace over the
+      sea) with an aisle, white chairs in rows, a flower arch, lights, the cake, and the guests seated: Mum, Dad,
+      his brother or sister, his friends, then the squad and both families for a bigger one, all in smart
+      clothes, him in a suit. She walks down the aisle in a white gown with the camera ahead of her, then the
+      two of them under the arch; three moments (the walk, the vows, the first dance), petals falling at the end.
+      Married: paid, in the news (by size), followers and commercial pull up, a big lift in morale. Married
+      life: she lives in his home in the city and is there when he walks in (they talk), she texts (dinner, his
+      mum, the weekend), she is in the family section at his games, a good marriage steadies him more than
+      dating; events: Mum and his wife disagree, the agent's summer tour against a summer at home, an offer from
+      abroad and what she thinks. A move for football asks her: a new city, a new country (if things are good she
+      is already packing; if not, it hurts); someone he is dating becomes long distance. A marriage is not ended
+      with a text. She carries forward through every stage of his career.
+      Checked: life battery 240 (14 new); in Chrome: the ring case, the proposal on the terrace, booking on the
+      phone, the banner, a big and a huge wedding (24 and 40 guests; 155 and 237 draw calls, frames 2.7 to 2.8
+      ms), her walk down the aisle, the vows, the petals, then his wife at home in their flat in Goa.
+- [x] W8 matches at the right venue: school, college, academy and pro grounds, daylight or floodlights, crowd and
+      sound by venue, home and away
+      The venue (W2's venueFor, the home side's ground) goes from the career's match page into FLMatch.open and
+      the 3D view (match.js passes it only in open(); Classic's sim never sees it; a Manager Career match passes
+      none). floodlights/m3d/view/ground.mjs builds a school, college or academy ground in place of the stadium,
+      same interface: the school's own buildings in its colours round the field, trees, a fence, benches, and a
+      few people standing along both touchlines (no stands); a college adds a small stand along the far side,
+      filled by the crowd figure, with a roof at the better ones and a running track at the best, and bigger
+      campus blocks behind; an academy is the club's training ground (the glass building with the club's band,
+      dugouts, other pitches, floodlights at a big club) with a small stand of supporters in the club's colour.
+      All scenery is one merged mesh, the people two instanced meshes that bob and jump for their side's goals.
+      In the day the view lights it like the day: sky, a sun, softer fog, brighter exposure, and the pitch's run
+      off turned to grass (pitch.daylight(), never called for a stadium). Pro matches keep the stadium.
+      Sound (sound.mjs, made in the browser, Player Career only): a school is quiet with shouts and claps from
+      the touchline, a college murmurs, an academy has a small crowd, a pro stadium roars and surges near goal;
+      the referee's whistle for fouls, kick off, half time and full time (three blasts). It follows the city's
+      mute setting. Manager Career matches have no venue, so no ground, no daylight and no sound: unchanged.
+      Checked: 3D match battery 177 (8 new: each ground's make up, goals and no NaN, cheap, a school match at
+      the school ground, a Manager match at the stadium, the venue never in Classic's sim); every Floodlights
+      battery 0 failed; in Chrome live matches at a school (away, at the other school), a college, an academy
+      (away at Brighton's) and the pros (Mumbai City at the stadium): 2.2 to 3.5 ms a frame, 76 to 82 calls.
+- [x] W9 batteries extended (friendships, dating stages, marriage, venue selection), screenshots, every battery 0
+      failed three times, memory under 400 MB, upload, push
+      Batteries: the life battery covers friendships (24), dating (19), the ring, wedding and married life (14)
+      and venue selection (7 from W2); the 3D match battery covers the grounds and venues (8). Found while
+      shooting and fixed: the second column of training pitches ran into the main building at most clubs (the
+      ground is now 208 to 224 m wide with a clear gap), the training ground roof was painted all in the club's
+      colour (now grey with a club fascia), and campus fronts on the street were one unstreamed mesh (each
+      campus now has a near version with every detail within 150 m and a plain far version out to the draw
+      distance, nothing beyond, like the city's chunks). A good marriage now also steadies his form. One test
+      fix: the career battery's coach's sheet check no longer counts a week he was injured in that week's
+      training (training runs after the sheet is picked, so the role is "injured"; the game was right).
+      test:all three times in a row, all green: typecheck, vitest 101, test_condition 138, test_sept 255 to 257,
+      test_dom_sept 167, test_match3d 177, test_layout 222, test_career 149 to 150, test_career_life 240,
+      test_site 202, test_boot 52 (some batteries count a check or two only when a random event happens).
+      Idle memory on the production server with a Manager game and two careers: 150 MB (130 at boot).
+      Acceptance screenshots on the production build in Be-A-Manager/acceptance_shots/campuses (not in the
+      repo): the school pitch (floating labels hidden for that one shot) and corridor, the college campus with
+      its stand, a training ground (his club's, City Football Academy, Carrington style: pitches, floodlights,
+      the glass building, the car park, the lads), a school match away (no stands, people on the touchline), a
+      college match (the small stand partly full), a pro match in Mumbai City's stadium, picking her up in the
+      car, a date at Thalassa by the water, and the wedding (her walk down the aisle, then under the arch).

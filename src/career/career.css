@@ -1877,6 +1877,10 @@ span.pc-res-rate {
   color: var(--pc-volt-ink);
   font: 800 12px/1 var(--pc-lbl);
 }
+/* above the speedometer while he drives */
+.pc-city-toast.is-high {
+  bottom: 96px;
+}
 .pc-city-toast {
   position: absolute;
   left: 18px;
@@ -2631,6 +2635,88 @@ span.pc-res-rate {
   font-size: 13.5px;
   animation: pc-shop-in 0.25s ease;
 }
+/* a chat with someone: what they said, what he said, how it went, and what next */
+.pc-talk.k-panel {
+  width: 100%;
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px 15px;
+  background-color: rgba(6, 8, 11, 0.92);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+  animation: pc-shop-in 0.2s ease;
+}
+.pc-talk .k-label,
+.pc-talk .pc-shop-title {
+  margin: 0;
+}
+.pc-talk-line,
+.pc-talk-me {
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 12px 12px 12px 3px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.pc-talk-me {
+  justify-self: end;
+  border-radius: 12px 12px 3px 12px;
+  background: color-mix(in srgb, var(--pc-volt) 22%, transparent);
+}
+.pc-talk-result {
+  margin: 0;
+  color: var(--pc-dim, #a8ada4);
+  font-size: 13px;
+}
+.pc-talk-rel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+.pc-talk-bar {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.pc-talk-bar i {
+  display: block;
+  height: 100%;
+  background: var(--pc-volt);
+  transition: width 0.4s ease;
+}
+.pc-talk-opts {
+  display: grid;
+  gap: 6px;
+}
+.pc-talk-opts .k-btn {
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+}
+.pc-talk-opts kbd,
+.pc-reply kbd {
+  margin-right: 8px;
+}
+.pc-msg {
+  display: grid;
+  gap: 4px;
+}
+/* a friend's text with replies to pick from */
+.pc-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  margin: 2px 0 8px;
+}
+.pc-bubble.is-mine {
+  justify-self: end;
+  background: color-mix(in srgb, var(--pc-volt) 20%, transparent);
+}
 /* the first Rolex: the room dims, the card rises in gold */
 .pc-shop-moment {
   position: fixed;
@@ -2742,4 +2828,41 @@ span.pc-res-rate {
   .pc-shop-moment-ring {
     animation: none;
   }
+}
+/* her chat: who she is, asking her out, ending it */
+.pc-datebar {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 122, 168, 0.3);
+  border-radius: 12px;
+  background: rgba(40, 10, 24, 0.5);
+}
+.pc-datebar-who {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-size: 13px;
+}
+.pc-datebar-who span {
+  color: var(--pc-dim);
+}
+.pc-datebar-plan {
+  display: grid;
+  gap: 8px;
+}
+.pc-datebar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pc-datebar-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.pc-avatar.pc-avatar-love {
+  background: #ff7aa8;
+  color: #2a0a16;
 }

@@ -7,6 +7,7 @@ import { useState } from "react";
 import clsx from "clsx";
 import { ChatCircle, Briefcase, InstagramLogo, Newspaper, CalendarBlank, Bank, UsersThree, Heart } from "@phosphor-icons/react";
 import { careerApi, type Saved } from "./api";
+import { cityClock } from "./world/clock";
 import type { CareerState } from "./types";
 
 type Run = <T>(fn: () => Promise<T>, after?: (r: T) => void) => Promise<void>;
@@ -117,6 +118,13 @@ export default function Phone({
 }) {
   const [thread, setThread] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  // asking her out: where, when (by the city clock), and whether he picks her up
+  const [planning, setPlanning] = useState(false);
+  const [venue, setVenue] = useState("restaurant");
+  const [hour, setHour] = useState<number | null>(null);
+  const [pickup, setPickup] = useState(true);
+  const [ending, setEnding] = useState(false);
+  const [wedSize, setWedSize] = useState<string | null>(null);
   const life = state.life;
   const threads = state.phone.threads;
   const unread = (ids: (t: string) => boolean) => threads.filter((t) => ids(t.id)).reduce((s, t) => s + t.msgs.filter((m) => !m.read).length, 0);
@@ -145,19 +153,151 @@ export default function Phone({
     else if (posting) setPosting(false);
     else setApp("home");
   };
+  const dating = state.social?.dating;
+  const herOf = (id: string) => (id.startsWith("f:d:") ? [dating?.partner, ...(dating?.contacts || [])].find((x) => x && x.id === id.slice(2)) || null : null);
+  const dateTools = (id: string) => {
+    const her = herOf(id);
+    if (!her || !dating) return null;
+    const now = cityClock.hour;
+    const times: number[] = [];
+    for (let h = Math.ceil(now + 0.6); h <= 23 && times.length < 5; h++) times.push(h);
+    const pick = hour !== null && times.includes(hour) ? hour : times[0];
+    const car = !!life.car;
+    const plan = dating.plan;
+    const send = () => {
+      if (pick === undefined) return;
+      setPlanning(false);
+      run(() => careerApi.act(saved, "phone", "askout", [her.id, venue, pick, pickup && car && venue !== "walk" ? 1 : 0, Math.round(now * 100) / 100].join("|")));
+    };
+    return (
+      <div className="pc-datebar">
+        <p className="pc-datebar-who">
+          <b>{her.first}</b>
+          <span>
+            {her.stageWord}, {her.age}. {her.trait}, into {her.likes.join(" and ")}.
+          </span>
+        </p>
+        {her.stage === "serious" && !dating.ring && <p className="pc-dim">Thinking about it? The watch boutique has rings.</p>}
+        {her.stage === "serious" && dating.ring && <p className="pc-dim">The {dating.ring.label.toLowerCase()} is in your pocket. The end of a good date is the moment.</p>}
+        {her.stage === "engaged" && !dating.wedding && (
+          <div className="pc-datebar-plan">
+            <p className="pc-dim">Engaged. How big a wedding?</p>
+            <div className="pc-datebar-row" role="group" aria-label="The wedding">
+              {(dating.weddings || []).map((w) => (
+                <button key={w.id} type="button" className={clsx("k-btn k-btn-sm", wedSize === w.id && "k-on")} disabled={state.money.cash < w.cost} onClick={() => setWedSize(w.id)}>
+                  {w.label.split(":")[0]} · {money(w.cost)}
+                </button>
+              ))}
+            </div>
+            {wedSize && <p className="pc-dim">{(dating.weddings || []).find((w) => w.id === wedSize)?.label}</p>}
+            <div className="pc-datebar-row">
+              <button
+                type="button"
+                className="k-btn k-btn-primary k-btn-sm"
+                disabled={busy || !wedSize}
+                onClick={() => {
+                  run(() => careerApi.act(saved, "phone", "wedding", wedSize!));
+                  setWedSize(null);
+                }}
+              >
+                Book the wedding
+              </button>
+            </div>
+          </div>
+        )}
+        {her.stage === "engaged" && dating.wedding && dating.wedding.status === "today" && <p className="pc-dim">The wedding is today. Close the phone and go.</p>}
+        {plan && plan.id === her.id ? (
+          <p className="pc-dim">
+            {plan.label} at {plan.at}
+            {plan.pickup ? ", from her door" : ""}.
+          </p>
+        ) : planning ? (
+          <div className="pc-datebar-plan">
+            <div className="pc-datebar-row" role="group" aria-label="Where">
+              {dating.venues.map((v) => (
+                <button key={v.id} type="button" className={clsx("k-btn k-btn-sm", venue === v.id && "k-on")} disabled={v.id === "drive" && !car} onClick={() => setVenue(v.id)}>
+                  {v.label}
+                </button>
+              ))}
+            </div>
+            <div className="pc-datebar-row" role="group" aria-label="When">
+              {times.length ? (
+                times.map((h) => (
+                  <button key={h} type="button" className={clsx("k-btn k-btn-sm", pick === h && "k-on")} onClick={() => setHour(h)}>
+                    {String(h).padStart(2, "0")}:00
+                  </button>
+                ))
+              ) : (
+                <span className="pc-dim">Too late tonight. Ask tomorrow.</span>
+              )}
+            </div>
+            {car && venue !== "walk" && venue !== "drive" && (
+              <label className="pc-datebar-check">
+                <input type="checkbox" checked={pickup} onChange={(e) => setPickup(e.target.checked)} /> Pick her up in the car
+              </label>
+            )}
+            <div className="pc-datebar-row">
+              <button type="button" className="k-btn k-btn-primary k-btn-sm" disabled={busy || !times.length} onClick={send}>
+                Send
+              </button>
+              <button type="button" className="k-btn k-btn-ghost k-btn-sm" onClick={() => setPlanning(false)}>
+                Not now
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="pc-datebar-row">
+            <button type="button" className="k-btn k-btn-primary k-btn-sm" disabled={busy || !!plan || life.time < 1} onClick={() => setPlanning(true)} title={life.time < 1 ? "No free time left this week" : plan ? "You already have a date this week" : ""}>
+              Ask her out
+            </button>
+            {ending ? (
+              <button
+                type="button"
+                className="k-btn k-btn-danger k-btn-sm"
+                disabled={busy}
+                onClick={() => {
+                  setEnding(false);
+                  run(() => careerApi.act(saved, "phone", "breakup", her.id));
+                }}
+              >
+                Sure? End it
+              </button>
+            ) : (
+              <button type="button" className="k-btn k-btn-ghost k-btn-sm" onClick={() => setEnding(true)}>
+                End it
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
   const chat = (id: string) => {
     const t = threads.find((x) => x.id === id);
     if (!t) return <p className="pc-dim pc-phone-empty">Nothing here yet.</p>;
     return (
       <div className="pc-chat">
+        {dateTools(id)}
         {t.msgs.map((m, i) => (
-          <p key={i} className="pc-bubble">
-            {id === "team" && <b className="pc-bubble-from">{m.from}</b>}
-            {m.text}
-            <small>
-              Season {m.s}, week {m.w + 1}
-            </small>
-          </p>
+          <div key={i} className="pc-msg">
+            <p className={clsx("pc-bubble", m.mine && "is-mine")}>
+              {id === "team" && <b className="pc-bubble-from">{m.from}</b>}
+              {m.text}
+              <small>
+                Season {m.s}, week {m.w + 1}
+              </small>
+            </p>
+            {/* a friend's text: he picks how to answer (or leaves it, which they notice) */}
+            {m.replies && m.answered === undefined && !m.expired && (
+              <div className="pc-replies">
+                {m.replies.map((r, j) => (
+                  <button key={j} type="button" className="k-btn k-btn-sm pc-reply" disabled={busy} onClick={() => run(() => careerApi.act(saved, "phone", "text", id + "|" + i + "|" + j))}>
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         ))}
       </div>
     );

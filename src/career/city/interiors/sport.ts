@@ -17,6 +17,8 @@ export function sportRoom(k: Kit, p: WorldPlace, night: number): Room {
   if (p.kind === "gym") {
     for (const h of hs) if (["weights", "engine", "mobility", "spa"].includes(h.id)) h.id = "gym:" + h.id;
     hs.push({ id: "door", label: "Way out", x: 0, z: room.d / 2 - 0.6, r: 1.0, tag: true });
+    // someone between sets, by the way in
+    room.slots = [{ x: -1.8, z: room.d / 2 - 2.6, ry: Math.PI / 2 + 0.5, sx: -0.9, sz: room.d / 2 - 2.1 }];
   } else if (p.kind === "training") {
     const drills = hs.findIndex((h) => h.id === "drills");
     if (drills >= 0) hs.splice(drills, 1);

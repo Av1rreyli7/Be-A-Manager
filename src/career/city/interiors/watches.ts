@@ -217,6 +217,24 @@ export function watchRoom(k: Kit, p: WorldPlace): Room {
   k.sign(watchLogo("Audemars Piguet"), -1.2, 2.9, 0.14, 2.4, 0.9, 0, { to: westB });
   k.sign(watchLogo("Richard Mille"), 0.6, 2.9, 0.14, 2.4, 0.9, 0, { to: eastB });
   for (const wg of [back, westB, eastB]) k.mount(wg, rbox(wg === back ? W : D / 2 + split, 0.05, 0.04, 0.01), gold, 0, 3.6, 0.14);
+  // engagement rings: a small glass case of their own in the front, three rings on velvet
+  {
+    const rx = -2.6,
+      rz = 5.4;
+    k.box(1.6, 0.95, 0.7, mat("#f6f2ea", { rough: 0.4 }), rx, 0.475, rz, 0, 0.03);
+    k.add(rbox(1.62, 0.04, 0.72, 0.01), gold, rx, 0.96, rz);
+    k.add(rbox(1.56, 0.3, 0.66, 0.01), glass("#eef4f8", 0.14), rx, 1.12, rz, 0, { shadow: false });
+    k.add(rbox(1.5, 0.03, 0.6, 0.01), mat("#7a1f2b", { rough: 0.95 }), rx, 0.99, rz);
+    (k.st.social?.dating?.rings || []).forEach((ring, i) => {
+      const x = rx - 0.5 + i * 0.5;
+      k.add(new THREE.TorusGeometry(0.035, 0.009, 8, 20), mat(i === 2 ? "#e8e8ec" : "#d4af37", { metal: 1, rough: 0.2 }), x, 1.03, rz, 0, { rx: Math.PI / 2 - 0.4, shadow: false });
+      k.add(new THREE.OctahedronGeometry(0.014 + i * 0.004, 0), mat("#f4fbff", { metal: 0.2, rough: 0.02 }), x, 1.07, rz + 0.012, 0, { shadow: false });
+      k.spot("ring:" + ring.id, ring.label, x, rz + 0.95, { ax: x, az: rz, y: 1.25, r: 0.5, tag: false });
+    });
+    k.text("ENGAGEMENT", "#c9a24a", "#f6f2ea", rx, 0.6, rz + 0.36, 1.2, 0.14, 0);
+    k.block(rx, rz, 0.85, 0.4);
+    k.pool(rx, rz, 2.2, "#fff2dc", 0.18);
+  }
   // a sofa and a low table to sit at while they bring the tray
   k.box(1.8, 0.42, 0.8, mat("#e8dcc4", { rough: 0.9 }), 0, 0.21, -D / 2 + 4.6, 0, 0.12);
   k.box(1.8, 0.5, 0.2, mat("#e8dcc4", { rough: 0.9 }), 0, 0.55, -D / 2 + 4.95, 0, 0.08);

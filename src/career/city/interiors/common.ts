@@ -6,7 +6,7 @@
  */
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import type { CareerState, WorldPlace, LifeCatalog } from "../../types";
+import type { CareerState, WorldPlace, LifeCatalog, SocialPerson } from "../../types";
 import { rbox, plane, mat, glow, signTexture, cachedTexture, seeded, cone, lightCone } from "../kit3d";
 
 export interface Hotspot {
@@ -49,6 +49,17 @@ export interface RoomLight {
   bg: string;
   fog?: [string, number, number];
 }
+/** where someone can stand or sit (seat: the seat's height); ry the way they face; sx, sz where he stands to talk */
+export interface Slot {
+  x: number;
+  z: number;
+  ry: number;
+  sit?: boolean;
+  seat?: number;
+  sx?: number;
+  sz?: number;
+}
+export type RoomPerson = SocialPerson & Slot;
 export interface Room {
   w: number;
   d: number;
@@ -62,6 +73,13 @@ export interface Room {
   light?: RoomLight;
   accent?: string;
   cam?: { dist: number; height: number };
+  /** the walking grid's cell in metres (big outdoor grounds use a coarser one) */
+  cell?: number;
+  /** where people can be, and who is there this week */
+  slots?: Slot[];
+  people?: RoomPerson[];
+  /** a table for two: where he sits and where she sits on a date */
+  dateSeats?: { him: Slot; her: Slot };
   tick?: (t: number, dt: number) => void;
   dispose: () => void;
 }
@@ -518,6 +536,8 @@ export class Kit {
   own: { dispose: () => void }[] = [];
   ticks: ((t: number, dt: number) => void)[] = [];
   pools: { x: number; z: number; r: number; c: THREE.Color }[] = [];
+  slots: Slot[] = [];
+  dateSeats: { him: Slot; her: Slot } | undefined;
   banks = new Map<string, Bank>();
   bankMeshes = new Map<string, THREE.InstancedMesh>();
   private stack: Frame[] = [];
@@ -614,6 +634,28 @@ export class Kit {
   circle(x: number, z: number, r: number) {
     const [wx, wz] = this.P(x, z);
     this.ob.push({ x: wx, z: wz, r });
+  }
+  /** a place for someone to stand (or sit), facing ry; he talks to them from (sx, sz), or just in front of them */
+  crowd(x: number, z: number, ry: number, o: { sit?: boolean; seat?: number; sx?: number; sz?: number } = {}) {
+    const [wx, wz] = this.P(x, z);
+    const [sx, sz] = this.P(o.sx ?? x + Math.sin(ry) * 0.95, o.sz ?? z + Math.cos(ry) * 0.95);
+    this.slots.push({ x: wx, z: wz, ry: this.A(ry), sit: o.sit, seat: o.seat, sx, sz });
+  }
+  /** a table for two on a date: his seat and hers, each a chair's position, facing the table */
+  tableFor2(hx: number, hz: number, hry: number, sx: number, sz: number, sry: number, seat: number) {
+    const [a, b] = this.P(hx, hz),
+      [c, d] = this.P(sx, sz);
+    this.dateSeats = { him: { x: a, z: b, ry: this.A(hry), sit: true, seat }, her: { x: c, z: d, ry: this.A(sry), sit: true, seat } };
+  }
+  /** two or three people chatting in a ring round (x, z), facing the middle */
+  group(x: number, z: number, n: number, r = 0.75, a0 = 0) {
+    for (let i = 0; i < n; i++) {
+      const a = a0 + (i / n) * Math.PI * 2;
+      const px = x + Math.sin(a) * r,
+        pz = z + Math.cos(a) * r;
+      // he stands a step further out, behind their shoulder
+      this.crowd(px, pz, Math.atan2(x - px, z - pz), { sx: x + Math.sin(a) * (r + 1.0), sz: z + Math.cos(a) * (r + 1.0) });
+    }
   }
   spot(id: string, label: string, x: number, z: number, o: { r?: number; ax?: number; az?: number; y?: number; tag?: boolean } = {}) {
     const [wx, wz] = this.P(x, z);
@@ -791,6 +833,8 @@ export class Kit {
       walls: this.walls,
       obstacles: this.ob,
       hotspots: this.hs,
+      slots: this.slots,
+      dateSeats: this.dateSeats,
       tick: r.tick || (ticks.length ? (t, dt) => ticks.forEach((f) => f(t, dt)) : undefined),
       dispose: () => own.forEach((o) => o.dispose()),
     };

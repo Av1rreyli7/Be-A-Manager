@@ -534,7 +534,14 @@ export function createPitch(THREE, ctx) {
     group.clear();
   }
 
-  return { group, update, mark, netHit, setQuality, dispose };
+  // a ground in the day (Player Career's school, college and academy pitches): the run off is grass, not the
+  // stadium's dark surround, and the stripes are a touch lighter. Never called for a stadium match.
+  function daylight() {
+    gU.flRun.value.setHex(0x3f6a33);
+    gU.flDark.value.setHex(0x335a2a);
+    gU.flLight.value.setHex(0x416c35);
+  }
+  return { group, update, mark, netHit, setQuality, dispose, daylight };
 }
 
 // merge a list of { geo, color } into one indexed geometry with position, normal and color

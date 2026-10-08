@@ -6,6 +6,8 @@ const D = require("./data");
 const { makePro } = require("./pro");
 const { makeLife } = require("./life");
 const { makePeople } = require("./people");
+const { makeCampus } = require("./campus");
+const { makeSocial } = require("./social");
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rnd = () => Math.random();
@@ -459,6 +461,7 @@ function makeCore(deps) {
     recordMatch(game, out);
     teamChat(game, out);
     PEOPLE.afterMatch(game, out);
+    SOCIAL.afterMatch(game, out);
     // exposure: scouts are at the big games and the good schools
     if (mins > 0) scoutWatch(game, out, set.exposure * (fx.national ? 2 : 1));
     c.cond.fatigue = clamp(c.cond.fatigue + mins * 0.16, 0, 100);
@@ -879,6 +882,8 @@ function makeCore(deps) {
       fx, oppStr, side: homeSide ? "home" : "away",
       setup: {
         kind: "youth", label: fx.comp + ", week " + (game.round + 1), home, away, side: homeSide ? "home" : "away",
+        // where it is played: his own ground at home, the other side's away (campus.js)
+        venue: K.campus ? K.campus.venueFor(game, home, away) : null,
         homeRating: avg(homeSide ? mine : theirs), awayRating: avg(homeSide ? theirs : mine),
         homeXI: homeSide ? mine : theirs, awayXI: homeSide ? theirs : mine, instruction: ins,
         lock: { name: p.name, num: meRow.num, pos: c.person.pos, instruction: ins.text, by: ins.by }
@@ -910,6 +915,7 @@ function makeCore(deps) {
     recordMatch(game, out);
     teamChat(game, out);
     PEOPLE.afterMatch(game, out);
+    SOCIAL.afterMatch(game, out);
     scoutWatch(game, out, fx.set.exposure * (out.national ? 2 : 1));
     c.cond.fatigue = clamp(c.cond.fatigue + out.mins * 0.16, 0, 100);
     // the coach asked for something: doing it wins him over
@@ -982,6 +988,7 @@ function makeCore(deps) {
     recordMatch(game, out);
     teamChat(game, out);
     PEOPLE.afterMatch(game, out);
+    SOCIAL.afterMatch(game, out);
     // trust: good games earn the manager's faith, bad ones and sulking on the bench cost it
     if (out.mins > 0) c.trust = clamp(c.trust + (out.rating - 6.6) * 3, 0, 100);
     else if (role === "unused") c.trust = clamp(c.trust - 0.3, 0, 100);
@@ -1088,6 +1095,7 @@ function makeCore(deps) {
     payWages(game);
     LIFE.weekly(game);
     PEOPLE.weekly(game);
+    SOCIAL.weekly(game);
     if (c.cond.inj) {
       c.cond.inj.weeks--;
       p.inj = Math.max(0, c.cond.inj.weeks);
@@ -1186,7 +1194,7 @@ function makeCore(deps) {
       money: { cash: c.money.cash, earned: c.money.earned || 0, log: c.money.log.slice(0, 12) },
       stats: { season: S, career: c.stats.career, seasons: c.stats.seasons, log: c.stats.log.slice(0, 10) },
       phone: { threads: Object.values(c.phone.threads).sort((a, b) => (b.last || 0) - (a.last || 0)), unread: Object.values(c.phone.threads).reduce((s, t) => s + t.msgs.filter(m => !m.read).length, 0) },
-      news: c.news.slice(0, 20), moments: c.moments, city: c.city, life: LIFE.view(game), calendar: calendar(game), people: PEOPLE.view(game),
+      news: c.news.slice(0, 20), moments: c.moments, city: c.city, life: LIFE.view(game), calendar: calendar(game), people: PEOPLE.view(game), social: SOCIAL.view(game),
       kit: p.club && deps.kitOf ? deps.kitOf(p.club) : null, natKit: deps.kitOf ? deps.kitOf(c.person.nat) : null,
       lastKit: c.retired && c.retired.lastClub && deps.kitOf ? deps.kitOf(c.retired.lastClub) : null,
       national: { level: c.national.level, caps: c.national.caps, goals: c.national.goals, log: (c.national.log || []).slice(0, 6), strength: Math.round(PRO.nationStrength(game)) },
@@ -1264,7 +1272,13 @@ function makeCore(deps) {
   const PRO = makePro(K, deps);
   const LIFE = makeLife(K);
   const PEOPLE = makePeople(K, deps);
-  return { setupWorld, createPlayer, decide, setPlan, advanceWeek, nextSeason, negotiate, sign, view, readThread, collegeOptions, academyChoices, ovrFor, refreshRating, clubLevel, makeOffer, weeklyWage, D, PRO, LIFE, PEOPLE, agentCut, agentAction, liveCheck, liveResult, liveStatus, livePeek };
+  const CAMPUS = makeCampus(K, deps);
+  const SOCIAL = makeSocial(K);
+  K.people = PEOPLE;
+  K.campus = CAMPUS;
+  K.social = SOCIAL;
+  K.life = LIFE;
+  return { CAMPUS, SOCIAL, setupWorld, createPlayer, decide, setPlan, advanceWeek, nextSeason, negotiate, sign, view, readThread, collegeOptions, academyChoices, ovrFor, refreshRating, clubLevel, makeOffer, weeklyWage, D, PRO, LIFE, PEOPLE, agentCut, agentAction, liveCheck, liveResult, liveStatus, livePeek };
 }
 
 module.exports = { makeCore };

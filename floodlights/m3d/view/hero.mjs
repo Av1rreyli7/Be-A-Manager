@@ -164,9 +164,11 @@ export function paintFace(doc, look, skinRgb, hairRgb, size) {
     blob(s * 0.33, FY.eye + 0.075, W * 0.02, H * 0.005, tint(skinRgb.map(c => c * 0.62)), 0.45, 2);
     g.save();
     g.strokeStyle = rgba(tint(skinRgb.map(c => c * 0.18)), 0.85);
-    g.lineWidth = 2.4 * (W / 1024);
+    g.lineWidth = (look.fem ? 4.2 : 2.4) * (W / 1024);
     g.beginPath();
     for (let k = 0; k <= 20; k++) { const t = k / 20; const [px, py] = P(s * (0.255 + t * 0.15), FY.eye + 0.035 + Math.sin(t * Math.PI) * 0.018); if (k) g.lineTo(px, py); else g.moveTo(px, py); }
+    // longer lashes: the line lifts a little at the outer corner
+    if (look.fem) { const [px, py] = P(s * 0.43, FY.eye + 0.055); g.lineTo(px, py); }
     g.stroke();
     g.restore();
   }
@@ -175,7 +177,8 @@ export function paintFace(doc, look, skinRgb, hairRgb, size) {
   blob(0, FY.noseTip, W * 0.012, H * 0.02, tint([skinRgb[0], skinRgb[1] * 0.85, skinRgb[2] * 0.84]), 0.45, 6);
   // lips: a soft rosy shape, a darker line where they meet
   const mw = 0.85 + F.mouth * 0.35;
-  const lip = tint([skinRgb[0] * 0.86, skinRgb[1] * 0.58, skinRgb[2] * 0.58]);
+  const lipRgb = look.lips ? [parseInt(look.lips.slice(1, 3), 16) / 255, parseInt(look.lips.slice(3, 5), 16) / 255, parseInt(look.lips.slice(5, 7), 16) / 255] : null;
+  const lip = lipRgb ? tint(lipRgb) : look.fem ? tint([skinRgb[0] * 0.88, skinRgb[1] * 0.5, skinRgb[2] * 0.55]) : tint([skinRgb[0] * 0.86, skinRgb[1] * 0.58, skinRgb[2] * 0.58]);
   blob(0, FY.upperLip, W * 0.028 * mw, H * 0.016, lip, 0.8, 3);
   blob(0, FY.lowerLip, W * 0.026 * mw, H * 0.02, lip, 0.8, 3);
   blob(0, FY.mouth, W * 0.032 * mw, H * 0.0035, tint(skinRgb.map(c => c * 0.45)), 0.7, 1);
@@ -242,10 +245,17 @@ export const HAIR = [
   { name: "quiff", len: 0.38, curl: 0.15, flow: [0, 1, 0.5], quiff: true, fade: true },
   { name: "undercut", len: 0.07, curl: 0, flow: [0, 0.2, -1], bun: true, fade: true, high: true },
   { name: "twists", len: 0.3, curl: 0.8, flow: [0, 1, 0], twists: true },
-  { name: "mullet", len: 0.2, curl: 0.35, flow: [0, -0.3, -1], mullet: true }
+  { name: "mullet", len: 0.2, curl: 0.35, flow: [0, -0.3, -1], mullet: true },
+  // the long styles (the career's other people): fall is how far the hair hangs, in head heights
+  { name: "longhair", len: 0.3, curl: 0.12, flow: [0, -0.5, -1], fall: 3.6 },
+  { name: "ponytail", len: 0.08, curl: 0, flow: [0, 0.25, -1], tail: true },
+  { name: "bob", len: 0.32, curl: 0.1, flow: [0, -0.6, -0.6], fall: 1.0, bob: true },
+  { name: "longcurls", len: 0.4, curl: 1.0, flow: [0, -0.4, -1], fall: 3.0, curls: true },
+  { name: "plait", len: 0.07, curl: 0, flow: [0, 0.2, -1], braid: true },
+  { name: "topknot", len: 0.1, curl: 0, flow: [0, 0.8, -0.6], bun: true, high: true }
 ];
 export const HERO_STYLES = HAIR.map(s => s.name);
-export function hairStyleOf(style) { return HAIR[((style | 0) % 16 + 16) % 16]; }
+export function hairStyleOf(style) { const s = style | 0; return s >= 16 && s < HAIR.length ? HAIR[s] : HAIR[(s % 16 + 16) % 16]; }
 
 // how long the hair is at a point on the head (a direction x, y, z on the unit sphere): 0 none, 1 the full length.
 // The edge of the hair is one smooth line round the head: the hairline across the forehead (receding a little at
@@ -274,7 +284,7 @@ export function hairCoverage(style, hairline) {
     // the cut: a fade runs from bare skin low on the sides up to the length on top; most cuts keep the back and
     // sides shorter than the top; long styles keep their length all round
     if (St.fade) v = 0.03 + 0.97 * smooth(St.high ? 0.6 : 0.4, St.high ? 0.84 : 0.7, y + (1 - sideness) * 0.28);
-    else if (!St.puff && !St.long && !St.mullet && St.name !== "buzz") v = 0.28 + 0.72 * Math.max(smooth(-0.05, 0.5, y), 1 - sideness);
+    else if (!St.puff && !St.long && !St.fall && !St.mullet && St.name !== "buzz") v = 0.28 + 0.72 * Math.max(smooth(-0.05, 0.5, y), 1 - sideness);
     if (St.strip) v = smooth(0.24, 0.16, ax) * smooth(0.15, 0.3, y) * 0.96 + 0.04;
     if (St.mullet && a < -0.2 && y < 0.25) v = 1;
     return Math.max(0, Math.min(1, v * inHair));
@@ -311,6 +321,8 @@ export function heroHair(ctx) {
       bd.blob(hx, hy - L * 0.42, hz, rx * 0.17, L * 0.55, rz * 0.08, (u, v) => (Math.sin(u * 30 + i) > 0.6 ? dark : rand(i) < 0.3 ? light : col), B.hair, 10, 8);
     }
   }
+  if (St.fall) longHair(ctx, St, on, dark, light);
+  if (St.tail || St.braid) tailHair(ctx, St, on, dark);
   if (St.locs) for (let i = 0; i < 46; i++) {
     const a = rand(i + 70) * Math.PI * 2, y0 = 0.35 + rand(i + 71) * 0.5;
     const r0 = Math.sqrt(1 - y0 * y0), x = Math.cos(a) * r0, z = Math.sin(a) * r0;
@@ -334,4 +346,59 @@ export function heroHair(ctx) {
     const [hx, hy, hz] = on(x, y, z, 1.12);
     bd.blob(hx, hy, hz, rx * 0.055, ry * 0.085, rz * 0.055, (a, b) => (Math.sin(b * 34 + i) > 0 ? dark : col), B.head, 6, 8);
   }
+}
+
+// long hair in close up: strands from round the back and sides of the head that fall, then go behind the
+// shoulders and down the back; the top of each strand moves with the head, the rest more with the body
+function longHair(ctx, St, on, dark, light) {
+  const { bd, cy, rx, ry, rz, col, B } = ctx;
+  const h = cy / 0.93;
+  const n = St.bob ? 40 : 34, K = St.bob ? 1 : 5;
+  const a0 = St.bob ? -0.08 : -0.04, a1 = St.bob ? 1.08 : 1.04;
+  const lumpy = St.curls ? (x, y, z) => { const b = 1 + 0.16 * Math.sin(y * 9 + x * 5); return [b, 1, b]; } : null;
+  for (let i = 0; i < n; i++) {
+    const a = Math.PI * (a0 + (i / (n - 1)) * (a1 - a0));
+    const ux = Math.cos(a), uz = -Math.sin(a) * 0.95;
+    const [sx, sy, sz] = on(ux * 0.96, 0.12, uz, 1.07);
+    const side = Math.abs(ux);
+    // a bob is one length, a little shorter in front of the ears; long hair is shorter at the sides
+    const L = ry * St.fall * (St.bob ? (uz > 0 ? 0.8 : 1) : 1 - side * 0.22) * (St.bob ? 0.97 + rand(i + 9) * 0.06 : 0.9 + rand(i + 9) * 0.2);
+    const wide = rx * (St.curls ? 0.26 : St.bob ? 0.16 : 0.2), thick = rz * (St.curls ? 0.13 : St.bob ? 0.11 : 0.085);
+    const pick = (u, v) => (Math.sin(u * 30 + i * 1.7) > 0.62 ? dark : rand(i) < 0.28 ? light : col);
+    let px = sx, py = sy, pz = sz;
+    for (let k = 1; k <= K; k++) {
+      const y = sy - (L * k) / K;
+      // below the neck, strands go behind the shoulders and lie down the back
+      const t = St.bob ? 0 : smooth(0.88 * h, 0.8 * h, y);
+      const x = sx * (1 + t * 0.3), z = Math.min(sz, sz + (-0.09 * h - sz) * t);
+      bd.blend = k === 1 ? null : [B.chest, Math.min(0.7, 0.2 * k)];
+      bd.blob((px + x) / 2, (py + y) / 2, (pz + z) / 2, wide * (1 - k * 0.04), Math.hypot(py - y, pz - z) * 0.62, thick, pick, k === 1 ? B.head : B.hair, 8, 8, 0, lumpy);
+      px = x; py = y; pz = z;
+    }
+  }
+  bd.blend = null;
+  // locks in front of the ears, framing the face
+  if (!St.bob) for (const s of [-1, 1]) {
+    const [hx, hy, hz] = on(s * 0.9, 0.1, 0.32, 1.06);
+    const L = ry * 1.5;
+    bd.blob(hx, hy - L * 0.48, hz - rz * 0.05, rx * 0.15, L * 0.55, rz * 0.1, col, B.head, 8, 8, 0, lumpy);
+  }
+}
+// a ponytail or a plait: tied at the back of the head, hanging behind
+function tailHair(ctx, St, on, dark) {
+  const { bd, cy, rx, ry, rz, col, B } = ctx;
+  const h = cy / 0.93;
+  const [tx, ty, tz] = on(0, St.braid ? -0.3 : 0.25, -0.95, 1.08);
+  bd.blob(tx, ty, tz, rx * 0.2, ry * 0.15, rz * 0.2, dark, B.head, 8, 10);
+  const N = St.braid ? 11 : 7;
+  for (let i = 0; i < N; i++) {
+    const t = (i + 1) / N;
+    const y = ty - ry * (St.braid ? 3.2 : 2.4) * t;
+    const z = tz - (St.braid ? 0.03 : 0.05) * h * Math.sin(t * Math.PI * 0.5) - (y < 0.82 * h ? 0.012 * h : 0);
+    const x = St.braid ? (i % 2 ? 1 : -1) * rx * 0.07 : 0;
+    const r = rx * (St.braid ? 0.24 : 0.26) * (1 - t * 0.4);
+    bd.blend = [B.chest, Math.min(0.6, t * 0.8)];
+    bd.blob(tx + x, y, z, r, ry * (St.braid ? 0.2 : 0.26), r, (u, v) => (Math.sin(v * 22 + i) > 0.5 ? dark : col), B.hair, 8, 8);
+  }
+  bd.blend = null;
 }

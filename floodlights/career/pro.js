@@ -183,7 +183,9 @@ function makePro(K, deps) {
     c.requested = false;
     c.trust = o.role === "Star" ? 66 : o.role === "First team" ? 58 : o.role === "Rotation" ? 50 : 42;
     c.captain = null;
+    const fromCity = c.city;
     c.city = cityOf(game, o.club);
+    if (K.social) K.social.onMove(game, fromCity);
     c.seasonsAtClub = 0;
     msg(game, "club", o.club, "Welcome to " + o.club + ". Training at nine on Monday.");
     return { ok: true };

@@ -12,24 +12,38 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { makeBody, type Outfit } from "../body";
-import type { CareerState, WorldPlace } from "../types";
+import type { CareerState, WorldPlace, Look } from "../types";
 import type { PlaceId } from "./CityScene";
 import { lightCone, cone } from "./kit3d";
 import { isRect, type Hotspot, type Room } from "./interiors/common";
 import { buildLegacyRoom } from "./interiors/legacy";
 import { buildPlace, roomKey } from "./interiors";
+import { weddingMarks } from "./interiors/wedding";
+
+const GOWN: Outfit = { shirt: "#fbf8f2", trim: "#fbf8f2", shorts: "#fbf8f2", socks: "#fbf8f2", bottom: "gown", top: "vest", plain: true, shoe: ["#fbf8f2", "#d9d4cc"] };
 
 export type { Hotspot } from "./interiors/common";
 export { resolvePlace, garagePlace, garageIds, homeOwned } from "./interiors";
 export interface WalkCtl {
   yaw: number;
+  /** the camera's height angle on top of the room's own (the mouse or a glide moves it) */
+  pitch?: number;
   zoom: number;
   use: number;
 }
+/** the mouse or a glide turns the camera in a room (dx right, dy down, in pixels) */
+export function lookRoom(c: WalkCtl, dx: number, dy: number) {
+  c.yaw -= dx * 0.0042;
+  c.pitch = Math.min(0.75, Math.max(-0.45, (c.pitch || 0) + dy * 0.003));
+}
+export function zoomRoom(c: WalkCtl, f: number) {
+  c.zoom = Math.min(1.7, Math.max(0.55, c.zoom * f));
+}
 
 // ---------- finding the way round the shelves: a coarse grid and A* ----------
-const CELL = 0.4;
+const CELL0 = 0.4;
 function makeGrid(room: Room) {
+  const CELL = room.cell || CELL0;
   const nx = Math.ceil(room.w / CELL),
     nz = Math.ceil(room.d / CELL);
   const block = new Uint8Array(nx * nz);
@@ -45,10 +59,10 @@ function makeGrid(room: Room) {
         }
       }
     }
-  return { nx, nz, block };
+  return { nx, nz, block, cell: CELL };
 }
 function findPath(g: ReturnType<typeof makeGrid>, room: Room, fx: number, fz: number, tx: number, tz: number): { x: number; z: number }[] | null {
-  const { nx, nz, block } = g;
+  const { nx, nz, block, cell: CELL } = g;
   const cell = (x: number, z: number) => [THREE.MathUtils.clamp(Math.floor((x + room.w / 2) / CELL), 0, nx - 1), THREE.MathUtils.clamp(Math.floor((z + room.d / 2) / CELL), 0, nz - 1)];
   const [si, sj] = cell(fx, fz);
   let [ti, tj] = cell(tx, tz);
@@ -215,6 +229,72 @@ export default function Interior({
     [lookKey, height, weight, outfit, fine],
   );
   useEffect(() => () => rig.dispose(), [rig]);
+  // the people here this week: light bodies on their spots, standing or sitting, and they turn to him when he
+  // comes to talk
+  const crowd = useMemo(
+    () =>
+      (room.people || []).map((p, i) => {
+        const b = makeBody(p.look as Partial<Look>, { height: p.h, weight: p.w, pos: "CM" }, p.outfit as Outfit, Math.min(1, quality), undefined, { lite: true, seed: i + 1 });
+        b.root.position.set(p.x, p.sit ? p.seat || 0.46 : 0, p.z);
+        b.root.rotation.y = p.ry;
+        if (p.sit) b.sit(true);
+        return { b, p, id: "talk:" + p.id };
+      }),
+    [room, quality],
+  );
+  useEffect(() => () => crowd.forEach((c) => c.b.dispose()), [crowd]);
+  // ---------- a date here: she waits at the table (or by him), and he sits down across from her ----------
+  const dp = state.social?.dating?.plan || null;
+  const herHere = !!dp && !!wp && dp.place === wp.id && (dp.status === "on" || dp.status === "together" || (dp.status === "set" && !dp.pickup));
+  const herKey = herHere ? dp!.who.id + "|" + dp!.venue : "";
+  const her = useMemo(
+    () => {
+      if (!herHere || !dp) return null;
+      const w = dp.who;
+      return makeBody(w.look as Partial<Look>, { height: w.h, weight: w.w, pos: "CM" }, (dp.venue === "club" || dp.venue === "restaurant" ? w.night : w.outfit) as Outfit, Math.min(1, quality), undefined, { seed: 4 });
+    },
+    // rebuilt only for a different date
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [herKey, quality],
+  );
+  useEffect(() => () => her?.dispose(), [her]);
+  const seats = room.dateSeats || null;
+  // ---------- the wedding: she walks down the aisle to him at the arch ----------
+  const isWedding = wp?.kind === "wedding";
+  const wsc = state.social?.dating?.wscene || null;
+  const bridePt = state.social?.dating?.partner || null;
+  const marks = useMemo(() => (isWedding ? weddingMarks(room) : null), [room, isWedding]);
+  const bride = useMemo(
+    () => (isWedding && bridePt ? makeBody(bridePt.look as Partial<Look>, { height: bridePt.h, weight: bridePt.w, pos: "CM" }, GOWN, Math.min(1, quality), undefined, { seed: 6 }) : null),
+    // rebuilt only for a different bride
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isWedding, bridePt?.id, quality],
+  );
+  useEffect(() => () => bride?.dispose(), [bride]);
+  const aisle = useRef({ t0: -1, z: 0, arrived: false });
+  const petals = useMemo(() => {
+    if (!isWedding) return null;
+    const n = 160;
+    const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.07, 0.05), new THREE.MeshBasicMaterial({ color: "#ffffff", side: THREE.DoubleSide, toneMapped: false }), n);
+    const cols = ["#f2b6c4", "#ffffff", "#e88aa0", "#fff2d8"];
+    const seeds = Array.from({ length: n }, (_, i) => ({ x: (Math.sin(i * 12.9898) * 0.5) * 6, z: (Math.sin(i * 78.233) * 0.5) * 6, y: 3 + (i % 17) * 0.25, sp: 0.5 + (i % 7) * 0.08, ph: i * 1.7 }));
+    for (let i = 0; i < n; i++) im.setColorAt(i, new THREE.Color(cols[i % 4]));
+    im.visible = false;
+    im.frustumCulled = false;
+    return { im, seeds, t0: -1 };
+  }, [isWedding]);
+  useEffect(
+    () => () => {
+      if (!petals) return;
+      petals.im.geometry.dispose();
+      (petals.im.material as THREE.Material).dispose();
+    },
+    [petals],
+  );
+  const sceneOn = herHere && dp!.status === "on";
+  const herSpot = useRef<{ x: number; z: number; ry: number } | null>(null);
+  const sat = useRef(false);
+  const herSat = useRef<unknown>(null);
   // where he was in this place: a rebuild of the same place (what it sells changed, the quality changed)
   // keeps him where he stood; walking in fresh starts him at the door
   const placeId = wp ? wp.id : String(place);
@@ -321,10 +401,92 @@ export default function Interior({
       walkTo(h.x, h.z, h.id);
       c.use = -1;
     }
+    // the wedding: he waits at the arch; when the music starts she walks down the aisle to him
+    if (isWedding && marks) {
+      const walking = !!wsc && wsc.step >= 1;
+      const a = aisle.current;
+      if (walking && a.t0 < 0) a.t0 = t;
+      const prog = a.t0 < 0 ? 0 : Math.min(1, (t - a.t0) / 11);
+      a.arrived = prog >= 1;
+      me.x = marks.him.x;
+      me.z = marks.him.z;
+      me.heading = a.arrived ? -Math.PI / 2 : 0;
+      me.target = null;
+      me.path = [];
+      if (bride) {
+        const bz = marks.start.z + (marks.her.z - marks.start.z) * prog;
+        const bx = prog < 0.85 ? 0 : marks.her.x * ((prog - 0.85) / 0.15);
+        a.z = bz;
+        bride.root.position.set(bx, 0, bz);
+        const want = a.arrived ? Math.PI / 2 : Math.PI;
+        bride.root.rotation.y += Math.atan2(Math.sin(want - bride.root.rotation.y), Math.cos(want - bride.root.rotation.y)) * Math.min(1, dt * 4);
+        bride.tick(dt, bride.root.rotation.y, walking && !a.arrived ? 0.75 : 0);
+      }
+    }
+    if (petals && marks) {
+      if (wsc?.result && petals.t0 < 0) petals.t0 = t;
+      petals.im.visible = petals.t0 >= 0 && t - petals.t0 < 14;
+      if (petals.im.visible) {
+        const m4 = new THREE.Matrix4(),
+          q = new THREE.Quaternion(),
+          e = new THREE.Euler(),
+          sc3 = new THREE.Vector3(1, 1, 1),
+          v = new THREE.Vector3();
+        const el = t - petals.t0;
+        petals.seeds.forEach((p, i) => {
+          const y = p.y - ((el * p.sp) % (p.y + 0.2));
+          v.set(p.x + Math.sin(el * 1.3 + p.ph) * 0.4, Math.max(0.02, y), marks.him.z + p.z * 0.6);
+          e.set(el * 2 + p.ph, el * 1.5 + p.ph, 0);
+          q.setFromEuler(e);
+          m4.compose(v, q, sc3);
+          petals.im.setMatrixAt(i, m4);
+        });
+        petals.im.instanceMatrix.needsUpdate = true;
+      }
+    }
+    // on a date at a table: he sits across from her until it is over
+    if (sceneOn && seats) {
+      if (!sat.current) {
+        sat.current = true;
+        rig.sit(true);
+      }
+      me.x = seats.him.x;
+      me.z = seats.him.z;
+      me.heading = seats.him.ry;
+      me.target = null;
+      me.path = [];
+      rig.root.position.set(me.x, seats.him.seat || 0.46, me.z);
+      rig.root.rotation.y = seats.him.ry;
+      rig.tick(dt, seats.him.ry, 0);
+    } else if (sat.current) {
+      // up from the chair, a step to the side
+      sat.current = false;
+      rig.sit(false);
+      me.x = seats ? seats.him.x + Math.cos(seats.him.ry) * 0.7 : me.x;
+      me.z = seats ? seats.him.z - Math.sin(seats.him.ry) * 0.7 : me.z;
+    }
+    if (her) {
+      if (seats) {
+        her.root.position.set(seats.her.x, seats.her.seat || 0.46, seats.her.z);
+        her.root.rotation.y = seats.her.ry;
+        if (herSat.current !== her) {
+          her.sit(true);
+          herSat.current = her;
+        }
+      } else {
+        // no table: she stands with him, facing him
+        if (!herSpot.current) herSpot.current = { x: me.x + Math.sin(me.heading) * 1.3, z: me.z + Math.cos(me.heading) * 1.3, ry: me.heading + Math.PI };
+        const hs = herSpot.current;
+        her.root.position.set(hs.x, 0, hs.z);
+        her.root.rotation.y = Math.atan2(me.x - hs.x, me.z - hs.z);
+      }
+      her.tick(dt, her.root.rotation.y, 0);
+    }
     // movement: keys move relative to the camera, a click walks the path there
     const K = keys.current;
-    let mx = (K.has("d") || K.has("arrowright") ? 1 : 0) - (K.has("a") || K.has("arrowleft") ? 1 : 0);
-    let mz = (K.has("s") || K.has("arrowdown") ? 1 : 0) - (K.has("w") || K.has("arrowup") ? 1 : 0);
+    const pinned = (sceneOn && !!seats) || (isWedding && !!marks);
+    let mx = pinned ? 0 : (K.has("d") || K.has("arrowright") ? 1 : 0) - (K.has("a") || K.has("arrowleft") ? 1 : 0);
+    let mz = pinned ? 0 : (K.has("s") || K.has("arrowdown") ? 1 : 0) - (K.has("w") || K.has("arrowup") ? 1 : 0);
     let speed = 0;
     if (mx || mz) {
       const cy = Math.cos(c.yaw),
@@ -334,7 +496,8 @@ export default function Interior({
       const l = Math.hypot(vx, vz) || 1;
       mx = vx / l;
       mz = vz / l;
-      speed = K.has("shift") ? 4.4 : 2.4;
+      // out on big grounds he walks and runs at street pace
+      speed = room.outdoor ? (K.has("shift") ? 6.2 : 3.0) : K.has("shift") ? 4.4 : 2.4;
     } else if (me.target) {
       const wpnt = me.path[0] || me.target;
       const dx = wpnt.x - me.x,
@@ -349,7 +512,9 @@ export default function Interior({
       } else {
         mx = dx / l;
         mz = dz / l;
-        speed = final ? Math.min(2.6, 0.8 + l * 1.4) : 2.6;
+        // a long way across the grounds: a jog
+        const cruise = room.outdoor && Math.hypot(me.target.x - me.x, me.target.z - me.z) > 8 ? 4.8 : 2.6;
+        speed = final ? Math.min(cruise, 0.8 + l * 1.4) : cruise;
       }
     }
     const ox = me.x,
@@ -394,8 +559,29 @@ export default function Interior({
         me.path = [];
       }
     }
-    rig.root.position.set(me.x, 0, me.z);
-    rig.tick(dt, me.heading, speed);
+    if (!pinned) {
+      rig.root.position.set(me.x, 0, me.z);
+      rig.tick(dt, me.heading, speed);
+    } else if (isWedding) {
+      rig.root.position.set(me.x, 0, me.z);
+      rig.root.rotation.y += Math.atan2(Math.sin(me.heading - rig.root.rotation.y), Math.cos(me.heading - rig.root.rotation.y)) * Math.min(1, dt * 4);
+      rig.tick(dt, rig.root.rotation.y, 0);
+    }
+    for (const c of crowd) {
+      // the one he is talking to (or standing right by) turns to him; sitters only turn a little
+      const close = me.near === c.id || Math.hypot(me.x - c.p.x, me.z - c.p.z) < 1.6;
+      let to = c.p.ry;
+      if (close) {
+        const want = Math.atan2(me.x - c.p.x, me.z - c.p.z);
+        let d = want - c.p.ry;
+        d = Math.atan2(Math.sin(d), Math.cos(d));
+        to = c.p.ry + (c.p.sit ? Math.max(-0.7, Math.min(0.7, d)) : d);
+      }
+      let cur = c.b.root.rotation.y;
+      cur += Math.atan2(Math.sin(to - cur), Math.cos(to - cur)) * Math.min(1, dt * 4);
+      c.b.root.rotation.y = cur;
+      c.b.tick(dt, cur, 0);
+    }
     standing.set(placeId, { x: me.x, z: me.z, heading: me.heading });
     // the nearest thing to use; items he faces win over items behind him
     let near: Hotspot | null = null;
@@ -455,17 +641,44 @@ export default function Interior({
       (r.material as THREE.MeshBasicMaterial).opacity = on ? 0.95 : 0.45 + Math.sin(t * 3 + k) * 0.15;
       r.scale.setScalar(on ? 1.15 : 1);
     });
-    // the camera: behind and above, turned by dragging, further out of doors
-    const dist = (room.cam?.dist ?? (room.outdoor ? 9.5 : 6.4)) * c.zoom;
-    const camH = (room.cam?.height ?? (room.outdoor ? 6.2 : 5.0)) * c.zoom;
+    // the camera: behind and above, turned by the mouse or a glide, further out of doors
+    const dist0 = room.cam?.dist ?? (room.outdoor ? 9.5 : 6.4),
+      camH0 = room.cam?.height ?? (room.outdoor ? 6.2 : 5.0);
+    const reach = Math.hypot(dist0, camH0) * c.zoom;
+    const elev = THREE.MathUtils.clamp(Math.atan2(camH0, dist0) + (c.pitch || 0), 0.1, 1.35);
+    const dist = Math.cos(elev) * reach,
+      camH = Math.sin(elev) * reach;
     tmp.set(me.x + Math.sin(c.yaw) * dist, camH, me.z + Math.cos(c.yaw) * dist);
+    // the wedding's camera: down the aisle to her, with her as she walks, then the two of them at the arch
+    if (isWedding && marks) {
+      const a = aisle.current;
+      if (a.t0 < 0) {
+        tmp.set(-0.9, 2.6, marks.archZ + 0.4);
+        look.set(0, 1.0, marks.start.z);
+      } else if (!a.arrived) {
+        // in the aisle ahead of her, backing away as she comes
+        tmp.set(0.3, 1.95, a.z - 3.3);
+        look.set(0, 1.3, a.z);
+      } else {
+        tmp.set(0.2, 1.7, marks.him.z + 3.6);
+        look.set(0, 1.45, marks.him.z - 0.2);
+      }
+    }
+    // at the table on a date: close, low, over his shoulder, on her
+    if (pinned && seats) {
+      const yaw = seats.him.ry + Math.PI + 0.42;
+      const el = 0.3,
+        rr = 3.1 * Math.min(1.4, Math.max(0.8, c.zoom));
+      tmp.set(seats.him.x + Math.sin(yaw) * Math.cos(el) * rr, (seats.him.seat || 0.46) + 0.7 + Math.sin(el) * rr, seats.him.z + Math.cos(yaw) * Math.cos(el) * rr);
+    }
     // the first frame in a room puts the camera straight behind him, after that it follows smoothly
     if (me.fresh) {
       camera.position.copy(tmp);
       me.fresh = false;
-    } else camera.position.lerp(tmp, Math.min(1, dt * 5));
+    } else camera.position.lerp(tmp, Math.min(1, dt * (pinned ? 2.5 : 5)));
     // look a little ahead of him, so the room in front fills the picture
-    look.set(me.x - Math.sin(c.yaw) * 1.6, 0.8, me.z - Math.cos(c.yaw) * 1.6);
+    if (pinned && seats) look.set(seats.her.x * 0.7 + seats.him.x * 0.3, (seats.her.seat || 0.46) + 0.55, seats.her.z * 0.7 + seats.him.z * 0.3);
+    else if (!(isWedding && marks)) look.set(me.x - Math.sin(c.yaw) * 1.6, 0.8, me.z - Math.cos(c.yaw) * 1.6);
     camera.lookAt(look);
     // walls between the camera and him drop down; outer walls whenever the camera is behind them
     const cx = camera.position.x,
@@ -504,19 +717,23 @@ export default function Interior({
         if (!el) continue;
         tmp.set(h.x, 1.9, h.z).project(camera);
         el.style.transform = `translate(${((tmp.x + 1) / 2) * size.width}px, ${((1 - tmp.y) / 2) * size.height}px) translate(-50%, -100%)`;
-        const seen = tmp.z > 1 ? 0 : h.tag ? 1 : Math.min(1, Math.max(0, (9 - Math.hypot(h.x - me.x, h.z - me.z)) / 2));
+        const far = Math.hypot(h.x - me.x, h.z - me.z);
+        // places to use read from across a ground; people's names only once he is near them, like items
+        const person = h.id.startsWith("talk:");
+        const seen = tmp.z > 1 ? 0 : person ? Math.min(1, Math.max(0, (7 - far) / 2)) : h.tag ? Math.min(1, Math.max(0, (40 - far) / 8)) : Math.min(1, Math.max(0, (9 - far) / 2));
         el.style.opacity = String(seen);
         el.style.pointerEvents = seen < 0.3 ? "none" : "";
       }
   });
-  const rings = useMemo(() => room.hotspots.map((h) => (legacy || h.tag ? h : null)), [room, legacy]);
+  const rings = useMemo(() => room.hotspots.map((h) => (legacy || (h.tag && !h.id.startsWith("talk:")) ? h : null)), [room, legacy]);
   const ringMat = useMemo(() => room.hotspots.map(() => new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.5, depthWrite: false, toneMapped: false })), [room, accent]);
   useEffect(() => () => ringMat.forEach((m) => m.dispose()), [ringMat]);
   const L = room.light;
   const lights = room.mood;
   const shadows = quality >= 2;
   const click = (e: ThreeEvent<MouseEvent>) => {
-    if (e.delta > 6) return;
+    // with the mouse captured for looking round, a click has no point on the floor: WASD and E do the work
+    if (e.delta > 6 || document.pointerLockElement) return;
     e.stopPropagation();
     // a thing for sale: walk to where he stands to look at it
     const o = e.object as THREE.Mesh;
@@ -534,7 +751,7 @@ export default function Interior({
       {(L?.fog || room.outdoor) && <fog attach="fog" args={L?.fog || ["#05070b", 18, 60]} />}
       <hemisphereLight args={L ? [L.sky, L.ground, L.hemi] : [lights === "cool" ? "#cfe0ff" : "#ffe6c8", "#1a1612", lights === "stadium" ? 0.7 : 0.55]} />
       <directionalLight
-        position={[room.w * 0.25, 9, room.d * 0.35]}
+        position={room.outdoor ? [room.w * 0.3, Math.max(9, Math.max(room.w, room.d) * 0.6), room.d * 0.4] : [room.w * 0.25, 9, room.d * 0.35]}
         intensity={L ? L.keyI : lights === "stadium" ? 2.2 : 1.1}
         color={L ? L.key : lights === "warm" ? "#ffe2bc" : "#eef4ff"}
         castShadow={shadows}
@@ -560,6 +777,12 @@ export default function Interior({
       )}
       <primitive object={room.group} onClick={click} />
       <primitive object={rig.root} />
+      {crowd.map((c) => (
+        <primitive key={c.id} object={c.b.root} />
+      ))}
+      {her && <primitive object={her.root} />}
+      {bride && <primitive object={bride.root} />}
+      {petals && <primitive object={petals.im} />}
       <primitive object={hi.g} />
       <mesh rotation-x={-Math.PI / 2} position-y={0.005} onClick={click}>
         <planeGeometry args={[room.w, room.d]} />
@@ -577,7 +800,7 @@ export default function Interior({
             position={[h.x, 0.02, h.z]}
             material={ringMat[k]}
             onClick={(e: ThreeEvent<MouseEvent>) => {
-              if (e.delta > 6) return;
+              if (e.delta > 6 || document.pointerLockElement) return;
               e.stopPropagation();
               walkTo(h.x, h.z, h.id);
             }}

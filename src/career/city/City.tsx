@@ -3,21 +3,26 @@
 /**
  * The City tab: his city as an open world he walks, drives and rides the bus through (src/career/world), and
  * the places he walks into. Everything he does goes to the server and comes back as the new career state.
- * On the street: WASD to walk, Shift to run, drag to look round, E to use what is in front of him, F for his
- * car, M for the map. Inside: walk up to things; E uses them; Esc or the door goes back out.
+ * On the street: WASD to walk, Shift to run, click the view and move the mouse (or glide two fingers on a
+ * trackpad) to look round, E to use what is in front of him, F for his car, M for the map, P for the phone.
+ * Inside: walk up to things; E uses them; Esc or the door goes back out (the first Esc only frees the mouse).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import clsx from "clsx";
-import { Sun, Moon, Cloud, CloudRain, CloudLightning, CloudFog, Snowflake, MapTrifold, DeviceMobile, SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
-import Interior, { type Hotspot, type WalkCtl } from "./Interior";
+import { Sun, Moon, Cloud, CloudRain, CloudLightning, CloudFog, Snowflake, MapTrifold, DeviceMobile, SpeakerHigh, SpeakerSlash, Heart } from "@phosphor-icons/react";
+import Interior, { lookRoom, zoomRoom, type Hotspot, type WalkCtl } from "./Interior";
+import { SUB_NAME } from "./interiors";
 import ShopHud from "./ShopHud";
+import DateCard from "./DateCard";
+import { herDoor } from "../world/date";
 import { Environment, FrameGuard, DPR_CAP } from "../Stage";
 import { OUTFITS, type Outfit } from "../body";
 import { careerApi, type Saved } from "../api";
 import type { CareerState, WorldPlace } from "../types";
-import World, { worldStart, carSpec, type WorldCtl, type Prompt } from "../world/World";
+import World, { worldStart, carSpec, lookStreet, zoomStreet, type WorldCtl, type Prompt } from "../world/World";
+import { attachLook, type LookCtl } from "../world/look";
 import CityMap from "../world/CityMap";
 import { makePlan, type PlaceSpot } from "../world/gen";
 import { makeStreetSound } from "../world/audio";
@@ -36,6 +41,8 @@ const clock = (h: number) => {
     mm = Math.floor((h - hh) * 60);
   return String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
 };
+
+const SUIT: Outfit = { shirt: "#1d2230", trim: "#f4f4f4", shorts: "#1d2230", socks: "#1d2230", bottom: "trousers", sleeve: true, plain: true, shoe: ["#111111", "#080808"] };
 
 export default function City({
   state,
@@ -81,7 +88,7 @@ export default function City({
   // a hook for the browser checks: where he is and where the places are (nothing in the game reads it)
   useEffect(() => {
     if (!plan || !ctlObj) return;
-    (window as unknown as { __pcCity?: unknown }).__pcCity = { ctl: () => ctlObj, places: () => plan.places, plan: () => plan };
+    (window as unknown as { __pcCity?: unknown }).__pcCity = { ctl: () => ctlObj, places: () => plan.places, plan: () => plan, walk: () => walk.current };
   }, [plan, ctlObj]);
   const sound = useMemo(() => makeStreetSound(), []);
   useEffect(() => () => sound.dispose(), [sound]);
@@ -92,10 +99,16 @@ export default function City({
   const [roomId, setRoomId] = useState<string | null>(null);
   const room = useMemo<WorldPlace | null>(() => {
     if (!roomId) return null;
-    const base = roomId.replace(/\/garage$/, "");
+    const base = roomId.split("/")[0];
     const fresh = (world?.places || []).find((p) => p.id === base) || inside?.place || null;
     if (!fresh) return null;
-    return roomId.endsWith("/garage") ? garageOf(fresh) : fresh;
+    if (roomId.endsWith("/garage")) return garageOf(fresh);
+    // a room inside a campus: the corridor, a classroom, the canteen, the gym, the dressing room, the physio
+    if (roomId !== base) {
+      const sub = roomId.slice(base.length + 1);
+      return { ...fresh, id: roomId, name: fresh.name + ", " + (SUB_NAME[sub] || sub).toLowerCase() };
+    }
+    return fresh;
   }, [roomId, world, inside]);
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [bubble, setBubble] = useState<string | null>(null);
@@ -127,6 +140,36 @@ export default function City({
   });
   const labelEls = useRef(new Map<string, HTMLElement>());
   const walk = useRef<WalkCtl>({ yaw: 0, zoom: 1, use: -1 });
+  // ---------- looking round: the mouse once the view is clicked, a trackpad glide, a gentle zoom ----------
+  const canvasEl = useRef<HTMLDivElement>(null);
+  const lookCtl = useRef<LookCtl | null>(null);
+  const insideNow = useRef(false);
+  useEffect(() => {
+    insideNow.current = !!inside;
+  }, [inside]);
+  const [locked, setLocked] = useState(false);
+  useEffect(() => {
+    const el = canvasEl.current;
+    if (!el || !ctlObj) return;
+    const L = attachLook(el, {
+      look: (dx, dy) => {
+        if (insideNow.current) lookRoom(walk.current, dx, dy);
+        else lookStreet(ctlObj, dx, dy, performance.now() / 1000);
+      },
+      zoom: (f) => {
+        if (insideNow.current) zoomRoom(walk.current, f);
+        else zoomStreet(ctlObj, f);
+      },
+    });
+    lookCtl.current = L;
+    const onLock = () => setLocked(document.pointerLockElement === el);
+    document.addEventListener("pointerlockchange", onLock);
+    return () => {
+      document.removeEventListener("pointerlockchange", onLock);
+      L.dispose();
+      lookCtl.current = null;
+    };
+  }, [ctlObj]);
   const say = (text: string) => setToast({ text, n: Date.now() });
   useEffect(() => {
     if (!toast) return;
@@ -176,9 +219,60 @@ export default function City({
     return () => cancelAnimationFrame(raf);
   }, [inside, ctlObj]);
 
+  // ---------- a date ----------
+  const dplan = state.social?.dating?.plan || null;
+  const dscene = state.social?.dating?.scene || null;
+  const hourNow = () => String(Math.round((ctlObj?.hour ?? 18) * 100) / 100);
+  const onPickup = useCallback(() => {
+    void actFor("her", "pickup", hourNow()).then((r) => {
+      const t = r && typeof r === "object" ? (r as { text?: string }).text : "";
+      if (t) say(t);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actFor, ctlObj]);
+  const onStreetDate = useCallback(() => {
+    void actFor("street", "date", hourNow());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actFor, ctlObj]);
+  // where to go next for the date: her door first if he is picking her up, then the place
+  const dateWay = () => {
+    if (!dplan || !plan || !ctlObj) return;
+    if (dplan.pickup && dplan.status === "set") {
+      const d = herDoor(plan, dplan.who.seed);
+      ctlObj.waypoint = { x: d.x, z: d.z };
+    } else {
+      const sp = plan.places.find((x) => x.place.id === dplan.place);
+      if (sp) ctlObj.waypoint = { x: sp.door.x, z: sp.door.z };
+    }
+  };
+
+  // ---------- the wedding: a place of its own, not on the map; he comes back out at his front door ----------
+  const wedding = state.social?.dating?.wedding || null;
+  const wscene = state.social?.dating?.wscene || null;
+  const goWedding = () => {
+    if (!plan) return;
+    const home = plan.places.find((x) => x.place.kind === "home" && (x.place.homeId || x.place.id.replace("home:", "")) === life.home.id) || plan.places[0];
+    const place: WorldPlace = { id: "wedding", kind: "wedding", name: "The wedding", where: "suburb", style: { floor: "#f4efe6", wall: "#f4efe6", accent: "#e8c46a", trim: "#ffffff", vibe: "warm" } };
+    lookCtl.current?.release();
+    setFade(true);
+    setTimeout(() => {
+      setInside({ ...home, place });
+      setRoomId("wedding");
+      setNear(null);
+      walk.current = { yaw: 0, zoom: 1, use: -1 };
+      setFade(false);
+      void actFor("wedding", "wedstart");
+    }, 400);
+  };
+
   // ---------- in and out of places ----------
   const enter = useCallback(
     (s: PlaceSpot) => {
+      // the date's place: it starts as he walks in (with her, or to where she waits)
+      if (dplan && dplan.place === s.place.id && (dplan.status === "together" || (dplan.status === "set" && !dplan.pickup))) {
+        setTimeout(() => void actFor(s.place.id, "date", hourNow()), 600);
+        if (ctlObj) ctlObj.waypoint = null;
+      }
       setFade(true);
       setTimeout(() => {
         setInside(s);
@@ -191,9 +285,9 @@ export default function City({
       }, 280);
       if (!(life.visited || []).includes(s.place.id)) void run(() => careerApi.act(saved, s.place.id, "visit"));
     },
-    // the visited list and the save are read when he walks in
+    // the visited list, the save and the date are read when he walks in
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [life.visited, saved],
+    [life.visited, saved, dplan],
   );
   const leave = useCallback(
     (o?: { drive?: string }) => {
@@ -224,12 +318,26 @@ export default function City({
     const k = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (t && (t.tagName === "INPUT" || t.tagName === "SELECT" || t.tagName === "TEXTAREA")) return;
-      if (e.key === "Escape" && inside) leave();
-      if (e.key.toLowerCase() === "m" && !inside && plan) setMapOpen((v) => !v);
+      const L = lookCtl.current;
+      // Esc with the mouse captured only frees the mouse (the browser does that); the next Esc leaves the place
+      if (e.key === "Escape") {
+        if (L && (L.locked() || L.sinceUnlock() < 400)) return;
+        if (inside) leave();
+        return;
+      }
+      if (e.repeat) return;
+      if (e.key.toLowerCase() === "m" && !inside && plan) {
+        L?.release();
+        setMapOpen((v) => !v);
+      }
+      if (e.key.toLowerCase() === "p") {
+        L?.release();
+        onPhone("home");
+      }
     };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
-  }, [inside, leave, plan]);
+  }, [inside, leave, plan, onPhone]);
 
   // ---------- inside: the shop card (ShopHud) handles E and every button; the door, the garage and driving
   // out come back here ----------
@@ -249,7 +357,15 @@ export default function City({
   // what he wears: his own clothes in the street, kit at the training ground, the gym and the stadium
   const co = life.cityOutfit;
   const street: Outfit = useMemo(() => (co ? { shirt: co.shirt, trim: co.trim, shorts: co.shorts, socks: co.socks } : OUTFITS.home), [co]);
-  const outfit = room && (room.kind === "training" || room.kind === "gym" || room.kind === "stadium") ? OUTFITS.training : street;
+  const sub = roomId && roomId.includes("/") && !roomId.endsWith("/garage") ? roomId.slice(roomId.indexOf("/") + 1) : "";
+  const outfit =
+    room && room.kind === "wedding"
+      ? SUIT
+      : room && (room.kind === "gym" || room.kind === "stadium" || (room.kind === "training" && !["canteen"].includes(sub)))
+      ? OUTFITS.training
+      : room && room.kind === "school" && !sub
+        ? OUTFITS.school
+        : street;
   const night = ctlObj ? THREE.MathUtils.clamp((Math.abs(ctlObj.hour - 13) - 6) / 1.5, 0, 1) : 0;
   const Wx = { clear: night > 0.6 ? Moon : Sun, cloud: Cloud, rain: CloudRain, storm: CloudLightning, snow: Snowflake, fog: CloudFog, haze: CloudFog }[life.weather.kind] || Sun;
   const c = ctlObj;
@@ -266,7 +382,7 @@ export default function City({
 
   return (
     <div className={clsx("pc-world", inside ? "is-inside" : "is-street")}>
-      <div className="pc-world-canvas" onPointerDown={() => sound.start()}>
+      <div className={clsx("pc-world-canvas", locked && "is-locked")} ref={canvasEl} onPointerDown={() => sound.start()}>
         <Canvas
           dpr={[1, DPR_CAP[quality]]}
           shadows={quality >= 1}
@@ -275,10 +391,12 @@ export default function City({
           onCreated={({ gl }) => {
             gl.toneMapping = THREE.ACESFilmicToneMapping;
             gl.toneMappingExposure = 1.0;
+            // for the browser checks: the renderer's counts (geometries, textures, draw calls); nothing reads it
+            (window as unknown as { __pcGL?: unknown }).__pcGL = gl;
           }}
         >
           <Environment intensity={inside ? 0.55 : 0.22} />
-          <World state={state} plan={plan} quality={quality} ctl={ctl as React.MutableRefObject<WorldCtl>} outfit={street} active={!inside} sound={sound} onEnter={enter} onPrompt={onPrompt} onBubble={onBubble} onPhoto={onPhoto} />
+          <World state={state} plan={plan} quality={quality} ctl={ctl as React.MutableRefObject<WorldCtl>} outfit={street} active={!inside} sound={sound} onEnter={enter} onPrompt={onPrompt} onBubble={onBubble} onPhoto={onPhoto} onPickup={onPickup} onStreetDate={onStreetDate} />
           {inside && room && <Interior key={room.id} place={room} state={state} quality={quality} night={night} outfit={outfit} ctl={walk} labelEls={labelEls} onNear={onNear} onUse={onUse} onHotspots={onHotspots} />}
           <FrameGuard quality={quality} onSlow={setQuality} />
         </Canvas>
@@ -325,6 +443,27 @@ export default function City({
           </span>
           <span className="pc-chip">{money(state.money.cash)}</span>
         </div>
+        {wedding && wedding.status === "today" && !inside && (
+          <div className="pc-world-wed">
+            <span>Today is your wedding day.</span>
+            <button type="button" className="k-btn k-btn-primary k-btn-sm" onClick={goWedding}>
+              Go to the wedding
+            </button>
+          </div>
+        )}
+        {dplan && !dscene && (
+          <div className="pc-world-date">
+            <Heart size={14} weight="fill" aria-hidden="true" />
+            <span>
+              {dplan.status === "set" && dplan.pickup ? "Pick up " + dplan.who.first + " at " + dplan.at : dplan.status === "together" ? "With " + dplan.who.first + ": " + dplan.label.toLowerCase() : dplan.label + " with " + dplan.who.first + " at " + dplan.at}
+            </span>
+            {!inside && (
+              <button type="button" className="k-btn k-btn-ghost k-btn-sm" onClick={dateWay}>
+                Show the way
+              </button>
+            )}
+          </div>
+        )}
       </div>
       <div className="pc-world-tools">
         {!inside && (
@@ -332,7 +471,7 @@ export default function City({
             <MapTrifold size={15} weight="bold" aria-hidden="true" /> Map
           </button>
         )}
-        <button type="button" className="k-btn k-btn-sm" onClick={() => onPhone("home")} title="Your phone">
+        <button type="button" className="k-btn k-btn-sm" onClick={() => onPhone("home")} title="Your phone (P)">
           <DeviceMobile size={15} weight="bold" aria-hidden="true" /> Phone
         </button>
         <button
@@ -380,7 +519,7 @@ export default function City({
       {!inside && help && !touch && (
         <div className="pc-world-help">
           <p>
-            <kbd>W A S D</kbd> walk, <kbd>Shift</kbd> run, drag to look round, <kbd>E</kbd> go in or talk, <kbd>F</kbd> your car, <kbd>M</kbd> the map
+            <kbd>W A S D</kbd> walk, <kbd>Shift</kbd> run, click the view and move the mouse (or glide two fingers) to look round, <kbd>E</kbd> go in or talk, <kbd>F</kbd> your car, <kbd>M</kbd> the map, <kbd>P</kbd> the phone, <kbd>Esc</kbd> frees the mouse
           </p>
           <button
             type="button"
@@ -399,6 +538,31 @@ export default function City({
         </div>
       )}
 
+      {wscene && inside?.place.kind === "wedding" && (
+        <DateCard
+          scene={{ id: "wedding", name: "", first: state.social?.dating?.partner?.first || "", venue: "wedding", keys: ["walk", "vows", "dance"], step: wscene.step, beat: wscene.beat, said: wscene.said, result: wscene.result }}
+          busy={busy}
+          endLabel="Celebrate"
+          onSay={(id) => void actFor("wedding", "wedsay", id)}
+          onEnd={() => {
+            void actFor("wedding", "wedend");
+            leave();
+          }}
+        />
+      )}
+      {dscene && (
+        <DateCard
+          scene={dscene}
+          busy={busy}
+          onSay={(id) => void actFor(inside ? inside.place.id : "street", "datesay", id)}
+          onEnd={() => void actFor(inside ? inside.place.id : "street", "dateend")}
+        />
+      )}
+      {locked && (
+        <p className="pc-world-lockhint" aria-hidden="true">
+          <kbd>Esc</kbd> frees the mouse
+        </p>
+      )}
       {/* inside a place: the way out, and the card for whatever he stands at */}
       {inside && (
         <button type="button" className="k-btn k-btn-sm pc-world-out" onClick={() => leave()}>
@@ -418,7 +582,8 @@ export default function City({
               // home to garage and back: a new room, the same door
               setFade(true);
               setTimeout(() => {
-                setRoomId(o.to === inside.place.id ? inside.place.id : inside.place.id + "/garage");
+                // home to garage and back, the grounds to a room inside and back: a new room, the same door
+                setRoomId(o.to!);
                 setNear(null);
                 setHotspots([]);
                 walk.current = { yaw: 0, zoom: 1, use: -1 };
@@ -445,7 +610,7 @@ export default function City({
         />
       )}
       {toast && (
-        <p key={toast.n} className="pc-city-toast" role="status">
+        <p key={toast.n} className={clsx("pc-city-toast", !inside && carName && "is-high")} role="status">
           {toast.text}
         </p>
       )}

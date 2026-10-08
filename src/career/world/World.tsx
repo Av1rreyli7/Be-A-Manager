@@ -1,8 +1,8 @@
 "use client";
 /* eslint-disable react-hooks/immutability -- three.js objects built in useMemo are moved every frame in useFrame, which is how React Three Fiber works */
 /**
- * The open city. He walks it in third person as his own footballer (WASD, Shift to run, drag to look round,
- * the wheel to zoom), drives his own cars (F to get in or out), or waits at a stop and rides the bus. The day
+ * The open city. He walks it in third person as his own footballer (WASD, Shift to run, the mouse or a trackpad
+ * glide to look round, see look.ts), drives his own cars (F to get in or out), or waits at a stop and rides the bus. The day
  * turns while he plays: the sun crosses the sky, the street lamps and windows come on at dusk. People walk the
  * pavements and stop to talk; fans ask for a photo once he is known. Doors glow; E goes in. The city streams
  * round him in chunks and everything repeated is instanced, so it stays smooth.
@@ -11,6 +11,9 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { makeBody, type Outfit } from "../body";
+import { herDoor, newCompanion, stepTowards } from "./date";
+import { cityClock } from "./clock";
+import type { Look } from "../types";
 import type { CareerState, CatalogCar, LifeCar } from "../types";
 import { Grid, rng, type CityPlan, type PlaceSpot } from "./gen";
 import { buildGround, buildBuildings, buildPlaces, buildStreetFurniture } from "./scene";
@@ -38,6 +41,8 @@ export interface WorldCtl {
   camYaw: number;
   camPitch: number;
   camDist: number;
+  /** when he last looked round (performance.now() in seconds): the car's camera eases back behind it after a pause */
+  lookT: number;
   fps: number;
   /** the touch stick, x right and y down, each from -1 to 1 (null when no thumb is on it) */
   stick: { x: number; y: number } | null;
@@ -65,9 +70,21 @@ export const worldStart = (plan: CityPlan, hour: number, homeId = ""): WorldCtl 
   camYaw: homeDoor(plan, homeId).ry + Math.PI,
   camPitch: 0.32,
   camDist: 7.5,
+  lookT: -9,
   fps: 60,
   stick: null,
 });
+
+/** the mouse or a glide turns the street camera (dx right, dy down, in pixels) */
+export function lookStreet(c: WorldCtl, dx: number, dy: number, now: number) {
+  c.camYaw -= dx * 0.0042;
+  c.camPitch = Math.min(1.2, Math.max(0.05, c.camPitch + dy * 0.0032));
+  c.lookT = now;
+}
+/** a gentle zoom: further out above 1, closer in below */
+export function zoomStreet(c: WorldCtl, f: number) {
+  c.camDist = Math.min(c.mode === "drive" ? 22 : 16, Math.max(3.2, c.camDist * f));
+}
 
 export interface Prompt {
   key: string;
@@ -126,6 +143,8 @@ export default function World({
   onPrompt,
   onBubble,
   onPhoto,
+  onPickup,
+  onStreetDate,
 }: {
   state: CareerState;
   plan: CityPlan;
@@ -138,6 +157,10 @@ export default function World({
   onPrompt: (p: Prompt | null) => void;
   onBubble: (text: string | null) => void;
   onPhoto: () => void;
+  /** he is at her door for a date */
+  onPickup?: () => void;
+  /** a walk or a drive together has gone on long enough: the date's moments */
+  onStreetDate?: () => void;
 }) {
   const { scene, gl, camera } = useThree();
   const q = Math.max(0, Math.min(3, quality));
@@ -169,6 +192,29 @@ export default function World({
     [lookKey, q],
   );
   useEffect(() => () => rig.dispose(), [rig]);
+
+  // ---------- a date: her door, and her, from waiting outside to beside him ----------
+  const dplan = state.social?.dating?.plan || null;
+  const herWho = dplan ? dplan.who : null;
+  const door = useMemo(() => (dplan && dplan.pickup && herWho ? herDoor(plan, herWho.seed) : null), [plan, dplan, herWho]);
+  const herKey = herWho ? herWho.id + "|" + dplan!.venue : "";
+  const herRig = useMemo(
+    () => (herWho ? makeBody(herWho.look as Partial<Look>, { height: herWho.h, weight: herWho.w, pos: "CM" }, (dplan!.venue === "club" || dplan!.venue === "restaurant" ? herWho.night : herWho.outfit) as Outfit, Math.min(1, q), undefined, { seed: 4 }) : null),
+    // rebuilt only for a different date
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [herKey, q],
+  );
+  useEffect(() => () => herRig?.dispose(), [herRig]);
+  const comp = useRef(newCompanion(""));
+  const datePlan = useRef(dplan);
+  useEffect(() => {
+    datePlan.current = dplan;
+  }, [dplan]);
+  const herMark = useMemo(() => {
+    const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.5, 0), new THREE.MeshBasicMaterial({ color: "#ff7aa8", toneMapped: false }));
+    m.visible = false;
+    return m;
+  }, []);
 
   // ---------- his car, when he has one out ----------
   const carMat = useMemo(() => worldMaterial(night, { rough: 0.25, metal: 0.55 }), [night]);
@@ -347,39 +393,13 @@ export default function World({
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     window.addEventListener("blur", blur);
-    // drag to look round, the wheel to zoom
-    const el = gl.domElement;
-    let drag: { x: number; y: number } | null = null;
-    const pd = (e: PointerEvent) => {
-      sound.start();
-      drag = { x: e.clientX, y: e.clientY };
-    };
-    const pm = (e: PointerEvent) => {
-      if (!drag) return;
-      const c = ctl.current;
-      c.camYaw -= (e.clientX - drag.x) * 0.006;
-      c.camPitch = THREE.MathUtils.clamp(c.camPitch + (e.clientY - drag.y) * 0.004, 0.05, 1.2);
-      drag = { x: e.clientX, y: e.clientY };
-    };
-    const pu = () => (drag = null);
-    const wh = (e: WheelEvent) => {
-      const c = ctl.current;
-      c.camDist = THREE.MathUtils.clamp(c.camDist * (1 + Math.sign(e.deltaY) * 0.1), 3.2, c.mode === "drive" ? 22 : 16);
-    };
-    el.addEventListener("pointerdown", pd);
-    window.addEventListener("pointermove", pm);
-    window.addEventListener("pointerup", pu);
-    el.addEventListener("wheel", wh, { passive: true });
+    // looking round (the mouse, a trackpad glide, the wheel) is the screen's look controller: see look.ts
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
-      el.removeEventListener("pointerdown", pd);
-      window.removeEventListener("pointermove", pm);
-      window.removeEventListener("pointerup", pu);
-      el.removeEventListener("wheel", wh);
     };
-  }, [active, gl, ctl, sound]);
+  }, [active, ctl, sound]);
 
   // ---------- the frame ----------
   const me = useMemo(() => ({ y: 0.15, walkSpeed: 0, vx: 0, vz: 0 }), []);
@@ -430,6 +450,7 @@ export default function World({
     }
     // ---------- the time of day ----------
     c.hour = (c.hour + dt / 45) % 24;
+    cityClock.hour = c.hour;
     const sk = skyColours(c.hour, state.life.style, grey);
     night.value = THREE.MathUtils.clamp(sk.night * 1.05 + grey * 0.15, 0, 1);
     skyMat.uniforms.uTop.value.copy(sk.top);
@@ -576,9 +597,87 @@ export default function World({
     const onSlab = Math.abs(lx) < plan.pitch / 2 - plan.road / 2 && Math.abs(lz) < plan.pitch / 2 - plan.road / 2 && (plan.coastRow === null || c.z < plan.coastZ! + plan.walk + 1);
     me.y += ((onSlab ? 0.15 : 0) - me.y) * Math.min(1, dt * 14);
 
+    // ---------- a date: her by her door, walking to the car, in it, or beside him ----------
+    const dp = datePlan.current;
+    if (herRig && dp) {
+      const co = comp.current;
+      if (co.id !== dp.id + dp.w) Object.assign(co, newCompanion(dp.id + dp.w));
+      const driving = c.mode === "drive";
+      if (dp.status === "set" && dp.pickup && door) {
+        if (co.mode === "away") Object.assign(co, { mode: "wait", x: door.x, z: door.z, ry: door.ry + Math.PI });
+        const d = Math.hypot(c.x - door.x, c.z - door.z);
+        if (!co.asked && ((driving && d < 15 && Math.abs(c.speed) < 3) || (!driving && d < 2.8))) {
+          co.asked = true;
+          onPickup?.();
+        }
+        // facing him once he is close
+        if (d < 25) co.ry = Math.atan2(c.x - co.x, c.z - co.z);
+      } else if (dp.status === "together" || dp.status === "on") {
+        if (co.mode === "away") Object.assign(co, { mode: driving ? "car" : "follow", x: c.x - Math.sin(c.ry) * 1.2, z: c.z - Math.cos(c.ry) * 1.2 });
+        if (co.mode === "wait") co.mode = "walkout";
+        const sx = Math.cos(c.ry),
+          sz = -Math.sin(c.ry);
+        if (co.mode === "walkout") {
+          // to the nearer side of the car, or to his side on foot
+          let tx = c.x,
+            tz = c.z;
+          if (driving) {
+            const a = Math.hypot(c.x + sx * 1.3 - co.x, c.z + sz * 1.3 - co.z),
+              b = Math.hypot(c.x - sx * 1.3 - co.x, c.z - sz * 1.3 - co.z);
+            const k2 = a < b ? 1 : -1;
+            tx = c.x + sx * 1.3 * k2;
+            tz = c.z + sz * 1.3 * k2;
+          }
+          const left = stepTowards(co, tx, tz, dt, 1.6);
+          const p2 = { x: co.x, z: co.z };
+          grid.push(p2, 0.3);
+          co.x = p2.x;
+          co.z = p2.z;
+          if (left < (driving ? 0.5 : 1.3)) co.mode = driving ? "car" : "follow";
+        } else if (co.mode === "car") {
+          co.x = c.x;
+          co.z = c.z;
+          co.ry = c.ry;
+          // he got out: she gets out on her side
+          if (!driving) Object.assign(co, { mode: "follow", x: c.x + sx * 1.4, z: c.z + sz * 1.4, speed: 0 });
+        } else if (co.mode === "follow") {
+          if (driving && Math.hypot(co.x - c.x, co.z - c.z) < 8) co.mode = "car";
+          else {
+            if (Math.hypot(co.x - c.x, co.z - c.z) > 18) Object.assign(co, { x: c.x - Math.sin(c.ry) * 1.2, z: c.z - Math.cos(c.ry) * 1.2 });
+            // a step behind his shoulder
+            const tx = c.x - Math.sin(c.ry) * 0.9 + sx * 0.75,
+              tz = c.z - Math.cos(c.ry) * 0.9 + sz * 0.75;
+            const left = stepTowards(co, tx, tz, dt, 6.5);
+            const p2 = { x: co.x, z: co.z };
+            grid.push(p2, 0.3);
+            co.x = p2.x;
+            co.z = p2.z;
+            if (left < 0.3 && c.speed < 0.3) co.ry += Math.atan2(Math.sin(c.ry - co.ry), Math.cos(c.ry - co.ry)) * Math.min(1, dt * 3);
+          }
+        }
+        // a walk or a drive: after a while together, the date's moments
+        if (dp.status === "together" && !co.dated && ((dp.venue === "walk" && co.mode === "follow" && c.speed > 0.6) || (dp.venue === "drive" && co.mode === "car" && Math.abs(c.speed) > 3))) {
+          co.together += dt;
+          if (co.together > 35) {
+            co.dated = true;
+            onStreetDate?.();
+          }
+        }
+      } else co.mode = "away";
+      herRig.root.visible = (co.mode === "wait" || co.mode === "walkout" || co.mode === "follow") && Math.hypot(co.x - c.x, co.z - c.z) < 120;
+      herRig.root.position.set(co.x, co.mode === "wait" ? 0.15 : me.y, co.z);
+      herRig.tick(dt, co.ry, co.speed);
+      herMark.visible = co.mode === "wait";
+      if (herMark.visible) {
+        herMark.position.set(door ? door.x : co.x, 3.4 + Math.sin(t * 2) * 0.15, door ? door.z : co.z);
+        herMark.rotation.y = t * 1.5;
+      }
+    } else herMark.visible = false;
+
     // ---------- the city round him ----------
     const far = QUAL.far[q];
     builds.stream(camera.position.x, camera.position.z, far);
+    places.stream(camera.position.x, camera.position.z, far);
     people.tick(dt, t, { x: c.x, z: c.z, car: c.mode === "drive", speed: c.speed }, Math.min(far, 200));
     traffic.tick(dt, t, { x: c.x, z: c.z, rad: c.mode === "drive" ? 1.2 : 0.4 }, Math.min(far, 260));
     bus.tick(dt);
@@ -604,19 +703,22 @@ export default function World({
 
     // ---------- the camera: behind him, pulled in when a building is in the way ----------
     const tgtY = c.mode === "walk" ? me.y + 1.55 : c.mode === "bus" ? 3.4 : 1.4;
-    if (c.mode !== "walk") {
-      // in a car or the bus the camera swings round behind on its own unless he is dragging
+    if (c.mode !== "walk" && performance.now() / 1000 - c.lookT > 1.4) {
+      // in a car or the bus the camera swings round behind on its own, once he has stopped looking round
       const behind = c.ry + Math.PI;
       let dy = behind - c.camYaw;
       dy = Math.atan2(Math.sin(dy), Math.cos(dy));
-      c.camYaw += dy * Math.min(1, dt * 2.2);
+      c.camYaw += dy * Math.min(1, dt * (c.mode === "drive" ? 1.6 : 2.2));
+      // and the height settles to a low chase angle
+      if (c.mode === "drive") c.camPitch += (0.22 - c.camPitch) * Math.min(1, dt * 1.2);
     }
     const dist = c.mode === "bus" ? 14 : c.mode === "drive" ? Math.max(c.camDist, 7) : c.camDist;
     const cp = Math.cos(c.camPitch);
     const want = tmp.set(c.x + Math.sin(c.camYaw) * dist * cp, tgtY + Math.sin(c.camPitch) * dist, c.z + Math.cos(c.camYaw) * dist * cp);
     const free = grid.clear(c.x, c.z, want.x, want.z, 12);
     if (free < 1) want.set(c.x + (want.x - c.x) * Math.max(0.15, free - 0.06), want.y, c.z + (want.z - c.z) * Math.max(0.15, free - 0.06));
-    camera.position.lerp(want, Math.min(1, dt * 8));
+    // a slight chase in the car: the camera trails a touch behind when he speeds up or turns
+    camera.position.lerp(want, Math.min(1, dt * (c.mode === "drive" ? 5 : 8)));
     camTarget.set(c.x, tgtY, c.z);
     camera.lookAt(camTarget);
     sky.position.copy(camera.position);
@@ -784,6 +886,8 @@ export default function World({
       <primitive object={homeMark} />
       <primitive object={beam} />
       <primitive object={rig.root} />
+      {herRig && <primitive object={herRig.root} />}
+      <primitive object={herMark} />
       <primitive object={carMesh} />
       {precip && <primitive object={precip} />}
     </primitive>

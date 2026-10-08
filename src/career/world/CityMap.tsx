@@ -32,6 +32,8 @@ const KIND_COL: Record<string, string> = {
   gym: "#7ad0ff",
   training: "#9ae66e",
   stadium: "#9ae66e",
+  school: "#ffb86b",
+  college: "#8fb8ff",
   dealer: "#d9dde3",
   home: "#d0e85c",
 };
@@ -45,8 +47,10 @@ const KIND_LABEL: Record<string, string> = {
   club: "Nightclub",
   clinic: "Clinic",
   gym: "Gym",
-  training: "Training",
-  stadium: "Stadium",
+  training: "Training grounds",
+  stadium: "Stadiums",
+  school: "Schools",
+  college: "Colleges",
   dealer: "Cars",
   home: "Homes",
 };
@@ -145,7 +149,7 @@ export default function CityMap({
           const on = known(s);
           g.fillStyle = KIND_COL[s.place.kind] || "#fff";
           g.globalAlpha = on ? 1 : 0.55;
-          const r = s.place.kind === "stadium" || s.place.kind === "training" || s.place.kind === "mall" ? 9 : 6;
+          const r = s.place.kind === "stadium" || s.place.kind === "training" || s.place.kind === "mall" || s.place.kind === "school" || s.place.kind === "college" ? 9 : 6;
           g.beginPath();
           g.arc(X(s.door.x), X(s.door.z), r * f * 1.4, 0, Math.PI * 2);
           g.fill();

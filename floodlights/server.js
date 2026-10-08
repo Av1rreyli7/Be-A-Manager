@@ -3660,7 +3660,7 @@ app.post("/api/pc/matchstart", (req, res) => {
     const num = kitNumbers(game, chk.club)[me.id];
     return res.json({
       ok: true, peek: true, kind: "league", label: me.league + ", week " + (game.round + 1), home: chk.home, away: chk.away, side: chk.side,
-      homeRating: xiRating(game, chk.home), awayRating: xiRating(game, chk.away), instruction: chk.instruction,
+      homeRating: xiRating(game, chk.home), awayRating: xiRating(game, chk.away), instruction: chk.instruction, venue: PC.CAMPUS.venueFor(game, chk.home, chk.away, { pro: true }),
       lock: { name: me.name, num: c.person.num || num, pos: c.person.pos, instruction: chk.instruction.text, by: chk.instruction.by || "Manager" }
     });
   }
@@ -3674,7 +3674,7 @@ app.post("/api/pc/matchstart", (req, res) => {
   res.json({
     ok: true, kind: "league", label: me.league + ", week " + (game.round + 1), home: chk.home, away: chk.away, side: chk.side,
     homeRating: xiRating(game, chk.home), awayRating: xiRating(game, chk.away),
-    homeXI: xi(chk.home), awayXI: xi(chk.away), instruction: chk.instruction,
+    homeXI: xi(chk.home), awayXI: xi(chk.away), instruction: chk.instruction, venue: PC.CAMPUS.venueFor(game, chk.home, chk.away, { pro: true }),
     lock: { name: me.name, num: nums[chk.club][me.id], pos: c.person.pos, instruction: chk.instruction.text, by: chk.instruction.by || "Manager" }
   });
 });

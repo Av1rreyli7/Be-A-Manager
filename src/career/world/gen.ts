@@ -134,6 +134,9 @@ const COAST = new Set(["Mumbai", "Goa", "Chennai", "Kochi", "Barcelona", "Lisbon
 /** where on the map each kind of place goes */
 function zoneFor(p: WorldPlace, hasSea: boolean): Zone {
   if (p.kind === "stadium" || p.kind === "training") return "sports";
+  // schools in the leafy ring of homes, colleges a little further in
+  if (p.kind === "school") return "suburb";
+  if (p.kind === "college") return "mid";
   if (p.kind === "home") {
     const id = p.homeId || p.id.replace("home:", "");
     if (id === "mansion") return "hill";
@@ -156,6 +159,9 @@ function sizeFor(p: WorldPlace): [number, number, number] {
       return [52, 52, 22];
     case "training":
       return [52, 52, 6];
+    case "school":
+    case "college":
+      return [52, 52, 14];
     case "mall":
       return [46, 40, 18];
     case "supermarket":
@@ -287,6 +293,11 @@ export function makePlan(city: string, style: CityStyle, places: WorldPlace[], s
     let blocks = blocksIn(zone);
     if (!blocks.length) blocks = blocksIn("mid");
     if (!blocks.length) blocks = blocksIn("suburb");
+    // a ground that takes a whole block and finds none left in its own zone tries the quieter zones next
+    if (whole) {
+      const free = (b: [number, number]) => ![0, 1, 2, 3].some((s2) => frontOf(b[0], b[1], s2).used.length);
+      if (!blocks.some(free)) for (const z2 of ["suburb", "mid", "outskirts", "hill", "sports"] as Zone[]) if (z2 !== zone) blocks = blocks.concat(blocksIn(z2).filter(free));
+    }
     // shuffle, but keep it the same for the same city
     blocks.sort((a, b) => hash(key + p.id + a.join(",")) - hash(key + p.id + b.join(",")));
     let done = false;

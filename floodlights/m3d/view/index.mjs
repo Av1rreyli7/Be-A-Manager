@@ -8,6 +8,8 @@ import { createAnimator } from "./anim.mjs";
 import { createCamera } from "./camera.mjs";
 import { createPitch } from "./pitch.mjs";
 import { createStadium } from "./stadium.mjs";
+import { createGround, DAYLIGHT } from "./ground.mjs";
+import { createMatchSound } from "./sound.mjs";
 import { createHud } from "./hud.mjs";
 
 const VOLT = "#d0e85c";
@@ -87,6 +89,11 @@ export function createView3D(THREE, opts) {
   const pitch = createPitch(THREE, { doc, renderer: own ? renderer : null, quality, maxAniso });
   scene.add(pitch.group);
   let stadium = null, kits = null, hud = null;
+  // Player Career sends where the match is (opts.venue): a school, college or academy ground in the day, with
+  // the sound of that ground. Manager Career sends none: the stadium at night, silent, exactly as it always was.
+  const venue = opts.venue || null;
+  const youthGround = !!venue && (venue.kind === "school" || venue.kind === "college" || venue.kind === "academy");
+  let sound = null;
 
   // ---------- the ball ----------
   const ballGeo = new THREE.SphereGeometry(BALL_R, 28, 20);
@@ -167,7 +174,17 @@ export function createView3D(THREE, opts) {
     const names = [m.teams[0].name, m.teams[1].name];
     kits = FL && FL.pickKits ? FL.pickKits(names[0], names[1]) : [["#c8102e", "#ffffff"], ["#1b2430", "#ffffff"]];
     const gkKit = keeperKit(kits);
-    stadium = createStadium(THREE, { doc, quality, kits });
+    stadium = youthGround ? createGround(THREE, { quality, kits, venue }) : createStadium(THREE, { doc, quality, kits });
+    if (venue && venue.daylight) {
+      scene.background.setHex(DAYLIGHT.sky);
+      scene.fog.color.setHex(DAYLIGHT.fog[0]); scene.fog.near = DAYLIGHT.fog[1]; scene.fog.far = DAYLIGHT.fog[2];
+      hemi.color.setHex(DAYLIGHT.hemi[0]); hemi.groundColor.setHex(DAYLIGHT.hemi[1]); hemi.intensity = DAYLIGHT.hemi[2];
+      key.color.setHex(DAYLIGHT.sun[0]); key.intensity = DAYLIGHT.sun[1];
+      fill1.intensity = DAYLIGHT.fills[0]; fill2.intensity = DAYLIGHT.fills[1]; rim.intensity = DAYLIGHT.fills[2];
+      if (own) renderer.toneMappingExposure = DAYLIGHT.exposure;
+      if (pitch.daylight) pitch.daylight();
+    }
+    if (venue && !sound) { try { sound = createMatchSound(venue, win); } catch (e) { sound = null; } }
     scene.add(stadium.group);
     for (const T of m.teams) {
       const kit = kits[T.idx];
@@ -311,6 +328,7 @@ export function createView3D(THREE, opts) {
     key.position.set(st.tx - 60, 85, st.tz + 55);
     pitch.update(dt || 0);
     if (stadium) stadium.update(dt || 0, m.t);
+    if (sound) sound.tick(dt || 0, m.ball ? Math.max(0, 1 - Math.abs(Math.abs(m.ball.x) - HALF_L) / 30) : 0);
     // ---------- half time: fade out, change ends, fade back in ----------
     if (fade) {
       let o = 0;
@@ -348,6 +366,12 @@ export function createView3D(THREE, opts) {
       if (ev.type === "save" || ev.type === "post") stadium.react("chance", 1);
       if (ev.type === "foul") stadium.react("foul", 1);
     }
+    if (sound) {
+      if (ev.type === "goal") sound.react("goal", ev.team === 0);
+      else if (ev.type === "save" || ev.type === "post") sound.react("chance");
+      else if (ev.type === "foul") sound.react("foul");
+      else if (ev.type === "kickoff" || ev.type === "half" || ev.type === "full") sound.react(ev.type);
+    }
     if (hud) hud.event(ev, sim);
   }
 
@@ -371,6 +395,7 @@ export function createView3D(THREE, opts) {
     for (const mt of mats) { if (mt.map) mt.map.dispose(); mt.dispose(); }
     mats.length = 0;
     if (stadium) { scene.remove(stadium.group); stadium.dispose(); stadium = null; }
+    if (sound) { sound.dispose(); sound = null; }
     if (hud) { hud.dispose(); hud = null; }
   }
 
@@ -395,7 +420,7 @@ export function createView3D(THREE, opts) {
   const api = {
     draw, onEvent, dispose, setQuality, ownHud: true, debugCam: null,
     quality: () => quality,
-    stats: () => ({ frameMs: Math.round(frameMs * 100) / 100, quality, calls: renderer.info && renderer.info.render ? renderer.info.render.calls : 0, triangles: renderer.info && renderer.info.render ? renderer.info.render.triangles : 0 }),
+    stats: () => ({ frameMs: Math.round(frameMs * 100) / 100, quality, venue: venue ? venue.kind : null, ground: stadium && stadium.info ? stadium.info.kind || "stadium" : null, calls: renderer.info && renderer.info.render ? renderer.info.render.calls : 0, triangles: renderer.info && renderer.info.render ? renderer.info.render.triangles : 0 }),
     sim: () => lastSim,
     figures, scene, camera: camera.cam
   };

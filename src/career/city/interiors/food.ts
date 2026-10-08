@@ -301,6 +301,9 @@ export function cafeRoom(k: Kit, p: WorldPlace): Room {
     k.spotLamp(tx, 2.4, tz, L.lamp, { shade: L.counter === "#141414" ? "#1a1a1a" : "#2a2a2a", r: 0.7, pool: 0.25, beam: 0.05, cord: 1.0 });
     if (R() < 0.6) k.inst("dish|cup", () => dishGeo("cup"), goodsMat("gloss"), tx + 0.1, 0.76, tz, { col: "#f4f2ec" });
   }
+  // someone by the counter he might get talking to; the table for two for a date
+  k.crowd(1.7, cz + 1.45, Math.PI - 0.3, { sx: 1.3, sz: cz + 2.5 });
+  k.tableFor2(-2.6 + 0.62, 1.6, -Math.PI / 2, -2.6 - 0.62, 1.6, Math.PI / 2, 0.46);
   people(k, "sit", [
     { x: -5.4 - 0.7, z: 0.8, ry: Math.PI / 2, col: "#2a3a5a", sit: true },
     { x: 0.2 + 0.7, z: 0.8, ry: -Math.PI / 2, col: "#c8202a", sit: true },
@@ -446,6 +449,23 @@ export function restaurantRoom(k: Kit, p: WorldPlace): Room {
     k.spot("menu:" + m.id, m.label, s.x, s.z + 1.15, { ax: s.x, az: s.z, y: 1.0, r: 1.0 });
     if (!s.out) k.spotLamp(s.x, 2.7, s.z, "#ffc27a", { r: 0.8, pool: 0.3 });
     else k.pool(s.x, s.z, 3, "#ffc27a", 0.25);
+  }
+  k.crowd(W / 2 - 2.15, oz + 2.6, Math.PI / 2 - 0.4, { sx: W / 2 - 3.2, sz: oz + 3.0 });
+  {
+    // the table for two at the rail: she sits with the water behind her, he faces it
+    const tz = zb - T + 2.2;
+    k.add(cyl(0.48, 0.48, 0.05, 24), clothM, 0, 0.76, tz);
+    k.add(cyl(0.5, 0.54, 0.5, 24, true), clothM, 0, 0.52, tz, 0, { shadow: false });
+    for (const sz of [-0.82, 0.82]) {
+      k.box(0.46, 0.46, 0.44, chairM, 0, 0.23, tz + sz, 0, 0.06);
+      k.box(0.46, 0.5, 0.06, chairM, 0, 0.71, tz + sz + Math.sign(sz) * 0.22, 0, 0.03);
+    }
+    k.add(cyl(0.03, 0.03, 0.14, 8), glow("#ffe6b0", 1.8), 0.12, 0.86, tz, 0, { shadow: false });
+    k.add(cyl(0.05, 0.03, 0.18, 10), glass("#f4f8fa", 0.3), -0.18, 0.88, tz - 0.12, 0, { shadow: false });
+    k.add(cyl(0.05, 0.03, 0.18, 10), glass("#f4f8fa", 0.3), -0.1, 0.88, tz + 0.16, 0, { shadow: false });
+    k.block(0, tz, 0.55, 1.1);
+    k.pool(0, tz, 2.4, "#ffc27a", 0.35);
+    k.tableFor2(0, tz + 0.74, Math.PI, 0, tz - 0.74, 0, 0.47);
   }
   people(k, "diner", [
     { x: 4.5 + 0.95, z: zb + 1.8, ry: -Math.PI / 2, col: "#1a2a4a", sit: true },

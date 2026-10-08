@@ -3303,8 +3303,9 @@ $("nameIn").value = ME.name;
   // the match screen first (a peek uses nothing up: "Not now" keeps this week's go), then the real start on Kick off
   post("/api/pc/matchstart", { peek: true }).then(function (s) {
     FLMatch.open({
-      info: { home: s.home, away: s.away, side: s.side, label: s.label, homeRating: s.homeRating, awayRating: s.awayRating },
+      info: { home: s.home, away: s.away, side: s.side, label: s.venue && s.venue.name ? s.label + ", at " + s.venue.name : s.label, homeRating: s.homeRating, awayRating: s.awayRating },
       lock: s.lock,
+      venue: s.venue || null,
       // a server from before the peek already started the match with that call: play what it sent
       kickoff: function () { return s.peek ? post("/api/pc/matchstart") : Promise.resolve(s); },
       finish: function (hg, ag, sim) {
