@@ -9,7 +9,7 @@ import { clamp, hyp, angDiff, seeded, shortName, finite } from "./util.mjs";
 import { deriveAttrs, deriveProfile, assignNumbers, roleOf, n01 } from "./attrs.mjs";
 import { createBall, stepBall, predict } from "./ball.mjs";
 import { stepBody, stepCollisions, emptyWant, newGait } from "./body.mjs";
-import { dribble, firstTouch, canMeet, canPlay, contest, pressureOn, userWin, isUser } from "./control.mjs";
+import { dribble, firstTouch, canMeet, canPlay, contest, pressureOn, userChallenge, isUser } from "./control.mjs";
 import { updateKick, startKick, planPass, planLob, SHOT_KINDS } from "./kick.mjs";
 import { updateTackle, updateSlide, tryIntercept, startSlide } from "./defend.mjs";
 import { updateKeeper, inOwnBox } from "./keeper.mjs";
@@ -129,8 +129,8 @@ export function createSim3D(setup, opts) {
     }
     // ---------- touches on the ball ----------
     if (b.ctrl && !b.ctrl.off && m.phase === "play" && !(b.ctrl.act && (b.ctrl.act.k === "skill" || b.ctrl.act.k === "kick"))) dribble(m, b.ctrl, dt);
-    // the person runs into the man on the ball: he wins it (before the bodies meet, so it is never his foul)
-    if (m.phase === "play") userWin(m);
+    // the person runs into the man on the ball: a real challenge, decided before the bodies meet
+    if (m.phase === "play") userChallenge(m);
     // ---------- bodies ----------
     for (const p of m.players) {
       if (p.off) { offPitch(m, p, dt); continue; }
@@ -243,6 +243,16 @@ function claims(m) {
       // a hard pass between two of theirs still has to be read in time; a loose or slow ball is simply his
       const theirPass = b.flight && b.flight.by && b.flight.by.team !== p.team && b.touchT < 2.5 && bsp > 12;
       if (theirPass && !tryIntercept(m, p)) continue;
+      // a ball the man on the other side has just lost at his own feet is a 50 50 with him, decided once
+      const lt = b.last;
+      if (lt && lt.team !== p.team && !lt.off && !lt.gk && b.touchT < 0.6 && canPlay(lt)) {
+        const dl = hyp(b.x - lt.x, b.y - lt.y);
+        if (dl < REACH * 1.6 && dl < bd + 0.6) {
+          if (contest(m, p, lt) !== p) { p.bal -= 0.08; p.ballLockT = m.t + 0.4; m.events.push({ type: "duel", won: lt.id, lost: p.id }); continue; }
+          lt.bal -= 0.1;
+          m.events.push({ type: "duel", won: p.id, lost: lt.id });
+        }
+      }
       cand.push(p);
       continue;
     }
@@ -256,16 +266,21 @@ function claims(m) {
   if (!cand.length) return;
   let who = cand.sort((a, c) => hyp(b.x - a.x, b.y - a.y) - hyp(b.x - c.x, b.y - c.y))[0];
   const rival = cand.find(c => c.team !== who.team && hyp(b.x - c.x, b.y - c.y) < hyp(b.x - who.x, b.y - who.y) + 0.35);
-  // the person's player wins a 50 50 he gets to (unless the other man is clearly first to it)
+  // the person's player and a man from the other side meet it together: his if he is clearly first, otherwise a
+  // real 50 50 (strength, touch, balance) that he can lose
   const you = cand.find(c => isUser(m, c));
   if (you && rival && (who === you || rival === you)) {
     const other = who === you ? rival : who;
-    if (hyp(b.x - you.x, b.y - you.y) < hyp(b.x - other.x, b.y - other.y) + 0.45) {
+    if (hyp(b.x - you.x, b.y - you.y) < hyp(b.x - other.x, b.y - other.y) - 0.3 || contest(m, you, other) === you) {
       other.bal -= 0.1;
       m.events.push({ type: "duel", won: you.id, lost: other.id });
       take(m, you);
       return;
     }
+    you.bal -= 0.1; you.ballLockT = m.t + 0.35;
+    m.events.push({ type: "duel", won: other.id, lost: you.id });
+    take(m, other);
+    return;
   }
   if (rival) {
     who = contest(m, who, rival);

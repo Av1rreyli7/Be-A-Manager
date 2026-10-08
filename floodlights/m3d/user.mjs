@@ -210,7 +210,15 @@ export function userStep(m, U, inp, dt) {
       if (ml === 0 || inp.held.S) {
         const gx = -T.dir * HALF_L;
         const ux = gx - carrier.x, uy = -carrier.y, ul = hyp(ux, uy) || 1;
-        const tx = carrier.x + ux / ul * 1.2, ty = carrier.y + uy / ul * 1.2;
+        let tx = carrier.x + ux / ul * 1.2, ty = carrier.y + uy / ul * 1.2;
+        // coming from behind him: go round his side to get goal side, never through his back
+        const ax = tx - p.x, ay = ty - p.y, al = hyp(ax, ay) || 1;
+        const along = ((carrier.x - p.x) * ax + (carrier.y - p.y) * ay) / al;
+        const off = (-(carrier.x - p.x) * ay + (carrier.y - p.y) * ax) / al;
+        if (along > 0 && along < al && Math.abs(off) < 1.1) {
+          const s = off >= 0 ? -1 : 1; // pass on the side he is already on
+          tx = carrier.x - ay / al * s * 1.4; ty = carrier.y + ax / al * s * 1.4;
+        }
         W.dx = tx - p.x; W.dy = ty - p.y;
         W.spd = d > 4 ? vmax * (inp.sprint ? 1 : 0.85) : Math.min(5, d * 1.6);
         if (d < 3.5) { W.face = Math.atan2(carrier.y - p.y, carrier.x - p.x); W.jockey = 1; }

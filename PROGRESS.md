@@ -860,7 +860,7 @@ Checklist:
       at corners, stops at red lights, keeps its distance and brakes for him; parked cars; the bus (red in
       Britain) that stops at every stop. E at a stop waits for it; it pulls in, he gets on, the camera rides
       with it, E gets him off at the next stop.
-- [ ] Q6 driving: his cars from the garage, arcade physics with a feel per car, bikes, the garage at home
+- [x] Q6 driving: his cars from the garage, arcade physics with a feel per car, bikes, the garage at home
       drive.ts: arcade driving with a real velocity, so the tail steps out when a corner asks too much of the
       tyres and the handbrake slides it; each car's feel from the catalog (top speed, pull, grip, weight), bikes
       lean; buildings stop it with a bump, traffic shoves it. F gets in and out of his parked car; his daily car
@@ -868,11 +868,12 @@ Checklist:
       and drops at each gear. Touch screens get a thumb stick (walk, run, drive) and E and Car buttons.
       Done: driving, his parked car, getting in and out, the drive out request carrying the kerb position of
       the garage's own home (City.tsx garageOf and leave({ drive })).
-      Left: one real run of garage room, "drive this one out", car in the street (the garage room itself
-      is built; the round trip has not been run in the browser yet).
-- [ ] Q7 interiors: supermarket aisles, the mall and its stores, brand stores, the watch boutique, dealerships,
+      Checked in Chrome on the real City tab (resume run): home, "Lift to the garage", walk up to the Porsche
+      (its card: top speed, 0 to 100, the weekly cost, Drive it out, Sell), E, and he is in it on the street
+      with the speed and the car's name on the screen and "F Get out".
+- [x] Q7 interiors: supermarket aisles, the mall and its stores, brand stores, the watch boutique, dealerships,
       cafes, the seaside restaurant, the nightclub, the clinic, gym, training ground, stadium, homes to view, buy
-      and walk around   <-- IN PROGRESS (stopped here on the user's request)
+      and walk around
       Done: src/career/city/interiors/*.ts builds every place kind from its WorldPlace (store styled per brand,
       the mall with its stores inside, supermarket aisles, watch boutique, cafes, restaurant with a sea view,
       nightclub, clinic, gym, training ground, stadium, the four dealers, homes by tier, the garage);
@@ -881,38 +882,79 @@ Checklist:
       (old place ids still work). City.tsx is wired: E at a door goes in, the room is read fresh from the latest
       state, the shop card handles E, home to garage and back, drive out, "Back to the street". Screenshots of
       eleven interiors were taken by the interiors helper (scratchpad, not in the repo).
-      Left:
-      - the boots, tech and jeweller shops still show clothing filler on their shelves; they need their own
-        fixtures (boot walls, phone tables, jewellery cases). This was being fixed when the work stopped.
-      - src/career/city/interiors/legacy.ts (the old room path) still shows the old made up shop signs
-        (Northline, Kurobe, Lumen, Pixelforge, Arden, Solenne, Halcyon, Celestor): swap for real names or drop.
-      - run the whole loop in the browser on the real City tab: walk in, walk up to items, buy, wear, the
-        garage, drive out, a home viewing then buying, the nightclub age gate, the clinic.
-      - frame times per interior on Medium.
+      Resume run, checked against the code: the boots, tech and jewellery shops already have their own
+      fixtures (store.ts picks lit boot shelves, tech tables or glass cases by what the shop sells), and no old
+      made up shop name is left anywhere (only "Northline Representation", a made up agents' firm, which is
+      fine). In Chrome on the real City tab: walk in, walk up to an item, its card, E to buy, worn at once
+      ("Take it off" on the card), the supermarket, the dealers, the mall, the watch boutique, the penthouse, the
+      garage and driving out. The nightclub age gate and the clinic are covered by the life battery.
+      Fixed on the way:
+      - the watch boutique was missing in mid sized cities (Manchester among them): the server put it in the
+        mall as an eighth shop, the mall has seven units, so the room dropped it and its watches could not be
+        reached. Now a full mall sends the boutique to the luxury row, as the biggest cities already do
+        (MALL_UNITS in floodlights/career/life.js); the life battery checks ten cities.
+      - in the mall's hall every shop's item names showed at once and piled up; names of things for sale now
+        fade out past about nine metres (places to use always show), and the hall has paving outside its doors
+        so the camera behind him at the way out sees ground.
+      Frame times on Medium in Chrome on the M3 with the frame cap lifted (median, slowest 5 in 100): the street
+      at night 4.0 and 13.5 ms, supermarket 3.6 and 7.0, Louis Vuitton 3.4 and 6.8, watch boutique 4.1 and 7.6,
+      mall 6.4 and 10.1, supercar dealer 4.6 and 7.4, penthouse 4.5 and 6.9, stadium 4.8 and 7.8, nightclub 3.9
+      and 8.3. All well inside 60 a second.
 - [x] Q8 map overlay, waypoints and the direction marker, fast travel, a new city after a transfer
       CityMap.tsx (M or the Map button): the streets, districts, sea or river, every place in its colour, his
       home ringed, the bus loop and stops, him as an arrow. Click to set a waypoint (a beam in the street, an
       arrow and the distance at the top of the screen, cleared when he gets there); places he has been to (the
       server's visited list) and his home can be reached at once. A transfer means a new city name and new
       places from the server, so the whole plan is built again: layout, sea or not, look, stores.
-- [ ] Q9 performance on Medium, screenshots, every battery 0 failed three times, memory under 400 MB, upload, push
-      Not started as a phase. Ready for it: scratchpad accept.mjs drives the real City tab for the screenshots
-      the user asked for (street with people, map with a waypoint, inside the supermarket, a clothing store, the
-      watch boutique, a dealership, the garage), using a read only hook window.__pcCity (where he is, the
-      places). Measured so far in Chrome on the M3 with the frame cap lifted, the street at night: Low 2.9 ms,
-      Medium 3.5 ms, High 5.2 ms, Ultra 6.2 ms median frames (50 to 103 draw calls).
-      Left: delete the two temporary lab pages (src/app/floodlights/career/lab and .../worldlab, used only for
-      checking the world and the interiors on their own); acceptance screenshots on the production build;
-      test:all three times with 0 failed (the new life battery is wired into test:floodlights); memory check;
-      upload folder; push with "Result chips, play match surfaced, free roam city with real brands and driving".
+- [x] Q9 performance on Medium, screenshots, every battery 0 failed three times, memory under 400 MB, upload, push
+      Frame times on Medium are under Q7, the screenshots under R4 below. test:all three times in a row, every
+      battery 0 failed: typecheck, vitest 89, condition 138, API 255 then 257 and 257, DOM 167, 3D match 167,
+      layout 222, Player Career 149 then 149 and 150, life 163, site 202, build, boot 52 (227 MB after its
+      checks). Memory of the production server with a Manager game and two Player Careers loaded: 130 MB at
+      boot, 174 MB with them loaded, 127 MB idle a minute later. Upload folder refreshed, pushed to GitHub with
+      "Result chips, play match surfaced, free roam city with real brands and driving".
 
-Status when the work stopped (on the user's request, mid Q7):
-- Done and committed: Q1, Q2, Q3, Q4, Q5, Q8. Q6 is done apart from one browser run of the garage round trip.
-- Inside: Q7 (interiors built and wired; the steps left are listed under Q7).
-- Not started: Q9.
-- Last checks: typecheck clean; career battery 150 and 0 failed; 3D match battery 158 and 0 failed; life
-  battery 162 and 0 failed; city plan unit tests 8 and 0 failed. The full test:all has not been run on this work.
-- Known and not fixed (outside the user's asks, worth a look): in a player lock match the locked player wins the
-  ball every time just by running into the man on it, so a scripted test player won youth games 6-0 to 10-0;
-  keepers cannot be played live (no human keeper controls in the engine), so their PLAY button stays disabled
-  with the reason.
+Resume run (8 Oct 2026, evening). The user's list: delete the two lab pages, fix the tackle bug properly, keep
+keepers on SIM with a clean disabled PLAY, take the acceptance screenshots, test:all three times, memory, push.
+- [x] R1 the two temporary lab pages are gone (src/app/floodlights/career/lab with its fixture, and worldlab).
+      Nothing linked to them; the build no longer has those routes. A dev server the earlier run left on port
+      3700 (old code, sharing floodlights/games.json with the batteries) was stopped.
+- [x] R2 the tackle bug: running into the man on the ball is a real challenge now, not a free win
+      Cause: control.mjs userWin gave the person's player the ball whenever he touched the man on it, so a
+      scripted player who only chased and bumped won 20 to 33 balls a match and school games 6-0 to 11-0
+      (Manager matches the same: 7-0 to 12-0).
+      Now (control.mjs userChallenge): decided once as they meet, before the bodies touch. His defending,
+      strength, reactions and balance against the man's dribbling, strength, balance and shielding (a skill
+      move's shield counts), with the angle (face on with the ball showing helps, into his back hurts, side on is
+      weight against weight) and the timing (a ball run away from the man's feet helps; flying in hurts, judged by
+      how fast they really close, so chasing a man who runs away is not flying in; a man who runs the ball into a
+      set defender gives it up more). Five outcomes: won clean, poked loose, bounced off, the man knocks it past
+      him and goes (mostly when he dived in), or a foul (likely into the back at speed, rare for a slow nudge, the
+      card follows how hard it was). A challenge that does not come off leaves him a moment to recover. It works
+      both ways: one of theirs who meets the person's man on the ball challenges him the same way, and a
+      defender a few steps in the path of the person's man running at him steps across and stands him up
+      (ai.mjs stepIn), where before only the one presser ever engaged. Also made real contests: a 50 50 he
+      reaches with one of theirs (his only if he is clearly first), and a ball the man on the other side has just
+      fumbled at his own feet. His sure clean first touch now needs no man on him. Holding Space to close a man
+      down goes round his side to get goal side instead of through his back (it used to give away pushes).
+      AI against AI is untouched: the headless battery's eight matches are the same scores and stats as before.
+      Measured with scripted matches (24 a kind; the chaser runs flat out at the man on the ball, bumps, then
+      runs at goal and shoots): school 2.8 goals for and 0.5 against a game (21 won, 1 drawn, 2 lost; was 7.9
+      and 0), pro 2.2 and 0.7 (15, 7, 2), Manager 2.8 and 0.5 (21, 2, 1; was 9.9 and 0.1). A careful player who
+      closes down with Space: 0.9 fouls a game, no cards in 40 games. In Chrome a live school match with the
+      battery's sensible player ended 3-0 (he used to win those 6-0 and up).
+      Still true and older than this bug: a person who is always on the ball wins a lot of games, as he did on
+      the engine before the ball carry change (a Manager chaser scored 4.3 a game there).
+      Battery: test_match3d.js (167): challenge outcomes by situation, no retry at once, no tackle straight
+      back, their challenges on him, the call for the ball checked directly (with a man near the lane the mate
+      plays it 10 times in 10 when he calls, 0 in 10 when he does not), and four chaser matches with no win by
+      6 or more. "Control stays on him" now means control never moves to someone else (a red card leaves no
+      one under control, which the career battery once tripped over).
+- [x] R3 keepers stay on SIM: PLAY MATCH is off and dimmed (not allowed cursor), the reason sits under it in amber
+      and is tied to the button for screen readers ("Keepers cannot be played live yet. Sim the match: your
+      rating still comes from how you play."), SIM MATCH stays the bright choice. Checked at 1440 and 390 wide.
+- [x] R4 acceptance screenshots on the production build with the ready script (scratchpad accept.mjs, extended
+      with the garage and shops inside the mall): street with people, the map, a waypoint, the supermarket,
+      Louis Vuitton, the watch boutique, the prestige and supercar dealers, the mall, the penthouse, the garage
+      with his Porsche, driving it out, buying and wearing a tee, the keeper's matchday, a live school match.
+      Copies in Be-A-Manager/acceptance_shots (next to site and github, not in the repo).

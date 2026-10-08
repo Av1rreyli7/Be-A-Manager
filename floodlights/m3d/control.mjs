@@ -7,6 +7,7 @@ import { BALL_R, GRAVITY, ROLL_MU, ROLL_V, REACH } from "./consts.mjs";
 import { clamp, hyp, lerp, angDiff, gauss } from "./util.mjs";
 import { n01 } from "./attrs.mjs";
 import { onGround } from "./ball.mjs";
+import { hitBalance, fallDown } from "./body.mjs";
 
 // the speed a rolling ball needs to cover D metres in T seconds (constant plus linear rolling resistance)
 export function rollSpeedFor(D, T) {
@@ -259,7 +260,7 @@ export function firstTouch(m, p, dir) {
   q += gauss(m.rng) * 0.11;
   if (isUser(m, p)) {
     q += 0.18;
-    if (inSp < 9 && b.z < 0.5) q = Math.max(q, 0.66);
+    if (inSp < 9 && b.z < 0.5 && pr < 0.5) q = Math.max(q, 0.66); // a clean touch is sure only with no man on him
   }
   const grade = q > 0.8 ? "perfect" : q > 0.62 ? "good" : q > 0.47 ? "loose" : q > 0.34 ? "heavy" : q > 0.22 ? "awkward" : "failed";
   const side = -Math.sin(p.face) * (b.x - p.x) + Math.cos(p.face) * (b.y - p.y);
@@ -305,27 +306,144 @@ export function firstTouch(m, p, dir) {
   return grade;
 }
 
-// the person's player runs into the man on the ball: he takes it off him. Checked before bodies collide, so the
-// contact that follows is on the new owner and is never a foul by the person.
-export function userWin(m) {
-  const p = m.ctrl, b = m.ball, c = b.ctrl;
-  if (m.auto || !p || p.off || !c || c.team === p.team || b.held || p.act || !canPlay(p)) return false;
-  if (b.z > 0.6) return false;
+// A challenge for the ball between the person's player and a man from the other side: he runs into their man on
+// the ball, or one of theirs runs into him while he has it. Decided once as they meet, before the bodies touch, so
+// the contact that follows belongs to it. The defender's defending, strength, reactions and balance against the
+// carrier's dribbling, strength, balance and shielding; the angle (face on with the ball showing is best, into the
+// man's back is worst) and the timing (a ball run away from the man's feet helps, flying in flat out does not).
+// It ends one of five ways: won clean, poked loose, bounced off, the man knocks it past and goes, or a foul. One
+// that does not come off leaves the defender a moment to recover. AI against AI never comes here.
+export function userChallenge(m) {
+  const u = m.ctrl, b = m.ball, c = b.ctrl;
+  if (m.auto || !u || u.off || !c || b.held || b.z > 0.6) return null;
+  if (c.team !== u.team) return canChallenge(m, u, c) ? challenge(m, u, c) : null;
+  if (c !== u) return null;
+  // he has it: the nearest of theirs who meets him challenges for it
+  let best = null, bd = 9;
+  for (const o of m.teams[1 - u.team].players) {
+    if (o.gk || !canChallenge(m, o, u)) continue;
+    const d = hyp(o.x - u.x, o.y - u.y);
+    if (d < bd) { bd = d; best = o; }
+  }
+  return best ? challenge(m, best, u) : null;
+}
+function canChallenge(m, p, c) {
+  const b = m.ball;
+  if (p.off || p.act || !canPlay(p) || p.chalT > m.t || p.ballLockT > m.t) return false;
   const dB = hyp(b.x - p.x, b.y - p.y), dC = hyp(c.x - p.x, c.y - p.y);
   if (dB > 0.95 && dC > 0.9) return false;
-  if (p.spd < 0.8 && dB > 0.6) return false; // he has to be going at it, or right on the ball
-  // the man loses it, a little off balance, and cannot dive straight back in
-  c.bal -= 0.12; c.ballLockT = m.t + 0.9;
-  if (c.act && (c.act.k === "skill" || c.act.k === "kick")) c.act = null;
-  b.ctrl = p; b.last = p; b.lastTeam = p.team; b.touchT = 0; b.flight = null; b.immune = p; b.immuneT = 0.3;
-  b.vx = p.vx; b.vy = p.vy; b.vz = 0;
+  return p.spd >= 0.8 || dB <= 0.6; // going at it, or right on the ball
+}
+// p challenges c, who has the ball
+function challenge(m, p, c) {
+  const b = m.ball;
+  const dB = hyp(b.x - p.x, b.y - p.y), dC = hyp(c.x - p.x, c.y - p.y);
+  const ux = (c.x - p.x) / (dC || 1), uy = (c.y - p.y) / (dC || 1);
+  // the angle: 1 when the man is facing him, -1 when he comes in from behind
+  const front = -(Math.cos(c.face) * ux + Math.sin(c.face) * uy);
+  const behind = clamp(-front * 1.4 - 0.2, 0, 1);
+  // where the ball is: run away from the man's feet (showing), or on the far side of his body (hidden)
+  const toC = hyp(b.x - c.x, b.y - c.y);
+  const showing = clamp((toC - 0.38) / 0.5, 0, 1) * (dB < toC ? 1 : 0.5);
+  const hidden = clamp(((b.x - c.x) * ux + (b.y - c.y) * uy) / 0.35, 0, 1);
+  const shield = Math.max(c.want.shield ? 1 : 0, c.act && c.act.k === "skill" && c.act.def && c.act.def.shield || 0);
+  // the timing: how hard he flies in (his own speed at the man, but only as fast as they really close: chasing a man
+  // who runs away is not flying in), whether he came in under control, and a man who runs the ball into him
+  const vn = p.vx * ux + p.vy * uy, vrel = (p.vx - c.vx) * ux + (p.vy - c.vy) * uy;
+  const charge = clamp((Math.min(vn, vrel) - 4.5) / 3.5, 0, 1);
+  const set = p.want.jockey || vn < 3.5 && p.spd < 5 ? 1 : 0;
+  const into = clamp(-(c.vx * ux + c.vy * uy) / 6, 0, 1) * (1 - charge);
+  // the men: his defending and strength against the man's dribbling, balance and strength
+  const tck = n01(p.a.tck), str = n01(p.a.str), awa = n01(p.a.awa), rea = n01(p.a.rea), agg = n01(p.a.agg);
+  const dri = n01(c.a.dri), cbal = n01(c.a.bal), cstr = n01(c.a.str), cctl = n01(c.a.ctl);
+  const D = tck * 0.5 + str * 0.25 + awa * 0.15 + rea * 0.1;
+  const A = dri * 0.45 + cbal * 0.2 + cstr * 0.2 + cctl * 0.15;
+  const mp = p.prof.mass * (0.75 + str * 0.5), mc = c.prof.mass * (0.75 + cstr * 0.5);
+  const side = 1 - Math.abs(front); // from the side it is shoulder against shoulder: weight and strength
+  let win = 0.3 + (D - A) * 0.6 + (p.bal - c.bal) * 0.3 + Math.max(0, front) * 0.08 - behind * 0.3;
+  win += showing * 0.22 - hidden * 0.2 - shield * 0.12 - charge * 0.2 + set * 0.06 + into * 0.15 + side * (mp - mc) / (mp + mc) * 0.6;
+  win = clamp(win, 0.03, 0.8);
+  // the contact that follows is this challenge's, not a second one
+  m.contacts[p.id < c.id ? p.id * 64 + c.id : c.id * 64 + p.id] = m.t;
+  const ev = { type: "challenge", by: p.id, on: c.id, out: "" };
   const foot = -Math.sin(p.face) * (b.x - p.x) + Math.cos(p.face) * (b.y - p.y) >= 0 ? 0 : 1;
-  p.drib.lastT = m.t; p.drib.since = 0; p.drib.knockT = 0;
-  p.touch = { t: m.t, foot, kind: "tackle", x: b.x, y: b.y };
-  m.events.push({ type: "tackle", by: p.id, won: true, steal: true, from: c.id });
-  m.stats.tackles[p.team]++;
-  if (m.lastShot) m.lastShot.on = false;
-  return true;
+  if (m.rng() < win) {
+    if (c.act && (c.act.k === "skill" || c.act.k === "kick")) c.act = null;
+    hitBalance(m, c, 0.08 + 0.1 * mp / (mp + mc), Math.atan2(uy, ux), "side");
+    if (b.ctrl !== c) b.ctrl = null; // he lost his feet in it
+    p.touch = { t: m.t, foot, kind: "tackle", x: b.x, y: b.y };
+    const keep = m.rng() < 0.45 + tck * 0.3 + showing * 0.2 + Math.max(0, front) * 0.1 - charge * 0.15;
+    c.ballLockT = m.t + (keep ? 0.9 : 0.5); // the man cannot dive straight back in
+    b.last = p; b.lastTeam = p.team; b.touchT = 0; b.flight = null; b.wz = 0;
+    if (keep) {
+      // won clean: he comes away with it
+      b.ctrl = p; b.immune = p; b.immuneT = 0.3;
+      b.vx = p.vx; b.vy = p.vy; b.vz = 0;
+      p.drib.lastT = m.t; p.drib.since = 0; p.drib.knockT = 0;
+      m.events.push({ type: "tackle", by: p.id, won: true, steal: true, from: c.id });
+      ev.out = "won";
+    } else {
+      // poked loose: it squirts away and anyone can have it
+      const a = p.face + gauss(m.rng) * 0.9, v = 3 + m.rng() * 3.5;
+      b.ctrl = null; b.immune = p; b.immuneT = 0.15;
+      b.vx = Math.cos(a) * v; b.vy = Math.sin(a) * v; b.vz = m.rng() < 0.2 ? 1.2 : 0;
+      b.wx = -b.vy / BALL_R; b.wy = b.vx / BALL_R;
+      m.events.push({ type: "tackle", by: p.id, won: true, poke: true, from: c.id });
+      ev.out = "loose";
+    }
+    m.stats.tackles[p.team]++;
+    if (m.lastShot) m.lastShot.on = false;
+    p.chalT = m.t + 0.4;
+    m.events.push(ev);
+    return ev.out;
+  }
+  // it did not come off. Running into the man's back or flying in is often a foul; a slow nudge rarely is.
+  const foulP = clamp((0.03 + behind * clamp((vrel - 1) / 3, 0, 1) * 0.55 + charge * 0.22 + agg * 0.08 - tck * 0.06) * (set ? 0.6 : 1), 0, 0.75);
+  if (m.rng() < foulP) {
+    const sev = clamp(0.1 + behind * 0.2 + clamp(vrel / 8, 0, 1) * 0.3 + charge * 0.2 + agg * 0.12 + m.rng() * 0.15, 0.05, 0.9);
+    const dir = Math.atan2(uy, ux);
+    if (sev > 0.35 || m.rng() < 0.5) fallDown(m, c, dir, behind > 0.5 ? "forward" : "twist", sev);
+    else hitBalance(m, c, 0.3, dir, "side");
+    m.foul(p, c, behind > 0.5 ? "push" : charge > 0.3 ? "charge" : "trip", sev);
+    m.events.push({ type: "tackle", by: p.id, won: false, foul: true, from: c.id });
+    ev.out = "foul";
+    p.chalT = m.t + 0.9; p.ballLockT = m.t + 0.6;
+    m.events.push(ev);
+    return ev.out;
+  }
+  const cf = Math.cos(c.face), sf = Math.sin(c.face);
+  const beat = m.rng() < clamp(0.15 + charge * 0.55 + dri * 0.25 + Math.max(0, front) * 0.1 - behind * 0.3 - set * 0.1, 0, 0.9);
+  if (beat && c.spd > 1.5 && !c.act) {
+    // he dived in and the man knocks it past him and goes: round the side away from him, then a burst
+    const away = -sf * (p.x - c.x) + cf * (p.y - c.y) > 0 ? -1 : 1;
+    const D2 = Math.min(3.2, 2.2 + dri * 1.2 + c.spd * 0.12);
+    const tx = c.x + cf * D2 - sf * away * 0.9, ty = c.y + sf * D2 + cf * away * 0.9;
+    const T = clamp(D2 / Math.max(c.spd + 1.5, 3), 0.45, 0.9);
+    const v = rollSpeedFor(hyp(tx - b.x, ty - b.y), T), a = Math.atan2(ty - b.y, tx - b.x);
+    b.vx = Math.cos(a) * v; b.vy = Math.sin(a) * v; b.vz = 0;
+    b.wx = -b.vy / BALL_R; b.wy = b.vx / BALL_R; b.wz = 0;
+    b.ctrl = c; b.last = c; b.lastTeam = c.team; b.touchT = 0; b.flight = null; b.immune = c; b.immuneT = 0.2;
+    c.drib.lastT = m.t; c.drib.since = 0; c.drib.knockT = m.t;
+    c.touch = { t: m.t, foot: away > 0 ? 1 : 0, kind: "outside", x: b.x, y: b.y };
+    c.boostT = m.t + 0.45; c.boost = 1.15;
+    // he is left going the wrong way
+    hitBalance(m, p, 0.28 + charge * 0.25, Math.atan2(p.vy, p.vx), "forward");
+    p.chalT = m.t + 1.1; p.ballLockT = m.t + 0.9;
+    m.events.push({ type: "touch", by: c.id, kind: "outside", foot: c.touch.foot });
+    m.events.push({ type: "tackle", by: p.id, won: false, from: c.id });
+    ev.out = "beat";
+  } else {
+    // he bounces off: the man holds him off and keeps it
+    const push = 1.6 * mc / (mp + mc) * (1 - shield * 0.3) + charge * 0.6;
+    p.vx -= ux * push; p.vy -= uy * push;
+    hitBalance(m, p, 0.16 + 0.24 * mc / (mp + mc) + charge * 0.15, Math.atan2(-uy, -ux), "back");
+    c.bal -= 0.06 * mp / (mp + mc) * (shield ? 0.5 : 1);
+    p.chalT = m.t + 0.8; p.ballLockT = m.t + 0.55;
+    m.events.push({ type: "tackle", by: p.id, won: false, from: c.id });
+    ev.out = "bounce";
+  }
+  m.events.push(ev);
+  return ev.out;
 }
 
 // can this player meet the ball now: in front of him, low enough to play, within reach

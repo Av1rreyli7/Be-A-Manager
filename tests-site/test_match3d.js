@@ -190,7 +190,7 @@ async function main() {
     ok("sprint dribbling pushes the ball further ahead than close control", fSprint > fClose + 0.3, [fClose, fSprint]);
   }
 
-  // ---------- the person's player: the ball goes where he goes, loose balls and the man on the ball are his ----------
+  // ---------- the person's player: the ball goes where he goes, loose balls are his, the man on the ball is a real challenge ----------
   {
     const userInp = (mx, my, sprint) => ({ mx, my, sprint: !!sprint, held: {}, down: {}, up: {} });
     const farAway = (m, keep) => { for (const q of m.players) if (!keep.includes(q)) { q.x = 55 * (q.team ? 1 : -1); q.y = 37 * (q.idx % 2 ? 1 : -1); q.vx = q.vy = 0; q.want.spd = 0; q.ai.think = 99; } };
@@ -226,25 +226,64 @@ async function main() {
       if (b.ctrl === p) got++;
     }
     ok("the person collects a loose ball he runs onto", got === 20, got);
-    // he runs into the man on the ball: he wins it, it is not a foul, and the man cannot tackle straight back
-    let won = 0, fouls = 0, lockOk = true;
-    for (let k = 0; k < 20; k++) {
-      const sim = createSim3D(setupOf(75, 75), { rng: seeded(740 + k) });
-      const m = sim.m, p = m.teams[0].players[5], c = m.teams[1].players[7];
-      clearPitch(m, [p, c]); m.auto = false; m.ctrl = p;
-      p.x = 0; p.y = 0; p.face = 0;
-      c.x = 6; c.y = (k % 5) - 2; c.face = Math.PI * (k % 2 ? 1 : 0.6);
-      const b = m.ball; b.x = c.x + Math.cos(c.face) * 0.4; b.y = c.y + Math.sin(c.face) * 0.4; b.ctrl = c; b.last = c; b.lastTeam = 1;
-      for (let i = 0; i < 180 && b.ctrl !== p; i++) {
-        farAway(m, [p, c]);
-        c.want.dx = Math.cos(c.face); c.want.dy = Math.sin(c.face); c.want.spd = 3; c.ai.think = 99;
-        sim.step(userInp(c.x - p.x, c.y - p.y, true)); m.events.length = 0;
+    // he runs into the man on the ball: a real challenge, not a free win. One of five things happens, and who wins
+    // depends on the men (defending and strength against dribbling, balance and strength), the angle and the timing.
+    // c carries the ball toward where its own goal attack points; p is the person's man, coming in as asked.
+    const challengeRuns = (a, c0, pIdx, cIdx, place, inputOf, n, seed0) => {
+      const tally = { won: 0, loose: 0, bounce: 0, beat: 0, foul: 0, none: 0, retry: 0, tackleBack: 0 };
+      for (let k = 0; k < n; k++) {
+        const sim = createSim3D(setupOf(a, c0), { rng: seeded(seed0 + k) });
+        const m = sim.m, p = m.teams[0].players[pIdx], c = m.teams[1].players[cIdx];
+        clearPitch(m, [p, c]); m.auto = false; m.ctrl = p;
+        place(m, p, c, k);
+        const b = m.ball; b.x = c.x + Math.cos(c.face) * 0.45; b.y = c.y + Math.sin(c.face) * 0.45; b.ctrl = c; b.last = c; b.lastTeam = 1;
+        let out = null, outT = 0, again = false;
+        for (let i = 0; i < 240; i++) {
+          farAway(m, [p, c]);
+          if (b.ctrl === c) { c.want.dx = Math.cos(c.face0); c.want.dy = Math.sin(c.face0); c.want.spd = c.run; c.ai.think = 99; }
+          sim.step(inputOf(m, p, c));
+          for (const e of m.events) if (e.type === "challenge" && e.by === p.id) { if (out) again = again || m.t - outT < 0.3; else { out = e.out; outT = m.t; } }
+          m.events.length = 0;
+          if (out && m.t - outT > 0.35) break;
+        }
+        tally[out || "none"]++;
+        if (again) tally.retry++;
+        if (out === "won" && defend.startTackle(m, c, false)) tally.tackleBack++;
       }
-      if (b.ctrl === p) { won++; if (defend.startTackle(m, c, false)) lockOk = false; }
-      fouls += m.stats.fouls[0];
+      return tally;
+    };
+    const toward = (m, p, c, sprint, jockey) => { const i = userInp(c.x - p.x, c.y - p.y, sprint); if (jockey) i.held.Z = true; return i; };
+    // a strong centre back, set and face on, against a poor winger running at him
+    const set = challengeRuns(86, 56, 2, 8, (m, p, c, k) => { p.x = 0; p.y = 0; p.face = 0; c.x = 6; c.y = (k % 5 - 2) * 0.2; c.face = c.face0 = Math.PI; c.run = 3.2; }, (m, p, c) => toward(m, p, c, false, true), 30, 760);
+    // a weak midfielder sprinting into the back of a fine winger running away from him
+    const back = challengeRuns(56, 86, 5, 10, (m, p, c, k) => { p.x = 0; p.y = 0; p.face = Math.PI; p.vx = -6; c.x = -1.6; c.y = (k % 5 - 2) * 0.15; c.face = c.face0 = Math.PI; c.vx = -2.5; c.run = 2.5; }, (m, p, c) => toward(m, p, c, true, false), 30, 800);
+    // two even men, the person flying in face on at a sprint
+    const fly = challengeRuns(75, 75, 6, 7, (m, p, c, k) => { p.x = 0; p.y = 0; p.face = 0; c.x = 9; c.y = (k % 5 - 2) * 0.2; c.face = c.face0 = Math.PI; c.run = 4; }, (m, p, c) => toward(m, p, c, true, false), 30, 840);
+    ok("challenges: a strong defender, set and face on to a poor dribbler, wins most of them and gives nothing away", set.won + set.loose >= 18 && set.foul <= 2, set);
+    ok("challenges: a weak man sprinting into the back of a fine dribbler hardly ever wins it and often gives away a foul", back.won + back.loose <= 5 && back.foul >= 6, back);
+    ok("challenges: flying in face on is mistimed often, and the man knocks it past and goes", fly.beat >= 6 && fly.won + fly.loose < set.won + set.loose, fly);
+    const all = [set, back, fly];
+    ok("challenges: every outcome happens (won clean, poked loose, bounced off, knocked past, a foul)", ["won", "loose", "bounce", "beat", "foul"].every(k => all.some(t => t[k] > 0)), all);
+    ok("challenges: one that is over cannot be tried again at once", all.every(t => t.retry === 0), all.map(t => t.retry));
+    ok("challenges: the man who lost it clean cannot tackle straight back", all.some(t => t.won > 0) && all.every(t => t.tackleBack === 0), all.map(t => t.tackleBack));
+    // the other way: the person runs the ball into a set defender, who challenges him the same way
+    const into = { won: 0, loose: 0, bounce: 0, beat: 0, foul: 0, none: 0 };
+    for (let k = 0; k < 30; k++) {
+      const sim = createSim3D(setupOf(76, 76), { rng: seeded(880 + k) });
+      const m = sim.m, p = m.teams[0].players[9], o = m.teams[1].players[2];
+      clearPitch(m, [p, o]); m.auto = false; m.ctrl = p;
+      p.x = 0; p.y = 0; p.face = 0; o.x = 8; o.y = (k % 5 - 2) * 0.2; o.face = Math.PI;
+      const b = m.ball; b.x = 0.45; b.y = 0; b.ctrl = p; b.last = p; b.lastTeam = 0;
+      let out = null;
+      for (let i = 0; i < 240 && !out; i++) {
+        farAway(m, [p, o]);
+        sim.step(userInp(1, 0, true));
+        for (const e of m.events) if (e.type === "challenge" && e.on === p.id && !out) out = e.out;
+        m.events.length = 0;
+      }
+      into[out || "none"]++;
     }
-    ok("running into the man on the ball wins it for the person, never as a foul", won === 20 && fouls === 0, [won, fouls]);
-    ok("the man who lost it cannot tackle straight back", lockOk, null);
+    ok("challenges: a set defender the person runs the ball into challenges him the same way (he wins some, the man keeps it some)", into.won + into.loose >= 5 && into.bounce + into.beat >= 5 && into.none <= 5, into);
   }
 
   // ---------- first touch quality ----------
@@ -484,7 +523,7 @@ async function main() {
         else { const dx = b.x - L.x, dy = b.y - L.y, d = Math.hypot(dx, dy) || 1; if (d < 20) inp.held.S = true; else { inp.mx = dx / d; inp.my = dy / d; } }
         if (m.phase === "restart" && m.restart && m.restart.team === 0 && m.restart.ready) { if (m.restart.taker === L) setPiecesHis++; else setPiecesOthers++; }
         sim.step(inp);
-        if (m.ctrl !== L) switched++;
+        if (m.ctrl && m.ctrl !== L) switched++; // a red card leaves no one under control, never someone else
         for (const e of m.events) if (e.type === "kick" && e.to === L.id && e.by !== L.id) toHim++;
         m.events.length = 0;
       }
@@ -495,7 +534,28 @@ async function main() {
     }
     ok("player lock: three full matches finish (home and away)", finished === 3, finished);
     ok("player lock: control never leaves him, not even at a set piece someone else takes", switched === 0 && setPiecesOthers > 0, [switched, setPiecesOthers, setPiecesHis]);
-    ok("player lock: team mates pass to him when he calls and gets free", toHim >= 3 && calls > 10, [toHim, calls]);
+    ok("player lock: team mates pass to him in a real match when he calls", toHim >= 2 && calls > 10, [toHim, calls]);
+    // the call itself: a team mate on the ball with him free ahead looks for him first once he calls
+    let answered = 0, unasked = 0;
+    for (let k = 0; k < 10; k++) {
+      for (const call of [true, false]) {
+        const sim = createSim3D({ home: "Home FC", away: "Away FC", side: "home", homeXI: lockXI(9), awayXI: testXI(76, "A") }, { rng: seeded(960 + k) });
+        const m = sim.m, L = m.lock, q = m.teams[0].players[6], o = m.teams[0].players[7], d = m.teams[1].players[3];
+        clearPitch(m, [L, q, o, d]); m.auto = false; m.ctrl = L;
+        // another free man is the safe ball; the lane to him has a man near it, so only his call makes it worth it
+        q.x = -10; q.y = 0; q.face = 0; L.x = 8; L.y = 10 + (k % 3); L.face = Math.PI; o.x = -2; o.y = -7 - (k % 2); d.x = 3; d.y = 5; d.face = Math.PI;
+        const b = m.ball; b.x = q.x + 0.4; b.y = 0; b.ctrl = q; b.last = q; b.lastTeam = 0; q.ai.think = 0.5;
+        let passed = false;
+        for (let i = 0; i < 150; i++) {
+          o.want.spd = 0; o.ai.think = 9; d.want.spd = 0; d.ai.think = 9; d.x = 3; d.y = 5;
+          sim.step({ mx: 0, my: 0, held: {}, down: call && i === 2 ? { Q: true } : {}, up: {} });
+          for (const e of m.events) if (e.type === "kick" && e.by === q.id) { passed = e.to === L.id; i = 999; }
+          m.events.length = 0;
+        }
+        if (passed) { if (call) answered++; else unasked++; }
+      }
+    }
+    ok("player lock: a team mate on the ball plays the riskier ball to him when he calls, and not when he does not", answered >= 8 && unasked <= 2, [answered, unasked]);
     ok("player lock: his line and live rating are sane", lines.every(l => l && [l.g, l.a, l.shots, l.passes, l.passOk, l.won, l.rating].every(Number.isFinite) && l.rating >= 3 && l.rating <= 10 && l.passOk <= l.passes && l.onTarget <= l.shots), lines);
     const idle = createSim3D({ home: "Home FC", away: "Away FC", side: "home", homeXI: lockXI(7), awayXI: testXI(76, "A") }, { rng: seeded(77) });
     let n2 = 0;
@@ -520,10 +580,29 @@ async function main() {
         const b = m.ball, inp = { mx: 0, my: 0, held: {}, down: {}, up: {} }, gx = m.teams[0].dir * C.HALF_L;
         if (b.ctrl === L) {
           const dx = gx - L.x, dy = -L.y, d = Math.hypot(dx, dy);
-          inp.mx = dx / d; inp.my = dy / d;
+          let ux = dx / d, uy = dy / d;
           st.had = (st.had || 0) + 1;
+          // a man in the way: go round him, or if he is right there and a team mate is free further on, give it
+          let block = null;
+          for (const o of m.teams[1].players) {
+            if (o.off || o.gk) continue;
+            const rx = o.x - L.x, ry = o.y - L.y, ah = rx * ux + ry * uy, lat = -rx * uy + ry * ux;
+            if (ah > 0 && ah < 5 && Math.abs(lat) < 2 && (!block || ah < block.ah)) block = { ah, lat };
+          }
+          if (block) { const sd = block.lat > 0 ? -1 : 1, nx = ux - uy * sd * 0.9, ny = uy + ux * sd * 0.9, nl = Math.hypot(nx, ny); ux = nx / nl; uy = ny / nl; }
+          inp.mx = ux; inp.my = uy;
           if (d < 22) { if ((st.eH || 0) < 0.45) { inp.held.E = true; st.eH = (st.eH || 0) + 1 / 60; } else { inp.up.E = st.eH; st.eH = 0; } }
-          else if (st.had === 50) inp.up.Q = 0.12;
+          else if (block && block.ah < 2.5 && st.had > 20) {
+            let mate = null, ms = -1e9;
+            for (const q of m.teams[0].players) {
+              if (q === L || q.off || q.gk) continue;
+              let free = 9; for (const o of m.teams[1].players) if (!o.off) free = Math.min(free, Math.hypot(o.x - q.x, o.y - q.y));
+              const fwd = (q.x - L.x) * m.teams[0].dir, dq = Math.hypot(q.x - L.x, q.y - L.y);
+              const sc = Math.min(free, 6) * 2 + fwd * 0.3 - Math.abs(dq - 15) * 0.2;
+              if (free > 3 && dq > 6 && dq < 30 && sc > ms) { ms = sc; mate = q; }
+            }
+            if (mate) { const qx = mate.x - L.x, qy = mate.y - L.y, ql = Math.hypot(qx, qy); inp.mx = qx / ql; inp.my = qy / ql; inp.up.Q = 0.35; st.had = 0; }
+          }
         } else {
           st.had = 0;
           if (b.ctrl && b.ctrl.team === 0) { const dx = b.x + m.teams[0].dir * 6 - L.x, dy = -b.y * 0.3 - L.y, d = Math.hypot(dx, dy) || 1; if (d > 2) { inp.mx = dx / d; inp.my = dy / d; } if (st.n % 90 === 0) inp.down.Q = true; }
@@ -540,6 +619,8 @@ async function main() {
           if (near) { const dx = near.x - L.x, dy = near.y - L.y, d = Math.hypot(dx, dy) || 1; inp.mx = dx / d; inp.my = dy / d; }
         } else {
           if (b.ctrl && b.ctrl.team === 0) { const dx = b.x - L.x, dy = b.y + 6 - L.y, d = Math.hypot(dx, dy) || 1; if (d > 6) { inp.mx = dx / d; inp.my = dy / d; } if (st.n % 90 === 0) inp.down.Q = true; }
+          // a loose ball near him he goes for (the man on the ball he leaves alone)
+          else if (!b.ctrl && !b.held && Math.hypot(b.x - L.x, b.y - L.y) < 15) { const dx = b.x - L.x, dy = b.y - L.y, d = Math.hypot(dx, dy) || 1; inp.mx = dx / d; inp.my = dy / d; }
         }
         return inp;
       }
@@ -551,7 +632,7 @@ async function main() {
       let notHim = 0;
       while (m.phase !== "full" && st.n++ < 60 * 700) {
         sim.step(bot(m, L, st));
-        if (m.ctrl !== L) notHim++;
+        if (m.ctrl && m.ctrl !== L) notHim++;
         mates.forEach((p, i) => { moved[i] += Math.hypot(p.x - start[i].x, p.y - start[i].y); start[i] = { x: p.x, y: p.y }; });
         m.events.length = 0;
       }
@@ -568,6 +649,35 @@ async function main() {
       ok("player lock (" + kind + "): the bad game counts the ball given away", bad.line.lost >= 3 && bad.line.shots === 0, bad.line);
       ok("player lock (" + kind + "): the rating follows how he played (good game above bad game)", good.line.rating > bad.line.rating + 0.8, [good.line.rating, bad.line.rating]);
     }
+    // the tackle bug, played out: a player who only chases the man on the ball flat out and runs into him (then runs
+    // at goal and shoots) used to win every challenge and school games 6-0 to 10-0. Now he wins few of them and the
+    // scores look like football.
+    const chaser = (m, L, st) => {
+      const b = m.ball, inp = { mx: 0, my: 0, sprint: true, held: {}, down: {}, up: {} }, gx = m.teams[0].dir * C.HALF_L;
+      if (b.ctrl === L) {
+        const dx = gx - L.x, dy = -L.y, d = Math.hypot(dx, dy);
+        inp.mx = dx / d; inp.my = dy / d;
+        if (d < 22) { if ((st.eH || 0) < 0.45) { inp.held.E = true; st.eH = (st.eH || 0) + 1 / 60; } else { inp.up.E = st.eH; st.eH = 0; } }
+      } else if (b.ctrl && b.ctrl.team === 0) { const dx = b.x + m.teams[0].dir * 6 - L.x, dy = -b.y * 0.3 - L.y, d = Math.hypot(dx, dy) || 1; if (d > 2) { inp.mx = dx / d; inp.my = dy / d; } }
+      else { const t = b.ctrl || b.held || b, dx = t.x - L.x, dy = t.y - L.y, d = Math.hypot(dx, dy) || 1; inp.mx = dx / d; inp.my = dy / d; }
+      return inp;
+    };
+    const chased = [];
+    for (const [kind, side, seed] of [["youth", "home", 4301], ["youth", "away", 4302], ["pro", "home", 4303], ["pro", "away", 4304]]) {
+      const sim = createSim3D(setups[kind](side), { rng: seeded(seed) });
+      const m = sim.m, L = m.lock, st = { n: 0 };
+      let won = 0, tries = 0;
+      while (m.phase !== "full" && st.n++ < 60 * 700) {
+        sim.step(chaser(m, L, st));
+        for (const e of m.events) if (e.type === "challenge" && e.by === L.id) { tries++; if (e.out === "won") won++; }
+        m.events.length = 0;
+      }
+      chased.push({ kind, side, score: m.score[0] + "-" + m.score[1], margin: m.score[0] - m.score[1], won, tries, done: m.phase === "full" });
+    }
+    const tries = chased.reduce((n, c) => n + c.tries, 0), wins = chased.reduce((n, c) => n + c.won, 0);
+    ok("the chaser: every match finishes", chased.every(c => c.done), chased);
+    ok("the chaser: running into the man on the ball wins it clean less than a third of the time (it used to be every time)", tries >= 20 && wins < tries * 0.3, [wins, tries]);
+    ok("the chaser: no blowouts, the scores look like football (no win by 6 or more, the average margin under 3.5)", chased.every(c => c.margin < 6) && chased.reduce((n, c) => n + c.margin, 0) / chased.length < 3.5, chased.map(c => c.score));
     // the rating, piece by piece: goals and good passes lift it, lost balls and wild passes drop it
     const rateOf = S => lockM.lockRating({ lock: { pos: "FW", role: "ST" }, lockStats: Object.assign({ touches: 0, passes: 0, passOk: 0, shots: 0, onTarget: 0, goals: 0, assists: 0, tackles: 0, won: 0, skills: 0, lost: 0 }, S), score: [0, 0], clock: 90 });
     const base = rateOf({});

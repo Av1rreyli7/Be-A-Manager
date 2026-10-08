@@ -8,7 +8,7 @@
 import { HALF_L, HALF_W, GOAL_HALF, BOX_D, BOX_HALF, REACH } from "./consts.mjs";
 import { clamp, hyp, lerp, angDiff, wrapAng, segDist } from "./util.mjs";
 import { n01 } from "./attrs.mjs";
-import { pressureOn, canPlay } from "./control.mjs";
+import { pressureOn, canPlay, isUser } from "./control.mjs";
 import { planPass, planThrough, planLob, planCross, planShot, startKick, timeToReach, laneRisk, isOffside, passSpeed } from "./kick.mjs";
 import { startTackle, startSlide, shoulder } from "./defend.mjs";
 import { pickSkill, startSkill } from "./skills.mjs";
@@ -266,6 +266,8 @@ function defendOff(m, p, dt) {
   const T = m.teams[p.team], O = m.teams[1 - p.team], b = m.ball, W = p.want, ai = p.ai, dir = T.dir;
   const owner = b.ctrl && b.ctrl.team !== p.team ? b.ctrl : null;
   W.shield = 0;
+  // the person's man running at us with the ball: a defender a few steps in his path steps across and stands him up
+  if (owner && isUser(m, owner) && stepIn(m, p, owner)) return;
   // pressing: close down, then jockey and pick the moment
   if (T.press1 === p && owner) { press(m, p, owner, dt); return; }
   if (T.press2 === p && owner) {
@@ -339,6 +341,20 @@ function pickMark(m, p) {
     bd = d; best = o;
   }
   return best;
+}
+
+// a man in the path of a carrier running at him gets across his line and holds it, so the run meets a challenge
+function stepIn(m, p, c) {
+  const cs = hyp(c.vx, c.vy);
+  if (cs < 2 || p.act) return false;
+  const ux = c.vx / cs, uy = c.vy / cs, rx = p.x - c.x, ry = p.y - c.y;
+  const ahead = rx * ux + ry * uy, lat = -rx * uy + ry * ux;
+  if (ahead < 0.8 || ahead > 6 || Math.abs(lat) > 2.2) return false;
+  const W = p.want, k = Math.max(1.1, ahead - 0.6);
+  const tx = c.x + ux * k, ty = c.y + uy * k;
+  W.dx = tx - p.x; W.dy = ty - p.y; W.spd = Math.min(p.prof.vmax * 0.8, hyp(W.dx, W.dy) * 3 + 0.5);
+  W.face = Math.atan2(c.y - p.y, c.x - p.x); W.jockey = 1;
+  return true;
 }
 
 // close down a carrier: fast, then a controlled approach, then jockey and choose the moment to tackle

@@ -18,6 +18,8 @@ export function mallRoom(k: Kit, p: WorldPlace): Room {
   const st = p.style;
   // ---------- the shell ----------
   k.floor(W, D, surfMat("marble", "#cfc5b4", "#8a7c66", { rough: 0.22 }), 0, 0, 3.2);
+  // the paving outside the doors, so the camera behind him at the way out sees ground, not the dark
+  k.floor(W + 10, 16, mat("#8f8b84", { rough: 0.92 }), 0, D / 2 + 8, 4, -0.01);
   const wallM = mat(st.wall || "#f4f2ee", { rough: 0.85 });
   k.wall(-W / 2, -D / 2, W / 2, -D / 2, H, wallM, { solid: false });
   k.wall(-W / 2, D / 2, -W / 2, -D / 2, H, wallM, { solid: false });
@@ -29,6 +31,7 @@ export function mallRoom(k: Kit, p: WorldPlace): Room {
   k.mount(head, rbox(gap + 0.4, 0.2, 0.4, 0.02), mat(st.trim || "#2b2b2b", { metal: 0.6, rough: 0.3 }), 0, 3.2, 0);
   k.spot("door", "Way out", 0, D / 2 - 0.6, { r: 1.2, y: 1.8 });
   // ---------- the shops round the atrium: three along the back, the rest down the sides ----------
+  // seven units; the server (MALL_UNITS in floodlights/career/life.js) never sends more shops than that
   const slots: { x: number; z: number; q: number; w: number; d: number }[] = [
     { x: -15.2, z: -D / 2 + 5.6, q: 0, w: 14.4, d: 11 },
     { x: 0, z: -D / 2 + 5.6, q: 0, w: 14.4, d: 11 },

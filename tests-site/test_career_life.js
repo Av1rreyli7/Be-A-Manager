@@ -412,6 +412,15 @@ async function main() {
     r = await A.act("dealer:super", "car", "roma");
     ok("a dealer that is not in this city sells nothing", r.status === 400, r.j);
     ok("what he owns still shows in a small city", item(st, "rm_67") && item(st, "rm_67").owned && car(st, "sf90") && car(st, "sf90").owned, null);
+    // every shop has a door the city can show: a mall holds at most its seven units, the rest stand on the street
+    const shopDoors = [];
+    for (const city of ["Manchester", "London", "Madrid", "Mumbai", "Glasgow", "Lisbon", "Milan", "Riyadh", "Kolkata", "Shillong"]) {
+      const w = (await A.act("_test", "city", city)).j.state.life.world, mall = w.places.find(p => p.id === "mall");
+      const inMall = w.places.filter(p => p.where === "mall" && p.kind !== "mall").map(p => p.id);
+      shopDoors.push({ city, tier: w.tier, n: mall.inside.length, same: inMall.length === mall.inside.length && inMall.every(id => mall.inside.includes(id)), watches: (w.places.find(p => p.id === "watches") || {}).where });
+    }
+    ok("every shop has a door: a mall holds at most its seven units, the rest (the watch boutique too) stand on the street", shopDoors.every(x => x.n <= 7 && x.same && x.watches), shopDoors);
+    st = (await A.act("_test", "city", "Shillong")).j.state;
     // a week in the new city: he gets a place to live there
     const wk = await A.week();
     st = wk && wk.j.state;

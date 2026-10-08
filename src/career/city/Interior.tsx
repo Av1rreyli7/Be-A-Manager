@@ -496,14 +496,17 @@ export default function Interior({
       const tt = room.group.getObjectByName("turntable");
       if (tt) tt.rotation.y += dt * 0.35;
     }
-    // labels over the things to use (only those the screen made an element for)
+    // labels over the things to use (only those the screen made an element for). The names of things for sale fade
+    // out with distance, so a big room (the mall's hall) does not fill up with them; places to use always show.
     if (labelEls.current.size)
       for (const h of room.hotspots) {
         const el = labelEls.current.get("hs:" + h.id);
         if (!el) continue;
         tmp.set(h.x, 1.9, h.z).project(camera);
         el.style.transform = `translate(${((tmp.x + 1) / 2) * size.width}px, ${((1 - tmp.y) / 2) * size.height}px) translate(-50%, -100%)`;
-        el.style.opacity = tmp.z > 1 ? "0" : "1";
+        const seen = tmp.z > 1 ? 0 : h.tag ? 1 : Math.min(1, Math.max(0, (9 - Math.hypot(h.x - me.x, h.z - me.z)) / 2));
+        el.style.opacity = String(seen);
+        el.style.pointerEvents = seen < 0.3 ? "none" : "";
       }
   });
   const rings = useMemo(() => room.hotspots.map((h) => (legacy || h.tag ? h : null)), [room, legacy]);

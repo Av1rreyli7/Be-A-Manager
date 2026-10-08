@@ -115,6 +115,7 @@ function makeLife(K) {
     return { restaurant: name("restaurant"), gym: name("gym"), mall: name("mall"), shops: info.row || ci.row || name("watches") };
   }
 
+  const MALL_UNITS = 7;
   // every place in the city he lives in, the same every time for the same city.
   // who: his club, his team, his home town and his homes (null for just the city)
   function buildWorld(city, country, who) {
@@ -149,7 +150,9 @@ function makeLife(K) {
     if (tier >= 3) luxury.push(...L.LUXURY);
     else if (tier === 2) { const a = seed % L.LUXURY.length; luxury.push(L.LUXURY[a], L.LUXURY[(a + 1 + (seed >>> 4) % (L.LUXURY.length - 1)) % L.LUXURY.length]); }
     const mallName = info.mall || (L.MALL_NAME[country] ? L.MALL_NAME[country](city) : city + " Central");
-    const watchesIn = tier >= 3 ? "luxury" : "mall";
+    // the mall has seven shop units (src/career/city/interiors/mall.ts); when its own shops fill them, the watch
+    // boutique gets a shop of its own on the luxury row, as it does in the biggest cities
+    const watchesIn = tier >= 3 || mallStores.length >= MALL_UNITS ? "luxury" : "mall";
     const inside = mallStores.slice();
     if (watchesIn === "mall") inside.push("watches");
     add({ id: "mall", kind: "mall", name: mallName, where: "centre", style: L.PLACE_STYLE.mall, inside });

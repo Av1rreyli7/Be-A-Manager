@@ -62,7 +62,7 @@ async function lockMatch(start, seed) {
     else if (b.ctrl && b.ctrl.team === 0) { const dx = b.x + m.teams[0].dir * 6 - L.x, dy = -b.y * 0.3 - L.y, d = Math.hypot(dx, dy) || 1; if (d > 2) { inp.mx = dx / d; inp.my = dy / d; } if (steps % 90 === 0) inp.down.Q = true; if (steps % 400 === 200) inp.down.T = true; }
     else { const dx = b.x - L.x, dy = b.y - L.y, d = Math.hypot(dx, dy) || 1; if (d < 20) inp.held.S = true; else { inp.mx = dx / d; inp.my = dy / d; } }
     sim.step(inp);
-    if (m.ctrl !== L && m.phase === "play") switched++;
+    if (m.ctrl && m.ctrl !== L && m.phase === "play") switched++; // a red card leaves no one under control, never someone else
     m.events.length = 0;
   }
   return { m, L, switched, res: sim.result(), line: sim.lockLine() };
