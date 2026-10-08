@@ -1,0 +1,421 @@
+/* The open city: the canvas fills the tab, the HUD sits in the corners, the prompt at the foot. Kit tokens
+   (public/kit.css) for every colour and face. */
+.pc-world {
+  position: relative;
+  height: calc(100dvh - 96px);
+  min-height: 520px;
+  margin-top: 14px;
+  overflow: hidden;
+  background: #05070b;
+  border: 1px solid var(--k-line);
+  border-radius: 10px;
+  isolation: isolate;
+}
+.pc-world-out {
+  position: absolute;
+  left: 16px;
+  bottom: 18px;
+  z-index: 5;
+}
+.pc-world-wait {
+  margin: 0;
+  padding: 40px;
+  color: var(--k-dim);
+  font: 600 14px/1.4 var(--k-f-ui);
+}
+.pc-world-canvas {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  cursor: grab;
+}
+.pc-world-canvas:active {
+  cursor: grabbing;
+}
+.pc-world-hud {
+  position: absolute;
+  left: 16px;
+  top: 14px;
+  display: grid;
+  gap: 8px;
+  pointer-events: none;
+}
+.pc-world-hud .pc-kicker {
+  margin: 0;
+  font: 700 12px/1 var(--k-f-lbl);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.pc-world-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pc-world-chips .pc-chip {
+  background: rgba(6, 8, 12, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.pc-world-chips .pc-chip b {
+  font: 700 13px/1 var(--k-f-num);
+  letter-spacing: 0.04em;
+  color: #ffffff;
+}
+.pc-world-tools {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 60%;
+}
+.pc-world-way {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.pc-world-way i {
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
+  border-bottom: 22px solid #ffd35c;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.7));
+  transform-origin: 50% 60%;
+}
+.pc-world-way span {
+  font: 700 11px/1 var(--k-f-lbl);
+  letter-spacing: 0.1em;
+  color: #ffd35c;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+.pc-world-prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  max-width: min(92%, 640px);
+  background: rgba(6, 8, 12, 0.8);
+  border: 1px solid var(--k-line-2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+  font: 600 14px/1.35 var(--k-f-ui);
+  pointer-events: none;
+}
+.pc-world-prompt kbd,
+.pc-world-help kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  font: 700 11px/1 var(--k-f-lbl);
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.pc-world-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 10px 14px;
+  max-width: min(86%, 460px);
+  background: #f4f1ea;
+  color: #111214;
+  font: 600 14px/1.4 var(--k-f-ui);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  animation: k-pop 0.24s var(--k-ease) both;
+}
+.pc-world-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  margin-left: -8px;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 9px solid #f4f1ea;
+}
+.pc-world-speed {
+  position: absolute;
+  left: 16px;
+  bottom: 22px;
+  display: grid;
+  gap: 4px;
+  pointer-events: none;
+}
+.pc-world-speed b {
+  font: 700 34px/1 var(--k-f-lbl);
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+.pc-world-speed span {
+  font: 600 11px/1 var(--k-f-lbl);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--k-dim);
+}
+.pc-world-help {
+  position: absolute;
+  left: 16px;
+  bottom: 84px;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  max-width: 340px;
+  padding: 12px 14px;
+  background: rgba(6, 8, 12, 0.8);
+  border: 1px solid var(--k-line);
+}
+.pc-world-help p {
+  margin: 0;
+  color: var(--k-soft);
+  font: 500 13px/1.9 var(--k-f-ui);
+}
+.pc-world-flash {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+}
+.pc-world-flash.is-on {
+  animation: pc-flash 0.5s ease-out both;
+}
+@keyframes pc-flash {
+  0% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.pc-world-side {
+  position: absolute;
+  right: 0;
+  top: 56px;
+  bottom: 0;
+  width: 340px;
+  padding: 14px;
+  overflow-y: auto;
+  background: rgba(6, 8, 12, 0.82);
+  border-left: 1px solid var(--k-line);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ---------- the map ---------- */
+.pc-map {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.pc-map-sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 0;
+  width: min(1180px, 100%);
+  max-height: 100%;
+  background: var(--k-modal-bg, #070807);
+  border: 1px solid var(--k-line);
+}
+.pc-map-canvas {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+}
+.pc-map-canvas canvas {
+  width: min(100%, calc(100dvh - 190px));
+  aspect-ratio: 1;
+  height: auto;
+  cursor: crosshair;
+  display: block;
+}
+.pc-map-hover {
+  position: absolute;
+  left: 22px;
+  top: 20px;
+  margin: 0;
+  padding: 6px 10px;
+  background: rgba(6, 8, 12, 0.85);
+  color: #ffffff;
+  font: 600 13px/1 var(--k-f-ui);
+  pointer-events: none;
+}
+.pc-map-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 16px;
+  border-left: 1px solid var(--k-line);
+  overflow-y: auto;
+  max-height: calc(100dvh - 160px);
+}
+.pc-map-side .pc-dim {
+  margin: 0;
+  font-size: 13px;
+}
+.pc-map-sel {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--k-line-2);
+  background: rgba(255, 255, 255, 0.03);
+}
+.pc-map-sel b {
+  color: #ffffff;
+  font: 700 15px/1.2 var(--k-f-ui);
+}
+.pc-map-sel span {
+  color: var(--k-dim);
+  font: 600 11px/1.2 var(--k-f-lbl);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.pc-map-sel-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.pc-map-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.pc-map-list li {
+  display: grid;
+  gap: 2px;
+}
+.pc-map-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--k-soft);
+  font: 500 13px/1.3 var(--k-f-ui);
+  text-align: left;
+  cursor: pointer;
+}
+.pc-map-row:hover,
+.pc-map-row.is-on {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+.pc-map-row.is-home {
+  color: var(--k-accent);
+}
+.pc-map-row i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+@media (max-width: 900px) {
+  .pc-map-sheet {
+    grid-template-columns: 1fr;
+  }
+  .pc-map-side {
+    border-left: 0;
+    border-top: 1px solid var(--k-line);
+    max-height: 30dvh;
+  }
+  .pc-world-side {
+    top: auto;
+    width: 100%;
+    max-height: 45%;
+    border-left: 0;
+    border-top: 1px solid var(--k-line);
+  }
+  .pc-world-tools {
+    max-width: 100%;
+    top: auto;
+    bottom: 76px;
+    right: 10px;
+  }
+}
+/* ---------- touch screens: a thumb stick and two buttons ---------- */
+.pc-touch {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 18px;
+  pointer-events: none;
+  z-index: 4;
+}
+.pc-touch-stick {
+  position: relative;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(6, 8, 12, 0.45);
+  touch-action: none;
+  pointer-events: auto;
+}
+.pc-touch-stick span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  margin: -26px 0 0 -26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+.pc-touch-btns {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 70px;
+  pointer-events: auto;
+}
+.pc-touch-btns .k-btn {
+  min-width: 58px;
+  min-height: 58px;
+  border-radius: 50%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-world-bubble,
+  .pc-world-flash.is-on {
+    animation: none;
+  }
+}

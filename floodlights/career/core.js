@@ -377,7 +377,8 @@ function makeCore(deps) {
     const recover = 22 + c.attrs.stamina * 0.12 + q.physio * 0.6;
     c.cond.fatigue = clamp(c.cond.fatigue + out.fatigue - recover, 0, 100);
     // injury: mostly from hard work while tired, a little from bad luck
-    const chance = 0.004 + Math.max(0, risk) * 0.0035 * Math.pow(c.cond.fatigue / 60, 2) * (1.25 - c.traits.discipline / 200) * (1.15 - q.physio * 0.03);
+    // a check up at the clinic (life.js) lowers the risk for a few weeks
+    const chance = (0.004 + Math.max(0, risk) * 0.0035 * Math.pow(c.cond.fatigue / 60, 2) * (1.25 - c.traits.discipline / 200) * (1.15 - q.physio * 0.03)) * LIFE.guard(game);
     if (rnd() < chance) out.injured = injure(game, c.training.intensity === "hard" ? 1.3 : 1);
     // the coach notices who works
     const work = c.training.slots.filter(s => !["rest", "recovery"].includes(s)).length;
@@ -413,30 +414,47 @@ function makeCore(deps) {
     if (c.stage === "centre" && c.centre) return { team: c.centre.name, comp: c.centre.competition, exposure: c.centre.exposure, comps: [{ name: "National Youth League", weeks: "league" }, { name: "International Youth Showcase", weeks: [20, 21], national: true }], rivals: ["Northern Academy", "Capital Football School", "Lagoon Stars", "City Rovers Youth", "Harbour Boys", "Valley FC Youth", "United Youth", "Golden Eagles Academy"] };
     return null;
   }
+  // one roll a week that stays the same however often it is asked for: the hub, a live match and the sim of the
+  // week all see the same opponent and the same team sheet
+  function weekRoll(game, salt) {
+    const s = String(C(game).created || 0) + ":" + game.season + ":" + game.round + ":" + salt;
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    h ^= h >>> 15; h = Math.imul(h, 2246822507) >>> 0; h ^= h >>> 13;
+    return (h >>> 0) / 4294967296;
+  }
   function youthFixture(game) {
     const set = youthSetting(game);
     if (!set) return null;
     const w = game.round + 1;
-    for (const comp of set.comps) if (Array.isArray(comp.weeks) && comp.weeks.includes(w)) return { comp: comp.name, national: !!comp.national, opp: pick(set.rivals), set };
+    for (const comp of set.comps) if (Array.isArray(comp.weeks) && comp.weeks.includes(w)) return { comp: comp.name, national: !!comp.national, opp: set.rivals[Math.floor(weekRoll(game, "opp") * set.rivals.length)], set };
     const league = set.comps.find(x => x.weeks === "league");
     if (league && w % 2 === 0 && w <= 36) return { comp: league.name, national: false, opp: set.rivals[(w / 2) % set.rivals.length], set };
     return null;
   }
-  function youthMatch(game, fx) {
+  // the coach's team sheet this week: start, the bench or left out. A strong team means a real fight for a place.
+  function youthRole(game) {
+    const c = C(game), p = me(game);
+    const set = youthSetting(game);
+    if (!set || c.cond.inj) return "out";
+    const bar = 34 + set.comp * 2.2 - (c.coachRel - 55) * 0.08;
+    const startP = clamp(0.5 + (p.rating - bar) / 7, 0.05, 0.98);
+    return weekRoll(game, "start") < startP ? "start" : weekRoll(game, "bench") < 0.6 ? "sub" : "out";
+  }
+  const resOf = (gf, ga) => (gf > ga ? "W" : gf < ga ? "L" : "D");
+  function youthMatch(game, fx, role0) {
     const c = C(game), p = me(game);
     const set = fx.set;
     const teamStr = 36 + set.comp * 2.4;
     const oppStr = teamStr + gauss() * 4 + (fx.national ? 4 : 0);
-    // selection: a strong team means a real fight for a place
-    const bar = 34 + set.comp * 2.2 - (c.coachRel - 55) * 0.08;
-    const startP = c.cond.inj ? 0 : clamp(0.5 + (p.rating - bar) / 7, 0.05, 0.98);
-    const role = rnd() < startP ? "start" : rnd() < 0.6 ? "sub" : "out";
+    // selection: picked before the week's training, the same sheet the hub showed
+    const role = role0 || youthRole(game);
     const mins = role === "start" ? (rnd() < 0.85 ? 90 : 60 + Math.floor(rnd() * 25)) : role === "sub" ? 10 + Math.floor(rnd() * 30) : 0;
     const share = mins / 90;
     const lift = (p.rating - teamStr) * 0.09 * share;
     const lf = 1.35 * Math.exp(((teamStr + lift) - oppStr) / 12), la = 1.25 * Math.exp((oppStr - (teamStr + lift * 0.5)) / 12);
     const gf = poisson(Math.min(lf, 4.5)), ga = poisson(Math.min(la, 4.5));
-    const out = { comp: fx.comp, opp: fx.opp, team: set.team, gf, ga, role, mins, national: fx.national };
+    const out = { comp: fx.comp, opp: fx.opp, team: set.team, gf, ga, res: resOf(gf, ga), wk: game.round + 1, role, mins, national: fx.national };
     if (mins > 0) Object.assign(out, playerLine(game, gf, ga, share, teamStr));
     recordMatch(game, out);
     teamChat(game, out);
@@ -466,6 +484,8 @@ function makeCore(deps) {
   function recordMatch(game, m) {
     const c = C(game);
     m.s = game.season; m.w = game.round;
+    // won, lost or drawn, his side's way round, so every result row can say it plainly
+    if (!m.res && Number.isFinite(m.gf) && Number.isFinite(m.ga)) m.res = resOf(m.gf, m.ga);
     c.stats.log.unshift(m);
     if (c.stats.log.length > 20) c.stats.log.length = 20;
     if (!m.mins) return;
@@ -688,15 +708,11 @@ function makeCore(deps) {
   }
 
   // ---------- the pro: picked or not, and how he played ----------
-  function pickForWeek(game) {
+  // the manager's call this week, worked out without touching the team sheet: injured, start or the bench
+  function proPick(game) {
     const c = C(game), p = me(game);
-    if (c.stage !== "pro" || !p.club) return null;
     const club = game.clubs[p.club];
-    if (!club) return null;
-    club.lineup = null;
-    if (c.cond.inj || p.inj > 0) return "injured";
-    const xi = bestXI(game, p.club);
-    const inXI = xi.some(q => q.id === p.id);
+    if (c.cond.inj || p.inj > 0) return { sel: "injured", group: [] };
     // the manager trusts some players more than others: form, trust and fitness move the line
     const group = club.squad.map(id => game.players[id]).filter(q => q && q.pos === p.pos && !(q.inj > 0) && !(q.ban > 0));
     group.sort((a, b) => b.rating - a.rating);
@@ -704,7 +720,19 @@ function makeCore(deps) {
     const rank = group.findIndex(q => q.id === p.id);
     const cut = group[Math.min(group.length - 1, needed)] ? group[Math.min(group.length - 1, needed)].rating : 0;
     const edge = p.rating - cut + (c.trust - 50) * 0.12 + (c.cond.form - 6.5) * 1.5 - (c.cond.fatigue > 75 ? 3 : 0);
-    const start = rank >= 0 && (rank < needed ? edge > -4 : edge > 1.5);
+    return { sel: rank >= 0 && (rank < needed ? edge > -4 : edge > 1.5) ? "start" : "bench", group };
+  }
+  function pickForWeek(game) {
+    const c = C(game), p = me(game);
+    if (c.stage !== "pro" || !p.club) return null;
+    const club = game.clubs[p.club];
+    if (!club) return null;
+    club.lineup = null;
+    const pk = proPick(game);
+    if (pk.sel === "injured") return "injured";
+    const group = pk.group, start = pk.sel === "start";
+    const xi = bestXI(game, p.club);
+    const inXI = xi.some(q => q.id === p.id);
     let ids = xi.map(q => q.id);
     if (start && !inXI) {
       const same = xi.filter(q => q.pos === p.pos && q.id !== p.id).sort((a, b) => a.rating - b.rating)[0] || xi.filter(q => q.pos !== "GK").sort((a, b) => a.rating - b.rating)[0];
@@ -720,50 +748,199 @@ function makeCore(deps) {
   // what the manager asks of him, by where he plays
   function instructionFor(c) {
     const pos = c.person.pos, g = D.POS_GROUP[pos];
-    if (pos === "LW" || pos === "RW") return { kind: "runs", n: 4, text: "Get in behind their full back. Four runs at least." };
-    if (g === "FW") return { kind: "shots", n: 3, text: "Live in their box. Get three shots away." };
-    if (g === "MF") return { kind: "passes", n: 15, text: "Keep the ball moving. Fifteen good passes." };
-    return { kind: "tackles", n: 3, text: "Win your battles. Three tackles won." };
+    // who gives it: the manager at a club, the coach at school, college or an academy
+    const by = c.stage === "pro" ? "Manager" : "Coach";
+    if (pos === "LW" || pos === "RW") return { kind: "runs", n: 4, by, text: "Get in behind their full back. Four runs at least." };
+    if (g === "FW") return { kind: "shots", n: 3, by, text: "Live in their box. Get three shots away." };
+    if (g === "MF") return { kind: "passes", n: 15, by, text: "Keep the ball moving. Fifteen good passes." };
+    return { kind: "tackles", n: 3, by, text: "Win your battles. Three tackles won." };
+  }
+  // the pro's league fixture this week, while it is still to be played
+  function proFixtureNow(game) {
+    const p = me(game);
+    const round = ((game.leagueFixtures || {})[p.league] || [])[game.round] || [];
+    const m = round.find(x => x.home === p.club || x.away === p.club);
+    return m && (m.hg === null || m.hg === undefined) ? m : null;
+  }
+  // can he play this week's match himself (player lock), and if not, why not, in plain words. It changes
+  // nothing, so the hub asks it every time it draws the week; a kick off asks it again before anything moves.
+  function liveStatus(game) {
+    const c = C(game), p = me(game);
+    const kind = c.stage === "pro" ? "pro" : "youth";
+    const no = (code, why, extra) => Object.assign({ can: false, code, kind, why }, extra || {});
+    if (c.retired) return no("retired", "This career is over.");
+    if (game.round >= (game.totalRounds || 38)) return no("season", "The season is over.");
+    if (kind === "pro" ? !(p.club && game.clubs[p.club] && proFixtureNow(game)) : !youthFixture(game)) return no("nomatch", "No match for you this week.");
+    // a keeper is the one place the lock cannot go yet: the 3D keeper is the engine's own (saves, dives, kicks)
+    if (c.person.pos === "GK") return no("keeper", "Keepers cannot be played live yet. Sim the match: your rating still comes from how you play.");
+    if (c.cond.inj || p.inj > 0) return no("injured", "You are injured this week.");
+    const d = blockers(game)[0];
+    if (d) return no("decision", "Make your choice first: " + d.title + ".", { decision: d });
+    const ev = PEOPLE.blocker(game);
+    if (ev) return no("event", "Something needs your answer first: " + ev.title + ".", { event: ev });
+    if (c.live && c.live.s === game.season && c.live.round === game.round) return no("played", "You already kicked off this week's match. Sim it now and the sim decides it.");
+    const sel = kind === "pro" ? proPick(game).sel : youthRole(game);
+    if (sel === "injured") return no("injured", "You are injured this week.");
+    if (sel === "bench") return no("bench", "The manager has you on the bench this week. Sim the match, and be ready if he calls.", { bench: true });
+    if (sel === "sub") return no("bench", "The coach has you on the bench this week. Sim the match, and be ready if he calls.", { bench: true });
+    if (sel === "out") return no("out", "The coach has left you out this week. Train well and win your place back.", { bench: true });
+    return { can: true, code: "ok", kind, why: "" };
   }
   function liveCheck(game) {
     const c = C(game), p = me(game);
-    if (c.retired) return { error: "This career is over." };
-    if (c.stage !== "pro" || !p.club) return { error: "Live matches start when you turn professional." };
-    if (c.person.pos === "GK") return { error: "Keepers' matches are simmed. Your rating still comes from how you play." };
-    if (blockers(game).length) return { error: "Make your choice first: " + blockers(game)[0].title + ".", decision: blockers(game)[0] };
-    const ev = PEOPLE.blocker(game);
-    if (ev) return { error: "Something needs your answer first: " + ev.title + ".", event: ev };
-    if (game.round >= (game.totalRounds || 38)) return { error: "The season is over.", seasonOver: true };
-    if (c.cond.inj || p.inj > 0) return { error: "You are injured this week." };
-    if (c.live && c.live.s === game.season && c.live.round === game.round) return { error: "You already kicked off this week's match. One go: play the week and the sim decides it." };
-    const round = ((game.leagueFixtures || {})[p.league] || [])[game.round] || [];
-    const m = round.find(x => x.home === p.club || x.away === p.club);
-    if (!m || (m.hg !== null && m.hg !== undefined)) return { error: "No league match for you this week." };
+    const st = liveStatus(game);
+    if (!st.can) {
+      const e = { error: st.why, code: st.code };
+      if (st.decision) e.decision = st.decision;
+      if (st.event) e.event = st.event;
+      if (st.code === "season") e.seasonOver = true;
+      if (st.bench) e.bench = true;
+      return e;
+    }
+    if (st.kind === "youth") return youthLiveStart(game);
+    const m = proFixtureNow(game);
     const pick = pickForWeek(game);
     if (pick !== "start") {
       game.clubs[p.club].lineup = null;
-      return { error: pick === "injured" ? "You are injured this week." : "The manager has you on the bench this week. Sim the week, and be ready if he calls." , bench: true };
+      return { error: pick === "injured" ? "You are injured this week." : "The manager has you on the bench this week. Sim the match, and be ready if he calls.", code: pick === "injured" ? "injured" : "bench", bench: true };
     }
-    c.live = { s: game.season, round: game.round, home: m.home, away: m.away, status: "started", instruction: instructionFor(c), xi: game.clubs[p.club].lineup.xi.slice() };
-    return { ok: true, home: m.home, away: m.away, side: m.home === p.club ? "home" : "away", club: p.club, opp: m.home === p.club ? m.away : m.home, instruction: c.live.instruction };
+    c.live = { kind: "pro", s: game.season, round: game.round, home: m.home, away: m.away, status: "started", instruction: instructionFor(c), xi: game.clubs[p.club].lineup.xi.slice() };
+    return { ok: true, kind: "pro", home: m.home, away: m.away, side: m.home === p.club ? "home" : "away", club: p.club, opp: m.home === p.club ? m.away : m.home, instruction: c.live.instruction };
+  }
+
+  // ---------- player lock in the youth years: the school, college, academy or centre match, played live ----------
+  // both sides are made up for the day: names that fit the country, ages that fit the level, a normal 4-3-3,
+  // ratings around the team strength the youth sim uses. His own row carries pc and his look, as in the pros.
+  const YOUTH_NAMES = {
+    en: [["Jack", "Harry", "Oliver", "Charlie", "George", "Alfie", "Leo", "Freddie", "Archie", "Theo", "Mason", "Ethan", "Noah", "Lewis", "Callum", "Kyle", "Ryan", "Jamie", "Liam", "Connor"], ["Smith", "Jones", "Taylor", "Brown", "Wilson", "Evans", "Walker", "Wright", "Hughes", "Clarke", "Hall", "Turner", "Cooper", "Ward", "Morris", "Bennett", "Shaw", "Murray", "Reid", "Campbell"]],
+    es: [["Pablo", "Alejandro", "Hugo", "Mateo", "Diego", "Javier", "Sergio", "Marcos", "Adrian", "Daniel", "Lucas", "Iker", "Alvaro", "Nicolas", "Santiago", "Thiago", "Bruno", "Gonzalo", "Joaquin", "Tomas"], ["Garcia", "Martinez", "Lopez", "Sanchez", "Perez", "Gomez", "Fernandez", "Ruiz", "Diaz", "Moreno", "Romero", "Torres", "Navarro", "Castro", "Ortiz", "Rubio", "Molina", "Herrera", "Suarez", "Vega"]],
+    pt: [["Joao", "Pedro", "Tiago", "Rafael", "Gabriel", "Lucas", "Mateus", "Diogo", "Rodrigo", "Vitor", "Bruno", "Gustavo", "Andre", "Thiago", "Caio", "Felipe", "Leonardo", "Miguel", "Henrique", "Davi"], ["Silva", "Santos", "Oliveira", "Souza", "Pereira", "Costa", "Ferreira", "Almeida", "Carvalho", "Gomes", "Martins", "Rocha", "Ribeiro", "Alves", "Lima", "Barbosa", "Cardoso", "Mendes", "Nunes", "Teixeira"]],
+    it: [["Lorenzo", "Matteo", "Leonardo", "Francesco", "Alessandro", "Andrea", "Gabriele", "Riccardo", "Tommaso", "Edoardo", "Davide", "Federico", "Marco", "Luca", "Simone", "Giovanni", "Pietro", "Filippo", "Nicolo", "Samuele"], ["Rossi", "Russo", "Ferrari", "Esposito", "Bianchi", "Romano", "Colombo", "Ricci", "Marino", "Greco", "Bruno", "Gallo", "Conti", "De Luca", "Costa", "Giordano", "Mancini", "Rizzo", "Lombardi", "Moretti"]],
+    de: [["Lukas", "Leon", "Finn", "Jonas", "Paul", "Felix", "Elias", "Noah", "Ben", "Luis", "Maximilian", "Jan", "Tim", "Niklas", "Moritz", "Julian", "Tobias", "David", "Florian", "Kai"], ["Muller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann", "Koch", "Richter", "Klein", "Wolf", "Neumann", "Schwarz", "Zimmermann", "Braun", "Kruger", "Hartmann"]],
+    fr: [["Lucas", "Hugo", "Louis", "Theo", "Nathan", "Enzo", "Mathis", "Jules", "Tom", "Raphael", "Arthur", "Noah", "Leo", "Adam", "Ethan", "Maxime", "Bastien", "Yanis", "Kylian", "Ibrahim"], ["Martin", "Bernard", "Dubois", "Thomas", "Robert", "Richard", "Petit", "Durand", "Leroy", "Moreau", "Simon", "Laurent", "Lefebvre", "Michel", "Fournier", "David", "Bertrand", "Roux", "Vincent", "Girard"]],
+    nl: [["Daan", "Sem", "Lucas", "Milan", "Levi", "Luuk", "Bram", "Thijs", "Jesse", "Ruben", "Stijn", "Jens", "Niels", "Tim", "Sven", "Bas", "Joris", "Teun", "Rick", "Wout"], ["de Jong", "Jansen", "de Vries", "van den Berg", "van Dijk", "Bakker", "Visser", "Smit", "Meijer", "de Boer", "Mulder", "de Groot", "Bos", "Vos", "Peters", "Hendriks", "van Leeuwen", "Dekker", "Brouwer", "de Wit"]],
+    tr: [["Emir", "Yusuf", "Mehmet", "Ahmet", "Mustafa", "Ali", "Omer", "Burak", "Emre", "Kerem", "Arda", "Efe", "Can", "Baris", "Hakan", "Cenk", "Kaan", "Oguz", "Serkan", "Umut"], ["Yilmaz", "Kaya", "Demir", "Sahin", "Celik", "Yildiz", "Yildirim", "Ozturk", "Aydin", "Ozdemir", "Arslan", "Dogan", "Kilic", "Aslan", "Cetin", "Kara", "Koc", "Kurt", "Ozkan", "Simsek"]],
+    ar: [["Mohammed", "Abdullah", "Fahad", "Faisal", "Khalid", "Saud", "Nasser", "Salem", "Omar", "Yasser", "Hamza", "Youssef", "Ayoub", "Achraf", "Hakim", "Sofiane", "Bilal", "Anas", "Karim", "Ilyas"], ["Al Dosari", "Al Shehri", "Al Ghamdi", "Al Qahtani", "Al Harbi", "Al Otaibi", "Al Zahrani", "Al Malki", "Bennani", "El Idrissi", "Alaoui", "Tazi", "Benali", "Amrani", "Saidi", "Haddad", "Mansour", "Nasri", "Belkadi", "Ziani"]],
+    wa: [["Chukwuemeka", "Tunde", "Emeka", "Samuel", "Victor", "Ahmed", "Kelechi", "Ademola", "Olamide", "Chidi", "Kwame", "Kofi", "Yaw", "Kwabena", "Ibrahim", "Musa", "Daniel", "Joseph", "Emmanuel", "Godfrey"], ["Okafor", "Adeyemi", "Okonkwo", "Balogun", "Eze", "Nwosu", "Abubakar", "Ogunleye", "Obi", "Mensah", "Asante", "Boateng", "Owusu", "Appiah", "Osei", "Agyeman", "Danjuma", "Lawal", "Bello", "Iheanacho"]],
+    jp: [["Haruto", "Sota", "Yuto", "Ren", "Riku", "Kaito", "Daiki", "Takumi", "Kenta", "Shota", "Ritsu", "Hiroki", "Yuma", "Kota", "Sho", "Taiga", "Kaoru", "Takefusa", "Ao", "Wataru"], ["Sato", "Suzuki", "Takahashi", "Tanaka", "Watanabe", "Ito", "Yamamoto", "Nakamura", "Kobayashi", "Kato", "Yoshida", "Yamada", "Sasaki", "Matsumoto", "Inoue", "Kimura", "Hayashi", "Shimizu", "Mori", "Endo"]],
+    kr: [["Min-jun", "Seo-jun", "Do-yun", "Ji-ho", "Joon-young", "Hyun-woo", "Sung-min", "Jae-won", "Dong-hyun", "Woo-jin", "Tae-yang", "Kang-in", "Heung-min", "Gue-sung", "Jin-su", "Seung-ho", "Young-woo", "Min-jae", "Chan-woo", "Hee-chan"], ["Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Lim", "Han", "Oh", "Seo", "Shin", "Kwon", "Hwang", "Ahn", "Song", "Hong", "Jeon"]]
+  };
+  const NAME_GROUP = { England: "en", Scotland: "en", USA: "en", Canada: "en", Australia: "en", Spain: "es", Mexico: "es", Argentina: "es", Uruguay: "es", Colombia: "es", Portugal: "pt", Brazil: "pt", Italy: "it", Germany: "de", France: "fr", Belgium: "nl", Netherlands: "nl", Turkey: "tr", "Saudi Arabia": "ar", Morocco: "ar", Nigeria: "wa", Ghana: "wa", Japan: "jp", "South Korea": "kr" };
+  const SHAPE = [["GK", "GK", 1], ["DF", "LB", 3], ["DF", "CB", 5], ["DF", "CB", 4], ["DF", "RB", 2], ["MF", "CDM", 6], ["MF", "CM", 8], ["MF", "CAM", 10], ["FW", "LW", 11], ["FW", "ST", 9], ["FW", "RW", 7]];
+  // one youth side: eleven rows the 3D match reads; withMe puts him in the slot of his own position
+  // the made up sides are the same however often they are asked for in a week (the match screen shows them
+  // before kick off, the kick off then plays them): every roll comes from a generator seeded by the week
+  function weekRng(game, salt) {
+    let a = Math.floor(weekRoll(game, salt) * 4294967296) >>> 0;
+    return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  function youthXI(game, str, withMe, R) {
+    const c = C(game), p = me(game);
+    const grp = NAME_GROUP[c.person.country];
+    const [firsts, lasts] = grp ? YOUTH_NAMES[grp] : [D.IN_FIRST, D.IN_LAST];
+    const used = new Set([p.name]);
+    const lo = c.stage === "college" ? Math.max(17, p.age - 1) : Math.max(13, p.age - 1), hi = c.stage === "college" ? p.age + 2 : Math.min(19, p.age + 1);
+    const gaussR = () => { let u = 0, v = 0; while (!u) u = R(); while (!v) v = R(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+    // first names and surnames are dealt from a shuffled pile, so a side rarely has two of the same
+    const deal = a => { const d = a.map(x => [R(), x]).sort((x, y) => x[0] - y[0]).map(x => x[1]); let i = 0; return () => d[i++ % d.length]; };
+    const nextFirst = deal(firsts), nextLast = deal(lasts);
+    const rows = SHAPE.map(([pos, role, num]) => {
+      let n = "";
+      for (let k = 0; k < 20 && (!n || used.has(n)); k++) n = nextFirst() + " " + nextLast();
+      used.add(n);
+      const r = Math.round(clamp(str + gaussR() * 3, 30, 90));
+      return { n, pos, role, r, base: r, num, age: lo + Math.floor(R() * (hi - lo + 1)) };
+    });
+    if (withMe) {
+      const role = D.POS_ROLE[c.person.pos] || "CM";
+      const i = Math.max(0, rows.findIndex(x => x.role === role));
+      const look = Object.assign({}, c.look, { h: (c.person.height || 178) / 100, mass: c.person.weight || 72 });
+      rows[i] = { n: p.name, pos: D.POS_GROUP[c.person.pos], role, r: p.rating, base: p.rating, num: c.person.num || rows[i].num, age: p.age, pc: true, look };
+      // his shirt number is his: nobody else wears it
+      for (const x of rows) if (x !== rows[i] && x.num === rows[i].num) x.num = 0;
+    }
+    return rows;
+  }
+  // this week's youth match for the 3D engine: both sides, the ratings, his lock. Nothing is changed here.
+  function youthSetup(game) {
+    const c = C(game), p = me(game);
+    const fx = youthFixture(game), set = fx.set;
+    const R = weekRng(game, "xi");
+    const teamStr = 36 + set.comp * 2.4;
+    const z = Math.sqrt(-2 * Math.log(Math.max(1e-9, R()))) * Math.cos(2 * Math.PI * R());
+    const oppStr = teamStr + z * 4 + (fx.national ? 4 : 0);
+    const homeSide = weekRoll(game, "home") < 0.5;
+    const mine = youthXI(game, teamStr, true, R), theirs = youthXI(game, oppStr, false, R);
+    const home = homeSide ? set.team : fx.opp, away = homeSide ? fx.opp : set.team;
+    const avg = xi => Math.round(xi.reduce((s2, x) => s2 + x.r, 0) / xi.length * 10) / 10;
+    const ins = instructionFor(c);
+    const meRow = mine.find(x => x.pc);
+    return {
+      fx, oppStr, side: homeSide ? "home" : "away",
+      setup: {
+        kind: "youth", label: fx.comp + ", week " + (game.round + 1), home, away, side: homeSide ? "home" : "away",
+        homeRating: avg(homeSide ? mine : theirs), awayRating: avg(homeSide ? theirs : mine),
+        homeXI: homeSide ? mine : theirs, awayXI: homeSide ? theirs : mine, instruction: ins,
+        lock: { name: p.name, num: meRow.num, pos: c.person.pos, instruction: ins.text, by: ins.by }
+      }
+    };
+  }
+  function youthLiveStart(game) {
+    const c = C(game);
+    const Y = youthSetup(game), S = Y.setup, fx = Y.fx;
+    c.live = { kind: "youth", s: game.season, round: game.round, home: S.home, away: S.away, side: Y.side, team: fx.set.team, comp: fx.comp, opp: fx.opp, national: !!fx.national, oppStr: round1(Y.oppStr), status: "started", instruction: S.instruction };
+    return { ok: true, kind: "youth", home: S.home, away: S.away, side: Y.side, club: fx.set.team, opp: fx.opp, instruction: S.instruction, setup: S };
+  }
+  // the match screen before kick off: who plays whom, the strengths and his lock, without using up the week's
+  // one go. Only the kick off (liveCheck) starts the match for real.
+  function livePeek(game) {
+    const c = C(game), p = me(game);
+    const st = liveStatus(game);
+    if (!st.can) return liveCheck(game);
+    if (st.kind === "youth") { const Y = youthSetup(game); return { ok: true, kind: "youth", peek: true, setup: Object.assign({}, Y.setup, { homeXI: undefined, awayXI: undefined }) }; }
+    const m = proFixtureNow(game);
+    return { ok: true, kind: "pro", peek: true, home: m.home, away: m.away, side: m.home === p.club ? "home" : "away", club: p.club, opp: m.home === p.club ? m.away : m.home, instruction: instructionFor(c) };
+  }
+  // the youth match he played: the live score and his line from the pitch, recorded the way the sim records one
+  function youthLiveMatch(game, fx, L) {
+    const c = C(game);
+    const gf = L.side === "away" ? L.ag : L.hg, ga = L.side === "away" ? L.hg : L.ag;
+    const grp = D.POS_GROUP[c.person.pos];
+    const out = { comp: L.comp || fx.comp, opp: L.opp || fx.opp, team: L.team || fx.set.team, gf, ga, res: resOf(gf, ga), wk: game.round + 1, role: "start", mins: 90, national: !!L.national, home: L.side !== "away", live: true, g: L.line.g, a: L.line.a, cs: ga === 0 && (grp === "DF" || grp === "GK"), rating: L.line.rating };
+    recordMatch(game, out);
+    teamChat(game, out);
+    PEOPLE.afterMatch(game, out);
+    scoutWatch(game, out, fx.set.exposure * (out.national ? 2 : 1));
+    c.cond.fatigue = clamp(c.cond.fatigue + out.mins * 0.16, 0, 100);
+    // the coach asked for something: doing it wins him over
+    if (L.line.instruction === true) { c.coachRel = clamp(c.coachRel + 3, 0, 100); msg(game, "coach", "Coach", "That is exactly what I asked for. Keep doing it."); }
+    else if (L.line.instruction === false) c.coachRel = clamp(c.coachRel - 1, 0, 100);
+    return out;
   }
   // the score and his line from the live match; the week is then played around it
   function liveResult(game, hg, ag, line) {
     const c = C(game);
     const L = c.live;
     if (!L || L.status !== "started" || L.s !== game.season || L.round !== game.round) return { error: "Kick off the match first." };
+    const youth = L.kind === "youth";
+    if (youth ? c.stage === "pro" : c.stage !== "pro") return { error: "Your football changed since kick off. Sim the week instead." };
     const ok = n => Number.isInteger(n) && n >= 0 && n <= 12;
     if (!ok(hg) || !ok(ag)) return { error: "That score does not look right." };
     const num = (v, lo, hi) => (Number.isFinite(Number(v)) ? clamp(Number(v), lo, hi) : lo);
     line = line || {};
-    L.line = { mins: 90, g: Math.round(num(line.g, 0, 12)), a: Math.round(num(line.a, 0, 12)), rating: round1(num(line.rating, 3, 10)), shots: Math.round(num(line.shots, 0, 60)), passes: Math.round(num(line.passes, 0, 200)), passOk: Math.round(num(line.passOk, 0, 200)), won: Math.round(num(line.won, 0, 80)), instruction: line.instruction === true ? true : line.instruction === false ? false : null };
-    const mine = L.home === me(game).club ? hg : ag;
+    // the rating is the one the match worked out from what he did; a missing one is an ordinary 6
+    const rating = typeof line.rating === "number" && Number.isFinite(line.rating) ? clamp(line.rating, 3, 10) : 6;
+    L.line = { mins: 90, g: Math.round(num(line.g, 0, 12)), a: Math.round(num(line.a, 0, 12)), rating: round1(rating), shots: Math.round(num(line.shots, 0, 60)), passes: Math.round(num(line.passes, 0, 200)), passOk: Math.round(num(line.passOk, 0, 200)), won: Math.round(num(line.won, 0, 80)), instruction: line.instruction === true ? true : line.instruction === false ? false : null };
+    const mine = youth ? (L.side === "away" ? ag : hg) : L.home === me(game).club ? hg : ag;
     L.line.g = Math.min(L.line.g, mine);
+    L.line.a = Math.min(L.line.a, Math.max(0, mine - L.line.g));
     L.hg = hg; L.ag = ag; L.status = "done";
-    game.plays = game.plays || {};
-    game.plays.__pc = { user: "player", season: game.season, round: game.round, kind: "league", home: L.home, away: L.away, status: "done", hg, ag, t: Date.now() };
+    if (!youth) {
+      game.plays = game.plays || {};
+      game.plays.__pc = { user: "player", season: game.season, round: game.round, kind: "league", home: L.home, away: L.away, status: "done", hg, ag, t: Date.now() };
+    }
     const out = advanceWeek(game);
-    if (out.error) { L.status = "started"; delete game.plays.__pc; return out; }
+    if (out.error) { L.status = "started"; if (game.plays) delete game.plays.__pc; return out; }
     return out;
   }
   function proMatchResult(game, pick0, before) {
@@ -782,8 +959,8 @@ function makeCore(deps) {
     const started = (ap[0] || 0) > (bap[0] || 0);
     const role = mins === 0 ? (pick0 === "injured" ? "injured" : "unused") : started ? "start" : "sub";
     const st = (game.stats || {})[p.id] || { g: 0, a: 0 };
-    const out = { comp: p.league, opp: home ? m.away : m.home, team: p.club, home, gf, ga, role, mins, pro: true };
-    const live = c.live && c.live.status === "done" && c.live.s === game.season && c.live.round === game.round - 1 ? c.live : null;
+    const out = { comp: p.league, opp: home ? m.away : m.home, team: p.club, home, gf, ga, res: resOf(gf, ga), wk: game.round, role, mins, pro: true };
+    const live = c.live && c.live.status === "done" && (c.live.kind || "pro") === "pro" && c.live.s === game.season && c.live.round === game.round - 1 ? c.live : null;
     if (live) {
       // he played it himself: his minutes, goals, assists and rating are the ones from the pitch, and the
       // world's scoring records are put in line with them
@@ -881,6 +1058,8 @@ function makeCore(deps) {
     if (pendingEvent) return { error: "Something needs your answer first: " + pendingEvent.title + ".", event: pendingEvent };
     const report = { week: weekLabel(game), training: null, match: null, events: [] };
     const before = { ap: (p.ap || [0, 0, 0]).slice(), g: ((game.stats || {})[p.id] || {}).g || 0, a: ((game.stats || {})[p.id] || {}).a || 0 };
+    // the youth coach picks his team before the week's training (the same sheet the hub showed)
+    const sel0 = c.stage !== "pro" ? youthRole(game) : null;
     // 1. training
     report.training = train(game);
     // 2. his football this week
@@ -888,10 +1067,12 @@ function makeCore(deps) {
     // a match he played live keeps the team he started in; a live match he left is simmed like any other
     const liveDone = c.live && c.live.status === "done" && c.live.s === game.season && c.live.round === game.round;
     if (c.live && !liveDone) { c.live = null; if (game.plays) delete game.plays.__pc; }
-    if (c.stage === "pro") pick0 = liveDone ? "start" : pickForWeek(game);
+    const liveKind = liveDone ? (c.live.kind || "pro") : null;
+    if (c.stage === "pro") pick0 = liveKind === "pro" ? "start" : pickForWeek(game);
     const youth = c.stage !== "pro" ? youthFixture(game) : null;
-    if (youth && !c.cond.inj) report.match = youthMatch(game, youth);
-    else if (youth && c.cond.inj) report.match = { comp: youth.comp, opp: youth.opp, role: "injured", mins: 0 };
+    if (youth && liveKind === "youth") report.match = youthLiveMatch(game, youth, c.live);
+    else if (youth && !c.cond.inj) report.match = youthMatch(game, youth, sel0);
+    else if (youth && c.cond.inj) report.match = { comp: youth.comp, opp: youth.opp, team: youth.set.team, wk: game.round + 1, role: "injured", mins: 0 };
     runTrials(game);
     // 3. the world plays its week (the same code Manager Career runs)
     playMatchweek(game);
@@ -999,7 +1180,7 @@ function makeCore(deps) {
       training: { slots: c.training.slots, intensity: c.training.intensity, sessions: D.SESSIONS, intensities: Object.keys(D.INTENSITY) },
       cond: c.cond, traits: c.traits, rep: c.rep, trust: Math.round(c.trust), coachRel: Math.round(c.coachRel),
       team: club ? club.name : youth ? youth.team : null, school: c.school, college: c.college, academy: c.academy, centre: c.centre,
-      next: nextFx, decisions: c.decisions, trials: c.trials, offers: c.offers.filter(o => o.status === "open"),
+      next: nextFx, play: liveView(game), decisions: c.decisions, trials: c.trials, offers: c.offers.filter(o => o.status === "open"),
       scouts: Object.values(c.scouts).filter(s => s.level >= 15).sort((a, b) => b.level - a.level).slice(0, 8).map(s => ({ club: s.club, level: Math.round(s.level) })),
       contract: c.contract, agent: c.agent ? D.AGENTS.find(a => a.id === c.agent.id) : null,
       money: { cash: c.money.cash, earned: c.money.earned || 0, log: c.money.log.slice(0, 12) },
@@ -1014,6 +1195,11 @@ function makeCore(deps) {
       canRetire: p.age >= 32 && !c.retired, retired: c.retired || null, managerOptions: c.retired && game.mode === "player" ? PRO.managerOptions(game) : [],
       currency: D.COUNTRIES[c.person.country] ? (club && club.league !== D.ISL_NAME ? currencyOfLeague(club.league) : D.COUNTRIES[c.person.country].currency) : "GBP"
     };
+  }
+  // this week's match for the hub: can he play it live, and the reason in plain words when he cannot
+  function liveView(game) {
+    const s = liveStatus(game);
+    return { can: s.can, code: s.code, kind: s.kind, why: s.why };
   }
   // the next weeks: his matches and the international windows
   function calendar(game) {
@@ -1078,7 +1264,7 @@ function makeCore(deps) {
   const PRO = makePro(K, deps);
   const LIFE = makeLife(K);
   const PEOPLE = makePeople(K, deps);
-  return { setupWorld, createPlayer, decide, setPlan, advanceWeek, nextSeason, negotiate, sign, view, readThread, collegeOptions, academyChoices, ovrFor, refreshRating, clubLevel, makeOffer, weeklyWage, D, PRO, LIFE, PEOPLE, agentCut, agentAction, liveCheck, liveResult };
+  return { setupWorld, createPlayer, decide, setPlan, advanceWeek, nextSeason, negotiate, sign, view, readThread, collegeOptions, academyChoices, ovrFor, refreshRating, clubLevel, makeOffer, weeklyWage, D, PRO, LIFE, PEOPLE, agentCut, agentAction, liveCheck, liveResult, liveStatus, livePeek };
 }
 
 module.exports = { makeCore };

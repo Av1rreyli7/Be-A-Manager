@@ -1,7 +1,8 @@
 // Player Career: the fixed data the career runs on. Countries and how a career starts in each, the India
 // school and college pathway, the Indian Super League (it exists only inside Player Career saves, so Manager
 // Career never sees it), agents, attributes and how each position weighs them, and the training menu.
-// Real school names are kept (the person asked for them); colleges, academies, agents and brands are invented.
+// Real school names are kept (the person asked for them); colleges, academies and agents are invented. The brands
+// (shops, cars, watches, sponsors) are real ones and live in life_data.js.
 
 // ---------- attributes ----------
 // 0 to 99 each. Grouped the way the career screens show them.

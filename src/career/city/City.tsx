@@ -1,56 +1,41 @@
 "use client";
+/* eslint-disable react-hooks/immutability -- the world's controller is a plain object the screen moves on purpose (a jump from the map, the way out of a place) */
 /**
- * The city screen: the 3D city from above, and the places you walk into. Everything you do here goes to the
- * server (free time, money, followers) and comes back as the new career state. Drag to look around; in a place,
- * click the floor or use WASD to walk, E to use what you are standing next to, Esc to go back out.
+ * The City tab: his city as an open world he walks, drives and rides the bus through (src/career/world), and
+ * the places he walks into. Everything he does goes to the server and comes back as the new career state.
+ * On the street: WASD to walk, Shift to run, drag to look round, E to use what is in front of him, F for his
+ * car, M for the map. Inside: walk up to things; E uses them; Esc or the door goes back out.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
-import gsap from "gsap";
 import clsx from "clsx";
-import { Sun, Moon, Cloud, CloudRain, CloudLightning, CloudFog, Snowflake } from "@phosphor-icons/react";
-import CityScene, { PLACE_IDS, SPOTS, camStart, cityLight, homeTop, type CamCtl, type PlaceId } from "./CityScene";
+import { Sun, Moon, Cloud, CloudRain, CloudLightning, CloudFog, Snowflake, MapTrifold, DeviceMobile, SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
 import Interior, { type Hotspot, type WalkCtl } from "./Interior";
+import ShopHud from "./ShopHud";
 import { Environment, FrameGuard, DPR_CAP } from "../Stage";
-import { OUTFITS } from "../body";
+import { OUTFITS, type Outfit } from "../body";
 import { careerApi, type Saved } from "../api";
-import type { CareerState } from "../types";
+import type { CareerState, WorldPlace } from "../types";
+import World, { worldStart, carSpec, type WorldCtl, type Prompt } from "../world/World";
+import CityMap from "../world/CityMap";
+import { makePlan, type PlaceSpot } from "../world/gen";
+import { makeStreetSound } from "../world/audio";
+import "../world/world.css";
 
-const PLACE_LABEL: Record<PlaceId, string> = { home: "Home", training: "Training ground", stadium: "Stadium", shops: "The shops", restaurant: "Restaurant", gym: "Gym", mall: "Mall" };
 const WEATHER: Record<string, string> = { clear: "Clear", cloud: "Cloudy", rain: "Rain", storm: "Storm", snow: "Snow", fog: "Fog", haze: "Hazy" };
 
 type Run = <T>(fn: () => Promise<T>, after?: (r: T) => void) => Promise<void>;
-type Panel = { kind: "wardrobe" | "homes" | "trophies" | "garage" | "meals" | "store" | "cars" | "sessions" | "match"; brand?: string } | null;
 
-/** the camera's lens, and a view offset so the middle of the picture sits in the space left of the side panel */
-function CamSetup({ fov, far, panel }: { fov: number; far: number; panel: number }) {
-  const size = useThree((s) => s.size);
-  const get = useThree((s) => s.get);
-  const fit = useCallback(() => {
-    const cam = get().camera as THREE.PerspectiveCamera;
-    const { width: W, height: H } = get().size;
-    cam.fov = fov;
-    cam.far = far;
-    if (panel > 0 && W > panel * 2) {
-      cam.aspect = (W + panel) / H;
-      cam.setViewOffset(W + panel, H, panel, 0, W, H);
-    } else {
-      cam.aspect = W / H;
-      cam.clearViewOffset();
-    }
-    cam.updateProjectionMatrix();
-  }, [get, fov, far, panel]);
-  useEffect(() => fit(), [fit, size.width, size.height]);
-  // the canvas resizes the camera on its own; put the offset back if it did
-  useFrame(() => {
-    const cam = get().camera as THREE.PerspectiveCamera;
-    const { width: W, height: H } = get().size;
-    const want = panel > 0 && W > panel * 2 ? (W + panel) / H : W / H;
-    if (Math.abs(cam.aspect - want) > 1e-3) fit();
-  });
-  return null;
-}
+// where he was in each city, so coming back to the tab carries on from there
+const KEEP = new Map<string, WorldCtl>();
+// the garage of a home is its own room: the home's place with "/garage" on the id
+const garageOf = (p: WorldPlace): WorldPlace => ({ ...p, id: p.id.replace(/\/garage$/, "") + "/garage", name: "Garage" });
+const clock = (h: number) => {
+  const hh = Math.floor(h),
+    mm = Math.floor((h - hh) * 60);
+  return String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
+};
 
 export default function City({
   state,
@@ -74,218 +59,234 @@ export default function City({
   onWeek: () => void;
 }) {
   const life = state.life;
-  const [place, setPlace] = useState<PlaceId | null>(null);
-  const [hover, setHover] = useState<PlaceId | null>(null);
+  const world = life.world;
+  const placesKey = world ? world.places.map((p) => p.id).join(",") : "";
+  const plan = useMemo(
+    () => (world ? makePlan(life.city, life.style, world.places, world.seed, world.tier) : null),
+    // the plan only changes with the city and its places
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [life.city, life.style.key, world?.seed, world?.tier, placesKey],
+  );
+  // the world's controller: a plain object the street and the screen both read and move, kept per city
+  const startHour = [10.5, 15, 19.6][state.round % 3];
+  const ctlObj = useMemo(() => {
+    if (!plan) return null;
+    const c = KEEP.get(plan.key) || worldStart(plan, startHour, life.home.id);
+    KEEP.set(plan.key, c);
+    return c;
+    // the start hour only matters the first time the city is built
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan]);
+  const ctl = useMemo(() => ({ current: ctlObj }), [ctlObj]);
+  // a hook for the browser checks: where he is and where the places are (nothing in the game reads it)
+  useEffect(() => {
+    if (!plan || !ctlObj) return;
+    (window as unknown as { __pcCity?: unknown }).__pcCity = { ctl: () => ctlObj, places: () => plan.places, plan: () => plan };
+  }, [plan, ctlObj]);
+  const sound = useMemo(() => makeStreetSound(), []);
+  useEffect(() => () => sound.dispose(), [sound]);
+  const [muted, setMuted] = useState(() => sound.muted());
+  const [inside, setInside] = useState<PlaceSpot | null>(null);
+  // the room he is in, by id (the place, or "<home id>/garage"), read fresh from the latest state so what he
+  // owns is always up to date inside
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const room = useMemo<WorldPlace | null>(() => {
+    if (!roomId) return null;
+    const base = roomId.replace(/\/garage$/, "");
+    const fresh = (world?.places || []).find((p) => p.id === base) || inside?.place || null;
+    if (!fresh) return null;
+    return roomId.endsWith("/garage") ? garageOf(fresh) : fresh;
+  }, [roomId, world, inside]);
+  const [prompt, setPrompt] = useState<Prompt | null>(null);
+  const [bubble, setBubble] = useState<string | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [flash, setFlash] = useState(0);
   const [near, setNear] = useState<string | null>(null);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
-  const [panel, setPanel] = useState<Panel>(null);
   const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
   const [fade, setFade] = useState(false);
-  const labelEls = useRef(new Map<string, HTMLElement>());
-  const cam = useRef<CamCtl>(camStart());
-  const walk = useRef<WalkCtl>({ yaw: 0, zoom: 1, use: -1 });
-  const drag = useRef<{ x: number; y: number; yaw: number; pitch: number } | null>(null);
-  const light = useMemo(() => cityLight(life, state.round), [life, state.round]);
-  // the side panel covers the right of the canvas on wide screens; the picture is centred in what is left
-  const [panelW, setPanelW] = useState(0);
+  // a touch screen: a thumb stick and buttons for the keys
+  const [touch, setTouch] = useState(false);
   useEffect(() => {
-    const m = window.matchMedia("(min-width: 901px)");
-    const set = () => setPanelW(m.matches ? 354 : 0);
+    const m = window.matchMedia("(pointer: coarse)");
+    const set = () => setTouch(m.matches);
     set();
     m.addEventListener("change", set);
     return () => m.removeEventListener("change", set);
   }, []);
-  const nextMatch = state.calendar.find((c) => c.match);
-
+  const press = (key: string) => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key }));
+    window.dispatchEvent(new KeyboardEvent("keyup", { key }));
+  };
+  const [help, setHelp] = useState(() => {
+    try {
+      return localStorage.getItem("pc_city_help") !== "seen";
+    } catch {
+      return true;
+    }
+  });
+  const labelEls = useRef(new Map<string, HTMLElement>());
+  const walk = useRef<WalkCtl>({ yaw: 0, zoom: 1, use: -1 });
   const say = (text: string) => setToast({ text, n: Date.now() });
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 4200);
     return () => clearTimeout(t);
   }, [toast]);
+  // for the shop card: the reply comes back so the card can show what happened
+  const actFor = useCallback(
+    (p: string, action: string, arg?: string) => {
+      let out: unknown = undefined;
+      return run(
+        () => careerApi.act(saved, p, action, arg),
+        (r) => void (out = r),
+      ).then(() => out);
+    },
+    [run, saved],
+  );
 
-  const act = (p: string, action: string, arg?: string) =>
-    run(
-      () => careerApi.act(saved, p, action, arg),
-      (r) => say(r.text),
-    );
+  // ---------- the HUD reads the world every frame without re-rendering React ----------
+  const timeEl = useRef<HTMLElement>(null);
+  const arrowEl = useRef<HTMLElement>(null);
+  const distEl = useRef<HTMLElement>(null);
+  const speedEl = useRef<HTMLElement>(null);
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const c = ctlObj;
+      if (c) {
+        if (timeEl.current) timeEl.current.textContent = clock(c.hour);
+        const ar = arrowEl.current,
+          di = distEl.current;
+        if (ar && di) {
+          if (c.waypoint && !inside) {
+            const dir = Math.atan2(c.waypoint.x - c.x, c.waypoint.z - c.z);
+            let a = dir - (c.camYaw + Math.PI);
+            a = Math.atan2(Math.sin(a), Math.cos(a));
+            ar.style.transform = "rotate(" + (-a * 180) / Math.PI + "deg)";
+            ar.parentElement!.style.opacity = "1";
+            di.textContent = Math.round(Math.hypot(c.waypoint.x - c.x, c.waypoint.z - c.z)) + " m";
+          } else ar.parentElement!.style.opacity = "0";
+        }
+        if (speedEl.current) speedEl.current.textContent = c.mode === "drive" ? Math.round(Math.abs(c.speed) * 3.6) + " km/h" : "";
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, [inside, ctlObj]);
 
   // ---------- in and out of places ----------
-  const enter = (id: PlaceId) => {
-    const s = SPOTS[id];
-    const c = cam.current;
-    c.drift = false;
-    c.idle = 0;
-    gsap.to(c, { tx: s.x, tz: s.z, ty: 2, dist: 34, pitch: 0.42, duration: 1.0, ease: "power3.inOut" });
-    setTimeout(() => setFade(true), 650);
-    setTimeout(() => {
-      setPlace(id);
-      setPanel(null);
-      setNear(null);
-      walk.current = { yaw: 0, zoom: 1, use: -1 };
-      setFade(false);
-    }, 1000);
-  };
-  const leave = useCallback(() => {
-    setFade(true);
-    setTimeout(() => {
-      setPlace(null);
-      setPanel(null);
-      setNear(null);
-      setHotspots([]);
-      const c = cam.current;
-      gsap.killTweensOf(c);
-      Object.assign(c, { dist: 60 });
-      const home = camStart();
-      gsap.to(c, { tx: home.tx, tz: home.tz, ty: home.ty, dist: home.dist, pitch: home.pitch, duration: 1.4, ease: "power2.out", onComplete: () => void (c.drift = true) });
-      setFade(false);
-    }, 300);
-  }, []);
+  const enter = useCallback(
+    (s: PlaceSpot) => {
+      setFade(true);
+      setTimeout(() => {
+        setInside(s);
+        setRoomId(s.place.id);
+        setNear(null);
+        setPrompt(null);
+        setBubble(null);
+        walk.current = { yaw: 0, zoom: 1, use: -1 };
+        setFade(false);
+      }, 280);
+      if (!(life.visited || []).includes(s.place.id)) void run(() => careerApi.act(saved, s.place.id, "visit"));
+    },
+    // the visited list and the save are read when he walks in
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [life.visited, saved],
+  );
+  const leave = useCallback(
+    (o?: { drive?: string }) => {
+      const s = inside;
+      setFade(true);
+      setTimeout(() => {
+        const c = ctlObj;
+        if (c && s) {
+          c.teleport = { x: s.door.x + s.face[0] * 1.6, z: s.door.z + s.face[1] * 1.6, ry: Math.atan2(s.face[0], s.face[1]) };
+          // out of the garage: the car waits in the kerbside lane, pointing along the street
+          if (o?.drive && plan) {
+            const [fx, fz] = s.face;
+            const tx = -fz,
+              tz = fx;
+            c.driveOut = { id: o.drive, x: s.door.x + fx * (plan.walk + 2.5) + tx * 4, z: s.door.z + fz * (plan.walk + 2.5) + tz * 4, ry: Math.atan2(tx, tz) };
+          }
+        }
+        setInside(null);
+        setRoomId(null);
+        setNear(null);
+        setHotspots([]);
+        setFade(false);
+      }, 280);
+    },
+    [inside, ctlObj, plan],
+  );
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && place) {
-        if (panel) setPanel(null);
-        else leave();
-      }
+      const t = e.target as HTMLElement;
+      if (t && (t.tagName === "INPUT" || t.tagName === "SELECT" || t.tagName === "TEXTAREA")) return;
+      if (e.key === "Escape" && inside) leave();
+      if (e.key.toLowerCase() === "m" && !inside && plan) setMapOpen((v) => !v);
     };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
-  }, [place, panel, leave]);
+  }, [inside, leave, plan]);
 
-  // ---------- using things ----------
-  const use = (id: string) => {
-    if (!place) return;
-    if (id.startsWith("store:")) return setPanel({ kind: "store", brand: id.slice(6) });
-    const P: Record<string, Panel> = {
-      wardrobe: { kind: "wardrobe" },
-      laptop: { kind: "homes" },
-      trophies: { kind: "trophies" },
-      garage: { kind: "garage" },
-      table: { kind: "meals" },
-      showroom: { kind: "cars" },
-      drills: { kind: "sessions" },
-      pitch: { kind: "match" },
-    };
-    if (P[id]) return setPanel(P[id]);
-    if (place === "home" && (id === "rest" || id === "unwind")) return act("home", id);
-    if (place === "gym") return act("gym", id);
-    if (place === "stadium" && id === "fans") return act("stadium", "fans");
-  };
-  const latestUse = useRef(use);
-  useEffect(() => {
-    latestUse.current = use;
-  });
-  const onUse = useCallback((id: string) => latestUse.current(id), []);
+  // ---------- inside: the shop card (ShopHud) handles E and every button; the door, the garage and driving
+  // out come back here ----------
+  const onUse = useCallback(() => {}, []);
   const onNear = useCallback((id: string | null) => setNear(id), []);
   const onHotspots = useCallback((h: Hotspot[]) => setHotspots(h), []);
+  const onPrompt = useCallback((p: Prompt | null) => setPrompt(p), []);
+  const onBubble = useCallback((t: string | null) => setBubble(t), []);
+  const onPhoto = useCallback(() => {
+    setFlash(Date.now());
+    void run(
+      () => careerApi.act(saved, "street", "fan", "photo"),
+      (r) => say(r.text),
+    );
+  }, [run, saved]);
 
-  const outfit = place === "training" || place === "gym" || place === "stadium" ? OUTFITS.training : OUTFITS.home;
-  const nearSpot = hotspots.find((h) => h.id === near);
-  const placeName =
-    place === "gym"
-      ? life.places.gym
-      : place === "restaurant"
-        ? life.places.restaurant
-        : place === "mall"
-          ? life.places.mall
-          : place === "shops"
-            ? life.places.shops
-            : place === "home"
-              ? life.home.label
-              : place
-                ? PLACE_LABEL[place]
-                : "";
-  const sub = (id: PlaceId) =>
-    id === "home"
-      ? life.home.label
-      : id === "stadium"
-        ? nextMatch?.match
-          ? "Week " + nextMatch.week + " v " + nextMatch.match.opp
-          : "Matchday"
-        : id === "gym"
-          ? life.places.gym
-          : id === "restaurant"
-            ? life.places.restaurant
-            : id === "mall"
-              ? life.places.mall
-              : id === "shops"
-                ? life.places.shops + ", cars"
-                : state.team || "Extra sessions";
-  const Wx = { clear: light.night > 0.6 ? Moon : Sun, cloud: Cloud, rain: CloudRain, storm: CloudLightning, snow: Snowflake, fog: CloudFog, haze: CloudFog }[life.weather.kind] || Sun;
+  // what he wears: his own clothes in the street, kit at the training ground, the gym and the stadium
+  const co = life.cityOutfit;
+  const street: Outfit = useMemo(() => (co ? { shirt: co.shirt, trim: co.trim, shorts: co.shorts, socks: co.socks } : OUTFITS.home), [co]);
+  const outfit = room && (room.kind === "training" || room.kind === "gym" || room.kind === "stadium") ? OUTFITS.training : street;
+  const night = ctlObj ? THREE.MathUtils.clamp((Math.abs(ctlObj.hour - 13) - 6) / 1.5, 0, 1) : 0;
+  const Wx = { clear: night > 0.6 ? Moon : Sun, cloud: Cloud, rain: CloudRain, storm: CloudLightning, snow: Snowflake, fog: CloudFog, haze: CloudFog }[life.weather.kind] || Sun;
+  const c = ctlObj;
+  const carName = c && c.mode === "drive" && c.carId ? carSpec(state, c.carId)?.name : null;
+  const ownedHomes = life.owned.filter((o) => o.city === life.city).map((o) => o.id);
+
+  if (!plan || !c) {
+    return (
+      <div className="pc-world">
+        <p className="pc-world-wait">Loading the city.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="pc-city">
-      <div
-        className={clsx("pc-city-canvas", place ? "is-inside" : "is-city", hover && "is-hover")}
-        onPointerDown={(e) => {
-          drag.current = { x: e.clientX, y: e.clientY, yaw: place ? walk.current.yaw : cam.current.yaw, pitch: cam.current.pitch };
-        }}
-        onPointerMove={(e) => {
-          const d = drag.current;
-          if (!d || !(e.buttons & 1)) return;
-          const dx = e.clientX - d.x,
-            dy = e.clientY - d.y;
-          if (Math.abs(dx) + Math.abs(dy) < 4) return;
-          if (place) walk.current.yaw = d.yaw - dx * 0.008;
-          else {
-            const c = cam.current;
-            c.yaw = d.yaw - dx * 0.005;
-            c.pitch = THREE.MathUtils.clamp(d.pitch + dy * 0.004, 0.22, 1.25);
-            c.idle = 0;
-          }
-        }}
-        onPointerUp={() => (drag.current = null)}
-        onWheel={(e) => {
-          if (place) walk.current.zoom = THREE.MathUtils.clamp(walk.current.zoom * (e.deltaY > 0 ? 1.08 : 0.93), 0.6, 1.6);
-          else {
-            cam.current.dist = THREE.MathUtils.clamp(cam.current.dist * (e.deltaY > 0 ? 1.08 : 0.93), 50, 220);
-            cam.current.idle = 0;
-          }
-        }}
-      >
+    <div className={clsx("pc-world", inside ? "is-inside" : "is-street")}>
+      <div className="pc-world-canvas" onPointerDown={() => sound.start()}>
         <Canvas
           dpr={[1, DPR_CAP[quality]]}
-          shadows={quality >= 2 ? { type: THREE.PCFShadowMap } : false}
+          shadows={quality >= 1}
           gl={{ antialias: quality >= 1, powerPreference: "high-performance" }}
-          camera={{ position: [90, 90, 110], fov: 38, near: 0.1, far: 1200 }}
+          camera={{ position: [c.x, 6, c.z + 8], fov: 55, near: 0.1, far: 1300 }}
           onCreated={({ gl }) => {
             gl.toneMapping = THREE.ACESFilmicToneMapping;
-            gl.toneMappingExposure = 1.05;
+            gl.toneMappingExposure = 1.0;
           }}
         >
-          <CamSetup fov={place ? 48 : 42} far={place ? 200 : 1200} panel={panelW} />
-          <Environment intensity={place ? 0.55 : 0.3} />
-          {place ? (
-            <Interior place={place} state={state} quality={quality} night={light.night} outfit={outfit} ctl={walk} labelEls={labelEls} onNear={onNear} onUse={onUse} onHotspots={onHotspots} />
-          ) : (
-            <CityScene life={life} round={state.round} quality={quality} hover={hover} onHover={setHover} onPick={enter} labelEls={labelEls} ctl={cam} />
-          )}
+          <Environment intensity={inside ? 0.55 : 0.22} />
+          <World state={state} plan={plan} quality={quality} ctl={ctl as React.MutableRefObject<WorldCtl>} outfit={street} active={!inside} sound={sound} onEnter={enter} onPrompt={onPrompt} onBubble={onBubble} onPhoto={onPhoto} />
+          {inside && room && <Interior key={room.id} place={room} state={state} quality={quality} night={night} outfit={outfit} ctl={walk} labelEls={labelEls} onNear={onNear} onUse={onUse} onHotspots={onHotspots} />}
           <FrameGuard quality={quality} onSlow={setQuality} />
         </Canvas>
         <div className={clsx("pc-city-fade", fade && "is-on")} aria-hidden="true" />
-        {/* name cards that follow the buildings, or the things to use in a place */}
-        <div className="pc-city-labels">
-          {!place &&
-            PLACE_IDS.map((id) => (
-              <button
-                type="button"
-                key={id}
-                className={clsx("pc-place-tag", hover === id && "is-hover", id === "home" && "is-home")}
-                ref={(el) => {
-                  if (el) labelEls.current.set(id, el);
-                  else labelEls.current.delete(id);
-                }}
-                onClick={() => enter(id)}
-                onPointerEnter={() => setHover(id)}
-                onPointerLeave={() => setHover(null)}
-                data-top={id === "home" ? homeTop(life.home.tier) : SPOTS[id].top}
-              >
-                <b>{PLACE_LABEL[id]}</b>
-                <span>{sub(id)}</span>
-              </button>
-            ))}
-          {place &&
-            hotspots.map((h, k) => (
+        <div className={clsx("pc-world-flash", flash && "is-on")} key={flash} aria-hidden="true" />
+        {inside && (
+          <div className="pc-city-labels">
+            {hotspots.map((h, k) => (
               <button
                 type="button"
                 key={h.id}
@@ -299,16 +300,19 @@ export default function City({
                 {h.label}
               </button>
             ))}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* the week, the weather, free time */}
-      <div className="pc-city-hud">
-        <p className="pc-kicker">{place ? PLACE_LABEL[place] : life.city}</p>
-        <h2 className="pc-city-title">{place ? placeName : life.city}</h2>
-        <div className="pc-city-chips">
+      {/* the corner: where, when, the weather, free time, money */}
+      <div className="pc-world-hud">
+        <p className="pc-kicker">{inside ? inside.place.name : life.city}</p>
+        <div className="pc-world-chips">
+          <span className="pc-chip">
+            <b ref={timeEl}>{clock(c.hour)}</b>
+          </span>
           <span className="pc-chip" title={WEATHER[life.weather.kind]}>
-            <Wx size={16} weight="bold" aria-hidden="true" />
+            <Wx size={15} weight="bold" aria-hidden="true" />
             {WEATHER[life.weather.kind]}, {life.weather.temp}°C
           </span>
           <span className="pc-chip" title="Free time left this week">
@@ -322,68 +326,123 @@ export default function City({
           <span className="pc-chip">{money(state.money.cash)}</span>
         </div>
       </div>
-
-      <div className="pc-city-side">
-        {!place ? (
-          <>
-            <p className="pc-dim pc-city-hint">Drag to look around. Pick a place to go in. Time out costs free time; shopping does not.</p>
-            <ul className="pc-place-list">
-              {PLACE_IDS.map((id) => (
-                <li key={id}>
-                  <button
-                    type="button"
-                    className={clsx("pc-place-row", hover === id && "is-hover")}
-                    onClick={() => enter(id)}
-                    onPointerEnter={() => setHover(id)}
-                    onPointerLeave={() => setHover(null)}
-                  >
-                    <b>{PLACE_LABEL[id]}</b>
-                    <span>{sub(id)}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <button type="button" className="k-btn k-btn-primary pc-city-week" disabled={busy || state.seasonOver} onClick={onWeek}>
-              {busy ? "Playing" : "Play the week"}
-            </button>
-          </>
-        ) : (
-          <>
-            <button type="button" className="k-btn pc-city-back" onClick={leave}>
-              Back to the city
-            </button>
-            {!panel ? (
-              <>
-                <p className="pc-dim pc-city-hint">Click the floor or use WASD to walk. Walk up to a glowing ring and press E.</p>
-                <ul className="pc-place-list">
-                  {hotspots.map((h, k) => (
-                    <li key={h.id}>
-                      <button type="button" className={clsx("pc-place-row", near === h.id && "is-hover")} onClick={() => (walk.current.use = k)}>
-                        <b>{h.label}</b>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                {life.done.length > 0 && (
-                  <ul className="pc-done">
-                    {life.done.slice(0, 3).map((d, i) => (
-                      <li key={i}>{d.text}</li>
-                    ))}
-                  </ul>
-                )}
-              </>
-            ) : (
-              <PlacePanel panel={panel} state={state} money={money} busy={busy} act={act} close={() => setPanel(null)} onPhone={onPhone} />
-            )}
-          </>
+      <div className="pc-world-tools">
+        {!inside && (
+          <button type="button" className="k-btn k-btn-sm" onClick={() => setMapOpen(true)} title="The city map (M)">
+            <MapTrifold size={15} weight="bold" aria-hidden="true" /> Map
+          </button>
         )}
+        <button type="button" className="k-btn k-btn-sm" onClick={() => onPhone("home")} title="Your phone">
+          <DeviceMobile size={15} weight="bold" aria-hidden="true" /> Phone
+        </button>
+        <button
+          type="button"
+          className="k-btn k-btn-ghost k-btn-sm"
+          aria-label={muted ? "Sound on" : "Sound off"}
+          onClick={() => {
+            sound.start();
+            sound.setMuted(!muted);
+            setMuted(!muted);
+          }}
+        >
+          {muted ? <SpeakerSlash size={15} weight="bold" /> : <SpeakerHigh size={15} weight="bold" />}
+        </button>
+        <button type="button" className="k-btn k-btn-primary k-btn-sm" disabled={busy || state.seasonOver} onClick={onWeek}>
+          {busy ? "Playing" : "Play the week"}
+        </button>
       </div>
 
-      {place && nearSpot && !panel && (
-        <button type="button" className="pc-city-prompt" onClick={() => use(nearSpot.id)}>
-          <kbd>E</kbd>
-          {nearSpot.label}
+      {/* the waypoint: an arrow at the top that points the way */}
+      {!inside && (
+        <div className="pc-world-way" style={{ opacity: 0 }} aria-hidden="true">
+          <i ref={arrowEl} />
+          <span ref={distEl} />
+        </div>
+      )}
+      {!inside && carName && (
+        <div className="pc-world-speed">
+          <b ref={speedEl} />
+          <span>{carName}</span>
+        </div>
+      )}
+      {!inside && bubble && (
+        <p className="pc-world-bubble" role="status">
+          {bubble}
+        </p>
+      )}
+      {!inside && prompt && (
+        <p className="pc-world-prompt">
+          {prompt.key && <kbd>{prompt.key}</kbd>}
+          {prompt.text}
+        </p>
+      )}
+      {!inside && touch && ctlObj && <TouchStick ctl={ctlObj} onPress={press} driving={!!carName} />}
+      {!inside && help && !touch && (
+        <div className="pc-world-help">
+          <p>
+            <kbd>W A S D</kbd> walk, <kbd>Shift</kbd> run, drag to look round, <kbd>E</kbd> go in or talk, <kbd>F</kbd> your car, <kbd>M</kbd> the map
+          </p>
+          <button
+            type="button"
+            className="k-btn k-btn-ghost k-btn-sm"
+            onClick={() => {
+              setHelp(false);
+              try {
+                localStorage.setItem("pc_city_help", "seen");
+              } catch {
+                /* fine */
+              }
+            }}
+          >
+            Got it
+          </button>
+        </div>
+      )}
+
+      {/* inside a place: the way out, and the card for whatever he stands at */}
+      {inside && (
+        <button type="button" className="k-btn k-btn-sm pc-world-out" onClick={() => leave()}>
+          Back to the street
         </button>
+      )}
+      {inside && room && (
+        <ShopHud
+          place={room}
+          state={state}
+          near={near}
+          busy={busy}
+          money={money}
+          act={actFor}
+          onLeave={(o) => {
+            if (o.to && inside) {
+              // home to garage and back: a new room, the same door
+              setFade(true);
+              setTimeout(() => {
+                setRoomId(o.to === inside.place.id ? inside.place.id : inside.place.id + "/garage");
+                setNear(null);
+                setHotspots([]);
+                walk.current = { yaw: 0, zoom: 1, use: -1 };
+                setFade(false);
+              }, 260);
+            } else leave(o.drive ? { drive: o.drive } : undefined);
+          }}
+        />
+      )}
+      {mapOpen && (
+        <CityMap
+          plan={plan}
+          ctl={ctl as React.MutableRefObject<WorldCtl>}
+          visited={life.visited || []}
+          homeId={life.home.id}
+          ownedHomes={ownedHomes}
+          onClose={() => setMapOpen(false)}
+          onTravel={(s) => {
+            const cc = ctlObj;
+            cc.teleport = { x: s.door.x + s.face[0] * 1.6, z: s.door.z + s.face[1] * 1.6, ry: Math.atan2(s.face[0], s.face[1]) };
+            cc.waypoint = null;
+            setMapOpen(false);
+          }}
+        />
       )}
       {toast && (
         <p key={toast.n} className="pc-city-toast" role="status">
@@ -394,233 +453,51 @@ export default function City({
   );
 }
 
-// ---------- what a place offers ----------
-function PlacePanel({
-  panel,
-  state,
-  money,
-  busy,
-  act,
-  close,
-  onPhone,
-}: {
-  panel: NonNullable<Panel>;
-  state: CareerState;
-  money: (n: number, o?: { week?: boolean }) => string;
-  busy: boolean;
-  act: (p: string, a: string, arg?: string) => Promise<void>;
-  close: () => void;
-  onPhone: (app: string) => void;
-}) {
-  const life = state.life;
-  const Row = ({ title, note, price, cta, off, onClick, done }: { title: string; note?: string; price?: string; cta: string; off?: boolean; onClick: () => void; done?: boolean }) => (
-    <li className={clsx("pc-buy", done && "is-done")}>
-      <div>
-        <b>{title}</b>
-        {note && <span>{note}</span>}
-      </div>
-      {price && <em>{price}</em>}
-      <button type="button" className={clsx("k-btn k-btn-sm", !done && "k-btn-primary")} disabled={busy || off} onClick={onClick}>
-        {cta}
-      </button>
-    </li>
-  );
-  let title = "";
-  let body: React.ReactNode = null;
-  if (panel.kind === "wardrobe") {
-    title = "Wardrobe";
-    const wearables = life.items.filter((i) => i.owned && i.look);
-    body = wearables.length ? (
-      <ul className="pc-buys">
-        {wearables.map((i) => (
-          <Row key={i.id} title={i.label} note={i.brand} cta={i.wearing ? "Take off" : "Wear"} done={i.wearing} onClick={() => act("home", "wear", i.id)} />
-        ))}
-      </ul>
-    ) : (
-      <p className="pc-dim">Watches, chains and earrings you buy at the shops hang here. Whatever you wear shows on you everywhere, the pitch too.</p>
-    );
-  } else if (panel.kind === "homes") {
-    title = "Homes and money";
-    body = (
-      <>
-        <p className="pc-dim">
-          Now: {life.home.label} in {life.home.city}
-          {life.home.mode === "rent" ? ", " + money(life.home.rent, { week: true }) : life.home.mode === "own" ? ", yours" : ""}. Living costs about {money(life.weeklyCost, { week: true })}.
-        </p>
-        <ul className="pc-buys">
-          {life.homes
-            .filter((h) => h.id !== "family" || state.life.city === state.life.hometown)
-            .map((h) => {
-              const here = life.home.id === h.id;
-              const owned = life.owned.some((o) => o.id === h.id && o.city === life.city);
-              if (h.id === "family")
-                return <Row key={h.id} title={h.label} note={h.note} cta={here ? "You live here" : "Move back"} done={here} off={here} onClick={() => act("home", "move", "family:rent")} />;
-              return (
-                <li key={h.id} className={clsx("pc-buy", here && "is-done")}>
-                  <div>
-                    <b>{h.label}</b>
-                    <span>{h.note}</span>
-                  </div>
-                  <em>
-                    {h.rent ? money(h.rent, { week: true }) : ""}
-                    {h.buy ? (h.rent ? " or " : "") + money(h.buy) : ""}
-                  </em>
-                  <span className="pc-buy-btns">
-                    {h.rent > 0 && (
-                      <button type="button" className="k-btn k-btn-sm" disabled={busy || here || !h.canRent} onClick={() => act("home", "move", h.id + ":rent")}>
-                        Rent
-                      </button>
-                    )}
-                    {h.buy > 0 && (
-                      <button type="button" className="k-btn k-btn-primary k-btn-sm" disabled={busy || (here && owned) || (!owned && !h.canBuy)} onClick={() => act("home", "move", h.id + ":buy")}>
-                        {owned ? "Move in" : "Buy"}
-                      </button>
-                    )}
-                  </span>
-                </li>
-              );
-            })}
-        </ul>
-        {life.owned.length > 0 && (
-          <>
-            <h4 className="pc-h4">Homes you own</h4>
-            <ul className="pc-buys">
-              {life.owned.map((o, i) => (
-                <Row key={i} title={o.label + ", " + o.city} note={"Bought for " + money(o.price || o.buy)} cta="Sell" onClick={() => act("home", "sell", o.id)} />
-              ))}
-            </ul>
-          </>
-        )}
-        <button type="button" className="k-btn" onClick={() => onPhone("bank")}>
-          Open the bank
-        </button>
-      </>
-    );
-  } else if (panel.kind === "trophies") {
-    title = "Trophy cabinet";
-    body =
-      state.trophies.length + state.awards.length ? (
-        <ul className="pc-honours">
-          {state.trophies.map((t, i) => (
-            <li key={"t" + i}>
-              <span className="pc-cup" aria-hidden="true" />
-              {t.title}
-              <em>{t.club}</em>
-            </li>
-          ))}
-          {state.awards.map((a, i) => (
-            <li key={"a" + i} className="is-award">
-              <span className="pc-cup" aria-hidden="true" />
-              {a.title}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="pc-dim">Empty shelves, for now. Every one of them is waiting for something.</p>
-      );
-  } else if (panel.kind === "garage") {
-    title = "Your cars";
-    const mine = life.cars.filter((c) => c.owned);
-    body = mine.length ? (
-      <ul className="pc-buys">
-        {mine.map((c) => (
-          <Row
-            key={c.id}
-            title={c.brand + " " + c.model}
-            note={money(c.upkeep, { week: true }) + " to run"}
-            cta={life.car?.id === c.id ? "Driving it" : "Drive this one"}
-            done={life.car?.id === c.id}
-            off={life.car?.id === c.id}
-            onClick={() => act("home", "drive", c.id)}
-          />
-        ))}
-      </ul>
-    ) : (
-      <p className="pc-dim">No cars yet. The showroom is at the shops.</p>
-    );
-  } else if (panel.kind === "meals") {
-    title = "The menu";
-    body = (
-      <ul className="pc-buys">
-        {life.meals.map((m) => (
-          <Row key={m.id} title={m.label} note={m.note} price={money(m.price)} cta="Order" off={life.time < 1 || state.money.cash < m.price} onClick={() => act("restaurant", m.id)} />
-        ))}
-      </ul>
-    );
-  } else if (panel.kind === "store") {
-    const brands = panel.brand === "Halcyon" ? ["Halcyon", "Maison Orrè"] : [panel.brand];
-    title = panel.brand || "Shop";
-    const items = life.items.filter((i) => brands.includes(i.brand));
-    body = (
-      <ul className="pc-buys">
-        {items.map((i) => (
-          <Row
-            key={i.id}
-            title={i.label}
-            note={i.look ? "Shows on you in 3D" : i.perk === "unwind" ? "Unlocks game nights at home" : undefined}
-            price={money(i.price)}
-            cta={i.owned ? "Yours" : "Buy"}
-            done={i.owned}
-            off={i.owned || state.money.cash < i.price}
-            onClick={() => act(i.shop, "buy", i.id)}
-          />
-        ))}
-      </ul>
-    );
-  } else if (panel.kind === "cars") {
-    title = "Car showroom";
-    body = (
-      <ul className="pc-buys">
-        {life.cars.map((c) => (
-          <Row
-            key={c.id}
-            title={c.brand + " " + c.model}
-            note={c.body === "scooter" ? "Fine from fifteen" : "Running costs " + money(c.upkeep, { week: true })}
-            price={money(c.price)}
-            cta={c.owned ? "Yours" : "Buy"}
-            done={c.owned}
-            off={c.owned || !c.canBuy}
-            onClick={() => act("shops", "car", c.id)}
-          />
-        ))}
-      </ul>
-    );
-  } else if (panel.kind === "sessions") {
-    title = "Extra session";
-    body = (
-      <ul className="pc-buys">
-        {Object.entries(state.training.sessions)
-          .filter(([id]) => id !== "rest")
-          .map(([id, s]) => (
-            <Row key={id} title={s.label} note={s.grows ? "Works on " + s.grows.length + " attributes" : "Feel better"} cta="Do it" off={state.life.time < 1} onClick={() => act("training", id)} />
-          ))}
-      </ul>
-    );
-  } else {
-    title = "Coming up";
-    body = (
-      <ul className="pc-ledger">
-        {state.calendar.slice(0, 6).map((c) => (
-          <li key={c.week}>
-            <span>
-              Week {c.week}
-              {c.intl ? ", international window" : ""}
-            </span>
-            <b>{c.match ? (c.match.home === false ? "at " : "v ") + c.match.opp : "No match"}</b>
-          </li>
-        ))}
-      </ul>
-    );
-  }
+/** the thumb stick for touch screens: drag it to walk (far to run) or drive; E and F as buttons */
+function TouchStick({ ctl, onPress, driving }: { ctl: WorldCtl; onPress: (key: string) => void; driving: boolean }) {
+  const knob = useRef<HTMLSpanElement>(null);
+  const base = useRef<HTMLDivElement>(null);
+  const move = (e: React.PointerEvent) => {
+    const b = base.current!.getBoundingClientRect();
+    const r = b.width / 2;
+    let x = (e.clientX - (b.left + r)) / r,
+      y = (e.clientY - (b.top + r)) / r;
+    const l = Math.hypot(x, y);
+    if (l > 1) {
+      x /= l;
+      y /= l;
+    }
+    ctl.stick = { x, y };
+    if (knob.current) knob.current.style.transform = "translate(" + x * r * 0.6 + "px," + y * r * 0.6 + "px)";
+  };
+  const end = () => {
+    ctl.stick = null;
+    if (knob.current) knob.current.style.transform = "";
+  };
   return (
-    <div className="pc-place-panel">
-      <div className="pc-place-panel-head">
-        <h3 className="pc-h3">{title}</h3>
-        <button type="button" className="k-btn k-btn-ghost k-btn-sm" onClick={close}>
-          Close
+    <div className="pc-touch">
+      <div
+        ref={base}
+        className="pc-touch-stick"
+        onPointerDown={(e) => {
+          (e.target as HTMLElement).setPointerCapture(e.pointerId);
+          move(e);
+        }}
+        onPointerMove={(e) => e.buttons && move(e)}
+        onPointerUp={end}
+        onPointerCancel={end}
+        aria-label={driving ? "Steer and drive" : "Walk"}
+      >
+        <span ref={knob} />
+      </div>
+      <div className="pc-touch-btns">
+        <button type="button" className="k-btn" onClick={() => onPress("e")}>
+          E
+        </button>
+        <button type="button" className="k-btn" onClick={() => onPress("f")}>
+          {driving ? "Out" : "Car"}
         </button>
       </div>
-      {body}
     </div>
   );
 }

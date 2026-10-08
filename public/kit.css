@@ -776,3 +776,15 @@ a.k-inset:hover, button.k-inset:hover { border-color: rgba(255, 255, 255, 0.28);
 :where([data-kapp="fl"]) a.homechip { text-decoration: none; color: var(--k-dim); transition: color 0.25s ease; }
 .k-chips a.chip:hover,
 :where([data-kapp="fl"]) a.homechip:hover { color: #ffffff; }
+
+/* ---------- a match result: one capital letter in a small square beside the score ----------
+   W green, L red, D grey, in the same tint as the OVR and condition arrows (the colour, a light wash of it, a
+   thin ring of it). Player Career uses .k-wdl; the Floodlights calendar uses .wdl. */
+.k-wdl,
+:where([data-kapp="fl"]) .wdl { --k-wc: var(--k-dim); display: inline-grid; place-items: center; flex: none; width: 18px; height: 18px; border-radius: 4px; font: 700 10.5px/1 var(--k-f-lbl); letter-spacing: 0; text-transform: uppercase; vertical-align: middle; color: var(--k-wc); background: color-mix(in srgb, var(--k-wc) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--k-wc) 42%, transparent); }
+.k-wdl.w,
+:where([data-kapp="fl"]) .wdl.w { --k-wc: var(--k-good); }
+.k-wdl.l,
+:where([data-kapp="fl"]) .wdl.l { --k-wc: var(--k-bad); }
+.k-wdl.d,
+:where([data-kapp="fl"]) .wdl.d { --k-wc: var(--k-dim); }

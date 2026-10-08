@@ -234,6 +234,7 @@ td[class^="pos-"]{font-family:var(--f-num);font-weight:600;font-size:12px;letter
 .calcell .cres{font-family:var(--f-num);font-size:13px;font-weight:600;margin-top:6px}
 .calcell .cres::before{content:"";display:inline-block;width:6px;height:6px;margin-right:7px;background:currentColor;vertical-align:1px}
 .calcell .cres.w{color:var(--grass)}.calcell .cres.l{color:var(--red)}.calcell .cres.d{color:var(--dim)}
+.calcell .cres.haswdl{display:flex;align-items:center}.calcell .cres.haswdl::before{content:none}.calcell .wdl{margin-right:8px;vertical-align:-3px}.calcell .cres .wdl{vertical-align:middle}.calcell .cextra .wdl{width:15px;height:15px;margin:0 5px 0 2px;font-size:9px;vertical-align:-2px}
 .calcell .cwin{font-size:9.5px;font-weight:700;letter-spacing:.08em;color:var(--warm);margin-top:7px;text-transform:uppercase}
 .calcell .cextra{font-size:9.5px;font-weight:600;letter-spacing:.05em;color:var(--dim2);margin-top:6px;line-height:1.55;text-transform:uppercase}
 .callegend{display:flex;gap:16px;font-size:10.5px;font-weight:600;letter-spacing:.08em;color:var(--dim2);flex-wrap:wrap;text-transform:uppercase}
@@ -2945,14 +2946,16 @@ function renderCalendar(s) {
   (s.cups || []).forEach(cup => cup.rounds.forEach(r => {
     (cupsByWeek[r.week] = cupsByWeek[r.week] || []).push({ cup, r });
   }));
+  // a result in my cell reads my way round: my goals first, then a W, L or D chip (kit .wdl) so the winner is plain
   const resFor = (home, away, hg, ag, pens, winner) => {
     if (hg === null || hg === undefined) return null;
-    const score = hg + "-" + ag + (pens ? " P" : "");
-    if (!myName || (home !== myName && away !== myName)) return { txt: score, cls: "d" };
+    if (!myName || (home !== myName && away !== myName)) return { txt: hg + "-" + ag + (pens ? " P" : ""), cls: "d" };
+    const mine = home === myName ? hg : ag, theirs = home === myName ? ag : hg;
     let cls = "d";
     if (pens && winner) cls = winner === myName ? "w" : "l";
-    else if (hg !== ag) cls = ((home === myName && hg > ag) || (away === myName && ag > hg)) ? "w" : "l";
-    return { txt: score, cls };
+    else if (mine !== theirs) cls = mine > theirs ? "w" : "l";
+    const word = cls === "w" ? "Won" : cls === "l" ? "Lost" : "Drew";
+    return { txt: mine + "-" + theirs + (pens ? " (pens)" : ""), cls, chip: '<span class="wdl ' + cls + '" title="' + word + (pens ? " on penalties" : "") + '" aria-label="' + word + '">' + cls.toUpperCase() + "</span>" };
   };
   let html = "";
   for (let w = 1; w <= total; w++) {
@@ -2973,7 +2976,7 @@ function renderCalendar(s) {
         const line = (tie.home === myName ? tie.away + " (H)" : tie.home + " (A)");
         const tieRes = resFor(tie.home, tie.away, tie.hg, tie.ag, tie.pens, tie.winner);
         if (!opp) { comp = (cup.title + " " + r.name).toUpperCase(); compGold = true; opp = line; res = tieRes; }
-        else extra.push((cup.title + " " + r.name).toUpperCase() + ": " + line + (tieRes ? " " + tieRes.txt : ""));
+        else extra.push((cup.title + " " + r.name).toUpperCase() + ": " + line + (tieRes ? " " + (tieRes.chip || "") + tieRes.txt : ""));
       } else if (cupIsMine(cup, s) || r.matches.length === 1) {
         extra.push((cup.title + scope + ": " + r.name).toUpperCase());
       }
@@ -2984,7 +2987,7 @@ function renderCalendar(s) {
     html += `<div class="calcell ${now ? "now" : ""} ${done ? "done" : ""}">
       <div class="ctop"><span class="cmw">MW ${String(w).padStart(2, "0")}</span><span class="ccomp" style="${compGold ? "color:var(--gold)" : ""}">${comp}</span></div>
       ${opp ? `<div class="copp" style="${opp === "FREE WEEK" ? "color:var(--faint)" : ""}">${opp}</div>` : ""}
-      ${res ? `<div class="cres ${res.cls}">${res.txt}</div>` : ""}
+      ${res ? `<div class="cres ${res.cls}${res.chip ? " haswdl" : ""}">${res.chip || ""}${res.txt}</div>` : ""}
       ${windowOpen ? `<div class="cwin">WINDOW OPEN</div>` : ""}
       ${extra.length ? `<div class="cextra">${extra.join("<br>")}</div>` : ""}
     </div>`;
@@ -3297,11 +3300,13 @@ $("nameIn").value = ME.name;
     box.querySelector("p:nth-of-type(2)").textContent = msg;
     document.body.appendChild(box);
   }
-  post("/api/pc/matchstart").then(function (s) {
+  // the match screen first (a peek uses nothing up: "Not now" keeps this week's go), then the real start on Kick off
+  post("/api/pc/matchstart", { peek: true }).then(function (s) {
     FLMatch.open({
       info: { home: s.home, away: s.away, side: s.side, label: s.label, homeRating: s.homeRating, awayRating: s.awayRating },
       lock: s.lock,
-      kickoff: function () { return Promise.resolve(s); },
+      // a server from before the peek already started the match with that call: play what it sent
+      kickoff: function () { return s.peek ? post("/api/pc/matchstart") : Promise.resolve(s); },
       finish: function (hg, ag, sim) {
         var line = sim && typeof sim.lockLine === "function" ? sim.lockLine() : null;
         return post("/api/pc/matchresult", { hg: hg, ag: ag, line: line }).then(function (r) {

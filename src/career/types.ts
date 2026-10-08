@@ -109,6 +109,16 @@ export interface MatchLine {
   a?: number;
   rating?: number;
   level?: string;
+  /** his side's name; lines saved before it was kept have none */
+  team?: string;
+  /** won, lost or drawn, his side's way round */
+  res?: "W" | "L" | "D";
+  /** the week it was played in */
+  wk?: number;
+  live?: boolean;
+  national?: boolean;
+  pro?: boolean;
+  home?: boolean;
 }
 
 export interface CareerSummary {
@@ -190,7 +200,7 @@ export interface LifeCar {
   upkeep: number;
   flash: number;
   colour: string;
-  body: "scooter" | "hatch" | "saloon" | "coupe" | "sports" | "suv" | "hyper";
+  body: "scooter" | "bike" | "hatch" | "saloon" | "coupe" | "sports" | "suv" | "hyper" | "van";
   owned?: boolean;
   canBuy?: boolean;
 }
@@ -254,7 +264,94 @@ export interface Life {
   sponsorOffers: { id: string; brand: string; kind: string; line: string; weekly: number; weeks: number; expires: number; boots: boolean; gift: string | null }[];
   savings: number;
   weeklyCost: number;
+  world?: LifeWorld;
+  catalog?: LifeCatalog;
+  visited?: string[];
+  garage?: string[];
+  cityOutfit?: CityOutfit;
+  fame?: number;
+  moments?: LifeMoment[];
+  week?: LifeWeek;
 }
+/** this week's small counters: cafe orders, supermarket buys and street fans used of their limits, the clinic */
+export interface LifeWeek {
+  cafe: number;
+  market: number;
+  fans: number;
+  treat: boolean;
+  checkup: boolean;
+  limits: { cafe: number; market: number; fans: number };
+  guarded: boolean;
+}
+
+export type PlaceKind = "store" | "mall" | "supermarket" | "cafe" | "restaurant" | "club" | "clinic" | "gym" | "training"
+  | "stadium" | "dealer" | "watches" | "home";
+export interface PlaceStyle { floor: string; wall: string; accent: string; trim: string; vibe: string }
+export interface WorldPlace {
+  id: string;
+  kind: PlaceKind;
+  name: string;
+  brand?: string;
+  where: "street" | "mall" | "luxury" | "seafront" | "centre" | "outskirts" | "hill" | "suburb";
+  style: PlaceStyle;
+  minAge?: number;
+  inside?: string[];
+  homeId?: string;
+  owned?: boolean;
+  living?: boolean;
+  price?: number;
+}
+export interface CatalogItem {
+  id: string;
+  store: string;
+  brand: string;
+  cat: "top" | "bottom" | "shoes" | "outer" | "watch" | "jewellery" | "boots" | "tech" | "bag";
+  label: string;
+  price: number;
+  mood: number;
+  flash: number;
+  look?: Record<string, string>;
+  outfit?: { shirt?: string; trim?: string; shorts?: string };
+  colour: string;
+  need?: number;
+  lockReason?: string;
+  owned: boolean;
+  wearing: boolean;
+  canBuy: boolean;
+  boot?: number;
+  perk?: string;
+}
+export interface CatalogCar {
+  id: string;
+  dealer: string;
+  brand: string;
+  model: string;
+  price: number;
+  upkeep: number;
+  flash: number;
+  colour: string;
+  body: "scooter" | "bike" | "hatch" | "saloon" | "coupe" | "sports" | "suv" | "hyper" | "van";
+  feel: { top: number; accel: number; grip: number; mass: number };
+  need?: number;
+  lockReason?: string;
+  owned: boolean;
+  canBuy: boolean;
+  minAge?: number;
+  tier?: number;
+  daily?: boolean;
+  sellFor?: number;
+}
+export interface Grocery { id: string; label: string; price: number; aisle: string; colour: string; note: string }
+export interface MenuItem { id: string; label: string; price: number; note: string; time?: number }
+export interface LifeWorld { seed: number; tier: 1 | 2 | 3; places: WorldPlace[] }
+export interface LifeCatalog {
+  items: CatalogItem[];
+  cars: CatalogCar[];
+  groceries: Grocery[];
+  menus: { cafe: MenuItem[]; restaurant: MenuItem[]; club: MenuItem[]; clinic: MenuItem[] };
+}
+export interface CityOutfit { shirt: string; trim: string; shorts: string; socks: string }
+export interface LifeMoment { id: string; kind: string; s: number; w: number; title: string; text: string; seen: boolean; item?: string; price?: number }
 
 export interface LifeEvent {
   id: string;
@@ -428,4 +525,6 @@ export interface CareerState {
   natKit: [string, string] | null;
   lastKit: [string, string] | null;
   calendar: { week: number; match: { comp: string; opp: string; home?: boolean; national?: boolean } | null; intl: boolean }[];
+  /** this week's match: can he play it live (player lock), and why not when he cannot */
+  play?: { can: boolean; code: string; kind: "youth" | "pro"; why: string };
 }

@@ -127,7 +127,7 @@ function makePeople(K, deps) {
       when: (g, c) => c.stage === "school" || c.stage === "college",
       tease: "Exam week is coming. So is a phone call about a photo shoot.",
       title: "Exams or a photo shoot?",
-      text: () => "A local brand wants you for a paid photo shoot on the same day as your exams. Your agent, or the brand's man if you have no agent, says chances like this do not wait. Mum says the exams are not negotiable.",
+      text: () => "The Puma store in town wants you for a paid photo shoot on the same day as your exams. Your agent, or the brand's man if you have no agent, says chances like this do not wait. Mum says the exams are not negotiable.",
       choices: [
         { id: "shoot", label: "Do the shoot.", fx: { rel: { mum: -10, dad: -4, agent: 5 }, cash: 300, commercial: 2, followers: 0.05, disc: -2 } },
         { id: "exams", label: "Sit the exams.", fx: { rel: { mum: 8, dad: 5, agent: -3 }, disc: 3, morale: 1 } },
@@ -211,10 +211,10 @@ function makePeople(K, deps) {
       when: (g, c) => c.stage !== "pro" && !c.contract,
       tease: "Your boots split down the side at training.",
       title: "New boots",
-      text: () => "Your boots are falling apart. Dad says buy proper ones, whatever they cost, because your feet are your job. Mum says the cheap ones are fine until somebody pays you to play.",
+      text: () => "Your boots are falling apart. Dad says buy proper ones, a pair of Adidas Predators, whatever they cost, because your feet are your job. Mum says a pair of Nike Club boots from the market is fine until somebody pays you to play.",
       choices: [
-        { id: "dad", label: "The proper ones.", fx: { rel: { dad: 5, mum: -3 }, cash: -120, conf: 2 } },
-        { id: "mum", label: "The cheap ones.", fx: { rel: { mum: 5, dad: -2 } } },
+        { id: "dad", label: "The proper ones, the Predators.", fx: { rel: { dad: 5, mum: -3 }, cash: -120, conf: 2 } },
+        { id: "mum", label: "The cheap Nike ones.", fx: { rel: { mum: 5, dad: -2 } } },
         { id: "coach", label: "Ask the coach if the club has a spare pair.", fx: { rel: { coach: 3 }, morale: 1 } }
       ]
     },

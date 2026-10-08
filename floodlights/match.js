@@ -1351,7 +1351,7 @@ function lockKeysHtml(cfg) {
     "<span><b>Defending</b> <kbd>Space</kbd> hold to press and tackle, <kbd>X</kbd> slide, <kbd>Z</kbd> jockey.</span>" +
     "<span><kbd>Esc</kbd> Pause</span></div>" +
     "<p>You are " + esc(L.name || "your player") + ", number " + esc(L.num || "") + ", " + esc(L.pos || "") + ". You control only him, the whole game. Your rating moves with every touch.</p>" +
-    (L.instruction ? '<p class="mdiff">The manager: ' + esc(L.instruction) + "</p>" : "") +
+    (L.instruction ? '<p class="mdiff">The ' + (L.by === "Coach" ? "coach" : "manager") + ": " + esc(L.instruction) + "</p>" : "") +
     '<p class="mwarn">You get one go. Leave before full time and the match is simmed instead.</p>';
 }
 function keyStrip(doc, wrap, classic, lock) {

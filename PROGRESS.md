@@ -759,3 +759,160 @@ Checklist (commit locally after each phase; each phase is tested before the next
       restaurant, mall, the shops, training ground, stadium), the phone (home, social, bank), life events,
       the People panel, the big day scenes, the retirement page, the graphics menu and a player lock match.
 - [x] F2 upload folder, push with the given message, report
+
+## Result chips, play match surfaced, free roam city with real brands and driving
+
+Goal (the user's pasted spec is the source of truth): match result rows that say who won (your team first, the
+score your way, a W, L or D chip), PLAY MATCH and SIM MATCH on every Player Career matchday with the player lock
+match checked end to end, and the city rebuilt as a real free roam open world (walk, drive, take the bus; people,
+traffic, day and night; distinct places you walk inside and buy from by walking to the items; real brands for
+clothes, watches, boots, cars and sponsors; homes on the map; a garage; a map with waypoints and fast travel;
+a different city after a transfer; 60 fps on a laptop on Medium). Push at the end with
+"Result chips, play match surfaced, free roam city with real brands and driving". Resume from the first unchecked box.
+
+Decisions (made at the start, change only with a note):
+- Real brands replace the made up ones (the user's call, a personal project). Old saves keep working: every id a
+  save can hold (items, cars, homes, sponsors) stays; only the names, prices and looks change.
+- The server owns places, prices and gates. A city's places (stores, mall, supermarket, cafes, restaurant, club,
+  clinic, gym, training ground, stadium, dealerships, homes) come from the server per city, so the same rules
+  check every purchase. Top end things are gated by fame as well as money (Ferrari allocations, Rolex and Richard
+  Mille waiting lists), so a Ferrari and an RM stay out of reach until he is a star.
+- The open world is drawn on the client from a seed per city: the street grid, districts, the sea front when the
+  city has water, the architecture flavour and which stores exist. Chunks stream in and out around him, every
+  repeated thing is instanced (buildings, windows, trees, lamps, pedestrians, traffic), far things drop detail.
+- People and traffic are instanced and animated in the shader (one draw call per kind), so a busy street costs
+  little. Only the footballer himself is a full body.
+- Interiors are rooms built per place, each with its own look; items sit on rails, shelves, plinths and stands,
+  and he walks up to one to see it and buy it.
+- Work is split: match rows and the play flow; server data and actions; interiors; the world. Each part keeps to
+  its own files (scratchpad contract). One local commit per phase.
+
+Checklist:
+- [x] Q1 result rows: your team first, the score your way, W L D chips (Player Career rows, internationals, the
+      Manager Career calendar), career battery checks
+      Every result row is "Your Team 2-1 Opponent" with a small W, L or D chip (a new kit chip, .k-wdl, with a
+      Floodlights twin), then the competition, the week, started or off the bench, goals and assists on a quieter
+      line and the rating at the end: the week reports, a Results list in the Season panel, the internationals
+      and the phone's calendar. Old saved lines fall back cleanly. Manager Career's calendar now puts the
+      manager's own goals first with the same chip (pens marked). Lines carry res and wk from the server.
+- [x] Q2 PLAY MATCH and SIM MATCH on every matchday (youth matches can be played live too), the chain checked
+      headless and in Chrome, rating from the live performance, battery checks
+      The matchday block shows the fixture with his team first and two equal buttons, PLAY MATCH and SIM MATCH;
+      when PLAY is not possible it stays visible and disabled with the reason (bench, left out, injured, a
+      choice or an event to answer, already kicked off, keepers). School, college, academy and centre matches
+      can now be played live in player lock: both sides are made up for the week (names that fit the country,
+      a 4-3-3, ages and ratings for the level), his row carries his look, and the result goes into his record
+      the way a simmed youth match does. The match screen opens from a peek that uses nothing up; the real
+      start happens on Kick off. Fixed on the way: the youth cup opponent changed every time it was asked for,
+      the hub and the sim could disagree on the team sheet, wing backs and wide midfielders played as centre
+      backs and centre mids in the engine, a missing rating saved as 3.0, and the instruction said "Manager"
+      in school games (now the coach). Checked headless (the engine keeps control on him every step; a good
+      game rates 10 against about 6 for a poor one) and in Chrome (career page, PLAY, kick off, his own player
+      under control, full time, back to the career with the new row and the live rating). Keepers stay on SIM:
+      the engine has no human keeper controls. Batteries: career 150, 3D match 158, both 0 failed.
+- [x] Q3 real brands and the server side of the city: places per city, catalog (clothes, watches, boots, tech,
+      groceries, cars with a driving feel, homes), new actions (visit, buy, order, night out, clinic, fan
+      moments, garage), fame gates, price pacing, old saves migrated, life battery
+      floodlights/career/life_data.js and life.js: 133 items and 35 vehicles at UK retail prices. Clothes from
+      Zara (16 to 60) through Nike, Adidas, Essentials, Stussy, Ralph Lauren, AMI Paris to Givenchy, Gucci,
+      Dior and Louis Vuitton (up to 5,900), each store with its own palette and feel; tops and bottoms change
+      what he wears in the city. A watch boutique from a 20 pound Casio F-91W through Guess, Tissot, TAG Heuer,
+      Omega, Rolex (Datejust, Submariner, GMT, Daytona, Day-Date) and Audemars Piguet to a 960,000 pound Richard
+      Mille RM 27-04; boots from Nike, Adidas and Puma at four tiers; tech, Tiffany and Cartier; 23 groceries
+      in six aisles; menus for the cafes, the restaurant, the club and the clinic. Four dealers: Toyota and
+      Honda, a prestige dealer (BMW M, Mercedes-AMG, Brabus, Porsche, Range Rover), a supercar showroom
+      (Ferrari, Lamborghini) and bikes (an e-scooter to a Panigale V4 S), each with its own feel, upkeep and
+      minimum age. Places per city from a seed: three tiers by size, real malls, supermarkets and cafes by
+      country, the club's real ground, homes in real neighbourhoods. Fame gates against commercial reputation
+      (a Rolex Daytona at 40, Ferrari SF90 at 75, Richard Mille from 70) with a plain reason when locked.
+      New actions: visit, buy, wear, car, garage sell and drive, home buy and rent, supermarket, cafe,
+      restaurant, a night out (18 and over), the clinic (a week off an injury, or a check up that lowers the
+      risk), fan photos and chats. Moments for the first Rolex, the first Richard Mille, the first big watch,
+      car, supercar and home (news lines and family messages). Sponsors are real brands now (Nike, Adidas and
+      Puma boot deals put their boots on him). Old saves: every id kept, names upgraded once by id.
+      Battery tests-site/test_career_life.js: 162 passed, 0 failed. Creator boot names are real too.
+- [x] Q4 open world core: city generator per city, streamed chunks, LOD, third person walking with collisions,
+      day and night, street lights, sounds, doors into places
+      src/career/world: gen.ts works out a city from its name, style and the server's places: a street grid
+      (10 to 12 blocks a side by city size), districts (centre, a ring of homes and offices, the hill, a sports
+      corner, sheds and showrooms, the sea front), the sea for coastal cities and a river with bridges for the
+      inland ones with water, every place on its own lot with its door on the pavement, filler buildings along
+      every free street front (pitched roofs in Britain and Europe, towers in the centre, villas on the hill),
+      lamps, trees, benches, parked cars kept clear of doors, a bus loop with stops named after what is near, and
+      a collision grid. The look of the streets follows the country (brick in Britain, stone in Europe,
+      terracotta on the Med, sand and glass in the Gulf, colour in India) and the traffic drives on the left in
+      Britain and India. scene.ts builds it: one merged mesh for every place front with all the signs in one
+      texture, buildings in 3 by 3 block chunks that stream in and out with a window shader that lights up at
+      night, close up trims and shop windows only near him, instanced lamps with pools of light at night, trees,
+      benches and traffic lights that follow the junction clock. World.tsx: third person walking (WASD, Shift to
+      run, drag to look, the wheel to zoom, a camera that pulls in when a building is in the way), the kerb step,
+      the day turning (45 seconds an hour) with the sun, shadows that follow him, clouds, dusk and stars, rain
+      and snow, doors that glow (E to go in, the nightclub turns away under 18s), his home marked, the waypoint
+      beam. audio.ts makes the city hum, rain, birds, footsteps, traffic, his engine and the door chime in the
+      browser, with a mute switch. Measured in Chrome on the M3 with the frame cap lifted: about 4.3 ms a frame
+      on Medium, 66 draw calls; a unit battery (tests/world.test.ts, 8 checks) covers the plan.
+- [x] Q5 the living street: pedestrians, small talk and fan photos, parked and moving traffic, buses with stops
+      people.ts: one instanced mesh for every pedestrian, legs and arms swinging in the vertex shader, dressed
+      per person, tall and short, broad and slim, a soft patch of shade under each; they walk round the blocks
+      near him, stop at shop windows, step round him, wait for his car, and the far ones are moved to blocks near
+      him. E says hello: small talk, or once he is known a fan asks for a photo (a second E takes it: a flash, a
+      camera click and the server's fan moment). vehicles.ts: traffic on both sides of every street that turns
+      at corners, stops at red lights, keeps its distance and brakes for him; parked cars; the bus (red in
+      Britain) that stops at every stop. E at a stop waits for it; it pulls in, he gets on, the camera rides
+      with it, E gets him off at the next stop.
+- [ ] Q6 driving: his cars from the garage, arcade physics with a feel per car, bikes, the garage at home
+      drive.ts: arcade driving with a real velocity, so the tail steps out when a corner asks too much of the
+      tyres and the handbrake slides it; each car's feel from the catalog (top speed, pull, grip, weight), bikes
+      lean; buildings stop it with a bump, traffic shoves it. F gets in and out of his parked car; his daily car
+      waits by the kerb at home; the speed and the car's name on the screen; the engine note rises with the revs
+      and drops at each gear. Touch screens get a thumb stick (walk, run, drive) and E and Car buttons.
+      Done: driving, his parked car, getting in and out, the drive out request carrying the kerb position of
+      the garage's own home (City.tsx garageOf and leave({ drive })).
+      Left: one real run of garage room, "drive this one out", car in the street (the garage room itself
+      is built; the round trip has not been run in the browser yet).
+- [ ] Q7 interiors: supermarket aisles, the mall and its stores, brand stores, the watch boutique, dealerships,
+      cafes, the seaside restaurant, the nightclub, the clinic, gym, training ground, stadium, homes to view, buy
+      and walk around   <-- IN PROGRESS (stopped here on the user's request)
+      Done: src/career/city/interiors/*.ts builds every place kind from its WorldPlace (store styled per brand,
+      the mall with its stores inside, supermarket aisles, watch boutique, cafes, restaurant with a sea view,
+      nightclub, clinic, gym, training ground, stadium, the four dealers, homes by tier, the garage);
+      src/career/city/ShopHud.tsx is the walk up card (name, brand, price, why it is locked, Buy, Wear, Order,
+      Drive, Treat, Night out, Buy or rent a home; a card for the first Rolex). Interior.tsx takes a WorldPlace
+      (old place ids still work). City.tsx is wired: E at a door goes in, the room is read fresh from the latest
+      state, the shop card handles E, home to garage and back, drive out, "Back to the street". Screenshots of
+      eleven interiors were taken by the interiors helper (scratchpad, not in the repo).
+      Left:
+      - the boots, tech and jeweller shops still show clothing filler on their shelves; they need their own
+        fixtures (boot walls, phone tables, jewellery cases). This was being fixed when the work stopped.
+      - src/career/city/interiors/legacy.ts (the old room path) still shows the old made up shop signs
+        (Northline, Kurobe, Lumen, Pixelforge, Arden, Solenne, Halcyon, Celestor): swap for real names or drop.
+      - run the whole loop in the browser on the real City tab: walk in, walk up to items, buy, wear, the
+        garage, drive out, a home viewing then buying, the nightclub age gate, the clinic.
+      - frame times per interior on Medium.
+- [x] Q8 map overlay, waypoints and the direction marker, fast travel, a new city after a transfer
+      CityMap.tsx (M or the Map button): the streets, districts, sea or river, every place in its colour, his
+      home ringed, the bus loop and stops, him as an arrow. Click to set a waypoint (a beam in the street, an
+      arrow and the distance at the top of the screen, cleared when he gets there); places he has been to (the
+      server's visited list) and his home can be reached at once. A transfer means a new city name and new
+      places from the server, so the whole plan is built again: layout, sea or not, look, stores.
+- [ ] Q9 performance on Medium, screenshots, every battery 0 failed three times, memory under 400 MB, upload, push
+      Not started as a phase. Ready for it: scratchpad accept.mjs drives the real City tab for the screenshots
+      the user asked for (street with people, map with a waypoint, inside the supermarket, a clothing store, the
+      watch boutique, a dealership, the garage), using a read only hook window.__pcCity (where he is, the
+      places). Measured so far in Chrome on the M3 with the frame cap lifted, the street at night: Low 2.9 ms,
+      Medium 3.5 ms, High 5.2 ms, Ultra 6.2 ms median frames (50 to 103 draw calls).
+      Left: delete the two temporary lab pages (src/app/floodlights/career/lab and .../worldlab, used only for
+      checking the world and the interiors on their own); acceptance screenshots on the production build;
+      test:all three times with 0 failed (the new life battery is wired into test:floodlights); memory check;
+      upload folder; push with "Result chips, play match surfaced, free roam city with real brands and driving".
+
+Status when the work stopped (on the user's request, mid Q7):
+- Done and committed: Q1, Q2, Q3, Q4, Q5, Q8. Q6 is done apart from one browser run of the garage round trip.
+- Inside: Q7 (interiors built and wired; the steps left are listed under Q7).
+- Not started: Q9.
+- Last checks: typecheck clean; career battery 150 and 0 failed; 3D match battery 158 and 0 failed; life
+  battery 162 and 0 failed; city plan unit tests 8 and 0 failed. The full test:all has not been run on this work.
+- Known and not fixed (outside the user's asks, worth a look): in a player lock match the locked player wins the
+  ball every time just by running into the man on it, so a scripted test player won youth games 6-0 to 10-0;
+  keepers cannot be played live (no human keeper controls in the engine), so their PLAY button stays disabled
+  with the reason.

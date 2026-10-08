@@ -328,3 +328,199 @@ export function cone(r: number, l: number) {
   }
   return g;
 }
+
+// ---------- vehicles with proper shapes: a side profile pushed out to the car's width ----------
+// (added for the showrooms and the garage; makeCar above stays as it was)
+type P2 = [number, number];
+interface BodySpec {
+  L: number;
+  W: number;
+  r: number;
+  front: number;
+  rear: number;
+  low: P2[];
+  cab: P2[];
+  wing?: boolean;
+}
+const BODIES: Record<string, BodySpec> = {
+  hatch: { L: 4.0, W: 1.76, r: 0.33, front: 1.3, rear: -1.25, low: [[-2.0, 0.32], [-2.02, 0.95], [-1.9, 1.0], [1.0, 1.0], [1.85, 0.86], [2.0, 0.62], [1.96, 0.32]], cab: [[-1.85, 1.0], [-1.75, 1.42], [-1.3, 1.5], [0.3, 1.5], [1.0, 1.0]] },
+  saloon: { L: 4.7, W: 1.82, r: 0.33, front: 1.45, rear: -1.4, low: [[-2.35, 0.3], [-2.36, 0.92], [-2.15, 0.98], [1.3, 0.98], [2.25, 0.8], [2.35, 0.58], [2.3, 0.3]], cab: [[-1.6, 0.98], [-0.85, 1.42], [0.5, 1.44], [1.3, 0.98]] },
+  coupe: { L: 4.6, W: 1.9, r: 0.34, front: 1.4, rear: -1.35, low: [[-2.3, 0.3], [-2.32, 0.88], [-2.1, 0.94], [1.15, 0.92], [2.2, 0.74], [2.3, 0.52], [2.25, 0.3]], cab: [[-1.75, 0.94], [-0.6, 1.3], [0.35, 1.33], [1.15, 0.92]] },
+  sports: { L: 4.5, W: 1.95, r: 0.34, front: 1.35, rear: -1.3, low: [[-2.25, 0.26], [-2.27, 0.84], [-2.0, 0.92], [0.95, 0.86], [2.1, 0.62], [2.25, 0.42], [2.2, 0.26]], cab: [[-1.4, 0.9], [-0.35, 1.2], [0.25, 1.22], [0.95, 0.86]] },
+  suv: { L: 4.9, W: 1.98, r: 0.4, front: 1.5, rear: -1.45, low: [[-2.45, 0.4], [-2.46, 1.18], [-2.35, 1.22], [1.45, 1.2], [2.35, 1.08], [2.45, 0.85], [2.42, 0.4]], cab: [[-2.3, 1.22], [-2.2, 1.8], [1.0, 1.82], [1.45, 1.2]] },
+  hyper: { L: 4.7, W: 2.04, r: 0.35, front: 1.4, rear: -1.4, low: [[-2.35, 0.22], [-2.37, 0.8], [-1.6, 0.9], [0.7, 0.84], [2.2, 0.5], [2.35, 0.36], [2.3, 0.22]], cab: [[-1.2, 0.88], [-0.3, 1.12], [0.2, 1.12], [0.75, 0.84]], wing: true },
+  van: { L: 5.0, W: 2.0, r: 0.36, front: 1.6, rear: -1.55, low: [[-2.5, 0.36], [-2.5, 1.98], [0.9, 1.98], [0.9, 1.25], [1.75, 1.2], [2.4, 1.05], [2.5, 0.8], [2.45, 0.36]], cab: [[0.9, 1.25], [1.75, 1.2], [1.2, 1.98], [0.9, 1.98]] },
+};
+const paintCache = new Map<string, THREE.MeshPhysicalMaterial>();
+/** car paint: a clear coat over the colour, cached by colour */
+export function paint(colour: string) {
+  let m = paintCache.get(colour);
+  if (!m) {
+    m = new THREE.MeshPhysicalMaterial({ color: colour, roughness: 0.32, metalness: 0.5, clearcoat: 1, clearcoatRoughness: 0.06 });
+    paintCache.set(colour, m);
+  }
+  return m;
+}
+/** an outline in the side view (u along the car, front at +u; v up) pushed out across the width, centred */
+function sideSlab(pts: P2[], width: number, bevel = 0.05) {
+  const s = new THREE.Shape(pts.map(([u, v]) => new THREE.Vector2(u, v)));
+  const g = new THREE.ExtrudeGeometry(s, { depth: width - bevel * 2, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel * 0.8, bevelSegments: 2, curveSegments: 6 });
+  g.translate(0, 0, -(width - bevel * 2) / 2);
+  g.rotateY(-Math.PI / 2);
+  return g;
+}
+/** the lower body with the wheel arches cut out of its bottom edge */
+function withArches(low: P2[], b: BodySpec): P2[] {
+  const R = b.r + 0.06;
+  const bottom = low[0][1];
+  const out: P2[] = low.slice(0, -1).map((p) => [p[0], p[1]] as P2);
+  const last = low[low.length - 1];
+  out.push([last[0], last[1]]);
+  for (const ax of [b.front, b.rear]) {
+    out.push([ax + R, bottom]);
+    for (let i = 0; i <= 10; i++) {
+      const a = (i / 10) * Math.PI;
+      out.push([ax + Math.cos(a) * R, Math.max(bottom, b.r + Math.sin(a) * R * 0.92)]);
+    }
+    out.push([ax - R, bottom]);
+  }
+  return out;
+}
+function mergeParts(parts: { g: THREE.BufferGeometry; m: THREE.Material }[]) {
+  const by = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  for (const p of parts) {
+    const g = p.g.index ? p.g.toNonIndexed() : p.g;
+    for (const k of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(k)) g.deleteAttribute(k);
+    if (!g.attributes.uv) g.setAttribute("uv", new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+    g.clearGroups();
+    if (!by.has(p.m)) by.set(p.m, []);
+    by.get(p.m)!.push(g);
+  }
+  const grp = new THREE.Group();
+  for (const [m, gs] of by) {
+    const n = gs.reduce((s, g) => s + g.attributes.position.count, 0);
+    const merged = new THREE.BufferGeometry();
+    for (const name of ["position", "normal", "uv"]) {
+      const size = name === "uv" ? 2 : 3;
+      const arr = new Float32Array(n * size);
+      let o = 0;
+      for (const g of gs) {
+        arr.set(g.attributes[name].array as Float32Array, o);
+        o += g.attributes.position.count * size;
+      }
+      merged.setAttribute(name, new THREE.Float32BufferAttribute(arr, size));
+    }
+    merged.computeBoundingSphere();
+    gs.forEach((g) => g.dispose());
+    const me = new THREE.Mesh(merged, m);
+    me.castShadow = true;
+    me.receiveShadow = true;
+    grp.add(me);
+  }
+  grp.userData.dispose = () => grp.traverse((o) => (o as THREE.Mesh).isMesh && (o as THREE.Mesh).geometry.dispose());
+  return grp;
+}
+const at = (g: THREE.BufferGeometry, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) => {
+  g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz)), new THREE.Vector3(1, 1, 1)));
+  return g;
+};
+/**
+ * A vehicle by body type, the front facing +z: hatch, saloon, coupe, sports, suv, hyper, van, a superbike, a
+ * motor scooter, or an electric kick scooter (a scooter whose model says so). Every part sharing a material is
+ * merged, so a car is about seven draw calls. userData.dispose() frees its geometry.
+ */
+export function makeVehicle(c: { body: string; colour: string; brand?: string; model?: string }) {
+  const P = paint(c.colour);
+  const dark = mat("#0b0d10", { rough: 0.55 });
+  const tyre = mat("#121315", { rough: 0.92 });
+  const rim = mat("#b9bec4", { rough: 0.22, metal: 1 });
+  const win = mat("#2a3646", { rough: 0.08, metal: 0.7 });
+  const head = glow("#fff6e0", 2.4);
+  const tail = glow("#ff2a2a", 1.8);
+  const parts: { g: THREE.BufferGeometry; m: THREE.Material }[] = [];
+  const add = (g: THREE.BufferGeometry, m: THREE.Material) => parts.push({ g, m });
+  const wheel = (x: number, y: number, z: number, r: number, w: number) => {
+    add(at(new THREE.CylinderGeometry(r, r, w, 20), x, y, z, 0, 0, Math.PI / 2), tyre);
+    add(at(new THREE.CylinderGeometry(r * 0.62, r * 0.62, w + 0.012, 12), x, y, z, 0, 0, Math.PI / 2), rim);
+  };
+  if (c.body === "bike" || c.body === "scooter") {
+    const kick = c.body === "scooter" && /electric|kick|xiaomi|segway/i.test((c.brand || "") + " " + (c.model || ""));
+    if (kick) {
+      add(at(new THREE.BoxGeometry(0.16, 0.05, 0.85), 0, 0.14, 0), P);
+      add(at(new THREE.CylinderGeometry(0.02, 0.02, 1.05, 8), 0, 0.68, 0.42, -0.12), dark);
+      add(at(new THREE.CylinderGeometry(0.015, 0.015, 0.48, 8), 0, 1.2, 0.48, 0, 0, Math.PI / 2), dark);
+      for (const z of [0.42, -0.42]) wheel(0, 0.12, z, 0.12, 0.06);
+      add(at(new THREE.BoxGeometry(0.06, 0.03, 0.03), 0, 1.0, 0.56), head);
+    } else if (c.body === "scooter") {
+      add(at(new THREE.BoxGeometry(0.34, 0.08, 0.7), 0, 0.3, 0.05), P);
+      add(at(new THREE.BoxGeometry(0.38, 0.75, 0.12), 0, 0.68, 0.48, -0.18), P);
+      const back = new THREE.SphereGeometry(0.32, 14, 10);
+      back.scale(0.9, 0.75, 1.3);
+      add(at(back, 0, 0.55, -0.45), P);
+      add(at(new THREE.BoxGeometry(0.3, 0.1, 0.6), 0, 0.82, -0.38), dark);
+      add(at(new THREE.CylinderGeometry(0.018, 0.018, 0.62, 8), 0, 1.08, 0.58, 0, 0, Math.PI / 2), dark);
+      add(at(new THREE.CylinderGeometry(0.06, 0.06, 0.04, 12), 0, 1.02, 0.63, Math.PI / 2), head);
+      for (const z of [0.6, -0.55]) wheel(0, 0.22, z, 0.22, 0.12);
+    } else {
+      // a superbike: wheels, a fairing, the tank, a seat, the tail
+      for (const z of [0.72, -0.72]) wheel(0, 0.31, z, 0.31, 0.16);
+      add(at(sideSlab([[0.95, 0.42], [1.02, 0.78], [0.72, 1.05], [0.25, 0.95], [0.28, 0.5]], 0.38, 0.06), 0, 0, 0), P);
+      add(at(sideSlab([[0.3, 0.86], [0.25, 1.02], [-0.25, 1.0], [-0.35, 0.86]], 0.34, 0.06), 0, 0, 0), P);
+      add(at(sideSlab([[-0.3, 0.88], [-0.35, 0.98], [-0.95, 1.08], [-1.0, 0.98], [-0.7, 0.86]], 0.24, 0.04), 0, 0, 0), P);
+      add(at(new THREE.BoxGeometry(0.22, 0.06, 0.4), 0, 0.98, -0.45), dark);
+      add(at(new THREE.BoxGeometry(0.16, 0.36, 0.6), 0, 0.55, 0.0, 0.3), dark);
+      add(at(new THREE.CylinderGeometry(0.025, 0.025, 0.7, 8), 0.1, 0.62, 0.72, -0.45), rim);
+      add(at(new THREE.CylinderGeometry(0.025, 0.025, 0.7, 8), -0.1, 0.62, 0.72, -0.45), rim);
+      add(at(new THREE.CylinderGeometry(0.05, 0.06, 0.55, 10), 0.14, 0.45, -0.5, Math.PI / 2 - 0.3), rim);
+      add(at(new THREE.CylinderGeometry(0.015, 0.015, 0.56, 8), 0, 1.02, 0.6, 0, 0, Math.PI / 2), dark);
+      add(at(new THREE.BoxGeometry(0.16, 0.06, 0.04), 0, 0.82, 1.0), head);
+      add(at(new THREE.BoxGeometry(0.12, 0.04, 0.03), 0, 1.0, -1.0), tail);
+      add(at(new THREE.BoxGeometry(0.14, 0.14, 0.1), 0, 1.04, 0.66, -0.4), win);
+    }
+    return mergeParts(parts);
+  }
+  const b = BODIES[c.body] || BODIES.saloon;
+  // round the box off: the sides lean in above the waist, the glasshouse leans in more, the nose and tail
+  // narrow in plan, so it reads as a car and not a crate
+  const belt = b.cab[0][1];
+  const shape = (g: THREE.BufferGeometry, lean: number, from: number) => {
+    const pos = g.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i),
+        z = pos.getZ(i);
+      let k = 1 - Math.max(0, y - from) * lean;
+      const end = Math.abs(z) - (b.L / 2 - 0.55);
+      if (end > 0) k *= 1 - end * 0.28;
+      pos.setX(i, pos.getX(i) * k);
+    }
+    g.computeVertexNormals();
+    return g;
+  };
+  add(shape(sideSlab(withArches(b.low, b), b.W, 0.06), 0.35, belt - 0.22), P);
+  add(shape(sideSlab(b.cab, b.W * (c.body === "van" ? 0.98 : 0.86), 0.05), c.body === "van" ? 0.05 : 0.42, belt), win);
+  // the roof over the glass
+  const top = b.cab.reduce((m, p) => Math.max(m, p[1]), 0);
+  const roofPts = b.cab.filter((p) => p[1] > top - 0.05);
+  if (roofPts.length >= 2) {
+    const u0 = Math.min(...roofPts.map((p) => p[0])),
+      u1 = Math.max(...roofPts.map((p) => p[0]));
+    add(at(new THREE.BoxGeometry(b.W * (c.body === "van" ? 0.9 : 0.66), 0.05, u1 - u0 + 0.04), 0, top + 0.03, (u0 + u1) / 2), P);
+  }
+  if (b.wing) {
+    add(at(new THREE.BoxGeometry(b.W * 0.92, 0.04, 0.34), 0, 1.12, -2.1), P);
+    for (const sx of [-0.5, 0.5]) add(at(new THREE.BoxGeometry(0.04, 0.24, 0.12), sx, 0.98, -2.1), dark);
+  }
+  const fy = b.low.find((p) => p[0] === Math.max(...b.low.map((q) => q[0])))![1] + 0.12;
+  const frontU = Math.max(...b.low.map((q) => q[0]));
+  const rearU = Math.min(...b.low.map((q) => q[0]));
+  for (const sx of [-1, 1]) {
+    add(at(new THREE.BoxGeometry(0.34, 0.07, 0.05), sx * (b.W / 2 - 0.3), fy + 0.08, frontU - 0.04, 0.3), head);
+    add(at(new THREE.BoxGeometry(0.38, 0.06, 0.05), sx * (b.W / 2 - 0.28), b.low[1][1] - 0.12, rearU + 0.01), tail);
+    // a mirror
+    add(at(new THREE.BoxGeometry(0.16, 0.1, 0.08), sx * (b.W / 2 + 0.04), b.cab[0][1] + 0.12, b.cab[b.cab.length - 1][0] - 0.25), P);
+  }
+  add(at(new THREE.BoxGeometry(b.W * 0.44, 0.16, 0.05), 0, fy - 0.12, frontU - 0.02), dark);
+  add(at(new THREE.BoxGeometry(b.W * 0.86, 0.08, b.L * 0.86), 0, b.low[0][1] + 0.02, 0), dark);
+  for (const sx of [-1, 1]) for (const ax of [b.front, b.rear]) wheel(sx * (b.W / 2 - 0.13), b.r, ax, b.r, 0.26);
+  return mergeParts(parts);
+}

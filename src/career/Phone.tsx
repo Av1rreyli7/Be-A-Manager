@@ -18,6 +18,84 @@ export function compact(n: number) {
   return String(Math.round(n));
 }
 
+/** one of his matches as the server keeps it (week reports, the season log, the internationals) */
+export interface ResultLine {
+  comp: string;
+  opp: string;
+  team?: string;
+  gf?: number;
+  ga?: number;
+  res?: string;
+  role: string;
+  mins: number;
+  g?: number;
+  a?: number;
+  rating?: number;
+  live?: boolean;
+  national?: boolean;
+  pro?: boolean;
+  level?: string;
+  s?: number;
+  w?: number;
+  wk?: number;
+}
+const WORD = { W: "Won", L: "Lost", D: "Drew" } as const;
+/** won, lost or drawn, from his side's point of view (old saves have no res, so the score decides) */
+export function outcome(m: ResultLine): "W" | "L" | "D" | null {
+  if (m.res === "W" || m.res === "L" || m.res === "D") return m.res;
+  if (typeof m.gf !== "number" || typeof m.ga !== "number") return null;
+  return m.gf > m.ga ? "W" : m.gf < m.ga ? "L" : "D";
+}
+/** the week a line was played in (lines from before wk was kept: youth weeks were stored one lower) */
+export function weekOf(m: ResultLine): number | null {
+  if (typeof m.wk === "number") return m.wk;
+  if (typeof m.w !== "number") return null;
+  return m.pro || m.level ? m.w : m.w + 1;
+}
+function roleText(m: ResultLine) {
+  if (m.live) return "Played live";
+  if (m.role === "start") return "Started";
+  if (m.role === "sub") return "Off the bench" + (m.mins ? ", " + m.mins + " min" : "");
+  if (m.role === "injured") return "Injured";
+  if (m.role === "out") return "Not picked";
+  return "On the bench";
+}
+/**
+ * One result, read at a glance: the W, L or D chip, his team first with the score his way round, then the
+ * competition, the week, how he took part and his rating.
+ */
+export function ResultRow({ m, team, when }: { m: ResultLine; team: string; when?: string }) {
+  const res = outcome(m);
+  const played = m.mins > 0 && typeof m.rating === "number";
+  const meta = [m.comp, when, roleText(m), m.g ? m.g + " goal" + (m.g > 1 ? "s" : "") : "", m.a ? m.a + " assist" + (m.a > 1 ? "s" : "") : ""].filter(Boolean);
+  return (
+    <div className={clsx("pc-res", m.level && "is-intl")}>
+      {res ? (
+        <span className={"k-wdl " + res.toLowerCase()} title={WORD[res]} aria-label={WORD[res]}>
+          {res}
+        </span>
+      ) : (
+        <span className="pc-res-none" aria-hidden="true" />
+      )}
+      <p className="pc-res-line">
+        <b>{team}</b>
+        {res ? <span className="pc-res-score">{m.gf + "-" + m.ga}</span> : <span className="pc-res-v">v</span>}
+        <span>{m.opp}</span>
+      </p>
+      <p className="pc-res-meta">{meta.join(" · ")}</p>
+      {played ? (
+        <b className={clsx("pc-rate", "pc-res-rate", (m.rating || 0) >= 7.5 && "is-good", (m.rating || 0) < 6 && "is-bad")} title="Match rating">
+          {(m.rating || 0).toFixed(1)}
+        </b>
+      ) : (
+        <span className="pc-res-rate pc-dim" title="No rating, he did not play">
+          -
+        </span>
+      )}
+    </div>
+  );
+}
+
 export default function Phone({
   state,
   saved,
@@ -260,8 +338,24 @@ export default function Phone({
       </ul>
     );
   } else if (app === "calendar") {
+    const results = (state.stats.log as unknown as ResultLine[]).slice(0, 5);
     body = (
       <ul className="pc-ledger pc-phone-scroll">
+        {results.length > 0 && (
+          <li className="pc-res-head">
+            <h4 className="pc-h4">Results</h4>
+          </li>
+        )}
+        {results.map((m, i) => (
+          <li key={"r" + i} className="pc-res-li">
+            <ResultRow m={m} team={m.team || (m.s === state.season ? state.team : null) || "Your team"} when={weekOf(m) ? "week " + weekOf(m) : undefined} />
+          </li>
+        ))}
+        {results.length > 0 && (
+          <li className="pc-res-head">
+            <h4 className="pc-h4">Coming up</h4>
+          </li>
+        )}
         {state.calendar.map((c) => (
           <li key={c.week}>
             <span>

@@ -67,14 +67,14 @@ export const EYE_COLOURS = [
 export const BEARDS = ["Clean", "Full beard", "Beard and tache", "Stubble", "Goatee", "Chin strap"];
 // the boot brands are invented; each colourway is one of the match's boot colours (6 to 13)
 export const BOOT_MODELS = [
-  { i: 6, brand: "Apex", model: "Strike Volt" },
-  { i: 7, brand: "Korra", model: "Night Ember" },
-  { i: 8, brand: "Valoré", model: "Pearl Crown" },
-  { i: 9, brand: "Apex", model: "Ultra Pulse" },
-  { i: 10, brand: "Tidal", model: "Surge Elite" },
-  { i: 11, brand: "Korra", model: "Neon Rose" },
-  { i: 12, brand: "Valoré", model: "Chrome Mirage" },
-  { i: 13, brand: "Tidal", model: "Sunburst" },
+  { i: 6, brand: "Nike", model: "Superfly 10 Academy" },
+  { i: 7, brand: "Puma", model: "King Pro" },
+  { i: 8, brand: "Adidas", model: "Predator Elite" },
+  { i: 9, brand: "Nike", model: "Vapor 16 Pro" },
+  { i: 10, brand: "Puma", model: "Ultra 5 Ultimate" },
+  { i: 11, brand: "Puma", model: "Future 8 Ultimate" },
+  { i: 12, brand: "Adidas", model: "F50 Elite" },
+  { i: 13, brand: "Nike", model: "Superfly 10 Elite" },
 ];
 export const FINISH_SW: Record<string, string> = {
   gold: "#d4af37",

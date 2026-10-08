@@ -11,7 +11,7 @@
     "refresh-data": "tsx scripts/fetch-data.ts --refresh",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:floodlights": "node floodlights/test_condition.js && node floodlights/test_sept.js && node floodlights/test_dom_sept.js && node tests-site/test_match3d.js && node tests-site/test_layout.js && node tests-site/test_career.js",
+    "test:floodlights": "node floodlights/test_condition.js && node floodlights/test_sept.js && node floodlights/test_dom_sept.js && node tests-site/test_match3d.js && node tests-site/test_layout.js && node tests-site/test_career.js && node tests-site/test_career_life.js",
     "test:site": "node tests-site/test_site.js",
     "test:boot": "node tests-site/test_boot.js",
     "test:all": "npm run typecheck && npm run test && npm run test:floodlights && npm run upload && npm run test:site && npm run build && npm run test:boot",

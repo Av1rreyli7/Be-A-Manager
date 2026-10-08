@@ -503,6 +503,78 @@ async function main() {
     ok("player lock: a player who does nothing gets a poor or ordinary rating, never a good one", idle.m.phase === "full" && idle.lockLine().rating <= 6.6, idle.lockLine().rating);
   }
 
+  // ================= player lock at every stage: a youth side and a pro side, a good game and a bad one =================
+  {
+    const lockM = await import("../floodlights/m3d/lock.mjs");
+    const look = { skinF: 0.62, hair: 9, hairCol: 1, beard: 2, muscle: 0.7, watch: "gold", boot: 7, h: 1.78, mass: 70 };
+    // a side the way the career sends it: a normal 4-3-3 around one strength, his row marked pc with his look
+    const careerXI = (base, tag, ages, meIdx) => testXI(base, tag).map((r, i) => Object.assign(r, { age: ages[0] + (i % (ages[1] - ages[0] + 1)) }, i === meIdx ? { n: tag + " Me", pc: true, look, num: 9, r: base + 4 } : {}));
+    const setups = {
+      youth: side => ({ kind: "youth", home: "Ascend School", away: "Campion School", side, homeXI: side === "home" ? careerXI(52, "Y", [14, 16], 9) : careerXI(53, "C", [14, 16], -1), awayXI: side === "home" ? careerXI(53, "C", [14, 16], -1) : careerXI(52, "Y", [14, 16], 9), instruction: { kind: "shots", n: 3 } }),
+      pro: side => ({ kind: "league", home: "Pro Town", away: "Pro City", side, homeXI: side === "home" ? careerXI(77, "P", [21, 31], 9) : careerXI(76, "Q", [21, 31], -1), awayXI: side === "home" ? careerXI(76, "Q", [21, 31], -1) : careerXI(77, "P", [21, 31], 9), instruction: { kind: "shots", n: 3 } })
+    };
+    // two people at the keys: one plays well (runs at goal, shoots, passes forward, calls for it, presses),
+    // one gives it away (calls for it, then walks it into their players, and never presses, passes or shoots)
+    const bots = {
+      good: (m, L, st) => {
+        const b = m.ball, inp = { mx: 0, my: 0, held: {}, down: {}, up: {} }, gx = m.teams[0].dir * C.HALF_L;
+        if (b.ctrl === L) {
+          const dx = gx - L.x, dy = -L.y, d = Math.hypot(dx, dy);
+          inp.mx = dx / d; inp.my = dy / d;
+          st.had = (st.had || 0) + 1;
+          if (d < 22) { if ((st.eH || 0) < 0.45) { inp.held.E = true; st.eH = (st.eH || 0) + 1 / 60; } else { inp.up.E = st.eH; st.eH = 0; } }
+          else if (st.had === 50) inp.up.Q = 0.12;
+        } else {
+          st.had = 0;
+          if (b.ctrl && b.ctrl.team === 0) { const dx = b.x + m.teams[0].dir * 6 - L.x, dy = -b.y * 0.3 - L.y, d = Math.hypot(dx, dy) || 1; if (d > 2) { inp.mx = dx / d; inp.my = dy / d; } if (st.n % 90 === 0) inp.down.Q = true; }
+          else { const dx = b.x - L.x, dy = b.y - L.y, d = Math.hypot(dx, dy) || 1; if (d < 20) inp.held.S = true; else { inp.mx = dx / d; inp.my = dy / d; } }
+        }
+        return inp;
+      },
+      bad: (m, L, st) => {
+        const b = m.ball, inp = { mx: 0, my: 0, held: {}, down: {}, up: {} };
+        if (b.ctrl === L) {
+          // walks it straight at the nearest man on the other side until he takes it
+          let near = null, nd = 1e9;
+          for (const o of m.teams[1].players) { const d = Math.hypot(o.x - L.x, o.y - L.y); if (!o.off && !o.gk && d < nd) { nd = d; near = o; } }
+          if (near) { const dx = near.x - L.x, dy = near.y - L.y, d = Math.hypot(dx, dy) || 1; inp.mx = dx / d; inp.my = dy / d; }
+        } else {
+          if (b.ctrl && b.ctrl.team === 0) { const dx = b.x - L.x, dy = b.y + 6 - L.y, d = Math.hypot(dx, dy) || 1; if (d > 6) { inp.mx = dx / d; inp.my = dy / d; } if (st.n % 90 === 0) inp.down.Q = true; }
+        }
+        return inp;
+      }
+    };
+    const run = (setup, seed, bot) => {
+      const sim = createSim3D(setup, { rng: seeded(seed) });
+      const m = sim.m, L = m.lock, st = { n: 0 };
+      const mates = m.teams[0].players.filter(p => p !== L), start = mates.map(p => ({ x: p.x, y: p.y })), moved = mates.map(() => 0);
+      let notHim = 0;
+      while (m.phase !== "full" && st.n++ < 60 * 700) {
+        sim.step(bot(m, L, st));
+        if (m.ctrl !== L) notHim++;
+        mates.forEach((p, i) => { moved[i] += Math.hypot(p.x - start[i].x, p.y - start[i].y); start[i] = { x: p.x, y: p.y }; });
+        m.events.length = 0;
+      }
+      return { m, L, notHim, moved, line: sim.lockLine(), res: sim.result() };
+    };
+    for (const kind of ["youth", "pro"]) {
+      const good = run(setups[kind]("home"), kind === "youth" ? 4101 : 4201, bots.good);
+      const bad = run(setups[kind]("away"), kind === "youth" ? 4102 : 4202, bots.bad);
+      const L = good.L;
+      ok("player lock (" + kind + "): his marked row is the locked player, with his look and number", L && L.pc && L.name.endsWith(" Me") && L.prof.skinF === 0.62 && L.prof.watch === "gold" && L.num === 9 && good.m.lock === L, L && [L.name, L.num]);
+      ok("player lock (" + kind + "): only he is ever under control, in a whole match (home and away)", good.m.phase === "full" && bad.m.phase === "full" && good.notHim === 0 && bad.notHim === 0, [good.notHim, bad.notHim]);
+      ok("player lock (" + kind + "): his team mates play on their own (every one of them covers ground)", good.moved.every(d => d > 60) && bad.moved.every(d => d > 60), good.moved.map(Math.round));
+      ok("player lock (" + kind + "): the good game counts goals, shots and good passes", good.line.shots >= 3 && good.line.g >= 1 && good.line.passOk >= 1, good.line);
+      ok("player lock (" + kind + "): the bad game counts the ball given away", bad.line.lost >= 3 && bad.line.shots === 0, bad.line);
+      ok("player lock (" + kind + "): the rating follows how he played (good game above bad game)", good.line.rating > bad.line.rating + 0.8, [good.line.rating, bad.line.rating]);
+    }
+    // the rating, piece by piece: goals and good passes lift it, lost balls and wild passes drop it
+    const rateOf = S => lockM.lockRating({ lock: { pos: "FW", role: "ST" }, lockStats: Object.assign({ touches: 0, passes: 0, passOk: 0, shots: 0, onTarget: 0, goals: 0, assists: 0, tackles: 0, won: 0, skills: 0, lost: 0 }, S), score: [0, 0], clock: 90 });
+    const base = rateOf({});
+    ok("player lock: goals lift the rating", rateOf({ goals: 2, shots: 3, onTarget: 2 }) > base + 1.5, [base, rateOf({ goals: 2, shots: 3, onTarget: 2 })]);
+    ok("player lock: good passes lift it, lost balls and wild passes drop it", rateOf({ passes: 20, passOk: 19 }) > base && rateOf({ lost: 10, passes: 12, passOk: 3 }) < base - 0.8, [rateOf({ passes: 20, passOk: 19 }), rateOf({ lost: 10, passes: 12, passOk: 3 })]);
+  }
+
   // ================= both ends play the same =================
   {
     // the same seed twice, the second with both teams turned round and every player rotated half a turn about

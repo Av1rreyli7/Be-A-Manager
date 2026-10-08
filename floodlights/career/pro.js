@@ -237,7 +237,8 @@ function makePro(K, deps) {
     const ga = poisson(Math.min(4, 1.15 * Math.exp(((chosen.id === "senior" ? oppStr : oppStr - 12) - levelStr) / 10)));
     const starter = chosen.id !== "senior" || pool.filter(q => q.pos === p.pos).sort((a, b) => b.rating - a.rating).slice(0, { GK: 1, DF: 4, MF: 3, FW: 3 }[p.pos]).some(q => q.rating < p.rating);
     const mins = starter ? 90 : rnd() < 0.6 ? 20 + Math.floor(rnd() * 25) : 0;
-    const m = { comp: nat + " " + chosen.label + (rnd() < 0.5 ? " friendly" : " qualifier"), opp: opp + (chosen.id === "senior" ? "" : " " + chosen.label), team: nat + " " + chosen.label, gf, ga, role: mins ? (starter ? "start" : "sub") : "unused", mins, national: true, level: chosen.id };
+    // the result his country's way round (res), and the week it was played in (wk), for the result rows
+    const m = { comp: nat + " " + chosen.label + (rnd() < 0.5 ? " friendly" : " qualifier"), opp: opp + (chosen.id === "senior" ? "" : " " + chosen.label), team: nat + " " + chosen.label, gf, ga, res: gf > ga ? "W" : gf < ga ? "L" : "D", wk: game.round, role: mins ? (starter ? "start" : "sub") : "unused", mins, national: true, level: chosen.id };
     if (mins) {
       Object.assign(m, playerLine(game, gf, ga, mins / 90, levelStr));
       c.national.caps[chosen.id] = (c.national.caps[chosen.id] || 0) + 1;

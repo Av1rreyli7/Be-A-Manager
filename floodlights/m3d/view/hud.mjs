@@ -738,7 +738,7 @@ export function createHud(doc, wrap, ctx) {
       el("span", "m3h-lk", r, "Your rating");
       lockV = el("b", "m3h-lv", r, "6.0");
       lockC = el("span", "m3h-lcall", r, "Calling");
-      el("div", "m3h-li", lockEl, m.instruction && m.instruction.text ? "Manager: " + m.instruction.text : "");
+      el("div", "m3h-li", lockEl, m.instruction && m.instruction.text ? (m.instruction.by || "Manager") + ": " + m.instruction.text : "");
     }
     const r = m.lockStats.rating;
     if (r !== lastR) { lastR = r; lockV.textContent = r.toFixed(1); }

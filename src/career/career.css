@@ -836,17 +836,168 @@
 }
 .pc-reports {
   display: grid;
-  gap: 6px;
+  gap: 12px;
   margin: 16px 0 0;
-  padding: 12px 0 0;
+  padding: 14px 0 0;
   list-style: none;
   border-top: 1px solid var(--pc-line);
   font-size: 13px;
 }
 .pc-reports li {
   display: grid;
-  grid-template-columns: 70px 1fr;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px 10px;
+}
+.pc-reports li > .pc-res {
+  grid-column: 2;
+}
+.pc-wk {
+  font: 600 10.5px/18px var(--pc-lbl);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--pc-dim);
+}
+
+/* ---------- a match result: the W, L or D chip (kit .k-wdl), his team first and the score his way round,
+   then the competition, the week and how he played on a quieter line, the rating at the end ---------- */
+.pc-res {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "chip line rate"
+    ". meta rate";
+  align-items: center;
+  gap: 3px 10px;
+  min-width: 0;
+}
+.pc-res > .k-wdl,
+.pc-res-none {
+  grid-area: chip;
+}
+.pc-res-none {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--pc-line);
+}
+.pc-res-line {
+  grid-area: line;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--pc-soft);
+}
+.pc-res-line b {
+  font-weight: 700;
+  color: var(--pc-ink);
+}
+.pc-res-score {
+  font: 700 14px/1 var(--pc-lbl);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--pc-ink);
+}
+.pc-res-v {
+  color: var(--pc-dim);
+}
+.pc-res-meta {
+  grid-area: meta;
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--pc-dim);
+}
+.pc-res.is-intl .pc-res-meta {
+  color: color-mix(in srgb, var(--pc-gold) 75%, var(--pc-dim));
+}
+.pc-res-rate {
+  grid-area: rate;
+  justify-self: end;
+}
+.pc-res .pc-rate {
+  margin-left: 0;
+}
+span.pc-res-rate {
+  min-width: 34px;
+  text-align: center;
+}
+.pc-results {
+  display: grid;
   gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pc-ledger li.pc-res-li {
+  display: block;
+}
+.pc-ledger li.pc-res-head .pc-h4 {
+  margin: 6px 0 0;
+}
+
+/* ---------- matchday: the two big buttons, play it yourself or let it sim ---------- */
+.pc-matchday {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 16px;
+  padding: 16px;
+  border: 1px solid var(--pc-line2);
+  border-radius: 10px;
+  background:
+    linear-gradient(160deg, rgba(208, 232, 92, 0.09), transparent 55%),
+    var(--pc-raise);
+}
+.pc-md-head {
+  display: grid;
+  gap: 6px;
+}
+.pc-md-fix {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+}
+.pc-md-comp {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--pc-dim);
+}
+.pc-md-btns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.pc-md-col {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+}
+.pc .pc-md-btn.k-btn {
+  width: 100%;
+  padding: 18px 20px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  letter-spacing: 0.14em;
+}
+.pc-md-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--pc-dim);
+}
+.pc-md-note.is-off {
+  color: var(--pc-warn);
+}
+@media (max-width: 560px) {
+  .pc-md-btns {
+    grid-template-columns: 1fr;
+  }
 }
 .pc-rate {
   display: inline-block;
@@ -1278,11 +1429,6 @@
 .pc-tag.is-warn {
   border-color: var(--pc-warn);
   color: var(--pc-warn);
-}
-.pc-intl {
-  display: block;
-  grid-column: 2;
-  color: var(--pc-gold);
 }
 .pc-caps {
   display: flex;
@@ -2313,5 +2459,287 @@
   .pc *::after {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* ---------- inside a place: the card for what he stands at (ShopHud) ----------
+   It sits in the middle of the space the side panel leaves; --pc-shop-right is that panel's width. */
+.pc-shop {
+  position: absolute;
+  left: calc((100% - var(--pc-shop-right, 354px)) / 2);
+  bottom: 18px;
+  z-index: 4;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: min(410px, calc(100% - var(--pc-shop-right, 354px) - 24px));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.pc-shop-card.k-panel {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px 15px;
+  overflow: visible;
+  background-color: rgba(6, 8, 11, 0.9);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+  animation: pc-shop-in 0.2s ease;
+}
+.pc-shop-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pc-shop-swatch {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    inset 0 -6px 10px rgba(0, 0, 0, 0.35),
+    0 0 0 3px rgba(255, 255, 255, 0.05);
+}
+.pc-shop-name {
+  min-width: 0;
+  flex: 1;
+}
+.pc-shop-name .k-label {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-shop-title {
+  margin: 1px 0 0;
+  font: 700 16.5px/1.22 var(--pc-ui);
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+.pc-shop-price {
+  flex: none;
+  margin: 0;
+  font: 700 19px/1 var(--pc-lbl);
+  color: var(--pc-volt);
+  white-space: nowrap;
+}
+.pc-shop-price span {
+  font-size: 11px;
+  color: var(--pc-dim);
+}
+.pc-shop-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--pc-soft);
+}
+.pc-shop-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+}
+.pc-shop-facts div {
+  padding: 7px 9px;
+  border: 1px solid var(--pc-line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.pc-shop-facts dt {
+  font: 600 9.5px/1.2 var(--pc-lbl);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pc-dim);
+}
+.pc-shop-facts dd {
+  margin: 3px 0 0;
+  font: 700 13.5px/1.1 var(--pc-lbl);
+}
+.pc-shop-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pc-shop-lock {
+  margin: 0;
+  padding: 2px 0 2px 9px;
+  border-left: 2px solid var(--pc-warn);
+  font-size: 12.5px;
+  color: #ffd79a;
+}
+.pc-shop-acts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pc-shop-acts .k-btn-primary {
+  flex: 1;
+}
+.pc-shop-acts kbd {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 2px;
+  border-radius: 5px;
+  background: var(--pc-volt);
+  color: var(--pc-volt-ink);
+  font: 800 11px/1 var(--pc-lbl);
+  text-shadow: none;
+}
+.pc-shop-list {
+  display: grid;
+  gap: 5px;
+  max-height: 210px;
+  margin: 0;
+  padding: 0 2px 0 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.pc-shop-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.pc-shop-list li span {
+  display: grid;
+  min-width: 0;
+}
+.pc-shop-list b {
+  overflow: hidden;
+  font-weight: 600;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-shop-list em {
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--pc-dim);
+}
+.pc-shop-flash {
+  max-width: 100%;
+  margin: 0;
+  padding: 9px 13px;
+  border-left: 3px solid var(--pc-volt);
+  background: rgba(6, 8, 11, 0.9);
+  font-size: 13.5px;
+  animation: pc-shop-in 0.25s ease;
+}
+/* the first Rolex: the room dims, the card rises in gold */
+.pc-shop-moment {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: radial-gradient(ellipse at center, rgba(60, 46, 12, 0.55), rgba(2, 3, 5, 0.82) 70%);
+  pointer-events: auto;
+  animation: pc-shop-fade 0.4s ease;
+}
+.pc-shop-moment-card.k-panel {
+  position: relative;
+  width: min(440px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 38px 30px 30px;
+  overflow: hidden;
+  border-color: rgba(232, 196, 106, 0.6);
+  background-color: rgba(10, 9, 6, 0.94);
+  text-align: center;
+  animation: pc-shop-rise 0.7s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+.pc-shop-moment-card h2 {
+  margin: 0;
+  font: 900 clamp(28px, 5vw, 40px)/1 var(--pc-ui);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  background: linear-gradient(100deg, #b8913a 0%, #fff1c4 45%, #d4af37 60%, #8a6a1e 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: pc-shop-shine 2.6s ease-in-out infinite;
+}
+.pc-shop-moment-card p {
+  position: relative;
+  margin: 0;
+  max-width: 34ch;
+  color: var(--pc-soft);
+}
+.pc-shop-moment-card .k-label {
+  color: var(--pc-gold);
+}
+.pc-shop-moment-price {
+  font: 700 22px/1 var(--pc-lbl);
+  color: var(--pc-gold) !important;
+}
+.pc-shop-moment-card .k-btn {
+  position: relative;
+  margin-top: 8px;
+}
+.pc-shop-moment-ring {
+  position: absolute;
+  left: 50%;
+  top: -120px;
+  width: 300px;
+  height: 300px;
+  margin-left: -150px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent, rgba(232, 196, 106, 0.35), transparent 40%, rgba(255, 241, 196, 0.25), transparent 75%);
+  filter: blur(18px);
+  animation: pc-shop-spin 6s linear infinite;
+  pointer-events: none;
+}
+@keyframes pc-shop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes pc-shop-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pc-shop-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.94);
+  }
+}
+@keyframes pc-shop-shine {
+  50% {
+    background-position: 100% 0;
+  }
+}
+@keyframes pc-shop-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 900px) {
+  .pc-shop {
+    --pc-shop-right: 0px;
+    top: calc(62vh - 14px);
+    bottom: auto;
+    transform: translate(-50%, -100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-shop-card.k-panel,
+  .pc-shop-flash,
+  .pc-shop-moment,
+  .pc-shop-moment-card.k-panel,
+  .pc-shop-moment-card h2,
+  .pc-shop-moment-ring {
+    animation: none;
   }
 }

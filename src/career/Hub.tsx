@@ -12,7 +12,7 @@ import { careerApi, ApiError, type Saved, type WeekReport } from "./api";
 import type { CareerState, Offer } from "./types";
 import type { Meta } from "./Creator";
 import { OUTFITS, kitOutfit } from "./body";
-import Phone, { type PhoneApp } from "./Phone";
+import Phone, { ResultRow, weekOf, type PhoneApp, type ResultLine } from "./Phone";
 
 const Stage = dynamic(() => import("./Stage"), {
   ssr: false,
@@ -235,20 +235,27 @@ export default function Hub({
   const outfit = state.stage === "school" ? OUTFITS.school : OUTFITS.training;
 
   const pendingEv = state.people.pending;
-  // his league match this week can be played live (player lock) when he is a fit outfield professional
-  const canPlayLive =
-    state.stage === "pro" &&
-    !!state.player.club &&
-    state.person.pos !== "GK" &&
-    !state.cond.inj &&
-    !state.seasonOver &&
-    !!state.next &&
-    !state.next.national &&
-    state.next.comp === state.player.league;
+  // this week's match and whether he can play it himself (player lock, every stage from school to the pros).
+  // The server says why not in plain words; a server from before that falls back to the old rule.
+  const legacyPlay = (): NonNullable<CareerState["play"]> => {
+    const ok = state.stage === "pro" && !!state.player.club && state.person.pos !== "GK" && !state.cond.inj && !!state.next && !state.next.national && state.next.comp === state.player.league;
+    if (!ok) return { can: false, code: "old", kind: "pro", why: state.person.pos === "GK" ? "Keepers cannot be played live yet." : state.cond.inj ? "You are injured this week." : "Live matches start when you turn professional." };
+    if (blocking.length) return { can: false, code: "decision", kind: "pro", why: "Make your choice first: " + blocking[0].title + "." };
+    if (pendingEv) return { can: false, code: "event", kind: "pro", why: "Something needs your answer first: " + pendingEv.title + "." };
+    return { can: true, code: "ok", kind: "pro", why: "" };
+  };
+  const play = state.play || legacyPlay();
+  const matchday = !state.seasonOver && !!state.next && state.next.week === state.round + 1 && play.code !== "nomatch";
   const playLive = () => {
-    if (state.decisions.some((d) => !d.optional)) return openDecision(state.decisions.find((d) => !d.optional)!.id);
     // the match overlay lives on the Floodlights page; it comes back here when the match is over
     window.location.assign(new URL("/floodlights/#pcmatch", window.location.origin).href);
+  };
+  // his side's name on a result row. Lines saved before the name was kept fall back to what fits.
+  const teamOf = (m: ResultLine, fresh?: boolean) => m.team || (m.level ? state.person.nat : fresh || m.s === state.season ? state.team : null) || "Your team";
+  const resultLog = (state.stats.log as unknown as ResultLine[]).slice(0, 5);
+  const when = (m: ResultLine) => {
+    const w = weekOf(m);
+    return w ? "week " + w : undefined;
   };
   const alerts = (blocking.length > 0 || state.decisions.length > 0 || state.offers.length > 0 || !!pendingEv) && (
     <section className="pc-alerts pc-card-in">
@@ -405,7 +412,38 @@ export default function Hub({
               <header className="k-controls">
                 <h3 className="k-panel-title">This week</h3>
               </header>
-              {state.next ? (
+              {matchday && state.next ? (
+                <div className="pc-matchday" aria-label="Matchday">
+                  <div className="pc-md-head">
+                    <p className="pc-kicker">
+                      Matchday · week {state.next.week}
+                    </p>
+                    <p className="pc-md-fix">
+                      <b>{state.team || "Your team"}</b> <span className="pc-dim">v</span> <b>{state.next.opp}</b>
+                    </p>
+                    <p className="pc-md-comp">
+                      {state.next.comp}
+                      {state.next.home !== undefined ? (state.next.home ? ", at home" : ", away") : ""}
+                    </p>
+                  </div>
+                  <div className="pc-md-btns">
+                    <div className="pc-md-col">
+                      <button type="button" className="k-btn k-btn-primary pc-md-btn" disabled={busy || !play.can} onClick={playLive} aria-describedby="pc-play-note">
+                        Play match
+                      </button>
+                      <p id="pc-play-note" className={clsx("pc-md-note", !play.can && "is-off")}>
+                        {play.can ? "In 3D, in control of only " + state.person.first + ". Your rating comes from how you play." : play.why}
+                      </p>
+                    </div>
+                    <div className="pc-md-col">
+                      <button type="button" className="k-btn pc-md-btn" disabled={busy} onClick={() => week(1)}>
+                        {busy ? "Playing" : "Sim match"}
+                      </button>
+                      <p className="pc-md-note">The match plays itself, with the rest of the week.</p>
+                    </div>
+                  </div>
+                </div>
+              ) : state.next ? (
                 <p className="pc-next">
                   <span className="pc-dim">Week {state.next.week}</span> {state.next.comp}
                   {state.next.national ? " (national)" : ""} against <b>{state.next.opp}</b>
@@ -450,21 +488,14 @@ export default function Hub({
                   <button type="button" className="k-btn k-btn-primary" disabled={busy} onClick={() => run(() => careerApi.season(saved))}>
                     Start next season
                   </button>
+                ) : matchday ? (
+                  <button type="button" className="k-btn k-btn-sm" disabled={busy} onClick={() => week(8)} title="Plays on until something needs you">
+                    Sim to the next event
+                  </button>
                 ) : (
                   <>
-                    {canPlayLive && (
-                      <button
-                        type="button"
-                        className="k-btn k-btn-primary"
-                        disabled={busy || !!pendingEv}
-                        onClick={playLive}
-                        title="Play the match yourself, in control of only your own footballer"
-                      >
-                        Play the match
-                      </button>
-                    )}
-                    <button type="button" className={clsx("k-btn", !canPlayLive && "k-btn-primary")} disabled={busy} onClick={() => week(1)}>
-                      {busy ? "Playing" : canPlayLive ? "Sim the week" : "Play the week"}
+                    <button type="button" className="k-btn k-btn-primary" disabled={busy} onClick={() => week(1)}>
+                      {busy ? "Playing" : "Play the week"}
                     </button>
                     <button type="button" className="k-btn" disabled={busy} onClick={() => week(8)} title="Plays on until something needs you">
                       Sim to the next event
@@ -483,31 +514,9 @@ export default function Hub({
                           {r.tease}
                         </span>
                       )}
-                      <span className="pc-dim">{r.week.replace(/^Season [0-9-]+, /, "")}</span>
-                      {r.match ? (
-                        r.match.mins ? (
-                          <span>
-                            {r.match.comp}: {r.match.gf}-{r.match.ga} v {r.match.opp}, {r.match.live ? "played live" : r.match.role === "start" ? "started" : "off the bench"}
-                            {r.match.g ? ", " + r.match.g + " goal" + (r.match.g > 1 ? "s" : "") : ""}
-                            {r.match.a ? ", " + r.match.a + " assist" + (r.match.a > 1 ? "s" : "") : ""}
-                            <b className={clsx("pc-rate", (r.match.rating || 0) >= 7.5 && "is-good", (r.match.rating || 0) < 6 && "is-bad")}>{r.match.rating?.toFixed(1)}</b>
-                          </span>
-                        ) : (
-                          <span className="pc-dim">
-                            {r.match.comp} v {r.match.opp}: {r.match.role === "injured" ? "injured" : "did not play"}
-                          </span>
-                        )
-                      ) : (
-                        <span className="pc-dim">Training week</span>
-                      )}
-                      {r.intl && (
-                        <span className="pc-intl">
-                          {r.intl.comp}: {r.intl.gf}-{r.intl.ga} v {r.intl.opp}
-                          {r.intl.mins ? (r.intl.role === "start" ? ", started" : ", off the bench") : ", on the bench"}
-                          {r.intl.g ? ", " + r.intl.g + " goal" + (r.intl.g > 1 ? "s" : "") : ""}
-                          {r.intl.mins && r.intl.rating ? <b className="pc-rate">{r.intl.rating.toFixed(1)}</b> : null}
-                        </span>
-                      )}
+                      <span className="pc-wk">{r.week.replace(/^Season [0-9-]+, /, "")}</span>
+                      {r.match ? <ResultRow m={r.match} team={teamOf(r.match, true)} /> : <span className="pc-dim">Training week</span>}
+                      {r.intl && <ResultRow m={{ ...r.intl, level: r.intl.level || "intl" }} team={teamOf({ ...r.intl, level: r.intl.level || "intl" }, true)} />}
                     </li>
                   ))}
                 </ul>
@@ -567,6 +576,18 @@ export default function Hub({
                   <span>Average</span>
                 </div>
               </div>
+              {resultLog.length > 0 && (
+                <>
+                  <h4 className="pc-h4">Results</h4>
+                  <ul className="pc-results">
+                    {resultLog.map((m, i) => (
+                      <li key={i}>
+                        <ResultRow m={m} team={teamOf(m)} when={when(m)} />
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
               {state.stage !== "pro" && <h4 className="pc-h4">Scouts watching</h4>}
               {state.stage === "pro" ? null : state.scouts.length ? (
                 <ul className="pc-scouts">
@@ -690,13 +711,10 @@ export default function Hub({
                       </li>
                     ))}
                   </ul>
-                  <ul className="pc-ledger">
+                  <ul className="pc-results">
                     {state.national.log.slice(0, 3).map((m, i) => (
                       <li key={i}>
-                        <span>
-                          {m.comp} v {m.opp}, {m.gf}-{m.ga}
-                        </span>
-                        <b>{m.mins ? (m.rating || 0).toFixed(1) : "Bench"}</b>
+                        <ResultRow m={{ ...m, level: m.level || "intl" }} team={teamOf({ ...m, level: m.level || "intl" })} when={when(m)} />
                       </li>
                     ))}
                   </ul>

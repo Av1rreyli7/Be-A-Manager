@@ -3643,26 +3643,39 @@ app.post("/api/pc/sign", (req, res) => {
   const ctx = pcCtx(req, res); if (!ctx) return;
   pcReply(res, ctx.game, PC.sign(ctx.game, String(req.body.offer || "")));
 });
-// player lock: his league match this week, played live in the 3D match with only him under control.
-// The teams are built the way /api/playstart builds them; his row carries pc (the lock) and his look.
+// player lock: his match this week, played live in the 3D match with only him under control.
+// A pro's league match: the teams are built the way /api/playstart builds them. A youth match (school, college,
+// academy, centre): the career makes both sides for the day. Either way his row carries pc (the lock) and his look.
+// peek: true gives the match screen what it shows before kick off and changes nothing, so "Not now" there
+// keeps the week's one go; the kick off itself comes back without peek and starts the match for real.
 app.post("/api/pc/matchstart", (req, res) => {
   const ctx = pcCtx(req, res); if (!ctx) return;
   const game = ctx.game, c = game.career;
-  const chk = PC.liveCheck(game);
+  const peek = req.body.peek === true;
+  const chk = peek ? PC.livePeek(game) : PC.liveCheck(game);
   if (chk.error) { save(); return res.status(400).json(chk); }
+  if (chk.kind === "youth") { if (!peek) save(); return res.json(Object.assign({ ok: true, peek }, chk.setup)); }
   const me = game.players[c.pid];
+  if (peek) {
+    const num = kitNumbers(game, chk.club)[me.id];
+    return res.json({
+      ok: true, peek: true, kind: "league", label: me.league + ", week " + (game.round + 1), home: chk.home, away: chk.away, side: chk.side,
+      homeRating: xiRating(game, chk.home), awayRating: xiRating(game, chk.away), instruction: chk.instruction,
+      lock: { name: me.name, num: c.person.num || num, pos: c.person.pos, instruction: chk.instruction.text, by: chk.instruction.by || "Manager" }
+    });
+  }
   const mm = { home: chk.home, away: chk.away };
   const nums = { [chk.home]: kitNumbers(game, chk.home), [chk.away]: kitNumbers(game, chk.away) };
   if (nums[chk.club]) nums[chk.club][me.id] = c.person.num || nums[chk.club][me.id];
   const look = Object.assign({}, c.look, { h: (c.person.height || 178) / 100, mass: c.person.weight || 72 });
-  const rowFor = (team, home) => p => Object.assign({ n: p.name, pos: p.pos, role: p.role || p.pos, r: Math.round(effOf(game, p, team, { home, m: mm, kind: "L", week: game.round })), base: p.rating, num: nums[team][p.id], age: p.age }, p.id === me.id ? { pc: true, look, role: c.person.pos } : {});
+  const rowFor = (team, home) => p => Object.assign({ n: p.name, pos: p.pos, role: p.role || p.pos, r: Math.round(effOf(game, p, team, { home, m: mm, kind: "L", week: game.round })), base: p.rating, num: nums[team][p.id], age: p.age }, p.id === me.id ? { pc: true, look, role: PC.D.POS_ROLE[c.person.pos] || c.person.pos } : {});
   const xi = team => chosenXI(game, team).filter(Boolean).map(rowFor(team, team === chk.home));
   save();
   res.json({
     ok: true, kind: "league", label: me.league + ", week " + (game.round + 1), home: chk.home, away: chk.away, side: chk.side,
     homeRating: xiRating(game, chk.home), awayRating: xiRating(game, chk.away),
     homeXI: xi(chk.home), awayXI: xi(chk.away), instruction: chk.instruction,
-    lock: { name: me.name, num: nums[chk.club][me.id], pos: c.person.pos, instruction: chk.instruction.text }
+    lock: { name: me.name, num: nums[chk.club][me.id], pos: c.person.pos, instruction: chk.instruction.text, by: chk.instruction.by || "Manager" }
   });
 });
 app.post("/api/pc/matchresult", (req, res) => {
