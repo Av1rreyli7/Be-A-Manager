@@ -2866,3 +2866,100 @@ span.pc-res-rate {
   background: #ff7aa8;
   color: #2a0a16;
 }
+
+/* ---------- the open world, full screen: no header, no page round it ---------- */
+html.pc-noscroll,
+html.pc-noscroll body {
+  overflow: hidden;
+}
+.pc-full {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #05070b;
+}
+/* the career's calls (a choice, offers, something brewing) stay in reach, down the right side */
+.pc-full-alerts {
+  position: absolute;
+  right: 14px;
+  top: 58px;
+  z-index: 6;
+  width: min(340px, calc(100% - 28px));
+}
+.pc-full-alerts .pc-alerts {
+  flex-direction: column;
+  margin: 0;
+}
+.pc-full-alerts .pc-alert {
+  backdrop-filter: blur(8px);
+}
+/* ---------- the loading screen: the brand's dots pulsing in turn, a small label ---------- */
+.pc-load {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 20px;
+  background: radial-gradient(ellipse at 50% 46%, #0c1218 0%, #05070b 68%);
+  animation: pc-load-in 0.22s ease both;
+  transition:
+    opacity 0.5s ease,
+    visibility 0s linear 0.5s;
+}
+.pc-load.is-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.pc-load-dots {
+  display: flex;
+  gap: 14px;
+}
+.pc-load-dots i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--pc-volt);
+  box-shadow: 0 0 16px rgba(208, 232, 92, 0.7);
+  animation: pc-load-dot 1.2s cubic-bezier(0.45, 0, 0.55, 1) infinite both;
+  will-change: transform, opacity;
+}
+.pc-load-dots i:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.pc-load-dots i:nth-child(3) {
+  animation-delay: 0.32s;
+}
+.pc-load-label {
+  margin: 0;
+  font: 700 11px/1 var(--k-f-lbl);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--pc-dim);
+}
+@keyframes pc-load-dot {
+  0%,
+  100% {
+    transform: scale(0.55);
+    opacity: 0.35;
+  }
+  40% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+@keyframes pc-load-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-load-dots i {
+    animation-duration: 2.4s;
+  }
+}

@@ -520,6 +520,8 @@ async function main() {
           r = await P("/api/pc/matchstart");
           if (r.status === 200) { start = r.j; break; }
           why.push(r.j.code + ": " + r.j.error);
+          // a club with better players in his position keeps him out: make him good enough to start
+          if ((r.j.code === "bench" || r.j.code === "out") && tries > 3) await P("/api/pc/testset", { boost: 6 });
           if (r.j.event) { await answerEvent(r, pc, "Pro"); continue; }
           if (r.j.seasonOver) { await P("/api/pc/season"); continue; }
           if (r.j.decision) { const d = r.j.decision; await P("/api/pc/decide", { id: d.id, choice: d.kind === "agent" ? "none" : d.options[0] }); continue; }

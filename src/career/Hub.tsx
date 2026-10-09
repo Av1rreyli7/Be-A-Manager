@@ -13,15 +13,17 @@ import type { CareerState, Offer } from "./types";
 import type { Meta } from "./Creator";
 import { OUTFITS, kitOutfit } from "./body";
 import Phone, { ResultRow, weekOf, type PhoneApp, type ResultLine } from "./Phone";
+import CityLoader from "./city/Loader";
 
 const Stage = dynamic(() => import("./Stage"), {
   ssr: false,
   loading: () => <div className="pc-stage-wait" />,
 });
 
+// the city's own loading screen covers it while its code arrives and while it is built (see CityLoader)
 const City = dynamic(() => import("./city/City"), {
   ssr: false,
-  loading: () => <div className="pc-city pc-stage-wait" />,
+  loading: () => null,
 });
 
 const GFX = [
@@ -136,6 +138,17 @@ export default function Hub({
   const [offersOpen, setOffersOpen] = useState(false);
   const [phoneApp, setPhoneApp] = useState<PhoneApp | null>(null);
   const [tab, setTab] = useState<"career" | "city">("career");
+  // the open world is the whole screen: no header, no page scroll behind it, a loading screen until it has drawn
+  const full = tab === "city" && !state.retired;
+  const [cityReady, setCityReady] = useState(false);
+  const goTab = (t: "career" | "city") => {
+    if (t === "city" && tab !== "city") setCityReady(false);
+    setTab(t);
+  };
+  useEffect(() => {
+    document.documentElement.classList.toggle("pc-noscroll", full);
+    return () => document.documentElement.classList.remove("pc-noscroll");
+  }, [full]);
   const [confirmRetire, setConfirmRetire] = useState(false);
   const [eventOpen, setEventOpen] = useState(false);
   // what the person was doing when an event stopped the week: it carries on once the event is answered
@@ -282,6 +295,7 @@ export default function Hub({
 
   return (
     <div className="pc-hub" ref={root}>
+      {!full && (
       <header className="pc-top">
         <button type="button" className="pc-brand" onClick={onExit}>
           <span className="pc-dot" />
@@ -289,10 +303,10 @@ export default function Hub({
         </button>
         {!state.retired && (
           <nav className="k-tabs" aria-label="Screens">
-            <button type="button" className={clsx(tab === "career" && "on")} aria-pressed={tab === "career"} onClick={() => setTab("career")}>
+            <button type="button" className={clsx(tab === "career" && "on")} aria-pressed={tab === "career"} onClick={() => goTab("career")}>
               Career
             </button>
-            <button type="button" className={clsx(tab === "city" && "on")} aria-pressed={tab === "city"} onClick={() => setTab("city")}>
+            <button type="button" className={clsx(tab === "city" && "on")} aria-pressed={tab === "city"} onClick={() => goTab("city")}>
               {state.life.city}
             </button>
           </nav>
@@ -331,12 +345,12 @@ export default function Hub({
           )}
         </div>
       </header>
+      )}
 
       {state.retired ? (
         <Retired state={state} saved={saved} money={money} quality={quality} />
       ) : tab === "city" ? (
-        <>
-          {alerts}
+        <div className="pc-full">
           <City
             state={state}
             saved={saved}
@@ -347,8 +361,13 @@ export default function Hub({
             busy={busy}
             onPhone={(a) => setPhoneApp(a as PhoneApp)}
             onWeek={() => week(1)}
+            onReady={() => setCityReady(true)}
+            onBack={() => goTab("career")}
+            graphics={{ tiers: GFX.map((g) => g.name), quality, set: setQuality, auto, setAuto }}
           />
-        </>
+          {alerts && <div className="pc-full-alerts">{alerts}</div>}
+          <CityLoader out={cityReady} />
+        </div>
       ) : (
         <>
           <section className="pc-hero pc-card-in">

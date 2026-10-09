@@ -145,6 +145,7 @@ export default function World({
   onPhoto,
   onPickup,
   onStreetDate,
+  onReady,
 }: {
   state: CareerState;
   plan: CityPlan;
@@ -161,6 +162,8 @@ export default function World({
   onPickup?: () => void;
   /** a walk or a drive together has gone on long enough: the date's moments */
   onStreetDate?: () => void;
+  /** called once, when the first few frames of the city are on screen */
+  onReady?: () => void;
 }) {
   const { scene, gl, camera } = useThree();
   const q = Math.max(0, Math.min(3, quality));
@@ -410,6 +413,7 @@ export default function World({
   const moonV = useMemo(() => new THREE.Vector3(0.4, 0.8, 0.3).normalize(), []);
   const camTarget = useMemo(() => new THREE.Vector3(), []);
   const fpsAcc = useRef({ t: 0, n: 0 });
+  const readyN = useRef(0);
   const age = state.player.age;
   const fame = state.life.fame ?? 0;
   const myName = state.person.first;
@@ -435,6 +439,11 @@ export default function World({
     const dt = Math.min(dt0, 0.05);
     const c = ctl.current;
     const t = clock.elapsedTime;
+    // the first frames are on screen: the loading screen can fade away
+    if (readyN.current >= 0 && ++readyN.current >= 3) {
+      readyN.current = -1;
+      onReady?.();
+    }
     // frames per second, for the frame guard and the screen
     const fa = fpsAcc.current;
     fa.t += dt0;

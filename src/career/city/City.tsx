@@ -54,6 +54,9 @@ export default function City({
   busy,
   onPhone,
   onWeek,
+  onReady,
+  onBack,
+  graphics,
 }: {
   state: CareerState;
   saved: Saved;
@@ -64,6 +67,12 @@ export default function City({
   busy: boolean;
   onPhone: (app: string) => void;
   onWeek: () => void;
+  /** the world has drawn its first frames: the loading screen can go */
+  onReady?: () => void;
+  /** Back to Career from the pause menu */
+  onBack?: () => void;
+  /** the graphics tiers, for the pause menu */
+  graphics?: { tiers: string[]; quality: number; set: (q: number) => void; auto: boolean; setAuto: (on: boolean) => void };
 }) {
   const life = state.life;
   const world = life.world;
@@ -113,6 +122,7 @@ export default function City({
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [bubble, setBubble] = useState<string | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [flash, setFlash] = useState(0);
   const [near, setNear] = useState<string | null>(null);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
@@ -319,13 +329,16 @@ export default function City({
       const t = e.target as HTMLElement;
       if (t && (t.tagName === "INPUT" || t.tagName === "SELECT" || t.tagName === "TEXTAREA")) return;
       const L = lookCtl.current;
-      // Esc with the mouse captured only frees the mouse (the browser does that); the next Esc leaves the place
+      // Esc with the mouse captured only frees the mouse (the browser does that); the next Esc leaves the place,
+      // or out in the street opens the pause menu (and closes it again). The map and any popup keep their own Esc.
       if (e.key === "Escape") {
         if (L && (L.locked() || L.sinceUnlock() < 400)) return;
+        if (document.querySelector(".k-scrim, .pc-moment")) return;
         if (inside) leave();
+        else if (!mapOpen) setPaused((v) => !v);
         return;
       }
-      if (e.repeat) return;
+      if (paused || e.repeat) return;
       if (e.key.toLowerCase() === "m" && !inside && plan) {
         L?.release();
         setMapOpen((v) => !v);
@@ -337,7 +350,7 @@ export default function City({
     };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
-  }, [inside, leave, plan, onPhone]);
+  }, [inside, leave, plan, onPhone, mapOpen, paused]);
 
   // ---------- inside: the shop card (ShopHud) handles E and every button; the door, the garage and driving
   // out come back here ----------
@@ -372,13 +385,8 @@ export default function City({
   const carName = c && c.mode === "drive" && c.carId ? carSpec(state, c.carId)?.name : null;
   const ownedHomes = life.owned.filter((o) => o.city === life.city).map((o) => o.id);
 
-  if (!plan || !c) {
-    return (
-      <div className="pc-world">
-        <p className="pc-world-wait">Loading the city.</p>
-      </div>
-    );
-  }
+  // (the loading screen over it says so until the world has drawn)
+  if (!plan || !c) return <div className="pc-world" />;
 
   return (
     <div className={clsx("pc-world", inside ? "is-inside" : "is-street")}>
@@ -396,7 +404,7 @@ export default function City({
           }}
         >
           <Environment intensity={inside ? 0.55 : 0.22} />
-          <World state={state} plan={plan} quality={quality} ctl={ctl as React.MutableRefObject<WorldCtl>} outfit={street} active={!inside} sound={sound} onEnter={enter} onPrompt={onPrompt} onBubble={onBubble} onPhoto={onPhoto} onPickup={onPickup} onStreetDate={onStreetDate} />
+          <World state={state} plan={plan} quality={quality} ctl={ctl as React.MutableRefObject<WorldCtl>} outfit={street} active={!inside && !paused} sound={sound} onEnter={enter} onPrompt={onPrompt} onBubble={onBubble} onPhoto={onPhoto} onPickup={onPickup} onStreetDate={onStreetDate} onReady={onReady} />
           {inside && room && <Interior key={room.id} place={room} state={state} quality={quality} night={night} outfit={outfit} ctl={walk} labelEls={labelEls} onNear={onNear} onUse={onUse} onHotspots={onHotspots} />}
           <FrameGuard quality={quality} onSlow={setQuality} />
         </Canvas>
@@ -557,6 +565,43 @@ export default function City({
           onSay={(id) => void actFor(inside ? inside.place.id : "street", "datesay", id)}
           onEnd={() => void actFor(inside ? inside.place.id : "street", "dateend")}
         />
+      )}
+      {paused && !inside && (
+        <div className="pc-pause" role="dialog" aria-modal="true" aria-label="Paused" onClick={(e) => e.target === e.currentTarget && setPaused(false)}>
+          <div className="pc-pause-card">
+            <p className="k-label">{life.city}</p>
+            <h2 className="pc-pause-title">Paused</h2>
+            <div className="pc-pause-acts">
+              <button type="button" className="k-btn k-btn-primary" autoFocus onClick={() => setPaused(false)}>
+                Resume
+              </button>
+              {onBack && (
+                <button type="button" className="k-btn" onClick={onBack}>
+                  Back to Career
+                </button>
+              )}
+            </div>
+            {graphics && (
+              <div className="pc-pause-gfx">
+                <p className="k-label">Graphics</p>
+                <div className="pc-pause-tiers" role="group" aria-label="Graphics">
+                  {graphics.tiers.map((n, i) => (
+                    <button type="button" key={n} className={clsx("k-btn k-btn-sm", graphics.quality === i && "k-on")} aria-pressed={graphics.quality === i} onClick={() => graphics.set(i)}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <label className="pc-pause-auto">
+                  <input type="checkbox" className="k-check" checked={graphics.auto} onChange={(e) => graphics.setAuto(e.target.checked)} />
+                  Keep it smooth
+                </label>
+              </div>
+            )}
+            <p className="pc-pause-hint">
+              <kbd>Esc</kbd> to resume
+            </p>
+          </div>
+        </div>
       )}
       {locked && (
         <p className="pc-world-lockhint" aria-hidden="true">

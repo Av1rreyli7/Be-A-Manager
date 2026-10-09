@@ -1196,3 +1196,21 @@ Checklist (commit locally after each phase; each phase is tested before the next
       the glass building, the car park, the lads), a school match away (no stands, people on the touchline), a
       college match (the small stand partly full), a pro match in Mumbai City's stadium, picking her up in the
       car, a date at Thalassa by the water, and the wedding (her walk down the aisle, then under the arch).
+
+## Open world full screen, Esc menu, loading screen
+
+- [x] Full screen: the city tab shows the open world in a fixed layer over the whole window, edge to edge; the
+      career header is not drawn and the page cannot scroll behind it. The career's calls (a choice, offers,
+      something brewing) stay in reach down the right side; popups (the phone, events, moments) sit on top.
+- [x] Esc: in the street, Esc opens a glass pause card (Resume, Back to Career, the graphics tiers and Keep it
+      smooth) and the world stands still; Esc again or Resume closes it; Back to Career goes back to the Career
+      tab. Unchanged: with the mouse captured the first Esc frees it, inside a place Esc leaves it, the map,
+      chats, dates and popups keep their own Esc. Getting in is the same city tab as before.
+- [x] Loading: a plain dark screen with the brand's three dots pulsing in turn and "Loading the city", one
+      element from the moment he steps in until the world has drawn its first frames, then a half second fade.
+      Only transform and opacity animate, so it keeps moving while the city is built.
+      Checked in Chrome (dev and production): the world is 1440 by 900 at 1440 by 900 with no header, the clock
+      stands still while paused, focus lands on Resume, the map's Esc and a place's Esc are as before, graphics
+      change from the card, Back to Career, a second entry shows the loader again. Screenshots in
+      Be-A-Manager/acceptance_shots/open_world. One battery fix for chance in the simulated career: a benched
+      pro at a stacked club is made good enough to start before the live league match check. test:all green.
