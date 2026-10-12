@@ -1,7 +1,7 @@
 // Player Career life battery: the city rebuild with real brands. Boots the Floodlights server on its own port and
 // save file, creates footballers through the API and checks the places in each city (big and small, by the sea or
-// not, a new city after a move), every life action (visit, buy, wear, cars and their age rules, the garage, homes
-// through their places, the supermarket, cafes, the restaurant, the club, the clinic, fans in the street), the fame
+// not, a new city after a move), every life action (visit, buy, wear, cars and their age rules, the garage, his
+// parking spot on the street with no home bought, homes through their places, the supermarket, cafes, the restaurant, the club, the clinic, fans in the street), the fame
 // gates and price pacing, old saves and old ids, and that nothing is NaN.
 // Run: node tests-site/test_career_life.js
 const fs = require("fs");
@@ -148,6 +148,7 @@ async function main() {
     ok("the old gold watch is still on his wrist", v.items.find(x => x.id === "goldwatch").wearing === true, null);
     ok("diamond studs became a real finish", game.career.look.earrings === "silver" && v.items.find(x => x.id === "studs").wearing === true, game.career.look.earrings);
     ok("an old save owning a Rolex has had its first already", game.career.life.firsts.rolex === true && game.career.life.firsts.car === true, game.career.life.firsts);
+    ok("an old save's cars with no home bought are recovered to his parking spot outside the family home", v.park && v.park.at === "street" && v.park.place === "home:family" && v.park.city === "Mumbai" && game.career.life.park.at === "street" && ["gt", "scoot"].every(id => v.garage.includes(id)), v.park);
     LIFE.weekly(game);
     ok("the old deal still pays every week", paid.some(t => t === "Sponsor, Puma"), paid);
     ok("the garage costs a little for the car in storage", paid.some(t => /^Garage/.test(t)) && paid.some(t => /Car costs, BMW M4/.test(t)), paid);
@@ -160,6 +161,19 @@ async function main() {
     game.career.life.v = 1;
     LIFE.view(game);
     ok("an old saved deal under the old name is renamed and still pays", game.career.life.sponsors[0].brand === "Adidas", game.career.life.sponsors[0]);
+    // cars that point at a garage he no longer has, or at another city, find his spot again on load
+    game.career.life.park = { at: "garage", home: "villa", city: "Mumbai" };
+    let pv = LIFE.view(game).park;
+    ok("cars in the garage of a home he no longer owns are recovered to his street spot on load", pv.at === "street" && pv.place === "home:family", pv);
+    game.career.life.park = { at: "street", home: "shared", city: "Delhi" };
+    pv = LIFE.view(game).park;
+    ok("cars left at a spot in another city come to this city's", pv.at === "street" && pv.city === "Mumbai" && pv.place === "home:family", pv);
+    game.career.life.owned = [{ id: "apartment", city: "Mumbai", price: 260000 }];
+    pv = LIFE.view(game).park;
+    ok("an old save that owns a home here keeps them in its garage", pv.at === "garage" && pv.home === "apartment" && pv.place === "home:apartment", pv);
+    game.career.life.owned = [];
+    pv = LIFE.view(game).park;
+    ok("and once that home is sold they are back on the street outside where he lives", pv.at === "street" && pv.place === "home:family", pv);
   }
 
   const server = spawn("node", [path.join(root, "floodlights", "server.js")], { env: Object.assign({}, process.env, { PORT, FL_SAVE_FILE: SAVE, FL_TEST_HOOKS: "1" }), stdio: "ignore" });
@@ -273,6 +287,10 @@ async function main() {
     ok("nor a motor scooter", r.status === 400 && /sixteen/.test(r.j.error || ""), r.j);
     r = await A.act("dealer:bikes", "car", "scoot");
     ok("an electric kick scooter is fine at fifteen", r.status === 200 && r.j.state.life.garage.includes("scoot"), r.j.error);
+    st = r.j.state;
+    const bikesText = (st.phone.threads.find(t => t.id === "dealer:bikes") || { msgs: [] }).msgs.map(m => m.text).join(" ");
+    ok("with no home bought, it goes to his parking spot on the street outside the family home", st.life.park && st.life.park.at === "street" && st.life.park.place === "home:family" && place(st, "home:family").living, st.life.park);
+    ok("and the dealer texts him where it is parked", /parked in your spot on the street outside the family home/.test(bikesText) && /marked on your map/.test(bikesText) && !bikesText.includes(EM) && !bikesText.includes(EN), bikesText);
     await A.set({ age: 16 });
     r = await A.act("dealer:bikes", "car", "activa");
     ok("a Honda Activa at sixteen", r.status === 200 && r.j.state.life.car.id === "activa", r.j.error);
@@ -312,6 +330,11 @@ async function main() {
     st = r.j.state;
     ok("an apartment bought through its place", r.status === 200 && st.life.home.id === "apartment" && st.life.home.mode === "own" && place(st, "home:apartment").owned && place(st, "home:apartment").living, r.j.error);
     ok("the first home is a moment", st.life.moments.some(m => m.id === "home"), null);
+    ok("buying a home moves every car he owns into its garage", st.life.park.at === "garage" && st.life.park.place === "home:apartment" && ["scoot", "activa", "pico", "sf90"].every(id => st.life.garage.includes(id)) && /cars are in its garage/.test(r.j.text || ""), [st.life.park, r.j.text]);
+    await A.set({ cash: 200000 });
+    const texts = s0 => s0.phone.threads.reduce((a, t) => a + t.msgs.length, 0);
+    r = await A.act("dealer:everyday", "car", "aero");
+    ok("a car bought with a home goes straight to its garage, no text needed", r.status === 200 && r.j.state.life.park.at === "garage" && r.j.state.life.garage.includes("aero") && texts(r.j.state) === texts(st), r.j.error);
     r = await A.act("home:shared", "rent");
     ok("a shared flat rented through its place", r.status === 200 && r.j.state.life.home.id === "shared" && r.j.state.life.home.mode === "rent", r.j.error);
     r = await A.act("home:apartment", "move");
@@ -322,6 +345,7 @@ async function main() {
     ok("no such home", r.status === 400, r.j);
     r = await A.act("home", "move", "family:live");
     ok("the old move action still works", r.status === 200 && r.j.state.life.home.id === "family", r.j.error);
+    ok("his cars stay in the garage of the home he bought", r.j.state.life.park.at === "garage" && r.j.state.life.park.home === "apartment", r.j.state.life.park);
 
     // the supermarket, the cafe, the restaurant
     await A.set({ cash: 5000 });
@@ -394,6 +418,7 @@ async function main() {
     ok("a new city has a new seed and no family home", st.life.world.seed !== lw.seed && !place(st, "home:family") && place(st, "home:mansion").name.includes("Bishops"), null);
     ok("the list of visited places starts again", st.life.visited.length === 0, st.life.visited);
     ok("his garage and wardrobe come with him", st.life.garage.includes("sf90") && item(st, "gucci_tee").owned, null);
+    ok("with no home bought in the new city, his cars wait in a parking spot on its street", st.life.park.at === "street" && st.life.park.city === "London" && place(st, st.life.park.place) && place(st, st.life.park.place).kind === "home", st.life.park);
     r = await A.act("cafe:starbucks", "order", "c_flatwhite");
     ok("the Mumbai Starbucks is now a London one", r.status === 200 && /Starbucks/.test(r.j.text || ""), r.j.error);
     r = await A.act("_test", "city", "Madrid");

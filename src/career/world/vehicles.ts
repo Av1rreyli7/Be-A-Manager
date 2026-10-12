@@ -248,8 +248,8 @@ export function makeTraffic(plan: CityPlan, count: number, night: { value: numbe
   };
 }
 
-/** parked cars along the kerbs, one instanced mesh per body */
-export function makeParked(plan: CityPlan, night: { value: number }) {
+/** parked cars along the kerbs, one instanced mesh per body, none in his own parking bays (clear) */
+export function makeParked(plan: CityPlan, night: { value: number }, clear: { x: number; z: number }[] = []) {
   const mat = worldMaterial(night, { rough: 0.35, metal: 0.4 });
   const bodies: Body[] = ["hatch", "saloon", "suv", "coupe"];
   const r = rng(plan.seed + 9);
@@ -261,14 +261,18 @@ export function makeParked(plan: CityPlan, night: { value: number }) {
   const meshes = bodies.map((b, bi) => {
     const list = plan.parked.filter((p) => p[3] === bi);
     const im = new THREE.InstancedMesh(bodyGeometry(b, PAINT, "low"), mat, Math.max(1, list.length));
-    im.count = list.length;
-    list.forEach((p, k) => {
+    let k = 0;
+    for (const p of list) {
+      // every car takes its colour, kept or not, so the rest of the street looks the same
+      const paint = TRAFFIC_COLOURS[Math.floor(r() * TRAFFIC_COLOURS.length)];
+      if (clear.some((c) => Math.hypot(c.x - p[0], c.z - p[1]) < 5.4)) continue;
       q.setFromAxisAngle(up, p[2]);
       m4.compose(new THREE.Vector3(p[0], 0.12, p[1]), q, one);
       im.setMatrixAt(k, m4);
-      col.set(TRAFFIC_COLOURS[Math.floor(r() * TRAFFIC_COLOURS.length)]);
-      im.setColorAt(k, col);
-    });
+      im.setColorAt(k, col.set(paint));
+      k++;
+    }
+    im.count = k;
     im.castShadow = true;
     return im;
   });

@@ -145,7 +145,9 @@ function placeKey(place: WorldPlace, st: CareerState): string {
         "|" +
         (life.items.some((i) => i.id === "console" && i.owned) || cat.items.some((i) => i.owned && /console|playstation|xbox|ps5/i.test(i.label))) +
         "|" +
-        garageIds(st).length
+        garageIds(st).length +
+        "|" +
+        (life.park ? life.park.at + life.park.home : "")
       );
     case "training":
       return base + "|" + Object.keys(st.training.sessions).join(",");

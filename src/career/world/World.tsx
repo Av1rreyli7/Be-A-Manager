@@ -15,12 +15,12 @@ import { herDoor, newCompanion, stepTowards } from "./date";
 import { cityClock } from "./clock";
 import type { Look } from "../types";
 import type { CareerState, CatalogCar, LifeCar } from "../types";
-import { Grid, rng, type CityPlan, type PlaceSpot } from "./gen";
+import { Grid, rng, parkingBays, BAY_LEN, type Bay, type CityPlan, type PlaceSpot } from "./gen";
 import { buildGround, buildBuildings, buildPlaces, buildStreetFurniture } from "./scene";
 import { makePeople } from "./people";
 import { makeTraffic, makeParked, makeBus, bodyGeometry, lightGreen, type Body } from "./vehicles";
 import { driveStep, newDrive, type DriveState, type Feel } from "./drive";
-import { worldMaterial } from "./mesher";
+import { Mesher, worldMaterial } from "./mesher";
 import type { StreetSound } from "./audio";
 
 export interface WorldCtl {
@@ -175,7 +175,23 @@ export default function World({
   const furniture = useMemo(() => buildStreetFurniture(plan, night, q), [plan, night, q]);
   const people = useMemo(() => makePeople(plan, QUAL.people[q], night), [plan, night, q]);
   const traffic = useMemo(() => makeTraffic(plan, QUAL.traffic[q], night), [plan, night, q]);
-  const parkedCars = useMemo(() => makeParked(plan, night), [plan, night]);
+  // ---------- his parking spot on the street: with no home bought, every car he owns waits in a marked bay
+  // outside the home he lives in, the daily one nearest the door ----------
+  const parkAt = state.life.park && state.life.park.at === "street" ? state.life.park.place : "";
+  const parkSpot = useMemo(() => (parkAt ? plan.places.find((s) => s.place.id === parkAt) || null : null), [plan, parkAt]);
+  const daily = state.life.car?.id || "";
+  const fleetKey = [...new Set(state.life.garage || [])].join(",");
+  const fleet = useMemo(
+    () => {
+      const price = (id: string) => state.life.catalog?.cars.find((c) => c.id === id)?.price ?? state.life.cars.find((c) => c.id === id)?.price ?? 0;
+      return fleetKey ? fleetKey.split(",").sort((a, b) => Number(b === daily) - Number(a === daily) || price(b) - price(a)) : [];
+    },
+    // the order only changes with the cars he owns and which one is the daily
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fleetKey, daily],
+  );
+  const bays = useMemo<Bay[]>(() => (parkSpot ? parkingBays(plan, parkSpot, fleet.length) : []), [plan, parkSpot, fleet.length]);
+  const parkedCars = useMemo(() => makeParked(plan, night, bays), [plan, night, bays]);
   const bus = useMemo(() => makeBus(plan, night), [plan, night]);
   useEffect(() => () => ground.dispose(), [ground]);
   useEffect(() => () => builds.dispose(), [builds]);
@@ -235,6 +251,98 @@ export default function World({
     return spec;
   };
   useEffect(() => () => carMat.dispose(), [carMat]);
+  // the bays painted on the road, the blue P sign on the pavement, and his cars standing in them
+  const bayMarks = useMemo(() => {
+    if (!bays.length) return null;
+    const m = new Mesher();
+    const line = "#e6e2d6";
+    for (const b of bays) {
+      const tx = Math.sin(b.ry),
+        tz = Math.cos(b.ry);
+      for (const s of [-1, 1]) m.box(line, b.x + (tx * s * BAY_LEN) / 2, 0.014, b.z + (tz * s * BAY_LEN) / 2, 2.3, 0.01, 0.12, { ry: b.ry });
+      m.box(line, b.x + b.ox * 1.15, 0.014, b.z + b.oz * 1.15, 0.12, 0.01, BAY_LEN, { ry: b.ry });
+    }
+    const b0 = bays[0];
+    const px = b0.x - b0.ox * 1.75,
+      pz = b0.z - b0.oz * 1.75;
+    m.box("#8c9196", px, 1.25, pz, 0.08, 2.5, 0.08);
+    m.box("#1f5fbf", px, 2.45, pz, 0.05, 0.62, 0.62, { ry: b0.ry, day: 0.15 });
+    // a white P on each face, the right way round from the road and from the pavement
+    for (const s of [1, -1]) {
+      const fx = px + b0.ox * 0.03 * s,
+        fz = pz + b0.oz * 0.03 * s;
+      const lx = -b0.oz * s,
+        lz = b0.ox * s;
+      const P = (u: number, y: number, w: number, h: number) => m.box("#f4f4f4", fx + lx * u, 2.45 + y, fz + lz * u, 0.012, h, w, { ry: b0.ry, day: 0.3 });
+      P(0.12, 0, 0.07, 0.42);
+      P(0.02, 0.18, 0.22, 0.06);
+      P(0.02, 0, 0.22, 0.06);
+      P(-0.1, 0.09, 0.07, 0.24);
+    }
+    const mesh = new THREE.Mesh(m.build(), worldMaterial(night, { rough: 0.8 }));
+    mesh.receiveShadow = true;
+    return mesh;
+  }, [bays, night]);
+  useEffect(
+    () => () => {
+      if (!bayMarks) return;
+      bayMarks.geometry.dispose();
+      (bayMarks.material as THREE.Material).dispose();
+    },
+    [bayMarks],
+  );
+  const bayCars = useMemo(
+    () => {
+      const list: { id: string; name: string; bay: Bay; mesh: THREE.Mesh }[] = [];
+      fleet.forEach((id, i) => {
+        const b = bays[i];
+        const spec = carSpec(state, id);
+        if (!b || !spec) return;
+        const mesh = new THREE.Mesh(bodyGeometry(spec.body, spec.colour), carMat);
+        mesh.position.set(b.x, 0.02, b.z);
+        mesh.rotation.set(0, b.ry, 0);
+        mesh.castShadow = true;
+        list.push({ id, name: spec.name, bay: b, mesh });
+      });
+      return list;
+    },
+    // rebuilt for another set of cars or bays, not for every new state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fleet, bays, carMat],
+  );
+  useEffect(
+    () => () => {
+      for (const b of bayCars) b.mesh.geometry.dispose();
+    },
+    [bayCars],
+  );
+  const bayGroup = useMemo(() => {
+    const g = new THREE.Group();
+    if (bayMarks) g.add(bayMarks);
+    for (const b of bayCars) g.add(b.mesh);
+    return g;
+  }, [bayMarks, bayCars]);
+  // the nearest of his cars he can get into: the one he left in the street, or one waiting in its bay
+  const nearCar = (c: WorldCtl, r: number) => {
+    let best: { id: string; x: number; z: number; ry: number } | null = null,
+      bd = r;
+    if (c.parked) {
+      const d = Math.hypot(c.parked.x - c.x, c.parked.z - c.z);
+      if (d < bd) {
+        bd = d;
+        best = c.parked;
+      }
+    }
+    for (const b of bayCars) {
+      if (!b.mesh.visible) continue;
+      const d = Math.hypot(b.bay.x - c.x, b.bay.z - c.z);
+      if (d < bd) {
+        bd = d;
+        best = { id: b.id, x: b.bay.x, z: b.bay.z, ry: b.bay.ry };
+      }
+    }
+    return best;
+  };
 
   // ---------- doors: glowing rings on the pavement ----------
   const doorRings = useMemo(() => {
@@ -423,17 +531,17 @@ export default function World({
     lastPrompt.current = k;
     onPrompt(p);
   };
-  // the daily car waits by the kerb at home the first time he comes out
+  // the daily car waits by the kerb at home the first time he comes out (with no home bought, it is in its bay)
   useEffect(() => {
     const c = ctl.current;
-    if (c.parked || c.mode === "drive" || !homeSpot || !state.life.car) return;
+    if (c.parked || c.mode === "drive" || !homeSpot || !state.life.car || parkSpot) return;
     const [fx, fz] = homeSpot.face;
     const tx = -fz,
       tz = fx;
     const x = homeSpot.door.x + fx * (plan.walk + 1.4) + tx * 6,
       z = homeSpot.door.z + fz * (plan.walk + 1.4) + tz * 6;
     c.parked = { id: state.life.car.id, x, z, ry: Math.atan2(tx, tz) };
-  }, [homeSpot, plan, state.life.car, ctl]);
+  }, [homeSpot, plan, state.life.car, ctl, parkSpot]);
 
   useFrame(({ clock }, dt0) => {
     const dt = Math.min(dt0, 0.05);
@@ -683,6 +791,9 @@ export default function World({
       }
     } else herMark.visible = false;
 
+    // his cars in their bays: each one there unless he is out in it or has left it somewhere else
+    for (const b of bayCars) b.mesh.visible = b.id !== c.carId && b.id !== c.parked?.id;
+
     // ---------- the city round him ----------
     const far = QUAL.far[q];
     builds.stream(camera.position.x, camera.position.z, far);
@@ -757,7 +868,7 @@ export default function World({
       }
       const ped = people.near();
       const stopI = plan.stops.findIndex((s) => Math.hypot(s.x - c.x, s.z - c.z) < 3.4);
-      const carNear = c.parked && Math.hypot(c.parked.x - c.x, c.parked.z - c.z) < 3.4;
+      const carNear = nearCar(c, 3.4);
       if (door) {
         const pl = door.place;
         if (pl.minAge && age < pl.minAge) p = { key: "", text: pl.name + ": " + pl.minAge + " and over only. The doorman shakes his head." };
@@ -772,7 +883,7 @@ export default function World({
           onEnter(door!);
         };
       } else if (carNear) {
-        const spec = carSpec(state, c.parked!.id);
+        const spec = carSpec(state, carNear.id);
         p = { key: "F", text: "Get in the " + (spec ? spec.name : "car") };
         action.current = () => toggleCar.current();
       } else if (stopI >= 0) {
@@ -858,13 +969,15 @@ export default function World({
         sound.thud(0.3);
         return;
       }
-      if (c.mode === "walk" && c.parked && Math.hypot(c.parked.x - c.x, c.parked.z - c.z) < 3.6) {
-        const spec = carSpec(state, c.parked.id);
+      const near = c.mode === "walk" ? nearCar(c, 3.6) : null;
+      if (near) {
+        const spec = carSpec(state, near.id);
         if (!spec) return;
-        drive.current = newDrive(c.parked.x, c.parked.z, c.parked.ry, spec.body);
+        drive.current = newDrive(near.x, near.z, near.ry, spec.body);
         c.mode = "drive";
-        c.carId = c.parked.id;
-        c.parked = null;
+        c.carId = near.id;
+        // the car he left in the street stays where it is; the one he takes is no longer parked
+        if (c.parked && c.parked.id === near.id) c.parked = null;
         c.camDist = 9;
         sound.thud(0.3);
       }
@@ -898,6 +1011,7 @@ export default function World({
       {herRig && <primitive object={herRig.root} />}
       <primitive object={herMark} />
       <primitive object={carMesh} />
+      <primitive object={bayGroup} />
       {precip && <primitive object={precip} />}
     </primitive>
   );

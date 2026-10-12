@@ -24,7 +24,7 @@ import type { CareerState, WorldPlace } from "../types";
 import World, { worldStart, carSpec, lookStreet, zoomStreet, type WorldCtl, type Prompt } from "../world/World";
 import { attachLook, type LookCtl } from "../world/look";
 import CityMap from "../world/CityMap";
-import { makePlan, type PlaceSpot } from "../world/gen";
+import { makePlan, parkingBays, type PlaceSpot } from "../world/gen";
 import { makeStreetSound } from "../world/audio";
 import "../world/world.css";
 
@@ -384,6 +384,17 @@ export default function City({
   const c = ctlObj;
   const carName = c && c.mode === "drive" && c.carId ? carSpec(state, c.carId)?.name : null;
   const ownedHomes = life.owned.filter((o) => o.city === life.city).map((o) => o.id);
+  // where his cars are kept, for the map: the middle of his bays on the street, or the door of the home he bought
+  const park = life.park;
+  const nCars = new Set(life.garage || []).size;
+  const carsAt = useMemo(() => {
+    const parkSpot = plan && park ? plan.places.find((s) => s.place.id === park.place) || null : null;
+    if (!plan || !park || !parkSpot) return null;
+    const where = park.home === "family" ? "the family home" : park.home === "hostel" ? "the team residence" : "your " + park.name;
+    if (park.at === "garage") return { x: parkSpot.door.x, z: parkSpot.door.z, label: "In the garage at " + where, n: nCars };
+    const used = parkingBays(plan, parkSpot, nCars).slice(0, Math.max(1, nCars));
+    return { x: used.reduce((a, b) => a + b.x, 0) / used.length, z: used.reduce((a, b) => a + b.z, 0) / used.length, label: "On the street outside " + where, n: nCars };
+  }, [plan, park, nCars]);
 
   // (the loading screen over it says so until the world has drawn)
   if (!plan || !c) return <div className="pc-world" />;
@@ -645,6 +656,8 @@ export default function City({
           visited={life.visited || []}
           homeId={life.home.id}
           ownedHomes={ownedHomes}
+          cars={carsAt}
+          carName={(id) => carSpec(state, id)?.name || "Your car"}
           onClose={() => setMapOpen(false)}
           onTravel={(s) => {
             const cc = ctlObj;

@@ -659,3 +659,54 @@ export function roadLanes(p: CityPlan): Lane[] {
     }
   return out;
 }
+
+/** a bay in his parking spot: where the car stands, the way it points (along the street), and out (from the kerb into the road) */
+export interface Bay {
+  x: number;
+  z: number;
+  ry: number;
+  ox: number;
+  oz: number;
+}
+/** a bay's length along the kerb */
+export const BAY_LEN = 5.6;
+/**
+ * His parking spot on the street outside a home: marked bays in the kerbside lane in front of the door, the
+ * nearest first, then on the far kerb across the road when he has more cars than his side of the street holds.
+ * Always at least two, so the spot is there from day one. Bays stay on the block's own stretch of kerb (never
+ * out in a crossing) and out of the sea.
+ */
+export function parkingBays(plan: CityPlan, spot: PlaceSpot, cars: number): Bay[] {
+  const [fx, fz] = spot.face;
+  const tx = -fz,
+    tz = fx;
+  const inner = plan.pitch - plan.road - plan.walk * 2;
+  // the middle of the block the home stands on, and the door's place along its front
+  const mid = (v: number) => Math.round((v + plan.half - plan.pitch / 2) / plan.pitch) * plan.pitch - plan.half + plan.pitch / 2;
+  const cx = mid(spot.x),
+    cz = mid(spot.z);
+  const c0 = (spot.door.x - cx) * tx + (spot.door.z - cz) * tz;
+  const reach = inner / 2 - BAY_LEN / 2 - 0.4;
+  const kerb = inner / 2 + plan.walk;
+  const along: number[] = [];
+  for (let k = 0; k < 12; k++)
+    for (const s of [1, -1]) {
+      const a = c0 + s * (3 + k * BAY_LEN);
+      if (Math.abs(a) <= reach) along.push(a);
+    }
+  along.sort((a, b) => Math.abs(a - c0) - Math.abs(b - c0));
+  const out: Bay[] = [];
+  const want = Math.max(2, cars);
+  // his side of the street, then the far kerb; nose along the traffic in that lane, as everyone parks
+  for (const far of [false, true]) {
+    const lat = far ? kerb + plan.road - 1.3 : kerb + 1.3;
+    for (const a of along) {
+      if (out.length >= want) break;
+      const x = cx + fx * lat + tx * a,
+        z = cz + fz * lat + tz * a;
+      if (far && plan.coastZ !== null && z > plan.coastZ + plan.walk) continue;
+      out.push({ x, z, ry: Math.atan2(tx, tz) + ((plan.side === 1) !== far ? 0 : Math.PI), ox: far ? -fx : fx, oz: far ? -fz : fz });
+    }
+  }
+  return out;
+}

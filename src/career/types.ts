@@ -404,10 +404,20 @@ export interface Life {
   catalog?: LifeCatalog;
   visited?: string[];
   garage?: string[];
+  /** where every car he owns is kept: his parking spot on the street outside the home he lives in, or the garage of a home he has bought */
+  park?: LifePark;
   cityOutfit?: CityOutfit;
   fame?: number;
   moments?: LifeMoment[];
   week?: LifeWeek;
+}
+/** where his cars are kept: the place is the home's place in the city ("home:shared"), name its name there */
+export interface LifePark {
+  at: "street" | "garage";
+  home: string;
+  city: string;
+  place: string;
+  name: string;
 }
 /** this week's small counters: cafe orders, supermarket buys and street fans used of their limits, the clinic */
 export interface LifeWeek {

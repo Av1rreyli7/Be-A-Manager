@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/immutability -- the world's controller is a plain object the map moves on purpose (the waypoint) */
 /**
  * The city map (M or the Map button): the streets, the districts, the sea, every place, his home, the bus
- * stops and where he is. Click anywhere to set a waypoint (a beam in the street and an arrow on the screen
+ * stops, where his cars are parked (a blue P) and where he is. Click anywhere to set a waypoint (a beam in the street and an arrow on the screen
  * lead him there); click a place he has been to, or pick it from the list, to go straight there.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -61,6 +61,8 @@ export default function CityMap({
   visited,
   homeId,
   ownedHomes,
+  cars,
+  carName,
   onClose,
   onTravel,
 }: {
@@ -69,6 +71,10 @@ export default function CityMap({
   visited: string[];
   homeId: string;
   ownedHomes: string[];
+  /** where his cars are kept: his bays on the street or the garage of the home he bought (null before he has a spot) */
+  cars: { x: number; z: number; label: string; n: number } | null;
+  /** a car's name, for one he has left somewhere else */
+  carName: (id: string) => string;
   onClose: () => void;
   onTravel: (s: PlaceSpot) => void;
 }) {
@@ -161,6 +167,24 @@ export default function CityMap({
           g.globalAlpha = 1;
         }
         const c = ctl.current;
+        // his cars: a blue P where they are kept, a smaller one for a car he has left somewhere else
+        const pin = (px: number, pz: number, r: number) => {
+          g.fillStyle = "#1f5fbf";
+          g.strokeStyle = "#ffffff";
+          g.lineWidth = 2;
+          g.beginPath();
+          g.roundRect(X(px) - r, X(pz) - r, r * 2, r * 2, r * 0.35);
+          g.fill();
+          g.stroke();
+          g.fillStyle = "#ffffff";
+          g.font = "800 " + Math.round(r * 1.3) + "px Inter, system-ui, sans-serif";
+          g.textAlign = "center";
+          g.textBaseline = "middle";
+          g.fillText("P", X(px), X(pz) + 1);
+        };
+        if (cars) pin(cars.x, cars.z, 11);
+        const left = c.parked;
+        if (left && (!cars || Math.hypot(left.x - cars.x, left.z - cars.z) > 12)) pin(left.x, left.z, 8);
         if (c.waypoint) {
           g.strokeStyle = "#ffd35c";
           g.lineWidth = 3;
@@ -197,7 +221,7 @@ export default function CityMap({
     return () => cancelAnimationFrame(raf);
     // known() reads the props each frame
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [base, plan, ctl, visited, homeId]);
+  }, [base, plan, ctl, visited, homeId, cars]);
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
@@ -289,6 +313,42 @@ export default function CityMap({
             </div>
           )}
           <ul className="pc-map-list">
+            {(cars || ctl.current.parked) && (
+              <li>
+                <span className="k-label">Your cars</span>
+                {cars && (
+                  <button
+                    type="button"
+                    className="pc-map-row"
+                    onClick={() => {
+                      setSel(null);
+                      ctl.current.waypoint = { x: cars.x, z: cars.z };
+                    }}
+                  >
+                    <i style={{ background: "#1f5fbf" }} />
+                    {cars.label}
+                    {cars.n ? " (" + cars.n + (cars.n === 1 ? " car)" : " cars)") : " (empty)"}
+                  </button>
+                )}
+                {(() => {
+                  const left = ctl.current.parked;
+                  if (!left || (cars && Math.hypot(left.x - cars.x, left.z - cars.z) <= 12)) return null;
+                  return (
+                    <button
+                      type="button"
+                      className="pc-map-row"
+                      onClick={() => {
+                        setSel(null);
+                        ctl.current.waypoint = { x: left.x, z: left.z };
+                      }}
+                    >
+                      <i style={{ background: "#1f5fbf" }} />
+                      {carName(left.id)}, where you left it
+                    </button>
+                  );
+                })()}
+              </li>
+            )}
             {groups.map(([label, list]) => (
               <li key={label}>
                 <span className="k-label">{label}</span>

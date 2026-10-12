@@ -1,8 +1,11 @@
 // The open city's plan (src/career/world/gen.ts): every place gets a lot and a door he can reach, the same city
 // always comes out the same, different cities come out different, the sea and rivers go where they should, the
-// bus loop is closed with stops on it, and the collision grid keeps him out of buildings but not off pavements.
+// bus loop is closed with stops on it, the collision grid keeps him out of buildings but not off pavements, and
+// every home has a parking spot for his cars on its own stretch of kerb.
 import { describe, expect, it } from "vitest";
-import { makePlan, Grid, roadLanes } from "../src/career/world/gen";
+import * as THREE from "three";
+import { makePlan, Grid, roadLanes, parkingBays, BAY_LEN } from "../src/career/world/gen";
+import { makeParked } from "../src/career/world/vehicles";
 import type { CityStyle, WorldPlace } from "../src/career/types";
 
 const style = (o: Partial<CityStyle> = {}): CityStyle => ({ key: "default", climate: "temperate", sky: ["#0b1630", "#e58a52"], ground: "#1d2420", build: "#2b3138", accent: "#d0e85c", height: 1, water: false, districts: ["Old Town", "Riverside", "Hillside", "The Docks"], ...o });
@@ -165,5 +168,65 @@ describe("the city plan", () => {
   it("keeps parked cars clear of every door", () => {
     const plan = makePlan("London", style({ key: "London", water: true }), PLACES, 8, 3);
     for (const [x, z] of plan.parked) for (const s of plan.places) expect(Math.hypot(s.door.x - x, s.door.z - z)).toBeGreaterThanOrEqual(12);
+  });
+
+  it("gives every home a parking spot: bays in the kerbside lane by the door, never in a crossing, never overlapping", () => {
+    const cell = (v: number, plan: { half: number; pitch: number }) => ((((v + plan.half) % plan.pitch) + plan.pitch) % plan.pitch) - plan.pitch / 2;
+    for (const [city, water, tier] of [
+      ["London", true, 3],
+      ["Barcelona", true, 3],
+      ["Manchester", true, 2],
+      ["Riyadh", false, 2],
+    ] as const) {
+      const plan = makePlan(city, style({ key: city, water }), PLACES, 8, tier);
+      const inner = plan.pitch - plan.road - plan.walk * 2;
+      const roadEdge = plan.pitch / 2 - plan.road / 2;
+      for (const s of plan.places.filter((p) => p.place.kind === "home")) {
+        for (const n of [0, 1, 3, 6, 12]) {
+          const bays = parkingBays(plan, s, n);
+          // always a spot from day one, and room for every car a player without a home is likely to have
+          if (n <= 6) expect(bays.length).toBe(Math.max(2, n));
+          else expect(bays.length).toBeGreaterThanOrEqual(7);
+          for (const b of bays) {
+            const ax = Math.abs(cell(b.x, plan)),
+              az = Math.abs(cell(b.z, plan));
+            // across: out in the road by a kerb; along: on the block's own stretch, short of the crossing
+            const [across, along] = ax > roadEdge ? [ax, az] : [az, ax];
+            expect(across).toBeGreaterThan(roadEdge);
+            expect(along).toBeLessThanOrEqual(inner / 2 - BAY_LEN / 2 + 1e-6);
+            if (plan.coastZ !== null) expect(b.z).toBeLessThan(plan.coastZ + plan.walk + plan.road);
+            expect(Number.isFinite(b.ry)).toBe(true);
+          }
+          for (let i = 0; i < bays.length; i++) for (let j = i + 1; j < bays.length; j++) expect(Math.hypot(bays[i].x - bays[j].x, bays[i].z - bays[j].z)).toBeGreaterThanOrEqual(BAY_LEN - 1e-6);
+        }
+        // the first bay is right outside the door
+        const [b0] = parkingBays(plan, s, 1);
+        expect(Math.hypot(b0.x - s.door.x, b0.z - s.door.z)).toBeLessThan(6);
+      }
+    }
+  });
+
+  it("clears the street's parked cars out of his bays and leaves the rest as they were", () => {
+    const plan = makePlan("London", style({ key: "London", water: true }), PLACES, 8, 3);
+    const night = { value: 0 };
+    const all = makeParked(plan, night);
+    const count = (p: ReturnType<typeof makeParked>) => p.meshes.reduce((a, m) => a + m.count, 0);
+    expect(count(all)).toBe(plan.parked.length);
+    for (const s of plan.places.filter((p) => p.place.kind === "home")) {
+      const bays = parkingBays(plan, s, 12);
+      const clear = makeParked(plan, night, bays);
+      const hit = plan.parked.filter((p) => bays.some((b) => Math.hypot(b.x - p[0], b.z - p[1]) < 5.4)).length;
+      expect(count(clear)).toBe(plan.parked.length - hit);
+      const m4 = new THREE.Matrix4(),
+        v = new THREE.Vector3();
+      for (const im of clear.meshes)
+        for (let k = 0; k < im.count; k++) {
+          im.getMatrixAt(k, m4);
+          v.setFromMatrixPosition(m4);
+          for (const b of bays) expect(Math.hypot(b.x - v.x, b.z - v.z)).toBeGreaterThanOrEqual(5.4);
+        }
+      clear.dispose();
+    }
+    all.dispose();
   });
 });

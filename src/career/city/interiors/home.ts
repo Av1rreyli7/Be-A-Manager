@@ -196,8 +196,9 @@ export function homeRoom(k: Kit, p: WorldPlace): Room {
     k.spot("trophies", "Trophy shelf", tx + ts * 1.0, tz, { r: 1.0, y: 1.4 });
     k.spot("rest", tier <= 1 ? "Lie down and rest" : "Rest", bx - (tier <= 1 ? 1.0 : 1.5), bz + 0.6, { r: 1.1, y: 1.0 });
     if (consoleOwned) k.spot("unwind", "Play some games", lx + 0.9, lz - 0.9, { r: 1.0, y: 1.2 });
-    if (tier >= 2) {
-      // the door down to the garage, the lift in the bigger homes
+    // the door down to the garage, the lift in the bigger homes: in the home he has bought that keeps his cars
+    // (with no home bought they wait in his parking spot on the street)
+    if (tier >= 2 && (!life.park || (life.park.at === "garage" && life.park.home === id))) {
       const gx = W / 2 - 0.12,
         gz = D / 2 - 2.0;
       k.box(0.1, 2.3, 1.3, mat(tier >= 3 ? "#c8ccd2" : "#6a5a4a", { metal: tier >= 3 ? 0.8 : 0, rough: 0.3 }), gx, 1.15, gz);

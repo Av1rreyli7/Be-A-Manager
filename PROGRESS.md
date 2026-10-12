@@ -1214,3 +1214,33 @@ Checklist (commit locally after each phase; each phase is tested before the next
       change from the card, Back to Career, a second entry shows the loader again. Screenshots in
       Be-A-Manager/acceptance_shots/open_world. One battery fix for chance in the simulated career: a benched
       pro at a stacked club is made good enough to start before the live league match check. test:all green.
+
+## Cars always have a parking spot
+
+- [x] Every player has a parking spot from day one: with no home bought, every car he owns waits in marked bays
+      on the street outside the home he lives in (the family home, the team residence, a rented flat), the
+      daily one nearest the door, with a blue P sign on the pavement. Walk up to any of them and F drives it out.
+      More cars than his side of the street holds go on the far kerb. The street's own parked cars keep clear.
+      The server keeps the spot on the save (life.park): the street outside where he lives, or the garage of a
+      home he has bought in this city.
+- [x] Buying a car with no home bought puts it in that spot, and the dealer texts him where it is ("parked in
+      your spot on the street outside the family home ... marked on your map"). Buying a home moves every car he
+      owns into its garage at once. The garage door inside a home only shows where his cars are kept, so a
+      rented flat no longer shows a second copy of them.
+- [x] On load the spot is worked out again, so cars from an old save with no home, cars pointing at the garage
+      of a home he has sold, and cars left in another city's spot all come back to his parking spot.
+- [x] The map marks his cars with a blue P (the bays, or the garage of his home), a smaller P for a car he
+      left somewhere else, and a "Your cars" row that sets a waypoint there.
+      Checked: life battery 251 (11 new: recovery on load for an old save, a sold home and another city, the
+      dealer's text, the move into a bought home's garage, cars staying there, a new city's street spot),
+      vitest 103 (2 new: bays on the block's own kerb, never in a crossing or overlapping, and the street's
+      parked cars cleared from them with the rest unchanged). test:all green: vitest 103, test_condition 138,
+      test_sept 257, test_dom_sept 167, test_match3d 177, test_layout 222, test_career 149 to 150,
+      test_career_life 251, test_site 202, test_boot 52. Two of the runs hit rare chance failures in
+      test_sept.js's Manager Career sections, which this change does not touch: one player kept his club but
+      had a new deal (the "contracts did not tick down" check), and one test manager was sacked and not
+      back in a job when the transfer events section read his club. Left as they are (no other changes).
+      In headless Chrome on the production build: the Yaris, the Activa and the M3 in their bays outside the
+      family home in Mumbai, the P sign the right way round from the road and the pavement, F gets in the
+      Yaris from its bay, and the map's blue P with "On the street outside the family home (3 cars)".
+      Screenshots in Be-A-Manager/acceptance_shots/parking.

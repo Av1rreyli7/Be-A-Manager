@@ -219,6 +219,30 @@ function makeLife(K) {
   function sellers(w) { return new Set(w.places.filter(x => x.kind === "store" || x.kind === "watches").map(x => x.id)); }
   const soldHere = (w, item) => sellers(w).has(item.store) && (item.minTier || 1) <= w.tier;
 
+  // ---------- where his cars are kept ----------
+  // every car he owns waits in one spot: the garage of a home he has bought in this city (the one he lives in,
+  // else the dearest), or with no home bought here, his parking spot on the street outside the home he lives in
+  // (the family home, the residence, a rented flat). Worked out again on every load, so an old save, a sold home
+  // or a move to a new city never leaves a car with nowhere to be.
+  function parking(game, w) {
+    const c = C(game), life = L0(game);
+    w = w || world(game);
+    const homes = w.places.filter(x => x.kind === "home");
+    const owned = homes.filter(x => x.owned);
+    const was = life.park;
+    let at;
+    if (owned.length) {
+      at = (was && was.at === "garage" && was.city === c.city && owned.find(x => x.homeId === was.home)) || owned.find(x => x.living) || owned.slice().sort((a, b) => homeOf(b.homeId).buy - homeOf(a.homeId).buy)[0];
+      life.park = { at: "garage", home: at.homeId, city: c.city };
+    } else {
+      at = homes.find(x => x.living) || homes.find(x => x.homeId === life.home.id) || homes.find(x => x.homeId === "shared") || homes[0];
+      life.park = { at: "street", home: at.homeId, city: c.city };
+    }
+    return { at: life.park.at, home: life.park.home, city: c.city, place: at.id, name: at.name };
+  }
+  // the parking spot in a text: "the family home", "the team residence", or "your Bandra shared flat"
+  const parkedOutside = pk => pk.home === "family" ? "the family home" : pk.home === "hostel" ? "the team residence" : "your " + pk.name;
+
   function pickWeather(game) {
     const c = C(game);
     const st = styleOf(c.city, cityCountry(game));
@@ -501,6 +525,12 @@ function makeLife(K) {
     c.cond.morale = clamp(c.cond.morale + 3 + car.tier, 5, 99);
     if (car.tier >= 4) news(game, p.name + " is spotted in a new " + car.brand + " " + car.model + ".", "life");
     carMoments(game, car);
+    // no home bought: the dealer leaves it in his parking spot on the street and texts him where
+    const w = world(game), pk = parking(game, w);
+    if (pk.at === "street") {
+      const dealer = placeIn(w, car.dealer);
+      msg(game, car.dealer || "dealer", dealer ? dealer.name : "The dealer", "Your " + car.brand + " " + car.model + " is parked in your spot on the street outside " + parkedOutside(pk) + ". The keys are yours and it is marked on your map. Enjoy it!");
+    }
     return { ok: true, text: "The " + car.brand + " " + car.model + " is yours." };
   }
   // what a car fetches back: 85 percent in its first half season, down to 70
@@ -759,11 +789,13 @@ function makeLife(K) {
         if (!spend(game, h.buy, "Bought a " + h.label.toLowerCase() + " in " + c.city)) return { error: "You cannot afford it yet." };
         life.owned.push({ id: h.id, city: c.city, price: h.buy });
         life.home = { id: h.id, city: c.city, mode: "own" };
+        // every car he owns moves into the new home's garage
+        life.park = { at: "garage", home: h.id, city: c.city };
         news(game, p.name + " buys a " + h.label.toLowerCase() + " in " + c.city + ".", "life");
         const wp = placeIn(w, "home:" + h.id);
         if (!life.firsts.home) msg(game, "mum", "Mum", "Your own place! Send me photos of every room. Is there space for us to visit?");
         moment(game, "home", "home", "The keys to your own place", "The " + (wp ? wp.name : h.label.toLowerCase()) + ". Yours. Nobody can ask you to move out again.", { item: h.id, price: h.buy });
-        return out("The keys are yours. A " + h.label.toLowerCase() + " in " + c.city + ".");
+        return out("The keys are yours. A " + h.label.toLowerCase() + " in " + c.city + "." + (life.cars.length ? " Your " + (life.cars.length === 1 ? "car is" : "cars are") + " in its garage now." : ""));
       }
       if (mode === "live") return { error: "Pick buy or rent." };
       if (!h.rent) return { error: "That one is not for rent." };
@@ -939,6 +971,7 @@ function makeLife(K) {
     const fame = fameOf(c);
     const cash = c.money.cash;
     const w = buildWorld(c.city, country, whoOf(game));
+    const park = parking(game, w);
     const cc = carCosts(life);
     const weeklyCost = (life.home.mode === "rent" ? h.rent : life.home.mode === "own" ? h.upkeep : 0) + (car ? car.upkeep : 0) + cc.stored + billsOf(c, h);
     const name = id => (placeIn(w, id) || {}).name || "";
@@ -995,7 +1028,7 @@ function makeLife(K) {
           clinic: L.CLINIC_MENU.map(m => ({ id: m.id, label: m.label, price: m.price, note: m.note, time: m.time }))
         }
       },
-      visited, garage: life.cars.slice(), cityOutfit: cityOutfit(life), fame,
+      visited, garage: life.cars.slice(), park, cityOutfit: cityOutfit(life), fame,
       moments: life.moments.slice(0, 8),
       week: (() => { const wk = life.wk && life.wk.at === weekIndex(game) ? life.wk : { cafe: 0, market: 0, fans: 0, treat: false, checkup: false }; return { cafe: wk.cafe, market: wk.market, fans: wk.fans, treat: !!wk.treat, checkup: !!wk.checkup, limits: LIMIT, guarded: guard(game) < 1 }; })()
     };
