@@ -160,7 +160,8 @@ ok("no old free agent release wording", !html.includes("free agent for anyone to
 
 // scripts still parse
 const blocks = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
-ok("two script blocks found", blocks.length === 2, blocks.length);
+// the small one at the top keeps the lobby from flashing while a saved room loads, then the page and its extras
+ok("three script blocks found", blocks.length === 3, blocks.length);
 for (let i = 0; i < blocks.length; i++) {
   let good = true, msg = "";
   try { new Function(blocks[i][1]); } catch (e) { good = false; msg = e.message; }

@@ -67,15 +67,42 @@ app.use("/floodlights/fonts", express.static(path.join(__dirname, "fonts"), { ma
 // FL_SAVE_FILE lets test runs keep their own save file so two runs never share one
 const SAVE_FILE = process.env.FL_SAVE_FILE || path.join(__dirname, "games.json");
 let games = {};
-try { games = JSON.parse(fs.readFileSync(SAVE_FILE, "utf8")); } catch (e) { games = {}; }
+try { games = JSON.parse(fs.readFileSync(SAVE_FILE, "utf8")) || {}; } catch (e) { games = {}; }
 
-let saveTimer = null;
-function save() {
+// Every change is written a moment later. The save goes to a side file first and is then swapped in, so a
+// crash or a restart in the middle of a write never leaves a broken save. When the server is told to stop,
+// the last change is written at once, so a normal restart keeps every room.
+let saveTimer = null, dirty = false, writing = false;
+function writeSave(now) {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    fs.writeFile(SAVE_FILE, JSON.stringify(games), () => {});
-  }, 500);
+  saveTimer = null;
+  if (!dirty) return;
+  const tmp = SAVE_FILE + ".tmp";
+  if (now) {
+    dirty = false;
+    try { fs.writeFileSync(tmp, JSON.stringify(games)); fs.renameSync(tmp, SAVE_FILE); } catch (e) { console.error("Could not save the games:", e.message); }
+    return;
+  }
+  if (writing) { saveTimer = setTimeout(() => writeSave(false), 100); return; }
+  dirty = false;
+  writing = true;
+  fs.writeFile(tmp, JSON.stringify(games), err => {
+    const done = e2 => { writing = false; if (e2) { console.error("Could not save the games:", e2.message); dirty = true; } if (dirty && !saveTimer) saveTimer = setTimeout(() => writeSave(false), 250); };
+    if (err) return done(err);
+    fs.rename(tmp, SAVE_FILE, done);
+  });
 }
+function save() {
+  dirty = true;
+  if (!saveTimer) saveTimer = setTimeout(() => writeSave(false), 250);
+}
+for (const sig of ["SIGTERM", "SIGINT"]) process.once(sig, () => { writeSave(true); process.exit(0); });
+process.once("beforeExit", () => writeSave(true));
+// a change the player made through the API is always saved, even where a route forgot to ask for it
+app.use((req, res, next) => {
+  if (req.method === "POST" && req.path.startsWith("/api/")) res.on("finish", () => { if (res.statusCode < 400) save(); });
+  next();
+});
 
 const BIG_CLUBS = ["Man City", "Liverpool", "Arsenal", "Chelsea", "Man United", "Tottenham", "Newcastle",
   "Real Madrid", "Barcelona", "Atletico Madrid", "Bayern Munich", "Borussia Dortmund", "PSG",
@@ -440,6 +467,7 @@ function simCupsForWeek(game) {
   advanceReadyCups(game);
 }
 
+function newUid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
 function code4() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let c = "";
@@ -1172,6 +1200,8 @@ function newGame(hostName) {
   const premTeams = Object.values(clubs).filter(c => c.prem).map(c => c.name);
   const game = {
     code: code4(),
+    // tells this game apart from another one that later gets the same code (a copy put back after a restart)
+    uid: newUid(),
     host: hostName,
     users: { [hostName]: { name: hostName, team: null, nation: null } },
     players: playerMap,
@@ -2101,6 +2131,43 @@ app.post("/api/join", (req, res) => {
     save();
   }
   res.json({ code: game.code });
+});
+
+// ---------- a copy of the save on the player's own device ----------
+// The free server forgets every room when it sleeps or restarts. Each browser keeps a packed copy of its own
+// game (GET /api/save/copy) and can hand it back (POST /api/save/restore) to open the same room again.
+const zlib = require("zlib");
+function sameGame(a, b) {
+  if (a.uid && b.uid) return a.uid === b.uid;
+  const who = g => Object.keys(g.users || {}).sort().join("|");
+  return a.host === b.host && who(a) === who(b);
+}
+app.get("/api/save/copy", (req, res) => {
+  const game = games[String(req.query.code || "").toUpperCase()];
+  if (!game) return res.status(404).json({ error: "Game not found." });
+  if (!game.users || !game.users[String(req.query.name || "")]) return res.status(403).json({ error: "You are not in this game." });
+  if (!game.uid) { game.uid = newUid(); save(); }
+  res.set("Cache-Control", "no-store");
+  res.type("application/gzip").send(zlib.gzipSync(JSON.stringify(game)));
+});
+app.post("/api/save/restore", express.raw({ type: "application/gzip", limit: "25mb" }), (req, res) => {
+  const name = String(req.query.name || "");
+  let game = null;
+  try { game = JSON.parse(zlib.gunzipSync(req.body).toString("utf8")); } catch (e) { game = null; }
+  const ok = game && typeof game === "object" && typeof game.code === "string" && game.users && game.users[name] &&
+    (game.mode === "player" ? !!game.career : !!(game.clubs && game.players));
+  if (!ok) return res.status(400).json({ error: "This copy of the game could not be read." });
+  const code = game.code.toUpperCase();
+  const live = games[code];
+  // a friend already put the room back: just go back in, their copy stays
+  if (live && sameGame(live, game)) return res.json({ code, mode: live.mode || "manager", restored: false });
+  // the code went to another game in the meantime: this one comes back under a new code
+  game.code = live ? code4() : code;
+  if (!game.uid) game.uid = newUid();
+  games[game.code] = game;
+  migrate(game);
+  save();
+  res.json({ code: game.code, mode: game.mode || "manager", restored: true });
 });
 
 function migrate(game) {

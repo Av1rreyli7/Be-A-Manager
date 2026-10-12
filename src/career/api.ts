@@ -39,10 +39,43 @@ export class ApiError extends Error {
   decision?: { id: string; kind: string; title: string };
   event?: LifeEvent;
   seasonOver?: boolean;
+  /** the server answered; false when it could not be reached at all */
+  answered = true;
 }
 
+/** fired once when the save is gone from the server (a restart cleared it); the career page shows its end screen */
+export const ENDED_EVENT = "pc:ended";
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/**
+ * One request. The free server sleeps when nobody plays: while it wakes up (no answer, or 502 to 504) the page
+ * asks again quietly for up to a minute. A change (POST) that never reached the server is not sent twice.
+ */
+export async function send(path: string, init: RequestInit, retryPost = false): Promise<Response> {
+  const t0 = Date.now();
+  for (let i = 0; ; i++) {
+    let r: Response | null = null;
+    try {
+      r = await fetch(path, init);
+    } catch {
+      if (init.method === "POST" && !retryPost) {
+        const e = new ApiError("Could not reach the server. Check your connection and try again.");
+        e.answered = false;
+        throw e;
+      }
+    }
+    if (r && r.status !== 502 && r.status !== 503 && r.status !== 504) return r;
+    if (Date.now() - t0 > 60000) {
+      const e = new ApiError("The server is not answering. Try again in a minute.");
+      e.answered = false;
+      throw e;
+    }
+    await sleep(Math.min(4000, 500 * (i + 1)));
+  }
+}
+
+let copyDirty = true;
 async function call<T>(path: string, body?: Record<string, unknown>): Promise<T> {
-  const r = await fetch(
+  const r = await send(
     path,
     body
       ? {
@@ -59,14 +92,75 @@ async function call<T>(path: string, body?: Record<string, unknown>): Promise<T>
     /* an empty or broken reply is reported below */
   }
   if (!r.ok) {
+    // the save is gone: the end screen takes over, and whatever asked never shows an error
+    if (r.status === 404 && j.error === "Game not found." && typeof window !== "undefined") {
+      window.dispatchEvent(new Event(ENDED_EVENT));
+      return new Promise<T>(() => {});
+    }
     const e = new ApiError(String(j.error || "Something went wrong."));
     if (j.decision) e.decision = j.decision as ApiError["decision"];
     if (j.seasonOver) e.seasonOver = true;
     if (j.event) e.event = j.event as LifeEvent;
     throw e;
   }
+  if (body) copyDirty = true;
   return j as T;
 }
+
+// ---------- a copy of the career on this device, to put it back after a server restart ----------
+// The same little store the Floodlights page keeps its copies in (IndexedDB "floodlights", "copies").
+export interface SaveCopy {
+  code: string;
+  name: string;
+  at: number;
+  data: ArrayBuffer;
+}
+function copyStore<T>(mode: IDBTransactionMode, fn: (st: IDBObjectStore) => IDBRequest | void): Promise<T | null> {
+  return new Promise<T | null>((res) => {
+    try {
+      const q = indexedDB.open("floodlights", 1);
+      q.onupgradeneeded = () => q.result.createObjectStore("copies");
+      q.onerror = () => res(null);
+      q.onsuccess = () => {
+        const t = q.result.transaction("copies", mode);
+        const rq = fn(t.objectStore("copies"));
+        t.oncomplete = () => res(rq ? (rq.result as T) : null);
+        t.onerror = () => res(null);
+      };
+    } catch {
+      res(null);
+    }
+  });
+}
+export const careerCopy = {
+  get: (code: string) => copyStore<SaveCopy>("readonly", (st) => st.get(code)),
+  lastAt: 0,
+  busy: false,
+  /** a fresh copy when something changed and the last one is half a minute old */
+  async take(s: Saved, force = false) {
+    if (this.busy || (!force && (!copyDirty || Date.now() - this.lastAt < 30000))) return;
+    this.busy = true;
+    try {
+      const r = await fetch(`/api/save/copy?code=${encodeURIComponent(s.code)}&name=${encodeURIComponent(s.name)}`, { cache: "no-store" });
+      if (r.ok) {
+        const rec: SaveCopy = { code: s.code, name: s.name, at: Date.now(), data: await r.arrayBuffer() };
+        await copyStore("readwrite", (st) => st.put(rec, rec.code));
+        this.lastAt = Date.now();
+        copyDirty = false;
+      }
+    } catch {
+      /* the next one will do */
+    }
+    this.busy = false;
+  },
+  /** hands the copy back to the server; the reply has the code it opened under (a new one if the old was taken) */
+  async restore(copy: SaveCopy): Promise<Saved> {
+    const r = await send(`/api/save/restore?name=${encodeURIComponent(copy.name)}`, { method: "POST", headers: { "Content-Type": "application/gzip" }, body: copy.data }, true);
+    const j = (await r.json().catch(() => ({}))) as { code?: string; error?: string };
+    if (!r.ok || !j.code) throw new ApiError(j.error || "Something went wrong.");
+    return { code: j.code, name: copy.name };
+  },
+};
 
 export interface StateReply {
   state: CareerState;

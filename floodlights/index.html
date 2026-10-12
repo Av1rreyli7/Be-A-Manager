@@ -97,6 +97,18 @@ td:last-child:has(button){text-align:right}
 td[class^="pos-"]{font-family:var(--f-num);font-weight:600;font-size:12px;letter-spacing:.03em}
 .pos-GK{color:var(--warm)}.pos-DF{color:var(--sky)}.pos-MF{color:var(--grass)}.pos-FW{color:var(--softred)}
 .msg{color:var(--volt);min-height:18px;font-size:13px;font-weight:500;margin-top:10px}
+/* a saved game loading (or the server waking up): one still screen, nothing behind it flashes */
+#gate{position:fixed;inset:0;z-index:50;display:grid;place-content:center;justify-items:center;gap:16px;background:var(--night);color:var(--soft);font-family:var(--f-lbl);font-size:12px;letter-spacing:.18em;text-transform:uppercase}
+#gate.hidden{display:none}
+body.resuming #lobby{visibility:hidden}
+.gatedots{display:flex;gap:9px}
+.gatedots i{width:9px;height:9px;border-radius:50%;background:var(--volt);opacity:.25;animation:gatedot 1.2s ease-in-out infinite}
+.gatedots i:nth-child(2){animation-delay:.2s}.gatedots i:nth-child(3){animation-delay:.4s}
+@keyframes gatedot{0%,100%{opacity:.25;transform:scale(.85)}40%{opacity:1;transform:scale(1)}}
+/* the room is gone: one card in the lobby says so, with the way back */
+#endedCard .endedh{font-size:22px;font-weight:800;line-height:1.2;margin:6px 0 10px}
+#endedCard .endedp{font-size:14px;line-height:1.55;color:var(--soft);margin-bottom:14px}
+#endedCard .row button{flex:1}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:24px}
 @media(max-width:820px){.grid2{grid-template-columns:1fr}}
@@ -485,7 +497,7 @@ td.num .rt{margin-left:auto}
 
 /* ---------- people who ask for less motion get a still page ---------- */
 @media (prefers-reduced-motion: reduce){
-  .pulse,.ctrophy,#matchday .waiting,#lobby h1 span,section[id^="tab-"],.mcard,.goalpop{animation:none}
+  .pulse,.ctrophy,#matchday .waiting,#lobby h1 span,section[id^="tab-"],.mcard,.goalpop,.gatedots i{animation:none}
   button,input,select,.confbar span{transition:none}
 }
 
@@ -738,6 +750,10 @@ tr.shim .k-shimmer{height:26px;border-radius:4px}
 <link rel="stylesheet" href="/kit.css">
 </head>
 <body data-kapp="fl">
+<script>
+// a saved room: keep the lobby from painting for a moment before the loading screen takes over
+try { if (localStorage.getItem("fl_code") && localStorage.getItem("fl_name") && location.hash !== "#pcmatch") document.body.classList.add("resuming"); } catch (e) { /* storage blocked: the lobby shows */ }
+</script>
 <!-- shared shading for the lineup shirts: light from the top, a soft fold down each side -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
   <linearGradient id="shirtShade" x1="0" y1="0" x2="1" y2="1">
@@ -810,8 +826,17 @@ tr.shim .k-shimmer{height:26px;border-radius:4px}
       <div class="msg" id="lobbyMsg"></div>
       <a class="pcentry" href="/floodlights/career"><b>Player Career</b><span>Create one footballer and live his whole career, school to superstar.</span><i aria-hidden="true">&rarr;</i></a>
     </div>
+    <div class="card hidden" id="endedCard" role="alert">
+      <span class="flab">Room <b id="endedCode" class="mono"></b></span>
+      <h2 class="endedh">This game session ended</h2>
+      <p class="endedp" id="endedText"></p>
+      <div class="row hidden" id="restoreRow"><button id="restoreBtn" class="gold">Restore the game</button></div>
+      <div class="row"><button id="endedNew">Create a new game</button><button id="endedHome" class="ghost">Go home</button></div>
+      <div class="msg" id="endedMsg"></div>
+    </div>
   </div>
 </div>
+<div id="gate" class="hidden" role="status" aria-live="polite"><span class="gatedots" aria-hidden="true"><i></i><i></i><i></i></span><span id="gateText">Loading your game</span></div>
 
 <div id="app" class="hidden">
   <div class="ticker" id="tickerBar" data-label="TRANSFER WIRE"><div class="ticker-inner" id="ticker">Welcome to the league.</div></div>
@@ -1123,14 +1148,134 @@ const $ = id => document.getElementById(id);
 // the site's motion kit (public/kit-motion.js on GSAP); null if it failed to load, and then nothing animates
 const KM = window.KitMotion || null;
 
+// The free server sleeps when nobody plays and forgets every room when it restarts. While it wakes up the page
+// asks again quietly for up to a minute (the LIVE chip says RECONNECTING). A room that is gone for good ends
+// the session once, on one clean screen, instead of a stale page where every button fails.
+class Ended extends Error {}
+let IN_ROOM = false, ENDED = false;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let WAKING = false, liveText = "";
+function setWaking(on) {
+  // only when it changes, so the chip never flips on a normal answer
+  if (on === WAKING) return;
+  WAKING = on;
+  const live = $("hLive");
+  if (live) { if (on) { liveText = live.textContent; live.textContent = "RECONNECTING"; } else live.textContent = liveText || "LIVE"; }
+  if (on && !$("gate").classList.contains("hidden")) $("gateText").textContent = "Waking the server up";
+}
+async function send(url, opts, retryPost) {
+  const t0 = Date.now();
+  for (let i = 0; ; i++) {
+    let r = null;
+    try { r = await fetch(url, opts); }
+    catch (e) { if (opts.method === "POST" && !retryPost) { setWaking(false); throw new Error("Could not reach the server. Check your connection and try again."); } }
+    if (r && r.status !== 502 && r.status !== 503 && r.status !== 504) { setWaking(false); return r; }
+    if (Date.now() - t0 > 60000) { setWaking(false); throw new Error("The server is not answering. Try again in a minute."); }
+    setWaking(true);
+    await sleep(Math.min(4000, 500 * (i + 1)));
+  }
+}
 async function api(path, body) {
   const opts = body ? { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ code: ME.code, name: ME.name, ...body }) } : {};
   const url = body ? path : path + (path.includes("?") ? "&" : "?") + "code=" + ME.code + "&name=" + encodeURIComponent(ME.name);
-  const r = await fetch(url, opts);
+  const r = await send(url, opts);
   const j = await r.json().catch(()=>({error:"Server error"}));
-  if (!r.ok) throw new Error(j.error || "Something went wrong");
+  if (!r.ok) {
+    if (r.status === 404 && /^Game not found\.$/.test(j.error || "") && IN_ROOM) {
+      // the room is gone: the end screen takes over, and the button that asked never shows an error box
+      sessionEnded();
+      return new Promise(() => {});
+    }
+    const e = new Error(j.error || "Something went wrong");
+    e.data = j;
+    throw e;
+  }
+  if (body && IN_ROOM) COPY_DIRTY = true;
   return j;
 }
+
+// ---- a copy of the game on this device, to put the room back after a restart ----
+const COPY = (() => {
+  let dbp = null;
+  const db = () => dbp || (dbp = new Promise((res, rej) => {
+    const q = indexedDB.open("floodlights", 1);
+    q.onupgradeneeded = () => q.result.createObjectStore("copies");
+    q.onsuccess = () => res(q.result);
+    q.onerror = () => rej(q.error);
+  }));
+  const run = (mode, fn) => db().then(d => new Promise((res, rej) => {
+    const t = d.transaction("copies", mode);
+    const q = fn(t.objectStore("copies"));
+    t.oncomplete = () => res(q && q.result);
+    t.onerror = () => rej(t.error);
+  }));
+  return {
+    put: rec => run("readwrite", st => st.put(rec, rec.code)).catch(() => {}),
+    get: code => run("readonly", st => st.get(code)).catch(() => null),
+  };
+})();
+let COPY_DIRTY = true, copyAt = 0, copyBusy = false, copyWeek = "";
+async function takeCopy() {
+  if (!IN_ROOM || ENDED || copyBusy || !ME.code) return;
+  copyBusy = true;
+  try {
+    const r = await fetch("/api/save/copy?code=" + ME.code + "&name=" + encodeURIComponent(ME.name), { cache: "no-store" });
+    if (r.ok) { await COPY.put({ code: ME.code, name: ME.name, at: Date.now(), data: await r.arrayBuffer() }); copyAt = Date.now(); COPY_DIRTY = false; }
+  } catch (e) { /* the next one will do */ }
+  copyBusy = false;
+}
+function maybeCopy() {
+  const wk = STATE ? STATE.season + "/" + STATE.round : "";
+  if (wk !== copyWeek) { copyWeek = wk; COPY_DIRTY = true; }
+  if (COPY_DIRTY && Date.now() - copyAt > 30000) takeCopy();
+}
+const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "a moment ago" : m < 60 ? m + (m === 1 ? " minute" : " minutes") + " ago" : m < 1440 ? Math.round(m / 60) + (Math.round(m / 60) === 1 ? " hour" : " hours") + " ago" : new Date(t).toLocaleDateString("en-GB"); };
+function showGate(on) { $("gate").classList.toggle("hidden", !on); if (on) $("gateText").textContent = "Loading your game"; else document.body.classList.remove("resuming"); }
+async function sessionEnded() {
+  if (ENDED) return;
+  ENDED = true;
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = null;
+  showGate(false);
+  $("app").classList.add("hidden");
+  $("lobby").classList.remove("hidden");
+  clubTint(null);
+  $("lobby").querySelector(".card:not(#endedCard)").classList.add("hidden");
+  $("endedCard").classList.remove("hidden");
+  $("endedCode").textContent = ME.code;
+  $("endedMsg").textContent = "";
+  const copy = await COPY.get(ME.code);
+  $("restoreRow").classList.toggle("hidden", !copy);
+  $("endedText").textContent = copy
+    ? "The server restarted and this room was cleared. This device kept a copy of the game from " + ago(copy.at) + ". Restore it to carry on from there; everyone else gets back in with the room code."
+    : "The server restarted and this room was cleared, and this device has no copy of it. A friend from the room can restore it from their device, or you can start a new game.";
+}
+$("restoreBtn").onclick = async () => {
+  const copy = await COPY.get(ME.code);
+  if (!copy) return;
+  $("restoreBtn").disabled = true;
+  $("endedMsg").textContent = "Putting the game back...";
+  try {
+    const r = await send("/api/save/restore?name=" + encodeURIComponent(ME.name), { method: "POST", headers: { "Content-Type": "application/gzip" }, body: copy.data }, true);
+    const j = await r.json().catch(() => ({ error: "Server error" }));
+    if (!r.ok) throw new Error(j.error || "Something went wrong");
+    ME.code = j.code; persist();
+    ENDED = false;
+    $("endedCard").classList.add("hidden");
+    $("lobby").querySelector(".card:not(#endedCard)").classList.remove("hidden");
+    enter();
+  } catch (e) { $("endedMsg").textContent = e.message; }
+  $("restoreBtn").disabled = false;
+};
+$("endedNew").onclick = () => {
+  localStorage.removeItem("fl_code");
+  ME.code = ""; IN_ROOM = false; ENDED = false;
+  $("endedCard").classList.add("hidden");
+  $("lobby").querySelector(".card:not(#endedCard)").classList.remove("hidden");
+  $("nameIn").value = ME.name;
+  $("createBtn").focus();
+};
+$("endedHome").onclick = () => { location.href = "/"; };
 
 // ---- lobby ----
 $("createBtn").onclick = async () => {
@@ -1143,13 +1288,25 @@ $("createBtn").onclick = async () => {
 $("joinBtn").onclick = async () => {
   try {
     ME.name = $("nameIn").value.trim(); if (!ME.name) throw new Error("Enter a name first.");
-    const j = await api("/api/join", { name: ME.name, code: $("codeIn").value.trim().toUpperCase() });
-    ME.code = j.code; persist(); enter();
+    const code = $("codeIn").value.trim().toUpperCase();
+    try {
+      const j = await api("/api/join", { name: ME.name, code });
+      ME.code = j.code; persist(); enter();
+    } catch (e) {
+      // a Player Career code: open that career here when the name is the player's own
+      if (!(e.data && e.data.playerCareer)) throw e;
+      const r = await send("/api/pc/state?code=" + code + "&name=" + encodeURIComponent(ME.name), { cache: "no-store" });
+      if (!r.ok) throw new Error("That code is a Player Career. Join it with the name the player was created with.");
+      localStorage.setItem("fl_pc_code", code); localStorage.setItem("fl_pc_name", ME.name);
+      location.href = "/floodlights/career";
+    }
   } catch(e){ $("lobbyMsg").textContent = e.message; }
 };
 function persist(){ localStorage.setItem("fl_name", ME.name); localStorage.setItem("fl_code", ME.code); }
 let pollTimer = null;
 function enter(){
+  IN_ROOM = true; ENDED = false; COPY_DIRTY = true; copyAt = 0;
+  showGate(false);
   $("lobby").classList.add("hidden"); $("app").classList.remove("hidden");
   if (pollTimer) clearInterval(pollTimer);
   tick(); pollTimer = setInterval(tick, 3000);
@@ -1157,6 +1314,7 @@ function enter(){
 function leave(){
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = null;
+  IN_ROOM = false;
   localStorage.removeItem("fl_code");
   ME.code = "";
   $("codeIn").value = "";
@@ -1484,13 +1642,19 @@ if (KM && window.MutationObserver) {
 }
 
 // ---- state polling ----
+let ticking = false;
 async function tick() {
+  // one ask at a time: a slow answer (the server waking up) never piles up behind the timer
+  if (ticking || ENDED) return;
+  ticking = true;
   try {
     STATE = await api("/api/state");
     // the page stays still while a match is being played so the game runs smooth
     if (!(window.FLMatch && FLMatch.isOpen())) render();
+    maybeCopy();
   }
   catch(e){ /* keep last state on transient errors */ }
+  ticking = false;
 }
 
 function rcol(r) { return r >= 85 ? "#d0e85c" : r >= 78 ? "#7ad97a" : r >= 70 ? "#e8c052" : "#9aa7b4"; }
@@ -3180,7 +3344,16 @@ $("mq").addEventListener("keydown", e => { if (e.key === "Enter") loadMarket(); 
 
 // auto resume (not when the page was opened for a Player Career live match)
 if (ME.name && ME.code && location.hash !== "#pcmatch") {
-  api("/api/state").then(()=>enter()).catch(()=>{ localStorage.removeItem("fl_code"); });
+  // a still loading screen, not the lobby, until the room answers (or the session has ended)
+  IN_ROOM = true;
+  showGate(true);
+  api("/api/state").then(()=>enter()).catch(e => {
+    IN_ROOM = false;
+    showGate(false);
+    $("lobbyMsg").textContent = e.message;
+    // a code that can never open here (not in the room, a Player Career) is forgotten; a server that did not answer keeps it
+    if (e.data) { localStorage.removeItem("fl_code"); ME.code = ""; }
+  });
 }
 $("nameIn").value = ME.name;
 </script>

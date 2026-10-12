@@ -147,6 +147,32 @@
   flex-wrap: wrap;
   gap: 12px;
   justify-content: center;
+  min-height: 46px;
+}
+/* a saved career loading: a quiet line in the buttons' place, so nothing swaps under the pointer */
+.pc-title-wait {
+  align-self: center;
+  font-family: var(--k-f-lbl);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pc-dim);
+}
+/* the save is gone from the server: one clean screen with the way back */
+.pc-ended {
+  max-width: 520px;
+  margin: 0 auto 28px;
+}
+.pc-ended h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 800;
+}
+.pc-ended p {
+  margin: 0;
+  color: var(--pc-soft);
+  font-size: 15px;
+  line-height: 1.55;
 }
 
 /* ---------- creator ---------- */

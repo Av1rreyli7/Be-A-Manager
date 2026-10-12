@@ -308,7 +308,9 @@ console.log("b5");
   const beforeYears = {}, beforeClub = {};
   saved = await readSave(code);
   g = Object.values(saved).find(x => x.code === code);
-  for (const [id, p] of Object.entries(g.players)) { if (p.contractYears !== undefined) { beforeYears[id] = p.contractYears; beforeClub[id] = p.club; if (Object.keys(beforeYears).length >= 20) break; } }
+  // the host's own squad: an AI club can sell a player and buy him back in one season, which hands him a new
+  // deal at the same club and would look like a tick; at a human club nobody moves unless the manager says so
+  for (const id of g.clubs.Arsenal.squad) { const p = g.players[id]; if (p && p.contractYears !== undefined) { beforeYears[id] = p.contractYears; beforeClub[id] = p.club; if (Object.keys(beforeYears).length >= 20) break; } }
   r = await api("/api/simseason", { code, name: "Host" });
   ok("Sim season runs to the end in one go", r.status === 200 && r.j.round === 38, r.j);
   saved = await readSave(code);
@@ -927,8 +929,10 @@ console.log("b5");
       // news ids this season start after the last one of the season before (week numbers repeat each season)
       for (const [n, team] of humans) {
         let s0 = await api(`/api/state?code=${tc2}&name=${n}`);
-        // a bad first season can cost a test manager the job (the board's rule): he takes the same club again
+        // a bad first season can cost a test manager the job (the board's rule): he takes the same club again,
+        // unless it went down to a league nobody can manage in, and then he sits this season out
         if (!s0.j.myClub) { await api("/api/pick", { code: tc2, name: n, team }); s0 = await api(`/api/state?code=${tc2}&name=${n}`); }
+        if (!s0.j.myClub) continue;
         seasonFrom[team] = Math.max(0, ...s0.j.myClub.news.map(x => x.i));
       }
       for (let wk = 0; wk < 38; wk++) {

@@ -1244,3 +1244,58 @@ Checklist (commit locally after each phase; each phase is tested before the next
       family home in Mumbai, the P sign the right way round from the road and the pavement, F gets in the
       Yaris from its bay, and the map's blue P with "On the street outside the family home (3 cars)".
       Screenshots in Be-A-Manager/acceptance_shots/parking.
+
+## Game not found fixed, multiplayer basketball fixed, bug sweep
+
+Bug fix build, no new features. Each fix is committed on its own.
+
+Part 1, game not found and glitches
+- [x] Reproduce every path that ends in "game not found" or a half loaded screen, and find the cause
+      Root cause confirmed: the free host wipes the disk when the server sleeps or redeploys, so games.json and
+      every room in it are gone, and every saved code answers "Game not found." Found along the way:
+      1. a change made in the half second before a restart was lost (the write waited 500 ms and a stop
+         never wrote it): Ann picked Arsenal, the server restarted, she had no club;
+      2. the save was written straight over games.json, so a crash mid write could leave a broken file and
+         the next boot would start with no games at all;
+      3. Floodlights: on opening the page, any failed first call (even the server still waking up) silently
+         deleted the saved room code, so the game was lost from that browser;
+      4. Floodlights: with the room gone, the page kept the old screen and every button popped a
+         "Game not found." box, and the poll kept failing every 3 seconds behind it;
+      5. Floodlights: with a saved room the lobby form painted first and then swapped to the game (a flash on
+         every visit), and slow answers piled up behind the 3 second timer;
+      6. Player Career: any failed first call deleted the saved career code (the career was gone from that
+         browser), and the title showed Start a new career and then swapped to Continue (a flash every visit);
+      7. a Player Career code typed into the Floodlights join box said "Open it from Player Career", which has
+         no place to type a code, so a career could never be opened on a second device.
+- [x] Server: save every change safely (write to a side file, then swap), flush on shutdown, load on boot
+      Every successful change through the API is saved within a quarter second; the write goes to a side file
+      and is swapped in; SIGTERM and SIGINT write at once. Each game gets an id so a copy can be matched to it.
+- [x] Client copy: each device keeps a packed copy of the save, so a game wiped by a server restart can be put back
+      GET /api/save/copy (members only, gzip, about 280 KB) and POST /api/save/restore. A friend restoring the
+      same game later just goes back in; a copy whose code went to another game comes back under a new code;
+      people outside the game and broken copies are refused. The Floodlights page and Player Career keep their
+      copy in IndexedDB, refreshed when something changed and at most every 30 seconds.
+- [x] Reconnect quietly while the server wakes up; one clean "this game session ended" screen when a room is gone
+      No answer, 502, 503 or 504: asked again quietly for up to a minute (a change that never reached the
+      server is not sent twice); the LIVE chip says RECONNECTING meanwhile. A room that is gone: one card
+      (Floodlights) or one screen (Player Career) saying this game session ended, with Restore when the device
+      has a copy, a new game, and the way home. A Player Career code in the Floodlights join box opens that
+      career when the name is the player's own.
+- [x] No flicker while a saved game loads or fails
+      A still loading screen instead of the lobby while a saved room loads (a tiny script at the top keeps the
+      lobby from painting first); Player Career keeps its title buttons back until the career has answered.
+      The live chip only changes when the connection does. One poll at a time.
+      Tests: new tests-site/test_restart.js (40 checks, in test:all after the boot test). Two old chance
+      failures in test_sept.js fixed in the test only: a test manager sacked after his club went down to a
+      league nobody can manage in now sits that season out, and the "contracts did not tick down" check reads
+      the host's own squad (an AI club can sell a player and buy him back in one season, a new deal at the same
+      club). test_dom_sept.js now expects three script blocks (all still parsed).
+
+Part 2, multiplayer basketball
+- [ ] Reproduce the Hardwood Legends room with two browsers and find where it breaks
+- [ ] Two or more players: create, join with a code, see each other, start, play to the end, result saved
+- [ ] Front Office online play checked, entry flow the same as Floodlights
+- [ ] A real two client test
+
+Part 3, sweep
+- [ ] Click through every game and the landing; fix crashes, dead buttons, broken links, console spam, glitches
