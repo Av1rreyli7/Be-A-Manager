@@ -1314,7 +1314,16 @@ Part 2, multiplayer basketball
       away. Alone in a room everything plays exactly as before (season, quick play); the room code is shown so
       friends can join. Single player checked in Chrome after the change: quick play and a season game to the
       final buzzer, keys move the player, no script errors.
-- [ ] Front Office online play checked, entry flow the same as Floodlights
+- [x] Front Office online play checked, entry flow the same as Floodlights
+      Played for real in two Chrome browsers through the public PeerJS server: create (room code), join with
+      the code, both see each other, each picks a team, the host starts, both land in the same league with
+      their own team. The entry already matches Floodlights (name, Create a game, Or join with a code, the
+      saved leagues card under it). One glitch found and fixed: a guest who refreshed inside a league saw the
+      whole entry form flash before the league came back, and a guest who refreshed in the room before the
+      start was dropped at the entry and had to type the code again. Now /gm puts a guest back in by itself
+      behind the same still screen the league uses ("Rejoining room CODE"), in the room and in the league; the
+      loading screen moved to src/components/BootScreen.tsx so both pages share it. (A Front Office room lives
+      in the host's browser, so it still ends when the host closes the tab; that is how it is built.)
 - [x] A real two client test
       New tests-site/test_hardwood_mp.js (36 checks, in test:all): two headless Chrome browsers, each with its
       own storage. Create, a wrong code, join, both see each other seated with different teams, only the host

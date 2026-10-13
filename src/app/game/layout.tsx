@@ -35,6 +35,7 @@ import { SimControls } from "@/components/SimControls";
 import { PHASE_LABEL, money } from "@/lib/format";
 import { fmtDate } from "@/engine/util/dates";
 import { guestJoin, hostResume, savedGuestSession } from "@/lib/online/session";
+import { BootScreen } from "@/components/BootScreen";
 import { useCourtMode, useTeamTheme } from "@/lib/theme";
 import { km, useEnterScreen } from "@/lib/motion";
 import { conferenceStandings, emptyRecord } from "@/engine/season/standings";
@@ -120,25 +121,6 @@ export default function GameLayout({ children }: { children: ReactNode }) {
   return (
     <div data-kmode="court" className="court-root">
       {league ? <Shell>{children}</Shell> : <BootScreen text={tried ? "Taking you back" : "Loading your league"} />}
-    </div>
-  );
-}
-
-function BootScreen({ text }: { text: string }) {
-  return (
-    <div className="grid min-h-[100dvh] place-items-center">
-      <div className="flex flex-col items-center gap-3">
-        <div className="k-brand">
-          <span className="sq" />
-          <span className="k-msub" style={{ letterSpacing: "0.2em", color: "#fff", fontWeight: 700 }}>
-            FRONT OFFICE
-          </span>
-        </div>
-        <div className="h-px w-44 overflow-hidden bg-line">
-          <div className="k-shimmer h-full w-full" />
-        </div>
-        <span className="k-label">{text}</span>
-      </div>
     </div>
   );
 }

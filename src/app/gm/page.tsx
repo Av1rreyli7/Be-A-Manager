@@ -13,6 +13,7 @@ import { Button, Field, Modal, inputCls, seg } from "@/components/ui";
 import { useCourtMode, useTeamTheme } from "@/lib/theme";
 import { useKitEntry } from "@/lib/entry";
 import { STARS_A, STARS_B } from "@/lib/starfield";
+import { BootScreen } from "@/components/BootScreen";
 import { deleteSave, listSaves, saveLeague, type SaveMeta } from "@/lib/db";
 import { useGame } from "@/lib/store";
 import { loadTeamsOnly } from "@/lib/seed";
@@ -67,12 +68,18 @@ function Home() {
     loadTeamsOnly().then((t) => setTeams([...(t as SeedTeam[])].sort((a, b) => a.fullName.localeCompare(b.fullName))));
   }, []);
 
-  // a guest refreshed the page inside a league: reconnect with the same name
+  // a guest refreshed the page (in the room or inside a league; the tab keeps its room): back in with the same
+  // name, behind a still screen instead of the entry form, so nothing flashes on the way back
+  const [rejoin, setRejoin] = useState<string | null>(null);
   useEffect(() => {
-    if (params.get("rejoin") !== "1" || online) return;
+    if (online) return;
     const s = savedGuestSession();
     if (!s) return;
-    void guestJoin(s.code, s.name).catch((e) => toast((e as Error).message, "error"));
+    Promise.resolve().then(() => setRejoin(s.code));
+    void guestJoin(s.code, s.name).catch((e) => {
+      toast((e as Error).message, "error");
+      setRejoin(null);
+    });
   }, [params, online, toast]);
 
   // the league just went live with this person in it: go and play
@@ -92,6 +99,9 @@ function Home() {
   // before a team is picked the room wears the court accent, the way Floodlights wears volt
   useTeamTheme(myTeamColors ?? (inRoom ? COURT : null));
 
+  // rejoining: the still screen until the room answers (a league that started goes straight on to /game)
+  const rejoining = !!rejoin && online?.status !== "disconnected" && !(inRoom && online?.lobby && !online.lobby.started && online.status !== "playing");
+  if (rejoining) return <BootScreen text={"Rejoining room " + rejoin} />;
   if (inRoom && online?.lobby) return <Room lobby={online.lobby} teams={teams} />;
   return <Entry />;
 }
