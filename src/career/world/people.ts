@@ -16,7 +16,7 @@ function personGeometry() {
   const limb: number[] = [];
   const pivot: number[] = [];
   const add = (g: THREE.BufferGeometry, x: number, y: number, z: number, sx: number, sy: number, sz: number, p: number, l: number, pv: number) => {
-    const ng = g.toNonIndexed();
+    const ng = g.index ? g.toNonIndexed() : g.clone();
     ng.scale(sx, sy, sz);
     ng.translate(x, y, z);
     const P = ng.getAttribute("position"),

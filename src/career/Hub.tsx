@@ -235,13 +235,26 @@ export default function Hub({
     run(() => careerApi.plan(saved, slots, inten)).then(() => setPending(null));
   };
 
-  const week = (n: number) =>
-    run(
+  const week = (n: number) => {
+    // a choice or an answer the week is waiting for opens straight away: the server would only send it back
+    // (a failed request in the console every time)
+    const wait = state.decisions.find((d) => !d.optional);
+    if (wait) {
+      openDecision(wait.id);
+      return;
+    }
+    if (state.people.pending) {
+      retry.current = () => week(n);
+      setEventOpen(true);
+      return;
+    }
+    return run(
       () => careerApi.week(saved, n),
       (r) => {
         setReports(r.reports.slice().reverse());
       },
     );
+  };
 
   const blocking = state.decisions.filter((d) => !d.optional);
   const sessionOpts = Object.entries(state.training.sessions);

@@ -1334,4 +1334,27 @@ Part 2, multiplayer basketball
       from disk), and a lost room put back with Restore. No script errors in either browser.
 
 Part 3, sweep
-- [ ] Click through every game and the landing; fix crashes, dead buttons, broken links, console spam, glitches
+- [x] Click through every game and the landing; fix crashes, dead buttons, broken links, console spam, glitches
+      Swept in headless Chrome on the production build, with every console error and warning, uncaught error
+      and failed request recorded and a screenshot of each screen: the landing (top and bottom), the Game
+      Night hub, the Front Office entry, a solo league and all 26 of its pages (a player page and a team page
+      too), the sims, Hardwood Legends (entry, rosters, settings, controls, quick play, pause, substitutions,
+      quitting, a season game), a Front Office game played inside Hardwood Legends to the end, Floodlights
+      Manager Career (lobby, room, start, all 14 tabs, a market search, a played week, a live match), Player
+      Career (title, every creator step, the hub, the phone, played weeks with their choices, the open world,
+      the map, walking, a cafe and back out, the pause menu), and every main page at phone width (nothing
+      wider than the screen). No crashes, no dead links anywhere. Found and fixed:
+      1. Game Night: every toast (the notes in the corner, like "Lakers must cut down to 15 ...") showed as bare
+         white text over the page: the kit lost its .k-toast rules when the entry pages were cloned. Put back.
+      2. Open world: coming out of a shop or cafe left the camera inside the awning, a screen of flat green
+         and white until he walked away. A camera pulled in by a building now also comes down to under the
+         awnings.
+      3. Open world: two three.js warnings on every visit to the city (the soft shadow type three.js dropped,
+         and a geometry converted twice for the people in the street). Fixed in our code.
+      4. Player Career: Play the week with a choice waiting asked the server first, which refused, and the
+         browser logged a failed request each time before the choice opened. The choice now opens straight
+         away; the same choice, the same screen.
+      Checked and left as they are (not bugs): the Floodlights travel advisor opens once a season until the
+      fund is set; Hardwood's entry numbers count up from zero; Front Office's Day button is held back by the
+      roster rule before opening night and says so. One warning left that is not ours: "THREE.Clock has been
+      deprecated", printed once by the React Three Fiber library each time a 3D view opens.

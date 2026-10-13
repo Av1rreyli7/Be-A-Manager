@@ -470,7 +470,8 @@ export default function World({
     if (active) {
       scene.fog = new THREE.Fog("#9fb2c8", 40, QUAL.far[q]);
       gl.shadowMap.enabled = QUAL.shadow[q] > 0;
-      gl.shadowMap.type = THREE.PCFSoftShadowMap;
+      // three.js 0.186 dropped the soft variant and used this one anyway (with a warning every time)
+      gl.shadowMap.type = THREE.PCFShadowMap;
     } else scene.fog = null;
     return () => {
       scene.fog = null;
@@ -836,7 +837,12 @@ export default function World({
     const cp = Math.cos(c.camPitch);
     const want = tmp.set(c.x + Math.sin(c.camYaw) * dist * cp, tgtY + Math.sin(c.camPitch) * dist, c.z + Math.cos(c.camYaw) * dist * cp);
     const free = grid.clear(c.x, c.z, want.x, want.z, 12);
-    if (free < 1) want.set(c.x + (want.x - c.x) * Math.max(0.15, free - 0.06), want.y, c.z + (want.z - c.z) * Math.max(0.15, free - 0.06));
+    // pulled in by a building, the camera also comes down towards his head, so close to a shop front it sits
+    // under the awnings and canopies (about 3.9 m up) instead of inside them
+    if (free < 1) {
+      const f = Math.max(0.15, free - 0.06);
+      want.set(c.x + (want.x - c.x) * f, tgtY + (want.y - tgtY) * Math.max(0.35, f), c.z + (want.z - c.z) * f);
+    }
     // a slight chase in the car: the camera trails a touch behind when he speeds up or turns
     camera.position.lerp(want, Math.min(1, dt * (c.mode === "drive" ? 5 : 8)));
     camTarget.set(c.x, tgtY, c.z);
