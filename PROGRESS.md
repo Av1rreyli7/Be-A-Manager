@@ -1292,10 +1292,37 @@ Part 1, game not found and glitches
       club). test_dom_sept.js now expects three script blocks (all still parsed).
 
 Part 2, multiplayer basketball
-- [ ] Reproduce the Hardwood Legends room with two browsers and find where it breaks
-- [ ] Two or more players: create, join with a code, see each other, start, play to the end, result saved
+- [x] Reproduce the Hardwood Legends room with two browsers and find where it breaks
+      It broke at the very first step: Hardwood Legends had no multiplayer at all. "Create a game" opened a
+      room screen copied from Floodlights (a managers list, a pulse) but the room had no code, the entry had
+      no way to join one, and the game engine only knew one human against the CPU. A second browser could
+      never get in.
+- [x] Two or more players: create, join with a code, see each other, start, play to the end, result saved
+      Rooms on the site's own server (rooms/hardwood.js, mounted in server.js, a WebSocket line through the
+      ws package): create, join with a four letter code (wrong codes say so), up to four players, two a side.
+      The server seats everyone (host home, then the side with fewer) and gives each side a team the other
+      side does not have; players can switch side or team, the host sets the quarter length and tips off.
+      The host's browser plays the game; each friend's keys reach it and go through the same input code as
+      the host's own (each person steers their own player, two people on a side each have one); the host
+      sends a picture of the court twenty times a second (players, ball, clock, score, free throws, pop ups,
+      sounds) and the friends' browsers draw it smoothly. A shot or free throw is judged on what the friend's
+      own screen showed, so lag does not cost them. The host's pause pauses everyone; a friend's Esc opens a
+      small menu. At the buzzer both see the same box score, the result is saved with the room (and on disk,
+      and on each device), and everyone goes back to the room for a rematch. Rooms are saved like Floodlights
+      games, every browser reconnects by itself after a restart, a room the server lost can be put back from a
+      browser's copy (the host puts it back quietly mid game), and rooms nobody uses for two days are tidied
+      away. Alone in a room everything plays exactly as before (season, quick play); the room code is shown so
+      friends can join. Single player checked in Chrome after the change: quick play and a season game to the
+      final buzzer, keys move the player, no script errors.
 - [ ] Front Office online play checked, entry flow the same as Floodlights
-- [ ] A real two client test
+- [x] A real two client test
+      New tests-site/test_hardwood_mp.js (36 checks, in test:all): two headless Chrome browsers, each with its
+      own storage. Create, a wrong code, join, both see each other seated with different teams, only the host
+      can tip off, the quarter reaches the friend, a third player joins and leaves, tip off, the friend's keys
+      move the friend's player in the host's game and the friend's screen agrees, a whole game to the final
+      buzzer (autopilot, the host ten times faster), the same final score on both box scores, the result on
+      the server, on disk and on both devices, back to the room, a restart (both reconnect, the room comes back
+      from disk), and a lost room put back with Restore. No script errors in either browser.
 
 Part 3, sweep
 - [ ] Click through every game and the landing; fix crashes, dead buttons, broken links, console spam, glitches

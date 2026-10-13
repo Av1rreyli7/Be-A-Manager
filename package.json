@@ -15,7 +15,8 @@
     "test:site": "node tests-site/test_site.js",
     "test:boot": "node tests-site/test_boot.js",
     "test:restart": "node tests-site/test_restart.js",
-    "test:all": "npm run typecheck && npm run test && npm run test:floodlights && npm run upload && npm run test:site && npm run build && npm run test:boot && npm run test:restart",
+    "test:hardwood": "node tests-site/test_hardwood_mp.js",
+    "test:all": "npm run typecheck && npm run test && npm run test:floodlights && npm run upload && npm run test:site && npm run build && npm run test:boot && npm run test:restart && npm run test:hardwood",
     "upload": "node scripts/make-upload.js"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
     "tailwindcss": "^4",
     "three": "^0.186.1",
     "typescript": "^5",
+    "ws": "^8.22.0",
     "zustand": "^5.0.15"
   },
   "devDependencies": {

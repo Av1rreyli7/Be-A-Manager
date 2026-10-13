@@ -17,10 +17,14 @@ nextApp.prepare().then(() => {
   server.get("/healthz", (req, res) => res.json({ ok: true }));
   // Floodlights first. Anything it does not own falls through to Next.
   server.use(require("./floodlights/server"));
+  // Hardwood Legends rooms: the code friends join and the live game between their browsers
+  const hardwood = require("./rooms/hardwood");
+  server.use(hardwood.router);
   server.all("*", (req, res) => handle(req, res));
-  server.listen(port, () => {
+  const http = server.listen(port, () => {
     console.log(`Be-A-Manager running on port ${port} (${dev ? "development" : "production"})`);
   });
+  hardwood.attach(http);
 }).catch(err => {
   console.error("Could not start the server", err);
   process.exit(1);

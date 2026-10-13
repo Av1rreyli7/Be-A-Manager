@@ -127,6 +127,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--k-bg);color:va
 .hl-pickopts{margin:18px 0 28px}
 .hl-pickopts .k-controls{margin-bottom:10px}
 .hl-optk{min-width:96px}
+/* the room with friends: the two sides next to each other */
+.hl-sides{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 4px}
+.hl-side{border:1px solid var(--k-line);padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.hl-side .k-btn{align-self:flex-start}
+.hl-sideteam{font-weight:700;display:flex;align-items:center;gap:8px;min-height:22px}
+.k-code{font-family:var(--k-f-num);letter-spacing:.3em;text-transform:uppercase}
+@media (max-width:560px){ .hl-sides{grid-template-columns:1fr} }
 .hl-panelrow{margin:16px 0 0}
 .hl-pick{cursor:pointer}
 .hl-out{opacity:.4;pointer-events:none}
@@ -859,6 +866,9 @@ class Player {
     return v; }
 }
 let G = {mode:'menu', time:0, crowdE:0.2};
+/* a game in a room with friends (section 16): on, this browser is the host (plays the game) or a viewer
+   (draws what the host sends); human[t] says a person steers team t */
+var MP = {on:false, host:false, remote:false, human:[false,false]};
 const ball = {x:0,y:5,z:0,vx:0,vy:0,vz:0,holder:null,state:'dead',shot:null,pass:null,lastTouch:0,catchT:0,noCatch:false,spinX:0,spinZ:0};
 const opp = t=>1-t;
 const allPlayers = ()=> G.teams[0].onCourt.concat(G.teams[1].onCourt);
@@ -866,7 +876,11 @@ const hoopX = t=> G.dir[t]*HOOP_X;
 const distHoop = p=> dist(p.x,p.z,hoopX(p.team),0);
 const diffCfg = ()=> DIFFS[SETTINGS.diff];
 function isThreeAt(x,z,t){ const hx=hoopX(t); if(Math.abs(z)>=22 && Math.abs(x)>32.8 && Math.sign(x)===Math.sign(hx)) return true; return dist(x,z,hx,0)>23.75; }
-function isCPU(p){ return p.team!==G.userTeam; }
+function isCPU(p){ return MP.on ? !MP.human[p.team] : p.team!==G.userTeam; }
+/* a player a person steers: this browser's own, or in a room anyone's */
+function isHumanP(p){ return p===G.user || (MP.on && MP.held(p)); }
+function isHumanTeam(t){ return MP.on ? !!MP.human[t] : t===G.userTeam; }
+function humanTeams(){ return MP.on ? [0,1].filter(t=>MP.human[t]) : [G.userTeam]; }
 
 function makeTeam(tIdx, side){
   const td=LEAGUE.teams[tIdx];
@@ -888,12 +902,12 @@ function setupJerseys(home, away){
 }
 
 // ---------- UI hooks (implemented in UI section) ----------
-function popup(text, cls){ const el=document.createElement('div'); el.className='pop '+(cls||''); el.textContent=text; const box=document.getElementById('popups'); box.appendChild(el); while(box.children.length>3) box.firstChild.remove(); setTimeout(()=>el.remove(),1500); }
-function ticker(text){ const el=document.createElement('div'); el.textContent=text; const box=document.getElementById('ticker'); box.appendChild(el); while(box.children.length>4) box.firstChild.remove(); setTimeout(()=>el.remove(),4000); }
-function flash(){ const f=document.getElementById('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
-function banner(t,s,show=true){ const b=document.getElementById('banner'); const was=b.style.display==='block'; b.style.display=show?'block':'none'; document.getElementById('bannerT').textContent=t||''; document.getElementById('bannerS').textContent=s||''; if(show&&!was&&window.KitMotion){ KitMotion.pop(document.getElementById('bannerT'),{scale:.8}); KitMotion.rise(document.getElementById('bannerS'),{delay:.12}); } }
-function crowd(level){ G.crowdE=Math.max(G.crowdE, level); Sound.cheer(level); }
-function shake(v){ camState.shake=Math.max(camState.shake,v); }
+function popup(text, cls){ if(MP.host) MP.ev.push(['popup',text,cls]); const el=document.createElement('div'); el.className='pop '+(cls||''); el.textContent=text; const box=document.getElementById('popups'); box.appendChild(el); while(box.children.length>3) box.firstChild.remove(); setTimeout(()=>el.remove(),1500); }
+function ticker(text){ if(MP.host) MP.ev.push(['ticker',text]); const el=document.createElement('div'); el.textContent=text; const box=document.getElementById('ticker'); box.appendChild(el); while(box.children.length>4) box.firstChild.remove(); setTimeout(()=>el.remove(),4000); }
+function flash(){ if(MP.host) MP.ev.push(['flash']); const f=document.getElementById('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+function banner(t,s,show=true){ if(MP.host) MP.ev.push(['banner',t,s,show]); const b=document.getElementById('banner'); const was=b.style.display==='block'; b.style.display=show?'block':'none'; document.getElementById('bannerT').textContent=t||''; document.getElementById('bannerS').textContent=s||''; if(show&&!was&&window.KitMotion){ KitMotion.pop(document.getElementById('bannerT'),{scale:.8}); KitMotion.rise(document.getElementById('bannerS'),{delay:.12}); } }
+function crowd(level){ if(MP.host) MP.ev.push(['crowd',level]); G.crowdE=Math.max(G.crowdE, level); Sound.cheer(level); }
+function shake(v){ if(MP.host) MP.ev.push(['shake',v]); camState.shake=Math.max(camState.shake,v); }
 
 // ---------- movement helpers ----------
 function maxSpeed(p, sprint){
@@ -924,7 +938,7 @@ function handPos(p){
 }
 
 // ---------- possession ----------
-function setUser(p){ if(p && p.team===G.userTeam){ if(G.user && G.user!==p){ G.user.stance=false; G.user.chargeSet=false; } G.user=p; } }
+function setUser(p){ if(MP.on){ if(p) MP.take(p); return; } if(p && p.team===G.userTeam){ if(G.user && G.user!==p){ G.user.stance=false; G.user.chargeSet=false; } G.user=p; } }
 function nearestTo(team, x, z, exclude){ let best=null,bd=1e9; for(const p of G.teams[team].onCourt){ if(p===exclude) continue; const d=dist(p.x,p.z,x,z); if(d<bd){bd=d;best=p;} } return best; }
 function choosePlay(t){
   const team=G.teams[t]; const star=team.onCourt.reduce((a,b)=>b.ovr>a.ovr?b:a);
@@ -935,7 +949,7 @@ function choosePlay(t){
 function changePossession(t){
   G.possTeam=t; G.shotClock=24; G.shotClockOn=true; G.frontEst=false; G.possTime=0; G.passCount=0; G.play=choosePlay(t); G.help=null; G.autoHelp=[null,null];
   for(const p of allPlayers()){ p.screenT=0; p.screening=false; p.rollT=0; p.cutT=0; p.driving=false; p.aiGoal=null; p.contestOf=null; p.chargeSet=false; }
-  if(t!==G.userTeam) setUser(nearestTo(G.userTeam, ball.x, ball.z));
+  for(const ht of humanTeams()) if(t!==ht) setUser(nearestTo(ht, ball.x, ball.z));
 }
 function gainBall(p){
   const sh=ball.shot, pa=ball.pass;
@@ -953,7 +967,7 @@ function gainBall(p){
   else if(oreb){ G.shotClock=14; G.shotClockOn=true; if(G.frontEst===false) {} }
   G.shotClockOn=true;
   if(G.possTeam>=0 && p.x*G.dir[p.team]>0) G.frontEst=true;
-  if(p.team===G.userTeam) setUser(p);
+  if(isHumanTeam(p.team)) setUser(p);
   if(pa && pa.oop && p===pa.to && p.y>0.6 && distHoop(p)<8){ startFinish(p,'oop'); }
 }
 
@@ -995,14 +1009,14 @@ function aiTimingTarget(p){
 }
 function alertDefenders(sh, range){
   const df=diffCfg();
-  for(const d of G.teams[opp(sh.team)].onCourt){ if(d===G.user) continue; if(dist(d.x,d.z,sh.x,sh.z)<range){ d.contestT=(isCPU(d)?df.react:0.22)+rand()*0.12; d.contestOf=sh; } }
+  for(const d of G.teams[opp(sh.team)].onCourt){ if(isHumanP(d)) continue; if(dist(d.x,d.z,sh.x,sh.z)<range){ d.contestT=(isCPU(d)?df.react:0.22)+rand()*0.12; d.contestOf=sh; } }
 }
 function startJumpShot(p){
   if(p.state!=='idle' || !p.hasBall) return;
   p.state='shoot'; p.shootT=0; p.jumped=false; p.released=false; p.dribbling=false;
   const rel = isThreeAt(p.x,p.z,p.team)? p.r('three') : p.r('mid');
   p.shotIdeal = 0.5+(99-rel)*0.0025;
-  p.shotAI = (p===G.user)? null : aiTimingTarget(p);
+  p.shotAI = isHumanP(p)? null : aiTimingTarget(p);
   alertDefenders(p, 8);
 }
 function updateShooter(p, dt){
@@ -1027,12 +1041,12 @@ function checkBlock(sh, kind){
 function checkShootingFoul(sh, con, drive){
   const d=con.def; if(!d) return null; const dd=dist(d.x,d.z,sh.x,sh.z); if(dd>3.5) return null;
   let c=(drive?0.09:0.035)+Math.max(0,3.5-dd)*(drive?0.06:0.03);
-  if(d===G.user && d.y>0.3 && dd<2.2) c+=0.08;
+  if(isHumanP(d) && d.y>0.3 && dd<2.2) c+=0.08;
   return rand()<c? d : null;
 }
 function releaseShot(p, m){
   p.released=true;
-  const t=p.team, hx=hoopX(t), d=dist(p.x,p.z,hx,0), three=isThreeAt(p.x,p.z,t), df=diffCfg(), user=p.team===G.userTeam;
+  const t=p.team, hx=hoopX(t), d=dist(p.x,p.z,hx,0), three=isThreeAt(p.x,p.z,t), df=diffCfg(), user=isHumanTeam(p.team);
   let win=(user?df.win:0.08)*(0.8+(three?p.r('three'):p.r('mid'))/99*0.4);
   const grade=timingGrade(m,win);
   let pc=baseShotPct(p,d,three);
@@ -1045,6 +1059,7 @@ function releaseShot(p, m){
   const fouler=blocker?null:checkShootingFoul(p,con,false);
   const make=!blocker && rand()<pc;
   if(p===G.user) G.meterResult={g:grade.g,c:grade.c,t:0.9};
+  else if(MP.on && MP.held(p)) MP.meter(p,{g:grade.g,c:grade.c,t:0.9});
   launchShot(p,{three,make,grade,fouler,blocker,kind:'jumper',pts:three?3:2});
 }
 function launchShot(p,o){
@@ -1107,7 +1122,7 @@ function updateFinish(p, dt){
 }
 function finishRelease(p){
   p.finReleased=true;
-  const type=p.finType, df=diffCfg(), user=p.team===G.userTeam, hx=hoopX(p.team);
+  const type=p.finType, df=diffCfg(), user=isHumanTeam(p.team), hx=hoopX(p.team);
   const con=contestInfo(p,true);
   let pc = type==='layup' ? 0.5+(p.r('layup')-55)*0.009-con.amount*0.32 : 0.86+(p.r('dunk')-60)*0.0035-con.amount*0.18;
   if(type==='oop') pc+=0.03; pc+= user?df.userBoost:df.aiShot; if(p.onFire) pc+=0.06; pc=clamp(pc,0.05,0.98);
@@ -1216,10 +1231,10 @@ function attemptSteal(d, h){
   if(!h || !h.hasBall) return;
   const dd=dist(d.x,d.z,h.x,h.z); if(dd>4.4) return;
   let c=0.025+(d.r("steal")-h.r("handle"))*0.0035+(d.stance?0.03:0)+(h.sprinting?0.08:0)+(h.moveT>0?-0.03:0)+(h.dribbleDead?0.05:0)+(h.state==='shoot'?-0.04:0);
-  if(isCPU(d)) c*=diffCfg().aiSteal; else if(d!==G.user) c*=0.6;
+  if(isCPU(d)) c*=diffCfg().aiSteal; else if(!isHumanP(d)) c*=0.6;
   c=clamp(c,0.01,0.25);
   let foulC=0.05+(d.stance?-0.02:0);
-  if(d===G.user){ G.stealTimes=(G.stealTimes||[]).filter(t=>G.time-t<2); G.stealTimes.push(G.time); if(G.stealTimes.length>2) foulC+=0.14*(G.stealTimes.length-2); }
+  if(isHumanP(d)){ const tl=d===G.user?G:d; tl.stealTimes=(tl.stealTimes||[]).filter(t=>G.time-t<2); tl.stealTimes.push(G.time); if(tl.stealTimes.length>2) foulC+=0.14*(tl.stealTimes.length-2); }
   if(h.state==='shoot' || h.state==='finish'){ if(rand()<0.25) { commitFoul(d,h,'shooting'); if(h.state==='shoot'&&!h.released){} } return; }
   if(rand()<c){ d.stats.stl++; h.stats.to++; popup('STOLEN!', d.team===G.userTeam?'blue':'red'); crowd(d.team===G.homeIdx?0.9:0.3); Sound.squeak(1); gainBall(d); }
   else if(rand()<foulC) commitFoul(d,h,'reach');
@@ -1255,7 +1270,7 @@ function pumpFake(p){
   p.state='fake'; p.fakeT=0.42; p.dribbling=false;
   if(p.hasDribbled && !p.dribbleDead){ p.dribbleDead=true; p.pickX=p.x; p.pickZ=p.z; }
   const df=diffCfg();
-  for(const d of G.teams[opp(p.team)].onCourt){ if(d===G.user || d.y>0) continue; if(dist(d.x,d.z,p.x,p.z)>7) continue;
+  for(const d of G.teams[opp(p.team)].onCourt){ if(isHumanP(d) || d.y>0) continue; if(dist(d.x,d.z,p.x,p.z)>7) continue;
     let bite=0.6-d.a.iq*0.0045; if(isCPU(d)) bite*=(1.35-SETTINGS.diff*0.15);
     if(rand()<bite){ jump(d,0.85); d.beatenT=1.0; if(p===G.user) popup('BIT ON THE FAKE','small'); } }
 }
@@ -1284,10 +1299,10 @@ function throwPass(p, r, type='chest', oop=false, inbound=false){
   ball.pass={from:p,to:r,type,oop,t:0,T,inbound,magnet:bad?0:1,interceptor:null};
   // interception roll
   if(!inbound || rand()<0.5){
-    for(const d of G.teams[opp(p.team)].onCourt){ if(d===G.user && !G.user) continue;
+    for(const d of G.teams[opp(p.team)].onCourt){
       const ds=distToSeg(d.x,d.z,p.x,p.z,tx,tz); if(ds>3.2 || dist(d.x,d.z,p.x,p.z)<1.5) continue;
       let c=d.r("steal")*0.0028*(1-ds/3.2)*(type==='bounce'?0.55:type==='lob'?0.35:1)*(1+d0/60);
-      if(isCPU(d)) c*=diffCfg().aiSteal*0.8; else if(d!==G.user) c*=0.7;
+      if(isCPU(d)) c*=diffCfg().aiSteal*0.8; else if(!isHumanP(d)) c*=0.7;
       if(rand()<c){ ball.pass.interceptor=d; break; }
     }
   }
@@ -1318,6 +1333,7 @@ function swapPlayers(team, slot, benchP, announce=true){
   team.onCourt[slot]=benchP; team.bench[bi]=out; out.hasBall=false; out.inbounding=false;
   avatars[team.side][slot].setPlayer(benchP, team);
   if(G.user===out) G.user=benchP;
+  if(MP.on) MP.swapOut(out, benchP);
   if(G.inbound){ if(G.inbound.inb===out) G.inbound.inb=benchP; if(G.inbound.rec===out) G.inbound.rec=benchP; }
   if(G.ft && G.ft.shooter===out) G.ft.shooter=benchP;
   if(announce && team.side===G.userTeam) ticker(`SUB: ${benchP.name} in for ${out.name}`);
@@ -1348,7 +1364,7 @@ function setupInbound(t, x, z){
   if(baseline) inb.facing=Math.atan2(-Math.sign(inb.x),0);
   inb.hasBall=true; ball.holder=inb; ball.state='held';
   G.inbound={inb,rec};
-  if(t===G.userTeam) setUser(rec); else setUser(nearestTo(G.userTeam, inb.x, inb.z));
+  for(const ht of humanTeams()){ if(t===ht) setUser(rec); else setUser(nearestTo(ht, inb.x, inb.z)); }
 }
 function doInboundPass(){
   const ib=G.inbound; if(!ib) return;
@@ -1361,8 +1377,8 @@ function doInboundPass(){
 function updateInbound(dt){
   G.stateT-=dt; G.inboundMax-=dt; const ib=G.inbound; if(!ib) return;
   const ready = dist(ib.rec.x,ib.rec.z,ib.inb.x,ib.inb.z)<16;
-  if(G.stateT<=0 && (ready || G.inboundMax<=0) && ib.inb.team!==G.userTeam) doInboundPass();
-  else if(G.stateT<=0 && ib.inb.team===G.userTeam && (G.inboundMax<=-0.5 || (ready && G.stateT<-0.6))) doInboundPass();
+  if(G.stateT<=0 && (ready || G.inboundMax<=0) && !isHumanTeam(ib.inb.team)) doInboundPass();
+  else if(G.stateT<=0 && isHumanTeam(ib.inb.team) && (G.inboundMax<=-0.5 || (ready && G.stateT<-0.6))) doInboundPass();
 }
 function setupFreeThrows(shooter, n){
   const t=shooter.team, dir=G.dir[t];
@@ -1372,7 +1388,7 @@ function setupFreeThrows(shooter, n){
   doSubs(shooter);
   G.ft={shooter:G.teams[t].onCourt.includes(shooter)?shooter:G.teams[t].onCourt[0], n, i:0, phase:'setup', t:1.1, made:0};
   placeFT();
-  if(t===G.userTeam) setUser(G.ft.shooter); else setUser(nearestTo(G.userTeam,dir*40,0));
+  for(const ht of humanTeams()){ if(t===ht) setUser(G.ft.shooter); else setUser(nearestTo(ht,dir*40,0)); }
 }
 function placeFT(){
   const s=G.ft.shooter, t=s.team, dir=G.dir[t], hx=hoopX(t);
@@ -1396,7 +1412,7 @@ function updateFT(dt){
   const s=f.shooter;
   if(f.phase==='setup'){ f.t-=dt; if(f.t<=0){ f.phase='aim'; f.t=1.3; f.cursorT=rand()*6; } return; }
   if(f.phase==='aim'){
-    if(s.team===G.userTeam && !G.autopilot){ f.cursorT+=dt*(2.6+SETTINGS.diff*0.55); f.cursor=0.5+0.5*Math.sin(f.cursorT); f.zone=(0.05+s.r('ft')/99*0.09)*(1.3-SETTINGS.diff*0.12); }
+    if(isHumanTeam(s.team) && !(MP.on ? MP.auto(s.team) : G.autopilot)){ f.cursorT+=dt*(2.6+SETTINGS.diff*0.55); f.cursor=0.5+0.5*Math.sin(f.cursorT); f.zone=(0.05+s.r('ft')/99*0.09)*(1.3-SETTINGS.diff*0.12); }
     else { f.t-=dt; if(f.t<=0) shootFT(rand()<ftProb(s)); }
     return;
   }
@@ -1432,7 +1448,7 @@ function setupTipoff(){
   G.possTeam=-1; G.shotClockOn=false; G.shotClock=24;
   for(const t of [0,1]){ const d=G.dir[t]; const zs=t===0?1:-1; const pos=[[-d*14,0],[-d*7,8],[-d*7,-8],[d*6,9*zs],[-d*1.4,0]];
     G.teams[t].onCourt.forEach((p,i)=>{ p.resetCourt(pos[i][0],pos[i][1]); p.slot=i; p.facing=Math.atan2(d,0); }); }
-  setUser(G.teams[G.userTeam].onCourt[0]);
+  if(MP.on) MP.tipoff(); else setUser(G.teams[G.userTeam].onCourt[0]);
 }
 function updateTipoff(dt){
   G.stateT+=dt; const tip=G.tip;
@@ -1659,7 +1675,7 @@ function computeAutoHelp(dt){
     const onBall=G.teams[dt_].onCourt[h.slot];
     const beaten=onBall.stumbleT>0||onBall.beatenT>0||(dist(onBall.x,onBall.z,hx,0)>dH+1.5 && dist(onBall.x,onBall.z,h.x,h.z)>3);
     if(!beaten) continue;
-    let best=null,bd=1e9; for(const d of G.teams[dt_].onCourt){ if(d===onBall||d===G.user) continue; const dd=dist(d.x,d.z,(h.x+hx)/2,h.z/2); if(dd<bd){bd=dd;best=d;} }
+    let best=null,bd=1e9; for(const d of G.teams[dt_].onCourt){ if(d===onBall||isHumanP(d)) continue; const dd=dist(d.x,d.z,(h.x+hx)/2,h.z/2); if(dd<bd){bd=dd;best=d;} }
     if(best && bd<18) G.autoHelp[dt_]={p:best,t:1.4};
   }
   if(G.help){ G.help.t-=dt; if(G.help.t<=0) G.help=null; }
@@ -1668,7 +1684,7 @@ function updateAI(dt){
   computeAutoHelp(dt);
   const st=G.state;
   for(const p of allPlayers()){
-    if(p===G.user && !G.autopilot && st!=="final" && st!=="break") continue;
+    if((MP.on ? MP.held(p) && !MP.autoP(p) : p===G.user && !G.autopilot) && st!=="final" && st!=="break") continue;
     if(p.state==='shoot'||p.state==='finish'||p.state==='fake'){ stop(p); continue; }
     if(p.stumbleT>0){ stop(p); continue; }
     if(st==='ft'||st==='break'||st==='final'||st==='tipoff'){ stop(p); p.aiStance=false; continue; }
@@ -1864,6 +1880,9 @@ function updateRules(dt){
    SECTION 10 - INPUT
    ===================================================================== */
 const keys={}, pressed={}, released={};
+/* the keys handleInput reads: this browser's own, or for a moment a friend's (MP.remoteInput) */
+const LOCAL_IN={keys, pressed, released, basis:null, rel:null};
+let IN=LOCAL_IN;
 const KEYMAP={ArrowUp:'Up',ArrowDown:'Down',ArrowLeft:'Left',ArrowRight:'Right',ShiftLeft:'Shift',ShiftRight:'Shift',Space:'Space',Escape:'Esc',
   KeyW:'W',KeyA:'A',KeyS:'S',KeyD:'D',KeyZ:'Z',KeyX:'X',KeyC:'C',KeyV:'V',KeyP:'P',KeyH:'H',KeyM:'M',KeyT:'T'};
 addEventListener('keydown',e=>{
@@ -1884,12 +1903,13 @@ addEventListener('pointerdown',()=>Sound.init());
 
 function camBasis(){ const f=new THREE.Vector3(); camera.getWorldDirection(f); f.y=0; if(f.lengthSq()<1e-4) f.set(0,0,-1); f.normalize(); return {fx:f.x,fz:f.z,rx:-f.z,rz:f.x}; }
 function handleInput(dt){
+  const keys=IN.keys, pressed=IN.pressed, released=IN.released;
   const u=G.user; if(!u || G.autopilot) return;
   const st=G.state;
   // FT
   if(st==='ft'){ stop(u); if(pressed.W) userFTPress(); return; }
   let ix=0,iy=0; if(keys.Up) iy+=1; if(keys.Down) iy-=1; if(keys.Right) ix+=1; if(keys.Left) ix-=1;
-  const b=camBasis(); let mx=b.rx*ix+b.fx*iy, mz=b.rz*ix+b.fz*iy; const ml=Math.hypot(mx,mz); if(ml>0){ mx/=ml; mz/=ml; }
+  const b=IN.basis||camBasis(); let mx=b.rx*ix+b.fx*iy, mz=b.rz*ix+b.fz*iy; const ml=Math.hypot(mx,mz); if(ml>0){ mx/=ml; mz/=ml; }
   u.inDX=mx; u.inDZ=mz;
   const canMove = (st==='live'||st==='inbound'||st==='buzzer') && !u.inbounding && u.state!=='finish';
   const defending = !u.hasBall && G.possTeam>=0 && G.possTeam!==u.team && ball.holder;
@@ -1901,7 +1921,7 @@ function handleInput(dt){
   if(st!=='live') return;
   if(u.hasBall){
     if(pressed.W && u.state==='idle'){ if(distHoop(u)<8.5) startFinish(u); else startJumpShot(u); }
-    if(released.W && u.state==='shoot' && !u.released) releaseShot(u, u.shootT/u.shotIdeal);
+    if(released.W && u.state==='shoot' && !u.released) releaseShot(u, IN.rel!=null ? IN.rel : u.shootT/u.shotIdeal);
     if(u.state==='idle' || u.state==='fake'){
       if(pressed.A){ const t=pickPassTarget(u,mx,mz); if(t){ u.state='idle'; throwPass(u,t,'chest'); } }
       if(pressed.S) G.sDown=G.time;
@@ -1913,7 +1933,7 @@ function handleInput(dt){
     if(pressed.Space) callScreen(u);
   } else {
     if(pressed.W) jump(u);
-    if(pressed.S){ const n=nearestTo(G.userTeam, ball.x, ball.z, u); if(n) setUser(n); }
+    if(pressed.S){ const n=nearestTo(G.userTeam, ball.x, ball.z, u); if(n){ if(MP.on) MP.take(n, MP.cur); else setUser(n); } }
     if(defending){
       const h=ball.holder;
       if(pressed.A) attemptSteal(u,h);
@@ -2021,11 +2041,11 @@ function updateVisuals(dt,t){
    SECTION 12 - GAME FLOW (start / end)
    ===================================================================== */
 function startGame(userIdx, oppIdx, opts={}){
-  G={mode:'game', time:0, crowdE:0.3, userTeam:0, homeIdx: opts.away?1:0, season:!!opts.season, paused:false,
+  G={mode:'game', time:0, crowdE:0.3, userTeam:opts.userTeam||0, homeIdx: opts.away?1:0, season:!!opts.season, paused:false,
      teams:[makeTeam(userIdx,0), makeTeam(oppIdx,1)], dir:[1,-1], quarter:1, clock:SETTINGS.qLen*60, shotClock:24, shotClockOn:false,
      possTeam:-1, frontEst:false, possTime:0, state:'tipoff', stateT:0, pending:null, user:null, play:{type:'motion',called:false}, help:null, autoHelp:[null,null], tipWinner:0, nextPoss:null};
   const home=G.teams[G.homeIdx], away=G.teams[1-G.homeIdx];
-  hlTint(G.teams[0].td);
+  hlTint(G.teams[G.userTeam].td);
   setupJerseys(home, away);
   setArenaTeams(home.td, away.td);
   for(const tm of G.teams) tm.onCourt.forEach((p,i)=>{ avatars[tm.side][i].setPlayer(p,tm); avatars[tm.side][i].group.visible=true; });
@@ -2040,6 +2060,7 @@ function startGame(userIdx, oppIdx, opts={}){
 function updateGame(dt){
   G.time+=dt;
   handleInput(dt);
+  if(MP.on) MP.remoteInput(dt);
   updateAI(dt);
   updatePlayers(dt);
   updateBall(dt);
@@ -2053,6 +2074,7 @@ function exitToMenu(){
   showMain();
 }
 function onGameOver(){
+  if(MP.host) MP.sendOver();
   const res={us:G.teams[0].score, them:G.teams[1].score};
   if(G.season && Season.data){ Season.recordUserGame(res); }
   if(FO && !FO.done){ FO.done=true; foPost({type:"hl:result", result:foResult()}); }
@@ -2239,6 +2261,9 @@ function showMain(){
       <div class="row"><input id="nameIn" class="k-input" maxlength="20" placeholder="e.g. Coach K" autocomplete="off" value="${escHTML(mgrName())}"></div>
       <div class="row"><button class="k-btn k-btn-primary k-create" data-a="create">Create a game</button></div>
       <div class="cardsplit"></div>
+      <label class="flab k-label" for="codeIn">Or join with a code</label>
+      <div class="row"><input id="codeIn" class="k-input k-code" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false"><button class="k-btn" data-a="join">Join</button></div>
+      <div class="cardsplit"></div>
       <label class="flab k-label" for="contIn">Or continue your season</label>
       <div class="row"><input id="contIn" class="k-input" size="8" readonly placeholder="No season saved" value="${escHTML(sum)}"><button class="k-btn" data-a="continue"${sum?'':' disabled'}>Continue</button></div>
       <div class="msg"></div>
@@ -2248,6 +2273,9 @@ function showMain(){
 </div>`, 'main');
   const nameIn=document.getElementById('nameIn');
   nameIn.addEventListener('input',()=>{ try{ localStorage.setItem('hl_name', nameIn.value.trim()); }catch(e){} });
+  const codeIn=document.getElementById('codeIn');
+  codeIn.addEventListener('input',()=>{ codeIn.value=codeIn.value.toUpperCase().replace(/[^A-Z0-9]/g,''); });
+  codeIn.addEventListener('keydown',e=>{ if(e.key==='Enter') MP.join(); });
   hlEntryMotion();
 }
 /* decode labels: each one resolves left to right in 400ms behind a short band of random letters, and the
@@ -2304,7 +2332,7 @@ function showTeamSelect(mode){
     ? [['Team OVR',teamRating(me),'k-acc'],['Best player',Math.max(...me.players.map(p=>p[4]))],['Conference',me.conf],['Games',SETTINGS.seasonLen]]
     : [['Team OVR',teamRating(me),'k-acc'],['Opponent',op.abbr],['Opp OVR',teamRating(op)],['Quarter',SETTINGS.qLen+'m']];
   page('select',
-    topbar(`<span class="chip">${season?'New season':'Quick play'}</span>`, tbBtn('rosters','Roster')+tbBtn('settings','Settings')+tbBtn('controls','Controls')+tbBtn('main','Leave'))
+    topbar(`${MP.code?`<span class="chip">Room <b>${escHTML(MP.code)}</b></span>`:''}<span class="chip">${season?'New season':'Quick play'}</span>`, tbBtn('rosters','Roster')+tbBtn('settings','Settings')+tbBtn('controls','Controls')+tbBtn('main','Leave'))
     + hubhead(`WELCOME · ${name} · ${me.city}`, me.name, meta)
     + `<section class="k-panel k-room">
       <div class="k-lobbygrid">
@@ -2322,6 +2350,7 @@ function showTeamSelect(mode){
           <div class="k-mgrow"><span class="n">01</span><div><div class="nm">${name}</div><div class="cl">${me.city} ${me.name}</div></div><span class="k-tag k-acc">YOU</span></div>
           ${season?'':`<div class="k-mgrow"><span class="n">02</span><div><div class="nm">CPU</div><div class="cl">${op.city} ${op.name}</div></div><span class="k-tag">CPU</span></div>`}
           <div class="k-msub" style="margin-top:18px">${season?'THE CPU RUNS THE OTHER 29 TEAMS.':'THE CPU RUNS THE OPPONENT.'}</div>
+          ${MP.code?`<div class="k-msub" style="margin-top:18px">ROOM <b>${escHTML(MP.code)}</b> · FRIENDS JOIN WITH THIS CODE TO PLAY HEAD TO HEAD</div>`:''}
         </div>
       </div>
       <div class="k-pickzone">
@@ -2469,18 +2498,21 @@ function showBoxScore(){
   const [a,b]=G.teams; const home=G.teams[G.homeIdx], away=G.teams[1-G.homeIdx];
   const gs=p=>{ const s=p.stats; return s.pts+0.4*s.fgm-0.7*s.fga-0.4*(s.fta-s.ftm)+0.7*s.oreb+0.3*(s.reb-s.oreb)+s.stl+0.7*s.ast+0.7*s.blk-s.to-0.4*s.pf + ((a.score>b.score?a:b).roster.includes(p)?3:0); };
   const all=a.roster.concat(b.roster); const pog=all.reduce((x,y)=>gs(y)>gs(x)?y:x);
-  const won=a.score>b.score, ot=G.quarter>4?(G.quarter===5?' / OT':` / ${G.quarter-4}OT`):'', ps=pog.stats;
+  // "you" are your own side (in a room the second side's players see it from theirs)
+  const mine=G.teams[G.userTeam||0], theirs=G.teams[1-(G.userTeam||0)];
+  const won=mine.score>theirs.score, ot=G.quarter>4?(G.quarter===5?' / OT':` / ${G.quarter-4}OT`):'', ps=pog.stats;
   page('box',
-    topbar(`<span class="chip">Final${ot}</span><span class="chip">${FO?'Front Office':G.season?'Season mode':'Quick play'}</span>`, FO?'':tbBtn('main','Leave'))
-    + hubhead(`FINAL${ot} · ${won?'VICTORY':'DEFEAT'} · ${a.td.name}`, `${away.td.abbr} ${away.score} - ${home.score} ${home.td.abbr}`, [['Result',won?'Win':'Loss',won?'k-good':'k-bad'],[away.td.abbr,away.score],[home.td.abbr,home.score]])
+    topbar(`<span class="chip">Final${ot}</span><span class="chip">${FO?'Front Office':MP.on?'Head to head · '+MP.code:G.season?'Season mode':'Quick play'}</span>`, FO||MP.on?'':tbBtn('main','Leave'))
+    + hubhead(`FINAL${ot} · ${won?'VICTORY':'DEFEAT'} · ${mine.td.name}`, `${away.td.abbr} ${away.score} - ${home.score} ${home.td.abbr}`, [['Result',won?'Win':'Loss',won?'k-good':'k-bad'],[away.td.abbr,away.score],[home.td.abbr,home.score]])
     + panel(`Player of the game · ${pog.name}`, `<div class="k-clubmeta">${[['PTS',ps.pts,'k-acc'],['REB',ps.reb],['AST',ps.ast],['STL',ps.stl],['BLK',ps.blk],['FG',`${ps.fgm}-${ps.fga}`]].map(cmeta).join('')}</div>`)
     + boxTable(away) + boxTable(home)
-    + `<div class="hl-foot">${FO?'<span></span><button class="k-btn k-btn-primary" data-a="foClose">Back to Front Office &rarr;</button>':'<button class="k-btn" data-a="main">Main Menu</button>'+(G.season?'<button class="k-btn k-btn-primary" data-a="seasonHub">Continue Season &rarr;</button>':'<button class="k-btn k-btn-primary" data-a="rematch">Rematch &rarr;</button>')}</div>`, a.td);
+    + `<div class="hl-foot">${FO?'<span></span><button class="k-btn k-btn-primary" data-a="foClose">Back to Front Office &rarr;</button>':MP.on?`<span class="k-msub">${MP.saved?'RESULT SAVED TO ROOM '+MP.code:'SAVING THE RESULT…'}</span><button class="k-btn k-btn-primary" data-a="mpBack">Back to the room &rarr;</button>`:'<button class="k-btn" data-a="main">Main Menu</button>'+(G.season?'<button class="k-btn k-btn-primary" data-a="seasonHub">Continue Season &rarr;</button>':'<button class="k-btn k-btn-primary" data-a="rematch">Rematch &rarr;</button>')}</div>`, a.td);
 }
 
 /* ---------- pause and substitutions ---------- */
 function togglePause(){
   if(G.mode!=='game') return;
+  if(G.remote){ MP.menu(); return; }
   if(G.paused){ G.paused=false; hideUI(); }
   else { G.paused=true; showPause(); }
 }
@@ -2506,10 +2538,22 @@ function showSubs(){
 }
 /* the screen a tool screen goes back to */
 function hlFrom(){ return hlScreen==='playoffs'?'hub':hlScreen; }
-function hlBack(to){ if(to==='pause') showPause(); else if(to==='select') showTeamSelect(); else if(to==='hub') showSeasonHub(); else showMain(); }
+function hlBack(to){ if(to==='pause') showPause(); else if(to==='mpmenu'){ MP.menuOpen=false; MP.menu(); } else if(to==='room') MP.renderRoom(true); else if(to==='select') showTeamSelect(); else if(to==='hub') showSeasonHub(); else showMain(); }
 const ACTIONS = {
-  main:()=>{ if(FO){ foPost({type:"hl:close"}); return; } if(G.mode==='post'||G.mode==='game') exitToMenu(); else showMain(); },
-  create:()=>showTeamSelect('season'),
+  main:()=>{ if(FO){ foPost({type:"hl:close"}); return; } if(G.mode==='post'||G.mode==='game') exitToMenu(); else { if(MP.code){ MP.leave(); } showMain(); } },
+  create:()=>MP.create(),
+  join:()=>MP.join(),
+  mpSide:(el)=>{ const s=+el.dataset.v, R=MP.room, f=R.members.find(m=>m.side===s); let t=f&&Number.isInteger(f.team)?f.team:selUser; const o=R.members.find(m=>m.side===1-s&&Number.isInteger(m.team)); if(!f && o && o.team===t) t=(t+1)%30; MP.pick(s,t); },
+  mpTeam:(el)=>{ const me=MP.room.members.find(m=>m.name===MP.name); if(me && me.side!=null){ selUser=+el.dataset.v; MP.pick(me.side,+el.dataset.v); } },
+  mpQ:(el)=>MP.send({t:'opts', qLen:+el.dataset.v}),
+  mpStart:()=>MP.send({t:'start'}),
+  mpLeave:()=>{ MP.leave(); showMain(); },
+  mpBack:()=>{ MP.endGame(); if(MP.room) MP.renderRoom(true); else showMain(); },
+  mpResume:()=>{ MP.menuOpen=false; hideUI(); },
+  mpQuit:()=>{ MP.endGame(); MP.leave(); showMain(); },
+  mpRestore:()=>MP.restore(false),
+  mpNew:()=>{ MP.code=''; MP.room=null; MP.create(); },
+  mpHome:()=>{ location.href='/'; },
   continue:()=>{ if(Season.data && Season.data.games) showSeasonHub(); },
   quick:()=>showTeamSelect('quick'),
   pickU:(el)=>{ selUser=+el.dataset.v; if(selectMode==='quick' && selUser===selOpp) selOpp=(selOpp+1)%30; showTeamSelect(); },
@@ -2554,7 +2598,7 @@ const ACTIONS = {
   pauseBack:()=>showPause(),
   pSettings:()=>{ settingsBack='pause'; showSettings(); },
   pControls:()=>{ controlsBack='pause'; showControls(); },
-  quitGame:()=>{ if(FO){ FO.done=true; foPost({type:"hl:quit"}); return; } G.paused=false; exitToMenu(); },
+  quitGame:()=>{ if(FO){ FO.done=true; foPost({type:"hl:quit"}); return; } if(MP.host){ MP.send({t:'abandon'}); MP.endGame(); MP.renderRoom(true,'You left the game. It does not count.'); return; } G.paused=false; exitToMenu(); },
   foClose:()=>foPost({type:"hl:close"}),
   hub:()=>{ location.href="/front-office"; }
 };
@@ -2593,6 +2637,398 @@ if(FO) addEventListener('message', e=>{
 });
 
 /* =====================================================================
+   SECTION 16 - A GAME WITH FRIENDS (rooms on the site's server, rooms/hardwood.js)
+   "Create a game" opens a room with a code and friends join it with the code. Alone in the room it plays
+   the same as before (a season or quick play). With two or more people the room picks two sides and a team
+   for each side, and the host tips off. The host's browser plays the game: each friend's keys reach it
+   through the server, and it sends a picture of the court twenty times a second for the friends' browsers to
+   draw. The result is saved with the room. If the server restarted and lost the room, the page says so once
+   and can put the room back from this browser's copy.
+   ===================================================================== */
+const MP_PF=['x','y','z','vx','vz','vy','facing','state','moveType','moveT','moveDur','hasBall','dribbling','dribblePh','dribbleHand','inbounding','finType','stumbleT','stealAnimT','passAnimT','stance','sprinting','shootT','shotIdeal','released','jumped','hangT','chargeSet','celebrateT','aiStance','onFire','coldN','stamina','fouls','fouledOut'];
+const MP_BOOL=new Set(['hasBall','dribbling','inbounding','stance','sprinting','released','jumped','chargeSet','aiStance','onFire','fouledOut']);
+const MP_SK=['pts','reb','oreb','ast','stl','blk','fgm','fga','tpm','tpa','ftm','fta','to','pf','sec'];
+const MP_KEYS=['Up','Down','Left','Right','Shift','W','A','S','D','Z','X','C','V','Space'];
+const mpNum=v=>typeof v==='number'?Math.round(v*1000)/1000:typeof v==='boolean'?(v?1:0):v==null?0:v;
+const mpSleep=ms=>new Promise(r=>setTimeout(r,ms));
+Object.assign(MP, {
+  code:'', name:'', token:'', room:null, copy:null, ws:null, tries:0, game:null, ctl:[], cur:null, ev:[], snapN:0, sendT:0, saved:false,
+  lastSnapAt:0, outP:{}, outR:{}, keep:null, menuOpen:false,
+  test:/[?&]hltest=1\b/.test(location.search),
+  speed:Math.max(1,Math.min(16,+((location.search.match(/[?&]hlspeed=(\d+)/)||[])[1]||1))),
+
+  // ---------- talking to the server: quiet retries while it wakes up ----------
+  async call(path, body){
+    const t0=Date.now();
+    for(let i=0;;i++){
+      let r=null;
+      try{ r=await fetch(path, body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store'}); }
+      catch(e){ if(body && i===0 && !navigator.onLine){ const x=new Error('You are offline.'); x.offline=true; throw x; } }
+      if(r && r.status!==502 && r.status!==503 && r.status!==504){
+        const j=await r.json().catch(()=>null);
+        if(!j){ const x=new Error('The game server is not running here.'); x.offline=true; throw x; }
+        if(!r.ok){ const x=new Error(j.error||'Something went wrong.'); x.status=r.status; throw x; }
+        return j;
+      }
+      if(Date.now()-t0>45000){ const x=new Error('The server is not answering. Try again in a minute.'); x.offline=!r; throw x; }
+      await mpSleep(Math.min(4000,500*(i+1)));
+    }
+  },
+  remember(){ try{ localStorage.setItem('hl_room', JSON.stringify({code:MP.code,name:MP.name,token:MP.token})); if(MP.copy) localStorage.setItem('hl_room_copy', JSON.stringify(MP.copy)); }catch(e){} },
+  forget(){ try{ localStorage.removeItem('hl_room'); }catch(e){} },
+  enter(j, name){
+    MP.code=j.code; MP.token=j.token; MP.name=name; MP.room=j.room; if(j.copy) MP.copy=j.copy;
+    MP.remember(); MP.connect();
+  },
+  async create(){
+    const name=(mgrName()||'Coach').slice(0,20);
+    MP.msg('');
+    try{ const j=await MP.call('/api/hl/create',{name, team:selUser}); MP.enter(j,name); }
+    catch(e){ if(!e.offline){ MP.msg(e.message); return; } }
+    showTeamSelect('season');
+  },
+  async join(){
+    const name=(mgrName()||'Coach').slice(0,20), inp=document.getElementById('codeIn'), code=(inp&&inp.value||'').trim().toUpperCase();
+    if(!code){ MP.msg('Type the code your friend sent you.'); return; }
+    MP.msg('');
+    try{ const j=await MP.call('/api/hl/join',{code,name,team:selUser}); MP.enter(j,name); MP.renderRoom(true); }
+    catch(e){ MP.msg(e.status===404?'No room with that code. Check it with your friend.':e.message); }
+  },
+  msg(t){ const el=ui.querySelector('.k-card .msg'); if(el) el.textContent=t; },
+  // ---------- the live line ----------
+  connect(){
+    if(MP.ws){ const old=MP.ws; MP.ws=null; try{ old.onclose=null; old.close(); }catch(e){} }
+    if(!MP.code) return;
+    let ws; const url=(location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/hl/live?code='+MP.code+'&name='+encodeURIComponent(MP.name)+'&token='+MP.token;
+    try{ ws=new WebSocket(url); }catch(e){ MP.retry(); return; }
+    MP.ws=ws;
+    ws.onopen=()=>{ MP.tries=0; MP.link(true); if(hlScreen==='room') MP.renderRoom(); };
+    ws.onmessage=e=>{ let m=null; try{ m=JSON.parse(e.data); }catch(x){ return; } MP.onMsg(m); };
+    ws.onclose=e=>{
+      if(MP.ws!==ws) return; MP.ws=null;
+      if(e.code===4404) return MP.gone();
+      if(e.code===4403) return MP.rejoin();
+      if(e.code===4409){ MP.link(false,'OPEN IN ANOTHER TAB'); return; }
+      MP.retry();
+    };
+  },
+  retry(){ if(!MP.code) return; MP.link(false); clearTimeout(MP.rt); MP.rt=setTimeout(()=>MP.connect(), Math.min(5000,500*(1+MP.tries++))); },
+  send(m){ if(MP.ws && MP.ws.readyState===1) MP.ws.send(JSON.stringify(m)); },
+  async rejoin(){
+    // the key was not taken (the room came back from someone else's copy): back in by name, like Floodlights
+    try{ const j=await MP.call('/api/hl/join',{code:MP.code,name:MP.name}); MP.enter(j,MP.name); }
+    catch(e){ if(e.status===404) MP.gone(); else MP.retry(); }
+  },
+  link(on,text){
+    MP.online_=on;
+    const el=document.getElementById('hlLink'); if(el){ el.textContent=on?'LIVE':(text||'RECONNECTING'); el.classList.toggle('k-bad',!on); }
+  },
+  online(name){ const m=MP.room&&MP.room.members.find(x=>x.name===name); return !!(m&&m.online); },
+  onMsg(m){
+    if(m.t==='room'){ MP.room=m.room; MP.keepCopy(); if(hlScreen==='select'||hlScreen==='room') MP.renderRoom(); return; }
+    if(m.t==='start'){ MP.begin(m.game, !!m.rejoin); return; }
+    if(m.t==='snap'){ if(G.remote) MP.applySnap(m); return; }
+    if(m.t==='input'){ if(MP.host) MP.takeInput(m); return; }
+    if(m.t==='over'){ MP.saved=true; if(G.remote) MP.finish(); else if(hlScreen==='box') showBoxScore(); MP.store(m.result); return; }
+    if(m.t==='abandoned'){ if(G.remote||MP.host){ MP.endGame(); MP.renderRoom(true,'The host left the game. It does not count.'); } return; }
+    if(m.t==='gone'){ MP.gone(); return; }
+  },
+  // this browser's copy of the room (to put it back after a server restart)
+  keepCopy(){
+    if(!MP.copy||!MP.room) return;
+    const c=MP.copy, R=MP.room; c.opts=R.opts; c.results=R.results; c.host=R.host;
+    for(const m of R.members){ const k=c.members[m.name]||(c.members[m.name]={name:m.name,token:'',joined:Date.now()}); k.side=m.side; k.team=m.team; }
+    for(const n of Object.keys(c.members)) if(!R.members.some(m=>m.name===n)) delete c.members[n];
+    MP.remember();
+  },
+  store(res){ try{ const a=JSON.parse(localStorage.getItem('hl_mp_results')||'[]'); if(!a.some(x=>x.id===res.id)){ a.push(Object.assign({code:MP.code},res)); localStorage.setItem('hl_mp_results', JSON.stringify(a.slice(-50))); } }catch(e){} },
+  gone(){
+    // the server lost the room. In a game the host puts it back quietly (it has the game); otherwise say so once
+    if(MP.host && G.mode==='game' && MP.copy){ MP.restore(true); return; }
+    if(G.remote) MP.endGame();
+    clearTimeout(MP.rt); MP.forget();
+    const copy=!!MP.copy && MP.copy.code===MP.code;
+    modal('ended', `<div class="k-modal-kicker">Room ${escHTML(MP.code)}</div><h3 class="k-modal-title">This game session ended</h3>
+      <p class="k-lead">${copy?'The server restarted and this room was cleared. This browser kept a copy of it. Restore it, and your friends get back in with the same code.':'The server restarted and this room was cleared, and this browser has no copy of it.'}</p>
+      <div class="hl-mstack">${copy?'<button class="k-btn k-btn-primary" data-a="mpRestore">Restore the room</button>':''}<button class="k-btn${copy?'':' k-btn-primary'}" data-a="mpNew">Create a new game</button><button class="k-btn" data-a="mpHome">Go home</button></div><p class="msg" style="margin-top:10px"></p>`);
+  },
+  async restore(quiet){
+    const c=MP.copy; if(!c) return;
+    try{
+      const j=await MP.call('/api/hl/restore',{name:MP.name,token:MP.token,room:c});
+      MP.enter(j,MP.name);
+      if(!quiet) MP.renderRoom(true);
+    }catch(e){ const el=ui.querySelector('.k-modal .msg'); if(el) el.textContent=e.message; else if(quiet) MP.retry(); }
+  },
+  leave(){
+    MP.send({t:'leave'}); clearTimeout(MP.rt);
+    if(MP.ws){ const w=MP.ws; MP.ws=null; try{ w.onclose=null; setTimeout(()=>w.close(),200); }catch(e){} }
+    MP.forget(); MP.code=''; MP.room=null; MP.token='';
+  },
+  // ---------- the room before the game ----------
+  renderRoom(force, note){
+    if(!MP.room||G.mode==='game') return;
+    if(!force && hlScreen!=='select' && hlScreen!=='room') return;
+    if(MP.room.members.length<2 && MP.room.phase==='lobby'){ showTeamSelect(selectMode); return; }
+    showRoom(note);
+  },
+  pick(side, team){ MP.send({t:'pick', side, team}); },
+  // ---------- the game ----------
+  begin(game, rejoin){
+    const iHost=MP.room&&MP.room.host===MP.name;
+    const side=game.seats[0].includes(MP.name)?0:game.seats[1].includes(MP.name)?1:-1;
+    if(iHost && rejoin){
+      // a host page that came back with its game still running carries on; a reloaded one cannot (the game was in it)
+      if(G.mode==='game' && MP.host) return;
+      MP.send({t:'abandon'}); return;
+    }
+    if(!iHost && rejoin && G.remote && MP.game && MP.game.id===game.id) return;
+    MP.game=game; MP.saved=false; MP.ev=[]; MP.snapN=0; MP.menuOpen=false;
+    MP.keep=MP.keep||{qLen:SETTINGS.qLen, diff:SETTINGS.diff};
+    SETTINGS.qLen=game.qLen; SETTINGS.diff=game.diff!=null?game.diff:1;
+    MP.on=true; MP.human=[true,true]; MP.hostSide=game.seats[0].includes(MP.room.host)?0:game.seats[1].includes(MP.room.host)?1:-1;
+    if(iHost){
+      MP.host=true; MP.remote=false;
+      MP.ctl=[]; game.seats.forEach((names,t)=>names.forEach((n,i)=>MP.ctl.push({name:n, team:t, lead:i===0, local:n===MP.name, p:null, keys:{}, pressed:{}, released:{}, basis:null, rel:null, ftc:null, auto:false, sDown:null, meter:null})));
+      startGame(game.teams[0], game.teams[1], {userTeam:side<0?0:side, label:'HEAD TO HEAD · '+game.qLen+' MIN QUARTERS'});
+      if(side<0) G.user=null;
+    } else {
+      MP.host=false; MP.remote=true; MP.ctl=[];
+      MP.view(game, side);
+    }
+  },
+  lead(t){ return MP.ctl.find(c=>c.team===t)||null; },
+  held(p){ for(const c of MP.ctl) if(c.p===p) return true; return false; },
+  autoOf(c){ return !c || (c.local ? !!G.autopilot : (c.auto || !MP.online(c.name))); },
+  autoP(p){ return MP.autoOf(MP.ctl.find(c=>c.p===p)); },
+  auto(t){ return MP.autoOf(MP.lead(t)); },
+  take(p, c){
+    if(!p) return;
+    if(!c){ if(MP.held(p)) return; c=MP.lead(p.team); }
+    if(!c || c.team!==p.team || c.p===p) return;
+    const other=MP.ctl.find(x=>x!==c && x.p===p);
+    if(other){ other.p=c.p; if(other.local) G.user=other.p; }
+    if(c.p){ c.p.stance=false; c.p.chargeSet=false; }
+    c.p=p; if(c.local) G.user=p;
+  },
+  tipoff(){
+    for(const t of [0,1]) MP.ctl.filter(c=>c.team===t).forEach((c,i)=>{ c.p=G.teams[t].onCourt[i]; });
+    const me=MP.ctl.find(c=>c.local); G.user=me?me.p:null;
+  },
+  swapOut(out, inn){ for(const c of MP.ctl) if(c.p===out){ c.p=inn; if(c.local) G.user=inn; } },
+  meter(p, res){ const c=MP.ctl.find(x=>x.p===p && !x.local); if(c) c.meter=res; },
+  // each friend's keys, played through the same input code as this browser's own
+  remoteInput(dt){
+    if(!MP.host) return;
+    const keep={user:G.user, team:G.userTeam, auto:G.autopilot, meter:G.meterResult, sDown:G.sDown};
+    for(const c of MP.ctl){
+      if(c.local || !c.p) continue;
+      MP.cur=c; G.user=c.p; G.userTeam=c.team; G.autopilot=MP.autoOf(c); G.meterResult=null; G.sDown=c.sDown;
+      IN={keys:c.keys, pressed:c.pressed, released:c.released, basis:c.basis, rel:c.rel};
+      const f=G.ft, fc=f?f.cursor:null;
+      if(f && f.phase==='aim' && c.ftc!=null && c.pressed.W) f.cursor=c.ftc;
+      try{ handleInput(dt); }
+      catch(err){ console.error(err); }
+      if(f && G.ft===f && f.phase==='aim' && fc!=null) f.cursor=fc;
+      c.sDown=G.sDown; if(G.meterResult) c.meter=G.meterResult;
+      for(const k in c.pressed) delete c.pressed[k]; for(const k in c.released) delete c.released[k]; c.rel=null; c.ftc=null;
+      IN=LOCAL_IN; MP.cur=null;
+    }
+    G.user=keep.user; G.userTeam=keep.team; G.autopilot=keep.auto; G.meterResult=keep.meter; G.sDown=keep.sDown;
+  },
+  takeInput(m){
+    const c=MP.ctl.find(x=>x.name===m.from && !x.local); if(!c) return;
+    const k={}; for(const n of MP_KEYS) if(m.k && m.k[n]) k[n]=true; c.keys=k;
+    for(const n of (m.p||[])) if(MP_KEYS.includes(n)) c.pressed[n]=true;
+    for(const n of (m.r||[])) if(MP_KEYS.includes(n)) c.released[n]=true;
+    if(Array.isArray(m.b) && m.b.length===4 && m.b.every(Number.isFinite)) c.basis={fx:m.b[0],fz:m.b[1],rx:m.b[2],rz:m.b[3]};
+    if(Number.isFinite(m.rel)) c.rel=m.rel;
+    if(Number.isFinite(m.ftc)) c.ftc=m.ftc;
+    c.auto=!!(MP.test && m.auto);
+  },
+  snap(){
+    const T=G.teams, slot=p=>p?G.teams[p.team].onCourt.indexOf(p):-1;
+    const m={t:'snap', n:++MP.snapN,
+      g:[mpNum(G.time),G.state,G.quarter,mpNum(G.clock),mpNum(G.shotClock),G.shotClockOn?1:0,G.possTeam,G.homeIdx,T[0].score,T[1].score,T[0].teamFouls,T[1].teamFouls,G.paused?1:0,G.mode],
+      on:T.map(t=>t.onCourt.map(p=>t.roster.indexOf(p))),
+      P:T.map(t=>t.onCourt.map(p=>MP_PF.map(k=>mpNum(p[k])))),
+      B:[mpNum(ball.x),mpNum(ball.y),mpNum(ball.z),mpNum(ball.vx),mpNum(ball.vy),mpNum(ball.vz),ball.holder?ball.holder.team:-1,slot(ball.holder),ball.state],
+      ft:G.ft&&G.ft.shooter?[G.ft.phase,mpNum(G.ft.cursor),mpNum(G.ft.zone),G.ft.i,G.ft.n,G.ft.shooter.team,slot(G.ft.shooter)]:null,
+      c:{}, ev:MP.ev.splice(0)};
+    for(const c of MP.ctl) if(c.p) m.c[c.name]=[c.p.team,slot(c.p)];
+    const mt={}; let any=false; for(const c of MP.ctl) if(c.meter){ mt[c.name]=c.meter; c.meter=null; any=true; } if(any) m.mt=mt;
+    if(MP.snapN%10===1 || G.mode==='post' || G.state==='final') m.S=T.map(t=>t.roster.map(p=>MP_SK.map(k=>p.stats[k])));
+    return m;
+  },
+  sendOver(){
+    const T=G.teams, box=t=>T[t].roster.filter(p=>p.stats.sec>0).sort((a,b)=>b.stats.pts-a.stats.pts).slice(0,8).map(p=>[p.name,p.stats.pts,p.stats.reb,p.stats.ast]);
+    MP.send({t:'snap', ...MP.snap()});
+    MP.send({t:'over', result:{home:{score:T[0].score, box:box(0)}, away:{score:T[1].score, box:box(1)}, ot:Math.max(0,G.quarter-4)}});
+  },
+  // ---------- a friend's browser: the court drawn from the host's pictures ----------
+  view(game, side){
+    G={mode:'game', remote:true, time:0, crowdE:0.3, userTeam:side<0?0:side, homeIdx:0, season:false, paused:false,
+       teams:[makeTeam(game.teams[0],0), makeTeam(game.teams[1],1)], dir:[1,-1], quarter:1, clock:SETTINGS.qLen*60, shotClock:24, shotClockOn:false,
+       possTeam:-1, state:'tipoff', stateT:0, user:null, ft:null, meterResult:null, sDown:null};
+    const home=G.teams[0], away=G.teams[1];
+    hlTint(G.teams[G.userTeam].td); setupJerseys(home, away); setArenaTeams(home.td, away.td);
+    for(const tm of G.teams) tm.onCourt.forEach((p,i)=>{ p.slot=i; avatars[tm.side][i].setPlayer(p,tm); avatars[tm.side][i].group.visible=true; });
+    ballMesh.visible=true; ball.holder=null; ball.state='dead'; ball.shot=null; ball.pass=null; ball.x=0; ball.y=5; ball.z=0; ball.vx=ball.vy=ball.vz=0;
+    hideUI(); document.getElementById('hud').style.display='block'; setupHUD();
+    camState.fx=0; camState.fz=0; camState.pos.set(0,31,58);
+    for(const t of [0,1]){ const d=G.dir[t], zs=t===0?1:-1, pos=[[-d*14,0],[-d*7,8],[-d*7,-8],[d*6,9*zs],[-d*1.4,0]];
+      G.teams[t].onCourt.forEach((p,i)=>{ p.resetCourt(pos[i][0],pos[i][1]); p.facing=Math.atan2(d,0); }); }
+    banner(`${away.td.name.toUpperCase()} @ ${home.td.name.toUpperCase()}`, 'HEAD TO HEAD · '+game.qLen+' MIN QUARTERS');
+    MP.lastSnapAt=performance.now(); MP.firstSnap=true;
+    Sound.init(); crowd(0.8);
+  },
+  applySnap(m){
+    const now=performance.now(), [gt,st,q,clk,sc,sco,pt,home,s0,s1,f0,f1,paused,mode]=m.g, T=G.teams;
+    G.time=gt; G.state=st; G.quarter=q; G.clock=clk; G.shotClock=sc; G.shotClockOn=!!sco; G.possTeam=pt; G.homeIdx=home;
+    T[0].score=s0; T[1].score=s1; T[0].teamFouls=f0; T[1].teamFouls=f1;
+    if(!!paused!==!!G.paused){ G.paused=!!paused; MP.pausedNote(G.paused); }
+    m.on.forEach((idx,t)=>{ const Tm=T[t], want=idx.map(i=>Tm.roster[i]).filter(Boolean);
+      if(want.length===5 && want.some((p,i)=>p!==Tm.onCourt[i])){ Tm.onCourt=want; Tm.bench=Tm.roster.filter(p=>!want.includes(p)); want.forEach((p,i)=>{ p.slot=i; avatars[Tm.side][i].setPlayer(p,Tm); }); } });
+    m.P.forEach((arr,t)=>arr.forEach((v,i)=>{ const p=T[t].onCourt[i]; if(!p) return;
+      MP_PF.forEach((k,j)=>{ if(k==='x'||k==='y'||k==='z'||k==='facing') return; p[k]=MP_BOOL.has(k)?!!v[j]:v[j]; });
+      p._t={x:v[0],y:v[1],z:v[2],f:v[6],at:now};
+      if(MP.firstSnap){ p.x=v[0]; p.y=v[1]; p.z=v[2]; p.facing=v[6]; } }));
+    const B=m.B; ball._t={x:B[0],y:B[1],z:B[2],at:now}; ball.vx=B[3]; ball.vy=B[4]; ball.vz=B[5]; ball.state=B[8];
+    ball.holder=B[6]>=0?T[B[6]].onCourt[B[7]]||null:null;
+    if(MP.firstSnap){ ball.x=B[0]; ball.y=B[1]; ball.z=B[2]; MP.firstSnap=false; }
+    G.ft=m.ft?{phase:m.ft[0],cursor:m.ft[1],zone:m.ft[2],i:m.ft[3],n:m.ft[4],shooter:T[m.ft[5]].onCourt[m.ft[6]]}:null;
+    const mine=m.c&&m.c[MP.name]; G.user=mine?T[mine[0]].onCourt[mine[1]]||null:null;
+    if(m.mt&&m.mt[MP.name]) G.meterResult=Object.assign({},m.mt[MP.name]);
+    if(m.S) m.S.forEach((rows,t)=>rows.forEach((v,i)=>{ const p=T[t].roster[i]; if(p) MP_SK.forEach((k,j)=>{ p.stats[k]=v[j]; }); }));
+    // the host's pop ups are coloured for the host's side; a player on the other side sees them the other way round
+    const flip=MP.hostSide>=0 && G.userTeam!==MP.hostSide;
+    for(const e of (m.ev||[])){ const [f,a,b,c]=e;
+      if(f==='popup') popup(a, flip?(b==='red'?'':(!b||b==='blue')?'red':b):b);
+      else if(f==='ticker') ticker(a); else if(f==='flash') flash(); else if(f==='banner') banner(a,b,c);
+      else if(f==='crowd') crowd(a); else if(f==='shake') shake(a);
+      else if(f==='sound' && typeof Sound[a]==='function' && MP.sounds.includes(a)) Sound[a].apply(Sound, Array.isArray(b)?b:[]); }
+    MP.lastSnapAt=now;
+    if(mode==='post' && G.mode==='game') MP.finish();
+  },
+  viewTick(dt){
+    const now=performance.now(), k=1-Math.exp(-dt*18);
+    for(const t of G.teams) for(const p of t.onCourt){ const s=p._t; if(!s) continue;
+      const e=Math.min(0.12,(now-s.at)/1000);
+      p.x+=(s.x+p.vx*e-p.x)*k; p.z+=(s.z+p.vz*e-p.z)*k; p.y+=(Math.max(0,s.y+(p.vy||0)*e)-p.y)*Math.min(1,k*1.6);
+      let df=s.f-p.facing; df=Math.atan2(Math.sin(df),Math.cos(df)); p.facing+=df*k;
+      if(p.dribbling){ const sp=Math.hypot(p.vx,p.vz); p.dribblePh+=dt*(1.9+sp*0.09)*Math.PI; }
+      if(p.state==='shoot' && !p.released) p.shootT+=dt; }
+    const b=ball._t; if(b){ const e=Math.min(0.12,(now-b.at)/1000), held=!!ball.holder;
+      const tx=b.x+(held?0:ball.vx*e), ty=held?b.y:Math.max(BALL_R,b.y+ball.vy*e-0.5*GRAV*e*e), tz=b.z+(held?0:ball.vz*e);
+      ball.x+=(tx-ball.x)*k; ball.y+=(ty-ball.y)*Math.min(1,k*1.6); ball.z+=(tz-ball.z)*k; }
+    if(G.ft && G.ft.phase==='aim') G.ft.cursor=G.ft.cursor; // drawn as sent
+    G.time+=dt;
+    // no picture for a while: the host lost the line (it comes back by itself, or the room ends the game)
+    const quiet=now-MP.lastSnapAt>4000;
+    if(quiet!==!!MP.quiet){ MP.quiet=quiet; banner(quiet?'WAITING FOR THE HOST':'', quiet?'THE HOST LOST THE CONNECTION FOR A MOMENT':'', quiet); }
+  },
+  // the keys of a friend's browser, sent to the host about thirty times a second
+  sendInput(){
+    for(const k in pressed) MP.outP[k]=1; for(const k in released) MP.outR[k]=1;
+    const now=performance.now(); if(now-MP.sendT<33) return; MP.sendT=now;
+    const k={}; for(const n of MP_KEYS) if(keys[n]) k[n]=1;
+    const b=camBasis(), m={t:'input', k, p:Object.keys(MP.outP), r:Object.keys(MP.outR), b:[mpNum(b.fx),mpNum(b.fz),mpNum(b.rx),mpNum(b.rz)]};
+    const u=G.user;
+    if(MP.outR.W && u && u.state==='shoot' && !u.released) m.rel=mpNum(u.shootT/u.shotIdeal);
+    if(MP.outP.W && G.state==='ft' && G.ft && G.ft.phase==='aim') m.ftc=mpNum(G.ft.cursor);
+    if(MP.test && G.autopilot) m.auto=1;
+    MP.outP={}; MP.outR={};
+    MP.send(m);
+  },
+  tick(dt){
+    if(MP.host && (G.mode==='game'||G.mode==='post')){
+      const now=performance.now(); if(now-MP.sendT>=50){ MP.sendT=now; if(G.mode==='game') MP.send(MP.snap()); }
+    } else if(G.remote && G.mode==='game') MP.sendInput();
+  },
+  finish(){
+    // the final buzzer on a friend's browser: the same box score the host sees
+    if(!G.remote) return;
+    G.mode='post'; document.getElementById('hud').style.display='none'; banner('','',false);
+    showBoxScore();
+  },
+  pausedNote(on){ if(G.remote){ banner(on?'PAUSED':'', on?'THE HOST PAUSED THE GAME':'', on); } },
+  menu(){
+    if(MP.menuOpen){ MP.menuOpen=false; hideUI(); return; }
+    MP.menuOpen=true;
+    modal('mpmenu', `<div class="k-modal-kicker">Head to head · ${qLabel(G.quarter)} ${fmtClock(G.clock)}</div><h3 class="k-modal-title">${scoreLine()}</h3>
+      <div class="hl-mstack"><button class="k-btn k-btn-primary" data-a="mpResume">Back to the game</button><button class="k-btn" data-a="pControls">Controls</button><button class="k-btn k-btn-danger" data-a="mpQuit">Leave the game</button></div>`);
+  },
+  endGame(){
+    // back to the room screen: the court empties, this browser's own settings come back
+    if(G.mode==='game'||G.mode==='post'){
+      for(const a of avatars.flat()) a.group.visible=false; ballMesh.visible=false; userRing.visible=false; passRing.visible=false; userArrow.visible=false;
+      document.getElementById('hud').style.display='none'; banner('','',false);
+    }
+    G={mode:'menu',time:0,crowdE:0.2};
+    if(MP.keep){ SETTINGS.qLen=MP.keep.qLen; SETTINGS.diff=MP.keep.diff; MP.keep=null; }
+    MP.on=false; MP.host=false; MP.remote=false; MP.human=[false,false]; MP.ctl=[]; MP.game=null; MP.menuOpen=false; MP.quiet=false;
+    setArenaTeams(LEAGUE.teams[menuTeam], LEAGUE.teams[(menuTeam+5)%30]);
+  },
+  sounds:['whistle','squeak','swish','ooh','clank','buzzer','board','bounce','pass'],
+  async resume(){
+    let saved=null; try{ saved=JSON.parse(localStorage.getItem('hl_room')||'null'); MP.copy=JSON.parse(localStorage.getItem('hl_room_copy')||'null'); }catch(e){ saved=null; }
+    if(!saved || !saved.code || FO) return;
+    try{
+      const j=await MP.call('/api/hl/room?code='+encodeURIComponent(saved.code)+'&name='+encodeURIComponent(saved.name)+'&token='+encodeURIComponent(saved.token));
+      // a room with friends opens again where it was; alone in it, the page starts at the entry like before
+      if(j.room.members.length<2 && j.room.phase==='lobby'){ MP.forget(); return; }
+      if(hlScreen!=='main') return;
+      MP.enter({code:saved.code, token:saved.token, room:j.room, copy:j.copy}, saved.name);
+      MP.renderRoom(true);
+    }catch(e){
+      if(e.status===404){ MP.code=saved.code; MP.name=saved.name; MP.token=saved.token; MP.gone(); }
+      else if(e.status===403) MP.forget();
+    }
+  },
+});
+// the host's sounds go to the friends' browsers too
+for(const n of MP.sounds){ const f=Sound[n]; if(typeof f==='function') Sound[n]=function(...a){ if(MP.host) MP.ev.push(['sound',n,a]); return f.apply(Sound,a); }; }
+
+/* the room with friends: two sides, a team each, the host tips off */
+function showRoom(note){
+  const R=MP.room, me=R.members.find(m=>m.name===MP.name)||{}, host=R.host===MP.name;
+  const side=s=>R.members.filter(m=>m.side===s);
+  const teamOf=s=>{ const f=side(s)[0]; return f&&Number.isInteger(f.team)?f.team:null; };
+  const myTeam=me.side!=null?teamOf(me.side):null, otherTeam=me.side!=null?teamOf(1-me.side):null;
+  const first=me.side!=null && side(me.side)[0] && side(me.side)[0].name===MP.name;
+  const ready=side(0).length && side(1).length && teamOf(0)!=null && teamOf(1)!=null && teamOf(0)!==teamOf(1);
+  const td=myTeam!=null?LEAGUE.teams[myTeam]:LEAGUE.teams[selUser];
+  hlTint(td);
+  const col=s=>{ const t=teamOf(s), T=t!=null?LEAGUE.teams[t]:null, list=side(s);
+    return `<div class="hl-side"><div class="k-mlab">${s===0?'HOME':'AWAY'}</div><div class="hl-sideteam">${T?`${swatch(T)}${T.city} ${T.name}<span class="k-msub"> · OVR ${teamRating(T)}</span>`:'<span class="k-msub">NO TEAM YET</span>'}</div>
+      ${list.map(m=>`<div class="k-mgrow"><span class="n">${m.online?'<span class="k-pulse"></span>':''}</span><div><div class="nm">${escHTML(m.name)}</div></div>${m.name===MP.name?'<span class="k-tag k-acc">YOU</span>':m.name===R.host?'<span class="k-tag">HOST</span>':''}</div>`).join('')||'<div class="k-msub">NOBODY YET</div>'}
+      ${me.side!==s&&list.length<2?`<button class="k-btn k-btn-sm" data-a="mpSide" data-v="${s}">Play ${s===0?'home':'away'}</button>`:''}</div>`; };
+  const last=R.results.slice(-5).reverse();
+  const qRow=`<div class="k-controls"><span class="k-msub hl-optk">QUARTER</span><span class="hl-opts">${[2,5,8,12].map(q=>host?choice('mpQ',q,R.opts.qLen===q,q+' min'):`<span class="k-tag${R.opts.qLen===q?' k-acc':''}">${q} MIN</span>`).join('')}</span></div>`;
+  const pick=LEAGUE.teams.slice(0,30).map((t,i)=>`<button data-a="mpTeam" data-v="${i}" class="${i===myTeam?'mine':''}${i===otherTeam?' taken':''}"${i===otherTeam?' disabled':''} style="--team:${teamCols(t)[0]}">${t.city} ${t.name}<br><span>${t.abbr} · OVR ${teamRating(t)}</span></button>`).join('');
+  page('room',
+    topbar(`<span class="chip">Room <b>${escHTML(R.code)}</b></span><span class="chip" id="hlLink">${MP.online_===false?'RECONNECTING':'LIVE'}</span>`, tbBtn('rosters','Rosters')+tbBtn('controls','Controls')+tbBtn('mpLeave','Leave'))
+    + hubhead(`ROOM ${escHTML(R.code)} · ${escHTML(MP.name)}`, 'Head to head', [['Players',R.members.length],['Quarter',R.opts.qLen+'m'],['Games played',R.results.length]])
+    + `<section class="k-panel k-room">
+      <div class="k-lobbygrid">
+        <div class="k-lobbyleft">
+          <div class="k-msub">${note?escHTML(note).toUpperCase():ready?(host?'BOTH SIDES ARE READY. TIP OFF WHEN EVERYONE IS SET.':'BOTH SIDES ARE READY. THE HOST TIPS OFF.'):'EACH SIDE NEEDS A PLAYER AND A TEAM. UP TO TWO PLAYERS A SIDE.'}</div>
+          <div class="hl-sides">${col(0)}${col(1)}</div>
+          <div class="hl-pickopts">${qRow}</div>
+          <div class="k-controls">${host?`<button class="k-btn k-btn-primary" data-a="mpStart"${ready?'':' disabled'}>Tip off &rarr;</button>`:''}<span class="k-msub">${host?'YOU ARE THE HOST. YOUR BROWSER PLAYS THE GAME.':'WAITING FOR '+escHTML(R.host).toUpperCase()+' TO TIP OFF'}</span></div>
+        </div>
+        <div class="k-lobbyright">
+          <div class="k-mgrhead"><span class="k-pulse"></span><span class="k-msub">MANAGERS · ${R.members.length}</span></div>
+          ${R.members.map((m,i)=>`<div class="k-mgrow"><span class="n">${String(i+1).padStart(2,'0')}</span><div><div class="nm">${escHTML(m.name)}</div><div class="cl">${m.side==null?'No side yet':(m.side===0?'Home':'Away')+(Number.isInteger(m.team)?' · '+LEAGUE.teams[m.team].name:'')}</div></div><span class="k-tag${m.online?' k-good':''}">${m.online?'IN':'AWAY'}</span></div>`).join('')}
+          <div class="k-msub" style="margin-top:18px">FRIENDS JOIN WITH CODE <b>${escHTML(R.code)}</b></div>
+          ${last.length?`<div class="k-mlab" style="margin-top:18px">LAST GAMES</div>${last.map(x=>`<div class="k-msub">${LEAGUE.teams[x.away.team].abbr} ${x.away.score} - ${x.home.score} ${LEAGUE.teams[x.home.team].abbr}${x.ot?' (OT)':''}</div>`).join('')}`:''}
+        </div>
+      </div>
+      ${first?`<div class="k-pickzone"><div class="k-mlab">PICK YOUR SIDE'S TEAM</div><p class="k-pickhelp">All 30 teams, with the real ${LEAGUE.season} rosters. A friend on your side plays for the same team.</p><div class="k-teampick">${pick}</div></div>`:''}
+    </section>`, td);
+}
+
+/* =====================================================================
    SECTION 15 - MAIN LOOP
    ===================================================================== */
 function onResize(){ renderer.setSize(innerWidth,innerHeight); camera.aspect=innerWidth/innerHeight; camera.fov=camera.aspect<1.2?58:42; camera.updateProjectionMatrix();
@@ -2602,8 +3038,10 @@ let lastT=performance.now(), rt=0;
 function frame(now){
   requestAnimationFrame(frame);
   const dt=Math.min(0.05,(now-lastT)/1000); lastT=now; rt+=dt;
-  if(G.mode==='game' && !G.paused){ try{ updateGame(dt); }catch(err){ console.error(err); } }
+  if(G.mode==='game' && G.remote){ MP.viewTick(dt); }
+  else if(G.mode==='game' && !G.paused){ try{ for(let i=0,n=MP.host&&MP.test?MP.speed:1;i<n && G.mode==='game';i++) updateGame(dt); }catch(err){ console.error(err); } }
   else if(G.mode==='post'){ updatePlayersIdle(dt); }
+  if(MP.on) MP.tick(dt);
   updateVisuals(dt,rt);
   renderer.shadowMap.needsUpdate=true;
   renderer.render(scene,camera);
@@ -2613,8 +3051,10 @@ function updatePlayersIdle(dt){ /* keep the court static behind the box score */
 setArenaTeams(LEAGUE.teams[menuTeam], LEAGUE.teams[(menuTeam+5)%30]);
 drawShotClockTex('24');
 selUser=menuTeam; selOpp=(menuTeam+7)%30;
+// the two-browser test reads the room and the game through this (only with ?hltest=1)
+if(MP.test){ window.__HLMP=MP; MP.screen=()=>hlScreen; MP.G=()=>G; MP.ball=ball; }
 if(FO){ modal('foWait', '<div class="k-modal-kicker">Front Office</div><h3 class="k-modal-title">Tip-off</h3><p class="k-lead">Loading your matchup…</p>'); foPost({type:"hl:ready"}); }
-else showMain();
+else { showMain(); MP.resume(); }
 window.__HL_READY=true;
 document.getElementById('loading').style.display='none';
 requestAnimationFrame(frame);

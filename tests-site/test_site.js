@@ -45,7 +45,9 @@ const pkg = JSON.parse(read("package.json"));
 ok("start runs the combined server in production mode", pkg.scripts.start === "NODE_ENV=production node server.js", pkg.scripts.start);
 ok("build is next build", pkg.scripts.build === "next build", pkg.scripts.build);
 for (const dep of ["express", "next", "react", "react-dom", "motion", "three", "@react-three/fiber", "dexie", "peerjs", "tailwindcss", "@tailwindcss/postcss", "typescript", "gsap", "@gsap/react"]) ok("runtime or build dependency present: " + dep, !!pkg.dependencies[dep], null);
-ok("no surprise dependencies were added", Object.keys(pkg.dependencies).every(d => ["@phosphor-icons/react", "@react-three/fiber", "@tailwindcss/postcss", "@types/node", "@types/react", "@types/react-dom", "@types/three", "clsx", "dexie", "express", "gsap", "@gsap/react", "motion", "next", "peerjs", "react", "react-dom", "recharts", "tailwindcss", "three", "typescript", "zustand"].includes(d)), Object.keys(pkg.dependencies));
+ok("no surprise dependencies were added", Object.keys(pkg.dependencies).every(d => ["@phosphor-icons/react", "@react-three/fiber", "@tailwindcss/postcss", "@types/node", "@types/react", "@types/react-dom", "@types/three", "clsx", "dexie", "express", "gsap", "@gsap/react", "motion", "next", "peerjs", "react", "react-dom", "recharts", "tailwindcss", "three", "typescript", "ws", "zustand"].includes(d)), Object.keys(pkg.dependencies));
+// ws carries the live line of a Hardwood Legends room (rooms/hardwood.js)
+ok("the Hardwood rooms have their WebSocket package", !!pkg.dependencies.ws && read("rooms/hardwood.js").includes('require("ws")'), null);
 const server = read("server.js");
 ok("server.js mounts Floodlights before Next", server.indexOf('require("./floodlights/server")') > 0 && server.indexOf('require("./floodlights/server")') < server.indexOf('server.all("*"'), null);
 ok("server.js listens on the port Render hands it", server.includes("process.env.PORT"), null);

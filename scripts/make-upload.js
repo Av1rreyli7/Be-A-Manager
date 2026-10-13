@@ -12,10 +12,10 @@ const TOP = [
   "package.json", "package-lock.json", "server.js", "next.config.ts", "tsconfig.json", "tsconfig.build.json", "postcss.config.mjs",
   "eslint.config.mjs", "vitest.config.ts", ".gitignore", ".node-version", "render.yaml",
   "README.md", "DEPLOY.md", "PROGRESS.md", "AGENTS.md", "CLAUDE.md",
-  "src", "public", "data", "scripts", "tests", "tests-site", "floodlights"
+  "src", "public", "data", "scripts", "tests", "tests-site", "floodlights", "rooms"
 ];
-const SKIP_NAMES = new Set(["node_modules", ".next", ".DS_Store", "games.json", "upload", ".cache", "Thumbs.db"]);
-const skip = name => SKIP_NAMES.has(name) || name.endsWith(".tsbuildinfo") || name.endsWith(".log");
+const SKIP_NAMES = new Set(["node_modules", ".next", ".DS_Store", "games.json", "hardwood_rooms.json", "upload", ".cache", "Thumbs.db"]);
+const skip = name => SKIP_NAMES.has(name) || name.endsWith(".tsbuildinfo") || name.endsWith(".log") || name.endsWith(".tmp");
 
 let files = 0, bytes = 0;
 function copy(from, to) {
