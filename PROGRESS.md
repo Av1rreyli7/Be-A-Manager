@@ -1366,3 +1366,19 @@ Part 3, sweep
       moment), and test_site skips a save on its way to disk (games.json.tmp) like the upload does.
       Idle memory on the production server: 130 MB at boot, 150 MB after a played season, a Player Career and
       a Hardwood room.
+
+## Player Career saves on your device
+
+Player Career is a game for one, so a career now belongs to the device it is played on, like a save file.
+- [x] Every career is kept on the device a moment after every change (not every half minute), with a short
+      line about it (age, position, team, season and week).
+- [x] The title lists every career on the device, newest first, the one being played lit: Continue or Play,
+      Save to a file, Delete (a second click deletes). Starting a new career no longer pushes the old one out.
+- [x] A career the server lost (a restart on the free host) comes back from the device without a word: on the
+      title it simply offers Continue, in the hub it carries on with one quiet note at the top. Only a career
+      the device never kept ends on the end screen, which now also offers Load from a file.
+- [x] Save to a file and Load from a file (a small .json file): a backup, or the way to take a career to
+      another device.
+      Checked in Chrome: two careers side by side, Play from the list, a wipe on the title and in the hub, a
+      file out, a delete and the file back in. test_restart.js now checks the list, the quiet return on the
+      title and in the hub, the end screen for a career never kept, and Load from a file (44 checks).

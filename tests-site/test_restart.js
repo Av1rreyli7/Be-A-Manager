@@ -5,7 +5,8 @@
 // when it sleeps or redeploys). Then, in headless Chrome when it is installed, the real pages: no lobby flash
 // while a saved room loads, a quiet RECONNECTING while the server sleeps (a little front proxy answers 503 like
 // the host does), one clean "this game session ended" screen when the room is gone, and Restore bringing it
-// back, on the Floodlights page and on the Player Career page.
+// back on the Floodlights page. Player Career is a game for one: its careers are kept on the device, listed on
+// the title, put back by themselves when the server lost them, and saved to and loaded from a file.
 const { spawn } = require("child_process");
 const fs = require("fs");
 const os = require("os");
@@ -27,6 +28,8 @@ function ok(name, cond, detail) {
   else { failed++; console.log("FAIL: " + name, detail === undefined ? "" : JSON.stringify(detail).slice(0, 400)); }
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+// the run's temp folder (the save files and Chrome profiles, a few hundred MB) goes when the run ends
+function tidy() { try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e) { /* the system clears it later */ } }
 async function waitFor(fn, ms) {
   const end = Date.now() + ms;
   while (Date.now() < end) { try { const v = await fn(); if (v) return v; } catch (e) { /* not yet */ } await sleep(200); }
@@ -90,6 +93,20 @@ async function cdp(method, params) {
     });
   } finally { ws.close(); }
 }
+// a few commands on one connection (DevTools node ids only mean something on the connection that made them)
+async function cdpSession(fn) {
+  const pg = await page();
+  const ws = new WebSocket(pg.webSocketDebuggerUrl);
+  await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
+  let id = 0;
+  const send = (method, params) => new Promise((res, rej) => {
+    const n = ++id;
+    const t = setTimeout(() => rej(new Error("timeout " + method)), 60000);
+    ws.addEventListener("message", function on(m) { const j = JSON.parse(m.data); if (j.id === n) { clearTimeout(t); ws.removeEventListener("message", on); j.error ? rej(new Error(j.error.message)) : res(j.result); } });
+    ws.send(JSON.stringify({ id: n, method, params: params || {} }));
+  });
+  try { return await fn(send); } finally { ws.close(); }
+}
 async function run(js) {
   const r = await cdp("Runtime.evaluate", { expression: "(async () => {" + js + "})()", awaitPromise: true, returnByValue: true });
   if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception ? r.exceptionDetails.exception.description : r.exceptionDetails.text);
@@ -100,7 +117,7 @@ const copyIn = code => run(`const q = indexedDB.open("floodlights", 1); q.onupgr
 
 async function main() {
   if (!fs.existsSync(path.join(root, ".next", "BUILD_ID"))) { console.log("No production build found. Run npm run build first."); process.exit(1); }
-  const stopAll = () => { try { if (server) server.kill(); } catch (e) {} try { if (chrome) chrome.kill(); } catch (e) {} };
+  const stopAll = () => { try { if (server) server.kill(); } catch (e) {} try { if (chrome) chrome.kill(); } catch (e) {} tidy(); };
   process.on("exit", stopAll);
   const guard = setTimeout(() => { console.log("FAIL: the restart run took longer than 8 minutes"); console.log(passed + " passed, " + (failed + 1) + " failed"); stopAll(); process.exit(1); }, 480000);
   guard.unref();
@@ -235,15 +252,42 @@ async function main() {
     }
     ok("a saved career never flashes Start a new career while it loads", btns.some(b => /^Continue as Pia/.test(b)) && !btns.some(b => /Start a new career/.test(b)), btns);
     ok("this device keeps a copy of the career", await waitFor(() => copyIn(P), 15000), null);
+    ok("the title lists the career kept on this device", await waitFor(() => run(`return [...document.querySelectorAll(".pc-saves li")].some(li => /Pia Rao/.test(li.textContent));`), 10000), null);
+    // Player Career is a game for one: a career the server lost comes back from this device without a word
     await stop();
     fs.rmSync(SAVE, { force: true });
     await start();
     await cdp("Page.navigate", { url: FB + "/floodlights/career" });
-    ok("a wiped career ends on one clean screen", await waitFor(() => run(`return !!document.querySelector(".pc-ended") && /Restore the career/.test(document.querySelector(".pc-title-btns").textContent);`), 20000), null);
-    await run(`[...document.querySelectorAll("button")].find(b => /Restore the career/.test(b.textContent)).click(); return 1;`);
-    ok("Restore puts the career back and opens it", await waitFor(() => run(`return !document.querySelector(".pc-title") && localStorage.getItem("fl_pc_code") === ${JSON.stringify(P)};`), 20000), null);
+    ok("a wiped career comes back from this device by itself, no end screen", await waitFor(() => run(`return !document.querySelector(".pc-ended") && /Continue as Pia/.test(document.querySelector(".pc-title-btns").textContent);`), 20000), null);
     st = await api(`/api/pc/state?code=${P}&name=Pia`);
     ok("and the server has it again", st.status === 200, st.status);
+    // in the hub too: the next thing he does finds it gone, it comes back, the hub carries on with a note
+    await run(`[...document.querySelectorAll("button")].find(b => /^Continue as/.test(b.textContent)).click(); return 1;`);
+    await sleep(1500);
+    await stop();
+    fs.rmSync(SAVE, { force: true });
+    await start();
+    await run(`const b = [...document.querySelectorAll("button")].find(b => b.offsetParent && !b.disabled && /^Play the week$/.test(b.textContent.trim())); if (b) b.click(); return !!b;`);
+    ok("wiped while in the hub: back at once, still in the hub, one quiet note", await waitFor(() => run(`return !document.querySelector(".pc-title") && /put back from this device/.test((document.querySelector(".pc-back-note") || {}).textContent || "");`), 20000), null);
+    // a career this device never kept still ends on the one clean screen
+    await run(`const q = indexedDB.open("floodlights", 1); const db = await new Promise(r => q.onsuccess = () => r(q.result)); await new Promise(r => { const t = db.transaction("copies", "readwrite"); t.objectStore("copies").delete(${JSON.stringify(P)}); t.oncomplete = r; }); return 1;`);
+    await stop();
+    fs.rmSync(SAVE, { force: true });
+    await start();
+    await cdp("Page.navigate", { url: FB + "/floodlights/career" });
+    ok("a career this device never kept ends on one clean screen", await waitFor(() => run(`return !!document.querySelector(".pc-ended") && /New career/.test(document.querySelector(".pc-title-btns").textContent) && !/Restore/.test(document.querySelector(".pc-title-btns").textContent);`), 20000), null);
+    // a career saved to a file loads back in (the file is made here the way the page makes it)
+    const file = path.join(tmp, "pia-player-career.json");
+    fs.writeFileSync(file, JSON.stringify({ kind: "floodlights-player-career", v: 1, code: P, name: "Pia", at: Date.now(), label: "Pia Rao", sub: "", data: pia.data.toString("base64") }));
+    await cdpSession(async send => {
+      const doc = await send("DOM.getDocument", {});
+      const inp = await send("DOM.querySelector", { nodeId: doc.root.nodeId, selector: ".pc-saves input[type=file]" });
+      await send("DOM.setFileInputFiles", { nodeId: inp.nodeId, files: [file] });
+    });
+    ok("Load from a file puts the career back and opens it", await waitFor(() => run(`return !document.querySelector(".pc-title") && !!localStorage.getItem("fl_pc_code");`), 20000), null);
+    const code2 = await run(`return localStorage.getItem("fl_pc_code");`);
+    st = await api(`/api/pc/state?code=${code2}&name=Pia`);
+    ok("and the server has it again", st.status === 200 && st.j.state.person.first === "Pia", st.status);
   }
   await stop();
   front.close();

@@ -107,13 +107,21 @@ async function call<T>(path: string, body?: Record<string, unknown>): Promise<T>
   return j as T;
 }
 
-// ---------- a copy of the career on this device, to put it back after a server restart ----------
-// The same little store the Floodlights page keeps its copies in (IndexedDB "floodlights", "copies").
+// ---------- the careers saved on this device ----------
+// Player Career is a game for one. Every career is saved on this device as well as on the server: a packed copy
+// of the save, refreshed a moment after every change, so a career is never lost to a server restart and any of
+// them can be picked up again from the title screen. A career can also be saved to a file and loaded from one
+// (a backup, or the way to take it to another device). The copies sit in the same little store the Floodlights
+// page keeps its manager games in (IndexedDB "floodlights", "copies"); a career's copy says kind "career".
 export interface SaveCopy {
   code: string;
   name: string;
   at: number;
   data: ArrayBuffer;
+  kind?: "career";
+  /** how the list of careers shows it: the player's name, then age, position, team, season and week */
+  label?: string;
+  sub?: string;
 }
 function copyStore<T>(mode: IDBTransactionMode, fn: (st: IDBObjectStore) => IDBRequest | void): Promise<T | null> {
   return new Promise<T | null>((res) => {
@@ -132,26 +140,57 @@ function copyStore<T>(mode: IDBTransactionMode, fn: (st: IDBObjectStore) => IDBR
     }
   });
 }
+const FILE_KIND = "floodlights-player-career";
+function toBase64(buf: ArrayBuffer) {
+  const b = new Uint8Array(buf);
+  let s = "";
+  for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+function fromBase64(t: string): ArrayBuffer {
+  const s = atob(t);
+  const b = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i);
+  return b.buffer;
+}
 export const careerCopy = {
-  get: (code: string) => copyStore<SaveCopy>("readonly", (st) => st.get(code)),
-  lastAt: 0,
+  get: async (code: string) => {
+    const c = await copyStore<SaveCopy>("readonly", (st) => st.get(code));
+    return c && c.kind === "career" ? c : c && !c.kind ? c : null;
+  },
+  /** every career on this device, the last one played first */
+  async list(): Promise<SaveCopy[]> {
+    const all = (await copyStore<SaveCopy[]>("readonly", (st) => st.getAll())) || [];
+    return all.filter((c) => c && c.kind === "career").sort((a, b) => b.at - a.at);
+  },
+  remove: (code: string) => copyStore("readwrite", (st) => st.delete(code)),
+  /** what the list shows for the career being played (set from its state as it changes) */
+  about: null as null | { label: string; sub: string },
   busy: false,
-  /** a fresh copy when something changed and the last one is half a minute old */
+  again: false,
+  /** a fresh copy when something changed (or when asked to) */
   async take(s: Saved, force = false) {
-    if (this.busy || (!force && (!copyDirty || Date.now() - this.lastAt < 30000))) return;
+    if (this.busy) {
+      this.again = true;
+      return;
+    }
+    if (!force && !copyDirty) return;
     this.busy = true;
     try {
       const r = await fetch(`/api/save/copy?code=${encodeURIComponent(s.code)}&name=${encodeURIComponent(s.name)}`, { cache: "no-store" });
       if (r.ok) {
-        const rec: SaveCopy = { code: s.code, name: s.name, at: Date.now(), data: await r.arrayBuffer() };
-        await copyStore("readwrite", (st) => st.put(rec, rec.code));
-        this.lastAt = Date.now();
         copyDirty = false;
+        const rec: SaveCopy = { code: s.code, name: s.name, at: Date.now(), data: await r.arrayBuffer(), kind: "career", label: this.about?.label, sub: this.about?.sub };
+        await copyStore("readwrite", (st) => st.put(rec, rec.code));
       }
     } catch {
       /* the next one will do */
     }
     this.busy = false;
+    if (this.again) {
+      this.again = false;
+      setTimeout(() => void this.take(s), 500);
+    }
   },
   /** hands the copy back to the server; the reply has the code it opened under (a new one if the old was taken) */
   async restore(copy: SaveCopy): Promise<Saved> {
@@ -159,6 +198,23 @@ export const careerCopy = {
     const j = (await r.json().catch(() => ({}))) as { code?: string; error?: string };
     if (!r.ok || !j.code) throw new ApiError(j.error || "Something went wrong.");
     return { code: j.code, name: copy.name };
+  },
+  /** the career as a file to keep */
+  file(copy: SaveCopy): { name: string; blob: Blob } {
+    const text = JSON.stringify({ kind: FILE_KIND, v: 1, code: copy.code, name: copy.name, at: copy.at, label: copy.label, sub: copy.sub, data: toBase64(copy.data) });
+    const base = (copy.label || copy.name || "career").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "career";
+    return { name: base + "-player-career.json", blob: new Blob([text], { type: "application/json" }) };
+  },
+  /** a career file back into a copy (not on the server yet: restore puts it there) */
+  async read(f: File): Promise<SaveCopy> {
+    let j: { kind?: string; code?: string; name?: string; at?: number; label?: string; sub?: string; data?: string } = {};
+    try {
+      j = JSON.parse(await f.text());
+    } catch {
+      /* reported below */
+    }
+    if (j.kind !== FILE_KIND || typeof j.data !== "string" || !j.name || !j.code) throw new ApiError("That file is not a Player Career save.");
+    return { code: j.code, name: j.name, at: Number(j.at) || Date.now(), data: fromBase64(j.data), kind: "career", label: j.label, sub: j.sub };
   },
 };
 

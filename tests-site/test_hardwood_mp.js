@@ -26,6 +26,8 @@ function ok(name, cond, detail) {
   else { failed++; console.log("FAIL: " + name, detail === undefined ? "" : JSON.stringify(detail).slice(0, 400)); }
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+// the run's temp folder (the save files and Chrome profiles, a few hundred MB) goes when the run ends
+function tidy() { try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e) { /* the system clears it later */ } }
 async function waitFor(fn, ms, every) {
   const end = Date.now() + ms;
   while (Date.now() < end) { try { const v = await fn(); if (v) return v; } catch (e) { /* not yet */ } await sleep(every || 250); }
@@ -77,7 +79,7 @@ function browser(name, port) {
 async function main() {
   if (!fs.existsSync(path.join(root, ".next", "BUILD_ID"))) { console.log("No production build found. Run npm run build first."); process.exit(1); }
   if (!CHROME) { console.log("test_hardwood_mp: Google Chrome not found, checks skipped"); console.log("0 passed, 0 failed"); return; }
-  const stopAll = () => { try { if (server) server.kill(); } catch (e) {} for (const c of chromes) { try { c.kill(); } catch (e) {} } };
+  const stopAll = () => { try { if (server) server.kill(); } catch (e) {} for (const c of chromes) { try { c.kill(); } catch (e) {} } tidy(); };
   process.on("exit", stopAll);
   const guard = setTimeout(() => { console.log("FAIL: the two browser run took longer than 12 minutes"); console.log(passed + " passed, " + (failed + 1) + " failed"); stopAll(); process.exit(1); }, 720000);
   guard.unref();
