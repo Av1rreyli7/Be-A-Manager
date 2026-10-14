@@ -1358,3 +1358,11 @@ Part 3, sweep
       fund is set; Hardwood's entry numbers count up from zero; Front Office's Day button is held back by the
       roster rule before opening night and says so. One warning left that is not ours: "THREE.Clock has been
       deprecated", printed once by the React Three Fiber library each time a 3D view opens.
+- [x] Tests and checks for the whole build
+      test:all green (typecheck, vitest 103, test_condition 138, test_sept 257, test_dom_sept 168, test_match3d
+      177, test_layout 222, test_career 149 to 150, test_career_life 251, test_site 203, build, test_boot 52,
+      the new test_restart 40 and the new two browser test_hardwood_mp 36). Two test only fixes on the way:
+      the box score check in test_hardwood_mp waits for the footer's entrance (the motion kit hides it for a
+      moment), and test_site skips a save on its way to disk (games.json.tmp) like the upload does.
+      Idle memory on the production server: 130 MB at boot, 150 MB after a played season, a Player Career and
+      a Hardwood room.

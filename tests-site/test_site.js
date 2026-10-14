@@ -25,7 +25,8 @@ function walk(dir, skip, out) {
 
 // ---------- no em dashes or en dashes anywhere ----------
 // .work holds the build checklists of parallel workers; it is local only and never uploaded
-const SKIP = new Set(["node_modules", ".next", "upload", ".git", ".work", ".impeccable", "package-lock.json", "games.json", ".DS_Store"]);
+// the save files (Floodlights games, Hardwood rooms) and a save half way to disk (.tmp) stay out, as in the upload
+const SKIP = new Set(["node_modules", ".next", "upload", ".git", ".work", ".impeccable", "package-lock.json", "games.json", "games.json.tmp", "hardwood_rooms.json", "hardwood_rooms.json.tmp", ".DS_Store"]);
 const all = walk(root, SKIP, []);
 const dashy = [];
 for (const f of all) {
@@ -202,7 +203,7 @@ const up = path.join(root, "upload");
 ok("the upload folder exists", fs.existsSync(up), null);
 if (fs.existsSync(up)) {
   const upFiles = walk(up, new Set(), []).map(f => path.relative(up, f));
-  const bad = upFiles.filter(f => /(^|\/)(node_modules|\.next)\//.test(f) || /games\.json$/.test(f) || /\.DS_Store$/.test(f) || /\.tsbuildinfo$/.test(f));
+  const bad = upFiles.filter(f => /(^|\/)(node_modules|\.next)\//.test(f) || /games\.json$/.test(f) || /hardwood_rooms\.json$/.test(f) || /\.tmp$/.test(f) || /\.DS_Store$/.test(f) || /\.tsbuildinfo$/.test(f));
   ok("the upload folder has no node_modules, .next, games.json or junk", bad.length === 0, bad.slice(0, 8));
   for (const f of ["package.json", "package-lock.json", "server.js", "next.config.ts", "tsconfig.json", "tsconfig.build.json", "postcss.config.mjs", ".gitignore", ".node-version", "render.yaml", "README.md", "DEPLOY.md", "floodlights/server.js", "floodlights/index.html", "floodlights/match.js", "floodlights/match3d.mjs", "floodlights/match_sim3d.mjs", "floodlights/m3d/sim.mjs", "floodlights/m3d/ball.mjs", "floodlights/m3d/view/index.mjs", "floodlights/m3d/view/anim.mjs", "floodlights/squads_2026.js", "floodlights/condition.js", "floodlights/events_data.js", "floodlights/travel_data.js", "floodlights/test_condition.js", "floodlights/players.js", "floodlights/world_pack.js", "floodlights/extra_clubs.js", "floodlights/league_fill.js", "floodlights/fonts/inter.woff2", "floodlights/test_sept.js", "floodlights/test_dom_sept.js", "src/app/page.tsx", "src/app/layout.tsx", "src/landing/Landing.tsx", "src/landing/Balls.tsx", "src/landing/beams.ts", "src/landing/landing.css", "public/games/hardwood-legends.html", "data/players.json", "tests/landing.test.tsx", "tests-site/test_boot.js", "floodlights/career/core.js", "floodlights/career/pro.js", "floodlights/career/data.js", "floodlights/m3d/view/hero.mjs", "floodlights/m3d/view/hairshells.mjs", "src/app/floodlights/career/page.tsx", "src/career/CareerApp.tsx", "src/career/Hub.tsx", "src/career/Creator.tsx", "src/career/Stage.tsx", "src/career/body.ts", "src/career/career.css", "tests-site/test_career.js"]) ok("upload has " + f, upFiles.includes(f), null);
   // the copy must match the working tree

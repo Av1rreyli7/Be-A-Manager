@@ -140,7 +140,9 @@ async function main() {
   ok("the friend sees the same final score on the box score", await waitFor(async () => { const b = await B.run(`const g = __HLMP.G(); return [g.teams[0].score, g.teams[1].score, __HLMP.screen(), g.mode];`); return b[2] === "box" && b[3] === "post" && b[0] === finalA[0] && b[1] === finalA[1]; }, 20000), [finalA, await B.run(`const g = __HLMP.G(); return [g.teams[0].score, g.teams[1].score, __HLMP.screen(), g.mode];`).catch(() => null)]);
   ok("it is a real game: both sides scored and someone won", finalA[0] > 10 && finalA[1] > 10 && finalA[0] !== finalA[1], finalA);
   ok("the host sees the box score too", finalA[2] === "box", finalA[2]);
-  ok("both box scores say the result was saved", (await A.run(`return /RESULT SAVED TO ROOM/.test(document.body.innerText);`)) && (await B.run(`return /RESULT SAVED TO ROOM/.test(document.body.innerText);`)), null);
+  const savedText = P => P.run(`return /RESULT SAVED TO ROOM/i.test(document.body.innerText);`);
+  ok("both box scores say the result was saved", await waitFor(async () => (await savedText(A)) && (await savedText(B)), 10000),
+    [await A.run(`return [__HLMP.screen(), __HLMP.saved, (document.querySelector(".hl-foot") || {}).innerText];`).catch(e => String(e)), await B.run(`return [__HLMP.screen(), __HLMP.saved, (document.querySelector(".hl-foot") || {}).innerText];`).catch(e => String(e))]);
   const tok = await A.run(`return __HLMP.token;`);
   const srv = await fetch(`${BASE}/api/hl/room?code=${code}&name=Ann&token=${tok}`).then(x => x.json());
   const res = srv.room && srv.room.results[srv.room.results.length - 1];
