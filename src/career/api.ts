@@ -224,6 +224,11 @@ export interface StateReply {
 export interface WeekReply extends StateReply {
   reports: WeekReport[];
 }
+// a simmed season: the weeks it played, the events it answered the calm way and why it stopped
+export interface SimReply extends WeekReply {
+  auto: { id: string; kind: string; title: string; choice: string; note: string; injury: boolean }[];
+  stopped: "season" | "decision" | "offer" | "retired" | "error";
+}
 export interface WeekReport {
   week: string;
   rating: number;
@@ -263,6 +268,7 @@ export const careerApi = {
   decide: (s: Saved, id: string, choice: string) => call<StateReply>("/api/pc/decide", { ...s, id, choice }),
   plan: (s: Saved, slots: string[], intensity: string) => call<StateReply>("/api/pc/plan", { ...s, slots, intensity }),
   week: (s: Saved, weeks: number) => call<WeekReply>("/api/pc/week", { ...s, weeks }),
+  simSeason: (s: Saved) => call<SimReply>("/api/pc/simseason", { ...s }),
   season: (s: Saved) =>
     call<StateReply & { summary: Record<string, unknown> }>("/api/pc/season", {
       ...s,

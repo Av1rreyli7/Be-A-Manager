@@ -3698,6 +3698,34 @@ app.post("/api/pc/week", (req, res) => {
   if (!reports.length) return res.status(400).json(out);
   pcReply(res, ctx.game, { ok: true, reports });
 });
+// sim the season: week after week to the end of it, with the calm answer to whatever life throws up. It stops
+// where only he can choose: a choice the career needs (a school, a trial, an academy), a new offer on the table,
+// or the end of his career. A match he started live and left is simmed like any other.
+app.post("/api/pc/simseason", (req, res) => {
+  const ctx = pcCtx(req, res); if (!ctx) return;
+  const game = ctx.game, c = game.career;
+  const must = () => c.decisions.find(d => !d.optional);
+  if (c.retired) return res.status(400).json({ error: "This career is over." });
+  if (must()) return res.status(400).json({ error: "Make your choice first: " + must().title + ".", decision: must() });
+  if (game.round >= (game.totalRounds || 38)) return res.status(400).json({ error: "The season is over. Start the next one.", seasonOver: true });
+  const seen = new Set(c.offers.filter(o => o.status === "open").map(o => o.id));
+  const reports = [], auto = [];
+  let stopped = "", out = null;
+  for (let i = 0; i < 60; i++) {
+    const a = PC.PEOPLE.autoAnswer(game);
+    if (a) auto.push(a);
+    out = PC.advanceWeek(game);
+    if (out.error) { stopped = c.retired ? "retired" : out.decision ? "decision" : out.seasonOver ? "season" : "error"; break; }
+    reports.push(out.report);
+    if (out.report.seasonOver) { stopped = "season"; break; }
+    if (c.retired) { stopped = "retired"; break; }
+    if (must()) { stopped = "decision"; break; }
+    if (c.offers.some(o => o.status === "open" && !seen.has(o.id))) { stopped = "offer"; break; }
+  }
+  if (!reports.length) return res.status(400).json(out && out.error ? out : { error: "The season could not be simmed." });
+  // a tease from the last week played is left for him to answer himself
+  pcReply(res, game, { ok: true, reports, auto, stopped: stopped || "season" });
+});
 app.post("/api/pc/season", (req, res) => {
   const ctx = pcCtx(req, res); if (!ctx) return;
   pcReply(res, ctx.game, PC.nextSeason(ctx.game));
@@ -3809,6 +3837,7 @@ if (process.env.FL_TEST_HOOKS === "1") {
     if (Number.isFinite(b.form)) c.cond.form = b.form;
     if (Number.isFinite(b.trust)) c.trust = b.trust;
     if (typeof b.event === "string") { const f = PC.PEOPLE.force(ctx.game, b.event); if (f.error) return res.status(400).json(f); }
+    if (b.preview) return res.json({ ok: true, events: PC.PEOPLE.EVENTS.map(e => PC.PEOPLE.preview(ctx.game, e.id)) });
     PC.refreshRating(ctx.game);
     save();
     res.json({ ok: true, state: PC.view(ctx.game) });

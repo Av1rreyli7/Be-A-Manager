@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import clsx from "clsx";
 import gsap from "gsap";
-import { careerApi, ApiError, type Saved, type WeekReport } from "./api";
+import { careerApi, ApiError, type Saved, type SimReply, type WeekReport } from "./api";
 import type { CareerState, Offer } from "./types";
 import type { Meta } from "./Creator";
 import { OUTFITS, kitOutfit } from "./body";
@@ -52,6 +52,14 @@ const OFFER_KIND: Record<string, string> = {
   loan: "Loan",
   free: "Free transfer",
   renewal: "New deal",
+};
+// why a simmed season stopped where it did
+const SIM_STOP: Record<string, string> = {
+  season: "The season is over.",
+  decision: "It stopped because a choice needs you.",
+  offer: "It stopped because a new offer came in.",
+  retired: "Your career is over.",
+  error: "It stopped early.",
 };
 const initials = (club: string) =>
   club
@@ -150,6 +158,10 @@ export default function Hub({
     return () => document.documentElement.classList.remove("pc-noscroll");
   }, [full]);
   const [confirmRetire, setConfirmRetire] = useState(false);
+  // sim the season: the first click asks, the second plays every week to the end; what it did stays on screen
+  const [simArm, setSimArm] = useState(false);
+  const [simGo, setSimGo] = useState(false);
+  const [simSum, setSimSum] = useState<null | { weeks: number; apps: number; g: number; a: number; auto: SimReply["auto"]; stopped: SimReply["stopped"] }>(null);
   const [eventOpen, setEventOpen] = useState(false);
   // what the person was doing when an event stopped the week: it carries on once the event is answered
   const retry = useRef<null | (() => void)>(null);
@@ -248,12 +260,42 @@ export default function Hub({
       setEventOpen(true);
       return;
     }
+    setSimSum(null);
     return run(
       () => careerApi.week(saved, n),
       (r) => {
         setReports(r.reports.slice().reverse());
       },
     );
+  };
+  // whatever life brings up on the way gets the calm answer from the server, so only a choice the career
+  // needs is opened first
+  const simSeason = () => {
+    setSimArm(false);
+    const wait = state.decisions.find((d) => !d.optional);
+    if (wait) {
+      openDecision(wait.id);
+      return;
+    }
+    setSimSum(null);
+    setSimGo(true);
+    return run(
+      () => careerApi.simSeason(saved),
+      (r) => {
+        setReports(r.reports.slice().reverse());
+        let apps = 0,
+          g = 0,
+          a = 0;
+        for (const w of r.reports)
+          for (const m of [w.match, w.intl])
+            if (m && m.mins > 0) {
+              apps++;
+              g += m.g || 0;
+              a += m.a || 0;
+            }
+        setSimSum({ weeks: r.reports.length, apps, g, a, auto: r.auto || [], stopped: r.stopped });
+      },
+    ).finally(() => setSimGo(false));
   };
 
   const blocking = state.decisions.filter((d) => !d.optional);
@@ -521,20 +563,79 @@ export default function Hub({
                     Start next season
                   </button>
                 ) : matchday ? (
-                  <button type="button" className="k-btn k-btn-sm" disabled={busy} onClick={() => week(8)} title="Plays on until something needs you">
-                    Sim to the next event
-                  </button>
+                  <>
+                    <button type="button" className="k-btn k-btn-sm" disabled={busy} onClick={() => week(8)} title="Plays on until something needs you">
+                      Sim to the next event
+                    </button>
+                    {simArm ? (
+                      <span className="pc-confirm">
+                        Play every week to the end of the season?
+                        <button type="button" className="k-btn k-btn-primary" disabled={busy} onClick={simSeason}>
+                          Yes, sim it
+                        </button>
+                        <button type="button" className="k-btn k-btn-ghost" onClick={() => setSimArm(false)}>
+                          Not now
+                        </button>
+                      </span>
+                    ) : (
+                      <button type="button" className="k-btn" disabled={busy} onClick={() => setSimArm(true)} title="Plays every week to the end of the season">
+                        Sim the season
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <>
                     <button type="button" className="k-btn k-btn-primary" disabled={busy} onClick={() => week(1)}>
-                      {busy ? "Playing" : "Play the week"}
+                      {busy && !simGo ? "Playing" : "Play the week"}
                     </button>
                     <button type="button" className="k-btn" disabled={busy} onClick={() => week(8)} title="Plays on until something needs you">
                       Sim to the next event
                     </button>
+                    {simArm ? (
+                      <span className="pc-confirm">
+                        Play every week to the end of the season?
+                        <button type="button" className="k-btn k-btn-primary" disabled={busy} onClick={simSeason}>
+                          Yes, sim it
+                        </button>
+                        <button type="button" className="k-btn k-btn-ghost" onClick={() => setSimArm(false)}>
+                          Not now
+                        </button>
+                      </span>
+                    ) : (
+                      <button type="button" className="k-btn" disabled={busy} onClick={() => setSimArm(true)} title="Plays every week to the end of the season">
+                        Sim the season
+                      </button>
+                    )}
                   </>
                 )}
               </div>
+              {simGo && <p className="pc-note">Simming the season. This takes a few seconds.</p>}
+              {simSum && (
+                <div className="pc-simsum">
+                  <p>
+                    <b>
+                      Simmed {simSum.weeks} {simSum.weeks === 1 ? "week" : "weeks"}.
+                    </b>{" "}
+                    {simSum.apps} {simSum.apps === 1 ? "game" : "games"}, {simSum.g} {simSum.g === 1 ? "goal" : "goals"}, {simSum.a} {simSum.a === 1 ? "assist" : "assists"}. {SIM_STOP[simSum.stopped] || SIM_STOP.error}
+                  </p>
+                  {simSum.auto.length > 0 && (
+                    <>
+                      <p className="pc-dim">
+                        Life went on. You took the calm way through {simSum.auto.length} {simSum.auto.length === 1 ? "thing" : "things"}:
+                      </p>
+                      <ul>
+                        {simSum.auto.slice(0, 12).map((x, i) => (
+                          <li key={i}>
+                            <b>{x.title}</b>
+                            <span>{x.choice}</span>
+                          </li>
+                        ))}
+                        {simSum.auto.length > 12 && <li className="pc-dim">And {simSum.auto.length - 12} more.</li>}
+                      </ul>
+                    </>
+                  )}
+                </div>
+              )}
               {err && <p className="pc-bad">{err}</p>}
               {reports.length > 0 && (
                 <ul className="pc-reports">

@@ -948,6 +948,34 @@
   gap: 10px;
   margin-top: 14px;
 }
+.pc-simsum {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--pc-volt);
+  background: var(--pc-raise);
+  font-size: 13px;
+}
+.pc-simsum p {
+  margin: 0 0 6px;
+}
+.pc-simsum ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pc-simsum li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+.pc-simsum li b {
+  font-weight: 600;
+}
+.pc-simsum li span {
+  color: var(--pc-soft);
+}
 .pc-reports {
   display: grid;
   gap: 12px;

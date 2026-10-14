@@ -288,6 +288,17 @@ async function main() {
     const code2 = await run(`return localStorage.getItem("fl_pc_code");`);
     st = await api(`/api/pc/state?code=${code2}&name=Pia`);
     ok("and the server has it again", st.status === 200 && st.j.state.person.first === "Pia", st.status);
+    // sim the season from the hub: the first click asks, the second plays to the end and says what happened
+    await api("/api/pc/decide", { code: code2, name: "Pia", id: "school", choice: "asb" });
+    await cdp("Page.navigate", { url: FB + "/floodlights/career" });
+    await waitFor(() => run(`const b = [...document.querySelectorAll("button")].find(b => /^Continue as/.test(b.textContent)); if (b) b.click(); return !!b;`), 20000);
+    ok("the hub has a Sim the season button", await waitFor(() => run(`return [...document.querySelectorAll("button")].some(b => b.offsetParent && /^Sim the season$/.test(b.textContent.trim()));`), 20000), null);
+    await run(`[...document.querySelectorAll("button")].find(b => /^Sim the season$/.test(b.textContent.trim())).click(); return 1;`);
+    ok("it asks first", await waitFor(() => run(`return /Play every week to the end of the season/.test(document.querySelector(".pc-go-row").textContent);`), 5000), null);
+    await run(`[...document.querySelectorAll("button")].find(b => /^Yes, sim it$/.test(b.textContent.trim())).click(); return 1;`);
+    ok("then sims and says what happened", await waitFor(() => run(`const s = document.querySelector(".pc-simsum"); return !!s && /Simmed \\d+ weeks?/.test(s.textContent);`), 30000), null);
+    st = await api(`/api/pc/state?code=${code2}&name=Pia`);
+    ok("and the season on the server moved on", st.status === 200 && st.j.state.round > 1, st.j.state && st.j.state.round);
   }
   await stop();
   front.close();

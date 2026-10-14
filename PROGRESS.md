@@ -1382,3 +1382,32 @@ Player Career is a game for one, so a career now belongs to the device it is pla
       Checked in Chrome: two careers side by side, Play from the list, a wipe on the title and in the hub, a
       file out, a delete and the file back in. test_restart.js now checks the list, the quiet return on the
       title and in the hub, the end screen for a career never kept, and Load from a file (44 checks).
+
+## Player Career: sim the season, a thousand more things that can happen
+
+- [x] Sim the season: a new button next to Play the week and Sim to the next event. The first click asks,
+      the second plays every week to the end of the season in one go (about a second or two). Anything life
+      throws up on the way gets the calm answer, the one that keeps the peace: dinner with the lads, not the
+      night out; log off at ten; ask the manager what you need to do, never a transfer request. It stops only
+      where he has to choose: a choice the career needs (a school, a college, a trial, an academy), a new
+      offer on the table, or the end of his career. After it, the hub says how many weeks went by, his games,
+      goals and assists, why it stopped, and every event it answered and how.
+- [x] 1011 more events (1042 in all), from a lost wallet on the bus to a fan with your face tattooed on his
+      leg: everyday life, home, food and health, friends, brothers and sisters, a partner, school and college,
+      the academy, the dressing room, away days, the press, brand deals, the city and its people, money,
+      the mind. Each one fits his stage (no school plays for a pro, no away days at school), names his own
+      places (his city's cafe, gym and supermarket, his team, his best mate, his brother or sister) and
+      has two or three choices with real effects. Money from an event fits his life: a schoolboy pays ten
+      for a small thing, a star's brand deal is a star's sum, and nothing spends money he does not have.
+      Each one is rare, so together they come up about as often as the 31 hand written ones, and never two
+      from the same family close together.
+- [x] Old saves get all of it: events are part of the game, not the save, so a career from before this
+      update simmed its season and got the new events after a restart, with the event it had waiting
+      answered the calm way. An event that no longer exists is let go instead of blocking the week.
+- [x] Tests: the new test_career_events.js (about 65 checks: every event's shape, words and effects, read for
+      careers at every stage, for a boy with no brother, sister, friend or partner, and for a real one in
+      Mumbai; the calm answers; money sizes; three seasons simmed through the API; an older save after a
+      restart). test_restart.js clicks Sim the season in Chrome and checks the summary. The test hook that
+      reads every event no longer breaks on a career with no brother or sister (one old event names them).
+- [x] The batteries now run with the screen kept awake (caffeinate): with the Mac's display asleep, headless
+      Chrome stalled for up to two minutes at random, which was behind the old "layout run timed out" flakes.

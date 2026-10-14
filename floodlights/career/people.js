@@ -469,6 +469,17 @@ function makePeople(K, deps) {
       ]
     }
   ];
+  // the calm answer to each of these, the one a simmed season gives: no career moves, no big gambles
+  const CALM = {
+    abroad: "agent", fee: "agent", exams: "exams", dadagent: "role", sibmoney: "help", wedding: "call", request: "ask", lifestyle: "sorry",
+    camp: "half", boots: "coach", late: "ten", nerves: "dad", bully: "coach", party: "early", press: "calm", hospital: "go", oldcoach: "video",
+    betting: "no", mentor: "yes", friend: "dinner", scare: "rest", friendexam: "notes", friendparty: "hour", friendloan: "half", jealous: "talk",
+    moretime: "yes", parents: "charm", wifemum: "both", wifeagent: "both", abroadwife: "ask", ladsnight: "dinner",
+  };
+  for (const e of E) if (CALM[e.id]) e.calm = CALM[e.id];
+  // about a thousand more (events_more.js): each one rare, so together they turn up as often as these do
+  E.push(...require("./events_more")(K, P0));
+  const BY_ID = new Map(E.map(e => [e.id, e]));
 
   // ---------- deciding and teasing ----------
   // called at the end of a week: maybe decide next week's event, and tease it
@@ -479,7 +490,10 @@ function makePeople(K, deps) {
     if (weekIndex(game) - pp.lastEvent < 2) return;
     if (rnd() > EVENT_RATE) return;
     const familyOk = pp.fixtures > pp.lastFamily;
-    const ok = E.filter(e => (e.kind !== "family" || familyOk) && !(e.id === "sibmoney" && !pp.sib) && (!e.who || safe(() => e.who(game))) && safe(() => e.when(game, c, p)) && !(pp.log.slice(0, 6).some(x => x.id === e.id)));
+    // not the same thing twice in a short while, and not two lost wallets in a row either
+    const recent = pp.log.slice(0, 6);
+    const recentFam = new Set(recent.map(x => (BY_ID.get(x.id) || {}).fam).filter(Boolean));
+    const ok = E.filter(e => (e.kind !== "family" || familyOk) && !(e.id === "sibmoney" && !pp.sib) && !(e.fam && recentFam.has(e.fam)) && (!e.who || safe(() => e.who(game))) && safe(() => e.when(game, c, p)) && !recent.some(x => x.id === e.id));
     if (!ok.length) return;
     let total = ok.reduce((s, e) => s + e.weight, 0), r = rnd() * total, ev = ok[0];
     for (const e of ok) { r -= e.weight; if (r <= 0) { ev = e; break; } }
@@ -499,22 +513,63 @@ function makePeople(K, deps) {
   }
   // test hook only: put a given event up now, whatever the conditions
   function force(game, id) {
-    const ev = E.find(e => e.id === id);
+    const ev = BY_ID.get(id);
     if (!ev) return { error: "No such event." };
     if (ev.id === "sibmoney" && !P0(game).sib) return { error: "No brother or sister in this family." };
     if (ev.who && !ev.who(game)) return { error: "No close friend for that one." };
     queue(game, ev, null);
     return { ok: true };
   }
+  // test hook only: how an event reads for this career right now, and whether it could come up (the same rules
+  // afterWeek uses, less the timing); one that cannot come up for him may not read at all, and says so
+  function preview(game, id) {
+    const ev = BY_ID.get(id);
+    if (!ev) return null;
+    const c = C(game), p = me(game);
+    const who = ev.who ? (safe(() => ev.who(game)) ? ev.who(game) : null) : null;
+    if (ev.who && !who) return { id, who: false };
+    const can = !(ev.id === "sibmoney" && !P0(game).sib) && safe(() => ev.when(game, c, p));
+    const f = v => (typeof v === "function" ? v(game, c, who) : v);
+    const choices = ev.choices.map(x => ({ id: x.id, label: x.label }));
+    try { return { id, can, tease: f(ev.tease), title: f(ev.title), text: f(ev.text), choices, calm: ev.calm }; }
+    catch (e) { return { id, can, error: String(e.message), choices, calm: ev.calm }; }
+  }
   function safe(fn) { try { return !!fn(); } catch (e) { return false; } }
   function blocker(game) { return P0(game).pending; }
+
+  // ---------- the calm answer, for a simmed week ----------
+  // every event names its own; one that does not gets the choice that keeps the peace: no career moves, no
+  // gambles, nothing that risks an injury, and the most good for the fewest costs
+  function calmOf(ev) {
+    if (ev.calm && ev.choices.some(x => x.id === ev.calm)) return ev.calm;
+    const score = fx => {
+      if (fx.act || fx.table) return -100;
+      const rel = Object.values(fx.rel || {}).reduce((s, d) => s + d, 0);
+      return rel / 2 + (fx.morale || 0) + (fx.conf || 0) + (fx.prof || 0) + (fx.disc || 0) - Math.max(0, fx.fatigue || 0) / 3 - (fx.injuryRisk || 0) * 100 - (fx.cash < 0 ? 1 : 0);
+    };
+    let best = ev.choices[0];
+    for (const ch of ev.choices) if (score(ch.fx) > score(best.fx)) best = ch;
+    return best.id;
+  }
+  // answer what is waiting the calm way; an event that is no longer in the game is let go
+  function autoAnswer(game) {
+    const pp = P0(game), pend = pp.pending;
+    if (!pend) return null;
+    const ev = BY_ID.get(pend.id);
+    if (!ev) { pp.pending = null; return null; }
+    const choice = calmOf(ev);
+    const label = (ev.choices.find(x => x.id === choice) || {}).label || "";
+    const r = answer(game, pend.id, choice);
+    if (r.error) { pp.pending = null; return null; }
+    return { id: pend.id, kind: pend.kind, title: pend.title, choice: label, note: r.note || "", injury: !!r.injury };
+  }
 
   // ---------- answering ----------
   function answer(game, id, choice) {
     const c = C(game), p = me(game), pp = P0(game);
     const pend = pp.pending;
     if (!pend || pend.id !== id) return { error: "Nothing waiting for an answer." };
-    const ev = E.find(e => e.id === id);
+    const ev = BY_ID.get(id);
     const ch = ev && ev.choices.find(x => x.id === choice);
     if (!ch) return { error: "Pick one of the choices." };
     let fx = Object.assign({}, ch.fx);
@@ -527,7 +582,7 @@ function makePeople(K, deps) {
       if (rnd() < odds) { fx = { rel: { mum: 5, dad: 4, agent: 4 }, morale: 4, conf: 2 }; note = "It took three hours and two pots of tea, but everyone came round. You go, with their blessing."; }
       else { fx = { rel: { mum: -6, dad: -3, agent: -5 }, morale: -4 }; note = "It ended with raised voices. Nobody is happy, and the decision is still yours."; }
     }
-    const out = apply(game, fx);
+    const out = apply(game, fx, pend.title);
     pp.pending = null;
     pp.answered++;
     pp.log.unshift({ id, kind: pend.kind, fx: pend.fx, s: pend.s, w: pend.w, title: pend.title, choice: ch.label, note });
@@ -536,7 +591,7 @@ function makePeople(K, deps) {
     news(game, pend.title.replace(/[?.!]$/, "") + ": " + ch.label.replace(/\.$/, "") + ".", "life");
     return Object.assign({ ok: true, note }, out);
   }
-  function apply(game, fx) {
+  function apply(game, fx, title) {
     const c = C(game), p = me(game), pp = P0(game), life = c.life;
     const out = {};
     for (const [who, d] of Object.entries(fx.rel || {})) R(game, who, d);
@@ -545,6 +600,13 @@ function makePeople(K, deps) {
     if (fx.form) c.cond.form = clamp(c.cond.form + fx.form, 3, 10);
     if (fx.fatigue) c.cond.fatigue = clamp(c.cond.fatigue + fx.fatigue, 0, 100);
     if (fx.cash) money(game, fx.cash, fx.cash > 0 ? "A one off deal" : "Family and giving");
+    // spend and earn: a sum that fits his life (1 small, 2 middling, 3 big), from a schoolboy's pocket money to a star's
+    if (fx.spend || fx.earn) {
+      const base = clamp(Math.max(c.contract ? c.contract.wage * 0.6 : 25, (c.money.cash || 0) * 0.02), 20, 200000);
+      const size = n => Math.max(10, Math.round(base * [0.25, 1, 3][clamp(n, 1, 3) - 1] / 10) * 10);
+      if (fx.earn) money(game, size(fx.earn), title || "A one off deal");
+      if (fx.spend) { const amt = Math.min(size(fx.spend), Math.max(0, Math.floor(c.money.cash || 0))); if (amt > 0) money(game, -amt, title || "Out of pocket"); }
+    }
     if (fx.local) c.rep.local = clamp(c.rep.local + fx.local, 0, 100);
     if (fx.national) c.rep.national = clamp(c.rep.national + fx.national, 0, 100);
     if (fx.commercial) c.rep.commercial = clamp(c.rep.commercial + fx.commercial, 0, 100);
@@ -602,7 +664,7 @@ function makePeople(K, deps) {
     };
   }
 
-  return { P0, afterWeek, afterMatch, answer, blocker, weekly, view, newClub, force, rel: R, EVENTS: E };
+  return { P0, afterWeek, afterMatch, answer, autoAnswer, calmOf, preview, blocker, weekly, view, newClub, force, rel: R, EVENTS: E };
 }
 
 module.exports = { makePeople };
