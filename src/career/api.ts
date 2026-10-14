@@ -74,7 +74,9 @@ export async function send(path: string, init: RequestInit, retryPost = false): 
 }
 
 let copyDirty = true;
-async function call<T>(path: string, body?: Record<string, unknown>): Promise<T> {
+// retryPost: a change that is safe to send twice (a slice of a simmed season just plays on) keeps trying through
+// a server that is down for a moment
+async function call<T>(path: string, body?: Record<string, unknown>, retryPost = false): Promise<T> {
   const r = await send(
     path,
     body
@@ -84,6 +86,7 @@ async function call<T>(path: string, body?: Record<string, unknown>): Promise<T>
           body: JSON.stringify(body),
         }
       : { cache: "no-store" },
+    retryPost,
   );
   let j: Record<string, unknown> = {};
   try {
@@ -224,11 +227,51 @@ export interface StateReply {
 export interface WeekReply extends StateReply {
   reports: WeekReport[];
 }
-// a simmed season: the weeks it played, the events it answered the calm way and why it stopped
+// one slice of a simmed season: the weeks it played, the events it answered the calm way (w: the week it was
+// answered in), and why it stopped, or more: true for the next slice
 export interface SimReply extends WeekReply {
-  auto: { id: string; kind: string; title: string; choice: string; note: string; injury: boolean }[];
-  stopped: "season" | "decision" | "offer" | "retired" | "error";
+  auto: SimAuto[];
+  more: boolean;
+  stopped: "" | "season" | "decision" | "offer" | "deadline" | "retired" | "error";
 }
+export interface SimAuto {
+  w: number;
+  id: string;
+  kind: string;
+  title: string;
+  choice: string;
+  note: string;
+  injury: boolean;
+}
+// the week number in a report's label ("Season 2026-27, week 12") and the season part of it
+const weekNo = (label: string) => Number((label.match(/week (\d+)$/) || [])[1]) || 0;
+const seasonOf = (label: string) => label.replace(/, week \d+$/, "");
+/** a season being simmed right now: if the server restarts half way, the career comes back from this device and
+ *  the sim carries on from there (what it had done so far is kept here) */
+export const simRun = {
+  active: false,
+  reports: [] as WeekReport[],
+  auto: [] as SimAuto[],
+  /** a new sim, or one carrying on from a copy at this week label and round: what came after the copy is played
+   *  again, so it is dropped here and counts once */
+  begin(from: { week: string; round: number } | null) {
+    if (from) {
+      this.reports = this.reports.filter((r) => seasonOf(r.week) === seasonOf(from.week) && weekNo(r.week) <= from.round);
+      this.auto = this.auto.filter((x) => x.w < from.round);
+    } else {
+      this.reports = [];
+      this.auto = [];
+    }
+    this.active = true;
+  },
+  add(r: SimReply) {
+    this.reports.push(...r.reports);
+    this.auto.push(...(r.auto || []));
+  },
+  end() {
+    this.active = false;
+  },
+};
 export interface WeekReport {
   week: string;
   rating: number;
@@ -268,7 +311,7 @@ export const careerApi = {
   decide: (s: Saved, id: string, choice: string) => call<StateReply>("/api/pc/decide", { ...s, id, choice }),
   plan: (s: Saved, slots: string[], intensity: string) => call<StateReply>("/api/pc/plan", { ...s, slots, intensity }),
   week: (s: Saved, weeks: number) => call<WeekReply>("/api/pc/week", { ...s, weeks }),
-  simSeason: (s: Saved) => call<SimReply>("/api/pc/simseason", { ...s }),
+  simSeason: (s: Saved, slice?: number) => call<SimReply>("/api/pc/simseason", slice ? { ...s, slice } : { ...s }, true),
   season: (s: Saved) =>
     call<StateReply & { summary: Record<string, unknown> }>("/api/pc/season", {
       ...s,

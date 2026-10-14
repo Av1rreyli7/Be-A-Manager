@@ -697,6 +697,10 @@ function makeCore(deps) {
     const c = C(game);
     for (const o of c.offers) if (o.status === "open" && weekIndex(game) > o.expires) { o.status = "expired"; msg(game, "offers", "Contract offers", o.club + "'s offer ran out."); }
   }
+  // the open offers that the next week played would let run out (a simmed season stops for them)
+  function offersRunningOut(game) {
+    return C(game).offers.filter(o => o.status === "open" && weekIndex(game) + 1 > o.expires).map(o => o.id);
+  }
   // agents come calling once scouts do
   function agentApproach(game) {
     const c = C(game);
@@ -1278,7 +1282,7 @@ function makeCore(deps) {
   K.campus = CAMPUS;
   K.social = SOCIAL;
   K.life = LIFE;
-  return { CAMPUS, SOCIAL, setupWorld, createPlayer, decide, setPlan, advanceWeek, nextSeason, negotiate, sign, view, readThread, collegeOptions, academyChoices, ovrFor, refreshRating, clubLevel, makeOffer, weeklyWage, D, PRO, LIFE, PEOPLE, agentCut, agentAction, liveCheck, liveResult, liveStatus, livePeek };
+  return { CAMPUS, SOCIAL, setupWorld, createPlayer, decide, setPlan, advanceWeek, nextSeason, negotiate, sign, view, readThread, collegeOptions, academyChoices, ovrFor, refreshRating, clubLevel, makeOffer, weeklyWage, D, PRO, LIFE, PEOPLE, agentCut, agentAction, liveCheck, liveResult, liveStatus, livePeek, offersRunningOut };
 }
 
 module.exports = { makeCore };

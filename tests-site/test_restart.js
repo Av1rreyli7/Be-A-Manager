@@ -261,14 +261,16 @@ async function main() {
     ok("a wiped career comes back from this device by itself, no end screen", await waitFor(() => run(`return !document.querySelector(".pc-ended") && /Continue as Pia/.test(document.querySelector(".pc-title-btns").textContent);`), 20000), null);
     st = await api(`/api/pc/state?code=${P}&name=Pia`);
     ok("and the server has it again", st.status === 200, st.status);
-    // in the hub too: the next thing he does finds it gone, it comes back, the hub carries on with a note
+    // in the hub too: the next thing he does finds it gone, it comes back, the hub carries on without a word
     await run(`[...document.querySelectorAll("button")].find(b => /^Continue as/.test(b.textContent)).click(); return 1;`);
     await sleep(1500);
     await stop();
     fs.rmSync(SAVE, { force: true });
     await start();
     await run(`const b = [...document.querySelectorAll("button")].find(b => b.offsetParent && !b.disabled && /^Play the week$/.test(b.textContent.trim())); if (b) b.click(); return !!b;`);
-    ok("wiped while in the hub: back at once, still in the hub, one quiet note", await waitFor(() => run(`return !document.querySelector(".pc-title") && /put back from this device/.test((document.querySelector(".pc-back-note") || {}).textContent || "");`), 20000), null);
+    ok("wiped while in the hub: back at once, still in the hub", await waitFor(async () => { const c = await run(`return localStorage.getItem("fl_pc_code");`); return (await api(`/api/pc/state?code=${c}&name=Pia`)).status === 200 && await run(`return !document.querySelector(".pc-title") && !!document.querySelector(".pc-go-row");`); }, 20000), null);
+    await sleep(1500);
+    ok("without a word about the restart", await run(`return !/restarted|put back/i.test(document.body.innerText) && !document.querySelector(".pc-back-note");`), null);
     // a career this device never kept still ends on the one clean screen
     await run(`const q = indexedDB.open("floodlights", 1); const db = await new Promise(r => q.onsuccess = () => r(q.result)); await new Promise(r => { const t = db.transaction("copies", "readwrite"); t.objectStore("copies").delete(${JSON.stringify(P)}); t.oncomplete = r; }); return 1;`);
     await stop();
@@ -299,6 +301,32 @@ async function main() {
     ok("then sims and says what happened", await waitFor(() => run(`const s = document.querySelector(".pc-simsum"); return !!s && /Simmed \\d+ weeks?/.test(s.textContent);`), 30000), null);
     st = await api(`/api/pc/state?code=${code2}&name=Pia`);
     ok("and the season on the server moved on", st.status === 200 && st.j.state.round > 1, st.j.state && st.j.state.round);
+
+    // the server restarts half way through a simmed season (the host's free disk goes with it): the career comes
+    // back from this device and the sim carries on by itself to the end, every week counted once, not a word
+    r = await api("/api/pc/create", { name: "Zia", player: Object.assign({}, FORM, { first: "Zia", last: "Khan" }) });
+    const Z = r.j.code;
+    await api("/api/pc/decide", { code: Z, name: "Zia", id: "school", choice: "asb" });
+    await run(`localStorage.setItem("fl_pc_code", ${JSON.stringify(Z)}); localStorage.setItem("fl_pc_name", "Zia"); localStorage.setItem("fl_sim_slice", "30"); return 1;`);
+    await cdp("Page.navigate", { url: FB + "/floodlights/career" });
+    await waitFor(() => run(`const b = [...document.querySelectorAll("button")].find(b => /^Continue as Zia/.test(b.textContent)); if (b) b.click(); return !!b;`), 20000);
+    ok("a new career is open in the hub and kept on this device", await waitFor(() => run(`return [...document.querySelectorAll("button")].some(b => b.offsetParent && /^Sim the season$/.test(b.textContent.trim()));`), 20000) && await waitFor(() => copyIn(Z), 15000), null);
+    await run(`[...document.querySelectorAll("button")].find(b => /^Sim the season$/.test(b.textContent.trim())).click(); return 1;`);
+    await sleep(200);
+    await run(`[...document.querySelectorAll("button")].find(b => /^Yes, sim it$/.test(b.textContent.trim())).click(); return 1;`);
+    const midway = await waitFor(async () => { const z = await api(`/api/pc/state?code=${Z}&name=Zia`); return z.status === 200 && z.j.state.round >= 6 && z.j.state.round < 30; }, 20000);
+    ok("the sim is half way through when the server goes", !!midway, null);
+    ok("the page says how far it has got", await run(`return /Simming the season: week \\d+ of 38/.test(document.body.innerText);`), null);
+    await stop();
+    fs.rmSync(SAVE, { force: true });
+    await start();
+    ok("the sim carries on by itself to the end of the season", await waitFor(() => run(`const s = document.querySelector(".pc-simsum"); return !!s && /The season is over/.test(s.textContent);`), 60000), null);
+    ok("every week counted once: 38 weeks", await run(`return /Simmed 38 weeks\\./.test(document.querySelector(".pc-simsum").textContent);`), await run(`return (document.querySelector(".pc-simsum") || {}).textContent;`));
+    ok("not a word about the restart", await run(`return !/restarted|put back/i.test(document.body.innerText);`), null);
+    const z2 = await run(`return localStorage.getItem("fl_pc_code");`);
+    st = await api(`/api/pc/state?code=${z2}&name=Zia`);
+    ok("the server has the whole season", st.status === 200 && st.j.state.round === 38 && st.j.state.seasonOver === true, st.j.state && st.j.state.round);
+    await run(`localStorage.removeItem("fl_sim_slice"); return 1;`);
   }
   await stop();
   front.close();

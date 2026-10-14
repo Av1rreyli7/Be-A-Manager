@@ -45,6 +45,19 @@ function badWords(s) {
   if (/ {2}|\s[.,!?]|(?<!\.)\.\.(?!\.)/.test(s)) return "a stray space or stop";
   return "";
 }
+// sim the season the way the page does: slice after slice until it stops, the replies put together
+async function simAll(P, slice) {
+  let all = null, slices = 0;
+  for (let i = 0; i < 300; i++) {
+    const r = await P("/api/pc/simseason", slice ? { slice } : {});
+    if (r.status !== 200) return all ? { status: r.status, j: Object.assign({ partial: all }, r.j) } : r;
+    slices++;
+    all = all ? Object.assign(all, { reports: all.reports.concat(r.j.reports), auto: all.auto.concat(r.j.auto), state: r.j.state, more: r.j.more, stopped: r.j.stopped }) : Object.assign({}, r.j);
+    if (!r.j.more) break;
+  }
+  all.slices = slices;
+  return { status: 200, j: all };
+}
 const FX = new Set(["rel", "morale", "conf", "form", "fatigue", "cash", "local", "national", "commercial", "followers", "prof", "disc", "lead", "time", "injuryRisk", "act", "table", "spend", "earn"]);
 const RELS = new Set(["mum", "dad", "sib", "friend", "best", "team", "coach", "agent", "fr", "pt"]);
 const KINDS = new Set(["life", "family", "friend", "partner", "team", "media", "agent"]);
@@ -221,7 +234,7 @@ async function main() {
 
     // a waiting event is answered the calm way when the season is simmed
     r = await Q("/api/pc/testset", { event: "late" });
-    r = await Q("/api/pc/simseason");
+    r = await simAll(Q);
     ok("sim the season plays on", r.status === 200 && r.j.reports.length >= 1 && ["season", "decision", "offer"].includes(r.j.stopped), r.j.error || r.j.stopped);
     ok("the event that was waiting got the calm answer", r.status === 200 && r.j.auto[0] && r.j.auto[0].id === "late" && r.j.auto[0].choice === "Log off at ten.", r.j.auto && r.j.auto[0]);
     // the hub shows his 12 latest answers: a season busy enough can push this one out of sight
@@ -231,7 +244,7 @@ async function main() {
     const stops = {}, autos = [];
     let seasons = 0, guard = 0, stuck = "", weeks = 0, st = null;
     while (seasons < 3 && guard++ < 80) {
-      r = await Q("/api/pc/simseason");
+      r = await simAll(Q);
       if (r.status !== 200) {
         if (r.j.seasonOver) { const n = await Q("/api/pc/season"); if (n.status === 200) seasons++; else if (n.j.decision) { const d = n.j.decision; await Q("/api/pc/decide", { id: d.id, choice: d.options[0] }); } continue; }
         if (r.j.decision) { const d = r.j.decision; await Q("/api/pc/decide", { id: d.id, choice: d.kind === "agent" ? "none" : d.kind === "trial" ? "decline" : d.options[0] }); continue; }
@@ -251,8 +264,8 @@ async function main() {
     ok("every one of them got its calm answer", autos.every(a => calmOf.get(a.id) === a.choice), autos.filter(a => calmOf.get(a.id) !== a.choice).slice(0, 2));
     ok("nothing in the state is NaN", st && !hasNaN(st), null);
     // at the end of a season it asks for the next one
-    for (let i = 0; i < 20; i++) {
-      r = await Q("/api/pc/simseason");
+    for (let i = 0; i < 60; i++) {
+      r = await simAll(Q);
       if (r.status === 200 && r.j.stopped === "season") break;
       if (r.status !== 200 && r.j.seasonOver) break;
       if (r.status === 200 && r.j.stopped === "decision") { const d = r.j.state.decisions.find(x => !x.optional); await Q("/api/pc/decide", { id: d.id, choice: d.kind === "agent" ? "none" : d.kind === "trial" ? "decline" : d.options[0] }); }
@@ -260,6 +273,41 @@ async function main() {
     }
     r = await Q("/api/pc/simseason");
     ok("with the season over it says to start the next one", r.status === 400 && r.j.seasonOver === true, r.j);
+
+    // ---------- a season in short slices: the server answers others between them ----------
+    {
+      const sr = await api("/api/pc/create", { name: "Slc", player: FORM({ first: "Dev", last: "Rao" }) });
+      const S = (p2, b) => api(p2, Object.assign({ code: sr.j.code, name: "Slc" }, b || {}));
+      await S("/api/pc/decide", { id: "school", choice: "asb" });
+      r = await S("/api/pc/simseason", { slice: 20 });
+      ok("a short slice plays a few weeks and asks for more", r.status === 200 && r.j.more === true && r.j.stopped === "" && r.j.reports.length >= 1 && r.j.reports.length <= 6 && r.j.state.round === r.j.reports.length, [r.j.more, r.j.stopped, r.j.reports && r.j.reports.length, r.j.state && r.j.state.round]);
+      const first = r.j.reports.length;
+      let worst = 0, pings = 0, run = true;
+      const pinger = (async () => { while (run) { const t = Date.now(); try { await fetch(BASE + "/api/pc/meta"); pings++; } catch (e) {} worst = Math.max(worst, Date.now() - t); await sleep(20); } })();
+      const tSim = Date.now();
+      r = await simAll(S, 20);
+      const simMs = Date.now() - tSim;
+      run = false; await pinger;
+      ok("slice after slice it reaches the end of the season", r.status === 200 && r.j.stopped === "season" && r.j.state.seasonOver && first + r.j.reports.length === r.j.state.total, [r.j.stopped, first, r.j.reports && r.j.reports.length, r.j.slices]);
+      ok("in many short slices", r.status === 200 && r.j.slices >= 8, r.j.slices);
+      // one long block would keep every other request waiting about as long as the whole sim; slices never do
+      ok("and the server answers others between them", pings >= 5 && worst < simMs / 3, [pings, worst, simMs]);
+      ok("the weeks are each played once, in order", r.status === 200 && r.j.reports.every((w, i) => Number(w.week.match(/week (\d+)$/)[1]) === first + i + 1), r.j.reports && r.j.reports.slice(0, 3).map(w => w.week));
+      ok("every event answered on the way says the week it was answered in", r.status === 200 && r.j.auto.every(a => Number.isInteger(a.w) && a.w >= first && a.w < r.j.state.total), r.j.auto && r.j.auto.slice(0, 2));
+    }
+
+    // ---------- an offer on the table is never let run out unseen ----------
+    {
+      const fr = await api("/api/pc/create", { name: "Off", player: FORM({ first: "Arjun", last: "Bose" }) });
+      const F = (p2, b) => api(p2, Object.assign({ code: fr.j.code, name: "Off" }, b || {}));
+      await F("/api/pc/decide", { id: "school", choice: "asb" });
+      let x = await F("/api/pc/testset", { offer: "FC Goa" });
+      ok("an offer is on the table (test hook)", x.status === 200 && x.j.state.offers.some(o => o.status === "open" && o.club === "FC Goa"), x.j.error);
+      x = await simAll(F);
+      ok("the sim stops in the offer's last week, the offer still open", x.status === 200 && x.j.stopped === "deadline" && x.j.reports.length === 4 && x.j.state.offers.some(o => o.status === "open" && o.club === "FC Goa"), [x.j.stopped, x.j.reports && x.j.reports.length]);
+      x = await simAll(F);
+      ok("sim again and the offer is let go", x.status === 200 && x.j.stopped !== "deadline" && x.j.reports.length > 1 && !x.j.state.offers.some(o => o.club === "FC Goa" && o.status === "open"), [x.j.stopped, x.j.state && x.j.state.offers.map(o => o.club + " " + o.status)]);
+    }
 
     // ---------- a save from before this update ----------
     const r2 = await api("/api/pc/create", { name: "Old", player: FORM({ first: "Ishan", last: "Roy" }) });
@@ -283,7 +331,7 @@ async function main() {
     }
     srv = spawn("node", [path.join(root, "floodlights", "server.js")], { env: Object.assign({}, process.env, { PORT, FL_SAVE_FILE: SAVE, FL_TEST_HOOKS: "1" }), stdio: "ignore" });
     ok("the server starts again on the older save", await up(), null);
-    r = await O("/api/pc/simseason");
+    r = await simAll(O);
     ok("the older career sims its season", r.status === 200 && r.j.reports.length >= 1, r.j.error);
     ok("the event it had waiting got the calm answer", r.status === 200 && r.j.auto[0] && r.j.auto[0].id === "friend" && r.j.auto[0].choice === "One good dinner, then bed.", r.j.auto && r.j.auto[0]);
     r = await O("/api/pc/testset", { event: "x_wallet_bus" });

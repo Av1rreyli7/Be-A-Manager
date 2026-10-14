@@ -3700,7 +3700,13 @@ app.post("/api/pc/week", (req, res) => {
 });
 // sim the season: week after week to the end of it, with the calm answer to whatever life throws up. It stops
 // where only he can choose: a choice the career needs (a school, a trial, an academy), a new offer on the table,
-// or the end of his career. A match he started live and left is simmed like any other.
+// the last week of an open offer, or the end of his career. Each offer stops a sim once: it was put in front of
+// him then (o.simSeen), and the next sim plays on past it. A match he started live and left is
+// simmed like any other.
+// It plays in slices of well under a second (more: true asks for the next one): a whole season in one go held the
+// server for seconds on a slow host, long enough for the host to think it had died and restart it, and the page
+// keeps its copy of the career fresh between slices. slice (ms) can be made shorter, never longer.
+const SIM_SLICE_MS = 600;
 app.post("/api/pc/simseason", (req, res) => {
   const ctx = pcCtx(req, res); if (!ctx) return;
   const game = ctx.game, c = game.career;
@@ -3708,23 +3714,30 @@ app.post("/api/pc/simseason", (req, res) => {
   if (c.retired) return res.status(400).json({ error: "This career is over." });
   if (must()) return res.status(400).json({ error: "Make your choice first: " + must().title + ".", decision: must() });
   if (game.round >= (game.totalRounds || 38)) return res.status(400).json({ error: "The season is over. Start the next one.", seasonOver: true });
+  const slice = Math.max(20, Math.min(SIM_SLICE_MS, Number(req.body.slice) || SIM_SLICE_MS));
   const seen = new Set(c.offers.filter(o => o.status === "open").map(o => o.id));
-  const reports = [], auto = [];
-  let stopped = "", out = null;
+  const reports = [], auto = [], t0 = Date.now();
+  let stopped = "", out = null, more = false;
   for (let i = 0; i < 60; i++) {
+    const w = game.round;
     const a = PC.PEOPLE.autoAnswer(game);
-    if (a) auto.push(a);
+    if (a) auto.push(Object.assign({ w }, a));
     out = PC.advanceWeek(game);
     if (out.error) { stopped = c.retired ? "retired" : out.decision ? "decision" : out.seasonOver ? "season" : "error"; break; }
     reports.push(out.report);
     if (out.report.seasonOver) { stopped = "season"; break; }
     if (c.retired) { stopped = "retired"; break; }
     if (must()) { stopped = "decision"; break; }
-    if (c.offers.some(o => o.status === "open" && !seen.has(o.id))) { stopped = "offer"; break; }
+    const fresh = c.offers.filter(o => o.status === "open" && !seen.has(o.id));
+    if (fresh.length) { for (const o of fresh) o.simSeen = true; stopped = "offer"; break; }
+    // an offer that was already open when the sim began is never let run out unseen
+    const due = c.offers.filter(o => !o.simSeen && PC.offersRunningOut(game).includes(o.id));
+    if (due.length) { for (const o of due) o.simSeen = true; stopped = "deadline"; break; }
+    if (Date.now() - t0 >= slice) { more = true; break; }
   }
   if (!reports.length) return res.status(400).json(out && out.error ? out : { error: "The season could not be simmed." });
-  // a tease from the last week played is left for him to answer himself
-  pcReply(res, game, { ok: true, reports, auto, stopped: stopped || "season" });
+  // a tease from the last week played waits for the next slice, or for him once the sim has stopped
+  pcReply(res, game, { ok: true, reports, auto, more, stopped: more ? "" : stopped || "season" });
 });
 app.post("/api/pc/season", (req, res) => {
   const ctx = pcCtx(req, res); if (!ctx) return;
@@ -3837,6 +3850,7 @@ if (process.env.FL_TEST_HOOKS === "1") {
     if (Number.isFinite(b.form)) c.cond.form = b.form;
     if (Number.isFinite(b.trust)) c.trust = b.trust;
     if (typeof b.event === "string") { const f = PC.PEOPLE.force(ctx.game, b.event); if (f.error) return res.status(400).json(f); }
+    if (typeof b.offer === "string") { const o = PC.makeOffer(ctx.game, b.offer, "test"); if (!o) return res.status(400).json({ error: "No offer made." }); }
     if (b.preview) return res.json({ ok: true, events: PC.PEOPLE.EVENTS.map(e => PC.PEOPLE.preview(ctx.game, e.id)) });
     PC.refreshRating(ctx.game);
     save();

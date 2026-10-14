@@ -1411,3 +1411,29 @@ Player Career is a game for one, so a career now belongs to the device it is pla
       reads every event no longer breaks on a career with no brother or sister (one old event names them).
 - [x] The batteries now run with the screen kept awake (caffeinate): with the Mac's display asleep, headless
       Chrome stalled for up to two minutes at random, which was behind the old "layout run timed out" flakes.
+
+## Sim the season: no more lost seasons after a server restart
+
+- [x] The bug: simming a season sometimes showed "The server restarted, so your career was put back from this
+      device" and put the career back a season. Root cause: the whole season was played in one request. On my
+      machine that holds the server for 1.1 to 1.4 seconds (nothing else gets an answer meanwhile, not even the
+      host's health check); the free host has a tenth of a CPU, so there it held the server for something like
+      10 to 30 seconds, long enough for the host to decide it had died and restart it, which wipes its disk. The
+      copy on the device was taken 1.5 seconds after a change, so a restart right after a sim put back the copy
+      from before it. Memory was checked too and is not it: with the server capped at 160 MB it ran five
+      seasons fine and levelled off at about 285 MB in all.
+- [x] The fix: a season is now simmed in slices of at most 0.6 seconds each, the page asking for the next until
+      the season stops, so the server answers everything else in between. The page shows how far it has got
+      ("Simming the season: week 12 of 38") and takes its copy of the career after every slice, and a moment
+      (0.6 s, was 1.5 s) after any other change.
+- [x] If the server does restart in the middle, the career comes back from the device without a word (the
+      message is gone for good) and the sim carries on by itself from where the copy was to the end of the
+      season, every week counted once in the summary.
+- [x] Found on the way: an offer already on the table when the sim began could run out during the sim unseen
+      (a new offer stopped it, an old one did not). The sim now also stops in the last week of an open offer it
+      has not stopped for yet. Each offer stops a sim once (when it comes in, or else in its last week); sim
+      again and the sim plays on past it, so a college season full of offers does not stop twice for each.
+- [x] Tests: test_career_events.js checks the slices (many short ones, every week played once and in order,
+      the server answering others in between) and the offer deadline. test_restart.js stops and wipes the server
+      half way through a simmed season in Chrome: the sim carries on by itself to "Simmed 38 weeks. The season
+      is over.", the server has the whole season, and no message about a restart shows anywhere.

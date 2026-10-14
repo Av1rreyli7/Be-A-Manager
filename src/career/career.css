@@ -231,21 +231,6 @@
     flex-wrap: wrap;
   }
 }
-/* a career put back after a server restart: one quiet line at the top of the hub (click to close) */
-.pc-back-note {
-  position: fixed;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 70;
-  margin: 0;
-  padding: 10px 16px;
-  border: 1px solid var(--k-line);
-  border-left: 3px solid var(--k-accent);
-  background: rgba(6, 9, 14, 0.92);
-  font-size: 13.5px;
-  cursor: pointer;
-}
 /* the save is gone from the server: one clean screen with the way back */
 .pc-ended {
   max-width: 520px;

@@ -7,7 +7,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { careerApi, careerCopy, readSaved, writeSaved, ApiError, ENDED_EVENT, type Saved, type SaveCopy } from "./api";
+import { careerApi, careerCopy, simRun, readSaved, writeSaved, ApiError, ENDED_EVENT, type Saved, type SaveCopy } from "./api";
 import Creator, { type Meta } from "./Creator";
 import Hub from "./Hub";
 import type { CareerState, Look, PersonForm } from "./types";
@@ -70,7 +70,8 @@ export default function CareerApp() {
   // every career saved on this device, and the one asking to be deleted (a second click deletes it)
   const [saves, setSaves] = useState<SaveCopy[]>([]);
   const [armed, setArmed] = useState("");
-  const [note, setNote] = useState("");
+  // the server restarted in the middle of a simmed season: the hub that comes back carries on with it
+  const [resumeSim, setResumeSim] = useState(false);
   // a career put back after a server restart starts the hub afresh (a button that asked the lost save never answers)
   const [hubKey, setHubKey] = useState(0);
   const fileIn = useRef<HTMLInputElement>(null);
@@ -132,9 +133,10 @@ export default function CareerApp() {
     });
   }, [load, refreshSaves]);
   // the save is gone from the server (it restarted): this device's copy goes back without a word and the game
-  // carries on; only a career this device never kept ends on the end screen
+  // carries on, a simmed season too; only a career this device never kept ends on the end screen
   useEffect(() => {
     const ended = async () => {
+      const wasSim = simRun.active;
       const s = readSaved();
       const c = s ? await careerCopy.get(s.code) : null;
       if (c) {
@@ -147,8 +149,8 @@ export default function CareerApp() {
           careerCopy.about = aboutOf(r.state);
           setState(r.state);
           setPhase("ready");
+          setResumeSim(wasSim);
           setHubKey((k) => k + 1);
-          setNote("The server restarted, so your career was put back from this device. Carry on.");
           if (goHub.current) {
             goHub.current = false;
             setScreen("hub");
@@ -170,7 +172,7 @@ export default function CareerApp() {
   useEffect(() => {
     if (!saved || !state || phase !== "ready") return;
     careerCopy.about = aboutOf(state);
-    const t = setTimeout(() => void careerCopy.take(saved), 1500);
+    const t = setTimeout(() => void careerCopy.take(saved), 600);
     return () => clearTimeout(t);
   }, [saved, state, phase]);
   // the list is fresh whenever the title is on screen
@@ -184,7 +186,7 @@ export default function CareerApp() {
     setSaved(s);
     setState(null);
     setArmed("");
-    setNote("");
+    setResumeSim(false);
     goHub.current = true;
     await load(s);
   };
@@ -387,11 +389,6 @@ export default function CareerApp() {
         </section>
       )}
       {screen === "create" && meta && <Creator meta={meta} quality={quality} setQuality={setQuality} onCreate={create} busy={busy} error={error} onBack={() => setScreen("title")} />}
-      {screen === "hub" && note && (
-        <p className="pc-back-note" role="status" onClick={() => setNote("")}>
-          {note}
-        </p>
-      )}
       {screen === "hub" && state && saved && meta && (
         <Hub
           key={hubKey}
@@ -405,6 +402,8 @@ export default function CareerApp() {
           setAuto={setAuto}
           onSlow={auto ? onSlow : undefined}
           onExit={() => setScreen("title")}
+          resumeSim={resumeSim}
+          onResumed={() => setResumeSim(false)}
         />
       )}
     </main>

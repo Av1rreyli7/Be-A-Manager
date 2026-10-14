@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import clsx from "clsx";
 import gsap from "gsap";
-import { careerApi, ApiError, type Saved, type SimReply, type WeekReport } from "./api";
+import { careerApi, careerCopy, simRun, ApiError, type Saved, type SimReply, type WeekReport } from "./api";
 import type { CareerState, Offer } from "./types";
 import type { Meta } from "./Creator";
 import { OUTFITS, kitOutfit } from "./body";
@@ -53,11 +53,20 @@ const OFFER_KIND: Record<string, string> = {
   free: "Free transfer",
   renewal: "New deal",
 };
+// how long one slice of a simmed season may run on the server (a test can make it shorter)
+const simSlice = () => {
+  try {
+    return Number(localStorage.getItem("fl_sim_slice")) || undefined;
+  } catch {
+    return undefined;
+  }
+};
 // why a simmed season stopped where it did
 const SIM_STOP: Record<string, string> = {
   season: "The season is over.",
   decision: "It stopped because a choice needs you.",
   offer: "It stopped because a new offer came in.",
+  deadline: "It stopped because an offer runs out this week. Sim again to let it go.",
   retired: "Your career is over.",
   error: "It stopped early.",
 };
@@ -103,6 +112,8 @@ export default function Hub({
   setAuto,
   onSlow,
   onExit,
+  resumeSim,
+  onResumed,
 }: {
   saved: Saved;
   state: CareerState;
@@ -115,6 +126,9 @@ export default function Hub({
   /** the frame guard's way down a level (undefined when the person switched it off) */
   onSlow?: (q: number) => void;
   onExit: () => void;
+  /** the server restarted during a simmed season: carry on with it */
+  resumeSim?: boolean;
+  onResumed?: () => void;
 }) {
   const money = useMoney(meta, state.currency);
   const [gfxOpen, setGfxOpen] = useState(false);
@@ -269,34 +283,68 @@ export default function Hub({
     );
   };
   // whatever life brings up on the way gets the calm answer from the server, so only a choice the career
-  // needs is opened first
-  const simSeason = () => {
+  // needs is opened first. The season goes in short slices and this device's copy is taken after each one: a
+  // server that restarts half way loses next to nothing, and the sim carries on from the copy (resume)
+  const simSeason = async (resume = false) => {
     setSimArm(false);
     const wait = state.decisions.find((d) => !d.optional);
     if (wait) {
+      simRun.end();
       openDecision(wait.id);
       return;
     }
+    // carrying on from the copy: it can be a slice behind what was played, and those weeks count once
+    simRun.begin(resume ? { week: state.week, round: state.round } : null);
     setSimSum(null);
     setSimGo(true);
-    return run(
-      () => careerApi.simSeason(saved),
-      (r) => {
-        setReports(r.reports.slice().reverse());
-        let apps = 0,
-          g = 0,
-          a = 0;
-        for (const w of r.reports)
-          for (const m of [w.match, w.intl])
-            if (m && m.mins > 0) {
-              apps++;
-              g += m.g || 0;
-              a += m.a || 0;
-            }
-        setSimSum({ weeks: r.reports.length, apps, g, a, auto: r.auto || [], stopped: r.stopped });
-      },
-    ).finally(() => setSimGo(false));
+    setBusy(true);
+    setErr("");
+    let stopped: SimReply["stopped"] = "season";
+    try {
+      if (!(resume && state.seasonOver)) {
+        for (let i = 0; i < 200; i++) {
+          const r = await careerApi.simSeason(saved, simSlice());
+          setState(r.state);
+          simRun.add(r);
+          void careerCopy.take(saved, true);
+          if (!r.more) {
+            stopped = r.stopped || "season";
+            break;
+          }
+        }
+      }
+      const all = simRun.reports;
+      setReports(all.slice().reverse());
+      let apps = 0,
+        g = 0,
+        a = 0;
+      for (const w of all)
+        for (const m of [w.match, w.intl])
+          if (m && m.mins > 0) {
+            apps++;
+            g += m.g || 0;
+            a += m.a || 0;
+          }
+      setSimSum({ weeks: all.length, apps, g, a, auto: simRun.auto.slice(), stopped });
+    } catch (e) {
+      if (e instanceof ApiError && e.decision) openDecision(e.decision.id);
+      else setErr(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      simRun.end();
+      setBusy(false);
+      setSimGo(false);
+    }
   };
+  // a sim the server's restart cut short carries on by itself once the career is back
+  const resumed = useRef(false);
+  useEffect(() => {
+    if (!resumeSim || resumed.current) return;
+    resumed.current = true;
+    onResumed?.();
+    void simSeason(true);
+    // once, on the first render of a hub that came back from this device's copy
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const blocking = state.decisions.filter((d) => !d.optional);
   const sessionOpts = Object.entries(state.training.sessions);
@@ -570,7 +618,7 @@ export default function Hub({
                     {simArm ? (
                       <span className="pc-confirm">
                         Play every week to the end of the season?
-                        <button type="button" className="k-btn k-btn-primary" disabled={busy} onClick={simSeason}>
+                        <button type="button" className="k-btn k-btn-primary" disabled={busy} onClick={() => void simSeason()}>
                           Yes, sim it
                         </button>
                         <button type="button" className="k-btn k-btn-ghost" onClick={() => setSimArm(false)}>
@@ -594,7 +642,7 @@ export default function Hub({
                     {simArm ? (
                       <span className="pc-confirm">
                         Play every week to the end of the season?
-                        <button type="button" className="k-btn k-btn-primary" disabled={busy} onClick={simSeason}>
+                        <button type="button" className="k-btn k-btn-primary" disabled={busy} onClick={() => void simSeason()}>
                           Yes, sim it
                         </button>
                         <button type="button" className="k-btn k-btn-ghost" onClick={() => setSimArm(false)}>
@@ -609,7 +657,11 @@ export default function Hub({
                   </>
                 )}
               </div>
-              {simGo && <p className="pc-note">Simming the season. This takes a few seconds.</p>}
+              {simGo && (
+                <p className="pc-note" role="status">
+                  Simming the season: week {Math.min(state.round + 1, state.total)} of {state.total}.
+                </p>
+              )}
               {simSum && (
                 <div className="pc-simsum">
                   <p>
