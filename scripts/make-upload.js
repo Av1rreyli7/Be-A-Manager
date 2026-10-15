@@ -11,7 +11,7 @@ const out = path.join(root, "upload");
 const TOP = [
   "package.json", "package-lock.json", "server.js", "next.config.ts", "tsconfig.json", "tsconfig.build.json", "postcss.config.mjs",
   "eslint.config.mjs", "vitest.config.ts", ".gitignore", ".node-version", "render.yaml",
-  "README.md", "DEPLOY.md", "PROGRESS.md", "AGENTS.md", "CLAUDE.md",
+  "README.md", "DEPLOY.md", "PROGRESS.md", "AUDIT.md", "AGENTS.md", "CLAUDE.md",
   "src", "public", "data", "scripts", "tests", "tests-site", "floodlights", "rooms"
 ];
 const SKIP_NAMES = new Set(["node_modules", ".next", ".DS_Store", "games.json", "hardwood_rooms.json", "upload", ".cache", "Thumbs.db"]);

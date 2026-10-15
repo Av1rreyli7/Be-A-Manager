@@ -1437,3 +1437,18 @@ Player Career is a game for one, so a career now belongs to the device it is pla
       the server answering others in between) and the offer deadline. test_restart.js stops and wipes the server
       half way through a simmed season in Chrome: the sim carries on by itself to "Simmed 38 weeks. The season
       is over.", the server has the whole season, and no message about a restart shows anywhere.
+
+## Full site audit
+
+No new features: every screen, tab, popup, button and flow listed in AUDIT.md, tested on the running site with
+headless Chrome (every console message, page error and failed request recorded) and screenshots looked at by eye,
+then hostile and edge testing. Every defect is logged in AUDIT.md with how to make it happen, the cause and the fix.
+- [x] Step 1: AUDIT.md, the whole site as a checklist
+- [ ] Step 2: the systematic pass (in progress)
+- [ ] Step 3: hostile and edge testing
+- [ ] Step 4: every defect fixed at its root
+- [ ] Step 5: the clean pass, every battery green three times
+- [x] Batch 1 (defects 1 to 7): a name or key like `__proto__` could change every game on the server; manager
+      names ran as page code in friends' browsers; the ticker never showed a week; the matchday label lagged a
+      week; Sim season held the whole server for about a second (many on the free host); the entry card ran past
+      the frame at phone width; Next.js smooth scroll warning on Game Night page changes.

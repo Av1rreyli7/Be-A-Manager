@@ -61,6 +61,10 @@ function newCode() {
 }
 const newToken = () => crypto.randomBytes(12).toString("hex");
 const cleanName = n => String(n || "").trim().slice(0, 20);
+// a member is only ever the room's own entry, so a name like "constructor" or "__proto__" never reaches Object.prototype
+const own = (o, k) => (o && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined);
+const INHERITED = new Set(Object.getOwnPropertyNames(Object.prototype));
+const BAD_NAME = { error: "That name cannot be used. Try another one." };
 
 // what a player sees of a room (no tokens)
 function view(r) {
@@ -169,7 +173,7 @@ function onMessage(r, me, msg) {
 }
 
 function leave(r, name) {
-  if (!r.members[name]) return;
+  if (!own(r.members, name)) return;
   delete r.members[name];
   const m = sockets.get(r.code);
   if (m && m.get(name)) { try { m.get(name).close(); } catch (e) { /* gone */ } m.delete(name); }
@@ -193,7 +197,7 @@ function attach(server) {
     const name = cleanName(url.searchParams.get("name"));
     const token = String(url.searchParams.get("token") || "");
     const r = rooms[code];
-    const me = r && r.members[name];
+    const me = r && own(r.members, name);
     wss.handleUpgrade(req, socket, head, ws => {
       if (!r) { send(ws, { t: "gone" }); ws.close(4404, "Game not found."); return; }
       if (!me || me.token !== token) { send(ws, { t: "denied" }); ws.close(4403, "You are not in this room."); return; }
@@ -208,7 +212,7 @@ function attach(server) {
       ws.on("message", data => {
         let msg = null;
         try { msg = JSON.parse(String(data)); } catch (e) { return; }
-        const room = rooms[code], who = room && room.members[name];
+        const room = rooms[code], who = room && own(room.members, name);
         if (!room || !who || !msg || typeof msg.t !== "string") return;
         onMessage(room, who, msg);
       });
@@ -247,7 +251,7 @@ function newRoom(name) {
   return r;
 }
 function addMember(r, name, pref) {
-  if (!r.members[name]) r.members[name] = { name, token: newToken(), side: null, team: null, joined: Date.now(), pref: Number.isInteger(pref) && pref >= 0 && pref < 30 ? pref : null };
+  if (!own(r.members, name)) r.members[name] = { name, token: newToken(), side: null, team: null, joined: Date.now(), pref: Number.isInteger(pref) && pref >= 0 && pref < 30 ? pref : null };
   seat(r);
   return r.members[name];
 }
@@ -278,6 +282,7 @@ function seat(r) {
 router.post("/api/hl/create", json, (req, res) => {
   const name = cleanName(req.body.name);
   if (!name) return res.status(400).json({ error: "Enter a manager name." });
+  if (INHERITED.has(name)) return res.status(400).json(BAD_NAME);
   const r = newRoom(name);
   const me = addMember(r, name, req.body.team);
   save();
@@ -288,7 +293,8 @@ router.post("/api/hl/join", json, (req, res) => {
   const r = rooms[String(req.body.code || "").toUpperCase()];
   if (!r) return res.status(404).json({ error: "Game not found." });
   if (!name) return res.status(400).json({ error: "Enter a manager name." });
-  if (!r.members[name] && Object.keys(r.members).length >= MAX_PLAYERS) return res.status(400).json({ error: "This room is full. Four players at most." });
+  if (INHERITED.has(name)) return res.status(400).json(BAD_NAME);
+  if (!own(r.members, name) && Object.keys(r.members).length >= MAX_PLAYERS) return res.status(400).json({ error: "This room is full. Four players at most." });
   const me = addMember(r, name, req.body.team);
   roomChanged(r);
   res.json({ code: r.code, token: me.token, room: view(r), copy: copyOf(r) });
@@ -296,7 +302,7 @@ router.post("/api/hl/join", json, (req, res) => {
 router.get("/api/hl/room", (req, res) => {
   const r = rooms[String(req.query.code || "").toUpperCase()];
   if (!r) return res.status(404).json({ error: "Game not found." });
-  const me = r.members[cleanName(req.query.name)];
+  const me = own(r.members, cleanName(req.query.name));
   if (!me || me.token !== String(req.query.token || "")) return res.status(403).json({ error: "You are not in this room." });
   res.set("Cache-Control", "no-store");
   res.json({ room: view(r), copy: copyOf(r) });
@@ -304,8 +310,9 @@ router.get("/api/hl/room", (req, res) => {
 // a room the server lost, handed back by a browser that kept a copy of it
 router.post("/api/hl/restore", json, (req, res) => {
   const name = cleanName(req.body.name);
+  if (INHERITED.has(name)) return res.status(400).json(BAD_NAME);
   const c = req.body.room;
-  const okRoom = c && typeof c === "object" && typeof c.code === "string" && c.members && typeof c.members === "object" && c.members[name] && c.members[name].token === String(req.body.token || "");
+  const okRoom = c && typeof c === "object" && typeof c.code === "string" && c.members && typeof c.members === "object" && own(c.members, name) && c.members[name].token === String(req.body.token || "");
   if (!okRoom) return res.status(400).json({ error: "This copy of the room could not be read." });
   const code = c.code.toUpperCase();
   const liveRoom = rooms[code];
@@ -320,7 +327,7 @@ router.post("/api/hl/restore", json, (req, res) => {
   };
   for (const m of Object.values(c.members).slice(0, MAX_PLAYERS)) {
     const n = cleanName(m && m.name);
-    if (!n) continue;
+    if (!n || INHERITED.has(n)) continue;
     // a friend whose key this browser does not have gets a new one; they come back in by name, like Floodlights
     r.members[n] = { name: n, token: typeof m.token === "string" && m.token.length >= 16 ? m.token : newToken(), side: m.side === 0 || m.side === 1 ? m.side : null, team: Number.isInteger(m.team) ? m.team : null, joined: Number(m.joined) || Date.now() };
   }

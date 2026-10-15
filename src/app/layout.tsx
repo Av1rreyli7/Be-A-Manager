@@ -23,7 +23,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} ${chakra.variable} h-full antialiased`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${inter.variable} ${chakra.variable} h-full antialiased`}>
       <head>
         {/* the shared visual kit: tokens, buttons, panels, motion, the same file Floodlights and Hardwood Legends load */}
         <link rel="stylesheet" href="/kit.css" />

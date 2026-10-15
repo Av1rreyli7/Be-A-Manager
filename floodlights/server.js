@@ -18,6 +18,21 @@ const app = express.Router();
 const jsonBody = express.json();
 const ownApi = new Set();
 app.use((req, res, next) => (ownApi.has(req.path) ? jsonBody(req, res, next) : next()));
+// Names, codes and choices sent by a player are used to look things up in plain objects. A key every object
+// inherits ("__proto__", "constructor", "toString" and the rest) would reach Object.prototype itself and could
+// change every game on the server, so a request carrying one is turned away before any route reads it.
+const INHERITED = new Set(Object.getOwnPropertyNames(Object.prototype));
+function inheritedKey(v, depth) {
+  if (typeof v === "string") return INHERITED.has(v.trim());
+  if (!v || typeof v !== "object" || Buffer.isBuffer(v) || depth > 4) return false;
+  for (const k of Object.keys(v)) if (INHERITED.has(k) || inheritedKey(v[k], depth + 1)) return true;
+  return false;
+}
+app.use((req, res, next) => {
+  if (ownApi.has(req.path) && (inheritedKey(req.query, 0) || inheritedKey(req.body, 0))) return res.status(400).json({ error: "That name or choice cannot be used. Try another one." });
+  next();
+});
+const own = (o, k) => (o && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined);
 app.get("/floodlights", (req, res, next) => {
   // the page loads its scripts with relative paths, so it needs the trailing slash
   if (req.originalUrl.split("?")[0].endsWith("/")) return next();
@@ -2124,7 +2139,7 @@ app.post("/api/join", (req, res) => {
   if (!game) return res.status(404).json({ error: "Game not found. Check the code." });
   if (!name) return res.status(400).json({ error: "Enter a manager name." });
   if (game.mode === "player") return res.status(400).json({ error: "This code is a Player Career save. Open it from Player Career.", playerCareer: true });
-  if (!game.users[name]) {
+  if (!own(game.users, name)) {
     if (Object.keys(game.users).length >= 10) return res.status(400).json({ error: "Lobby is full." });
     game.users[name] = { name, team: null, nation: null };
     log(game, `${name} joined the game.`);
@@ -2145,7 +2160,7 @@ function sameGame(a, b) {
 app.get("/api/save/copy", (req, res) => {
   const game = games[String(req.query.code || "").toUpperCase()];
   if (!game) return res.status(404).json({ error: "Game not found." });
-  if (!game.users || !game.users[String(req.query.name || "")]) return res.status(403).json({ error: "You are not in this game." });
+  if (!own(game.users, String(req.query.name || ""))) return res.status(403).json({ error: "You are not in this game." });
   if (!game.uid) { game.uid = newUid(); save(); }
   res.set("Cache-Control", "no-store");
   res.type("application/gzip").send(zlib.gzipSync(JSON.stringify(game)));
@@ -2154,7 +2169,7 @@ app.post("/api/save/restore", express.raw({ type: "application/gzip", limit: "25
   const name = String(req.query.name || "");
   let game = null;
   try { game = JSON.parse(zlib.gunzipSync(req.body).toString("utf8")); } catch (e) { game = null; }
-  const ok = game && typeof game === "object" && typeof game.code === "string" && game.users && game.users[name] &&
+  const ok = game && typeof game === "object" && typeof game.code === "string" && game.users && own(game.users, name) &&
     (game.mode === "player" ? !!game.career : !!(game.clubs && game.players));
   if (!ok) return res.status(400).json({ error: "This copy of the game could not be read." });
   const code = game.code.toUpperCase();
@@ -2214,7 +2229,7 @@ function getCtx(req, res) {
   // a Player Career save only opens through its own screens until he retires and takes a club
   if (game.mode === "player" && !req.path.startsWith("/api/pc/")) { res.status(400).json({ error: "This code is a Player Career save. Open it from Player Career.", playerCareer: true }); return null; }
   const name = String(req.query.name || req.body.name || "");
-  const user = game.users[name];
+  const user = own(game.users, name);
   if (!user) { res.status(403).json({ error: "You are not in this game." }); return null; }
   return { game, user };
 }
@@ -2224,7 +2239,7 @@ app.post("/api/pick", (req, res) => {
   const { game, user } = ctx;
   if (game.started && user.team) return res.status(400).json({ error: "Season already started. You can only take a new job if you lose yours." });
   const team = req.body.team;
-  const club = game.clubs[team];
+  const club = own(game.clubs, team);
   if (!club || !(LEAGUES[club.league] || {}).playable) return res.status(400).json({ error: "Pick a club from one of the playable leagues." });
   if (humanOf(game, team) && humanOf(game, team).name !== user.name) return res.status(400).json({ error: "That club is taken." });
   user.team = team;
@@ -2246,7 +2261,7 @@ app.post("/api/nation", (req, res) => {
     save();
     return res.json({ ok: true });
   }
-  const n = (game.nations || {})[nation];
+  const n = own(game.nations, nation);
   if (!n) return res.status(400).json({ error: "That national team is not in this game." });
   if (n.manager && n.manager !== user.name) return res.status(400).json({ error: "That national job is taken." });
   if (user.nation && game.nations[user.nation]) game.nations[user.nation].manager = null;
@@ -2615,11 +2630,15 @@ function playMatchweek(game) {
   game.plays = {};
 }
 
+// games whose season is being simmed right now: their week moves only through that sim until it is done
+const SIMMING = new Set();
+const SIM_BUSY = { error: "The season is being simmed right now. Give it a moment." };
 app.post("/api/sim", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
   if (user.name !== game.host) return res.status(403).json({ error: "Only the host can sim the matchweek." });
   if (!game.started) return res.status(400).json({ error: "Start the season first." });
+  if (SIMMING.has(game)) return res.status(409).json(SIM_BUSY);
   if (game.round >= (game.totalRounds || 38)) return res.status(400).json({ error: "The season is over. Check the final tables and awards, then press Start next season." });
   playMatchweek(game);
   save();
@@ -2628,18 +2647,35 @@ app.post("/api/sim", (req, res) => {
 
 // Sim Season runs every remaining week in order through all the systems (form, morale, events, travel
 // bookings by each manager's policy), so the end state is the same as pressing Play matchweek each time.
-app.post("/api/simseason", (req, res) => {
+// The server answers everyone else between weeks: a whole season in one go held it for about a second here and
+// for many seconds on the free host, long enough for the host to think it had died, restart it and lose the
+// season. Each week is saved as it lands, so a restart part way through keeps the weeks already played.
+app.post("/api/simseason", async (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
   if (user.name !== game.host) return res.status(403).json({ error: "Only the host can sim the season." });
   if (!game.started) return res.status(400).json({ error: "Start the season first." });
   const total = game.totalRounds || 38;
   if (game.round >= total) return res.status(400).json({ error: "The season is over. Check the final tables and awards, then press Start next season." });
+  if (SIMMING.has(game)) return res.status(409).json(SIM_BUSY);
+  SIMMING.add(game);
   const from = game.round + 1;
   let guard = 0;
-  while (game.round < total && guard < 60) {
-    playMatchweek(game);
-    guard++;
+  try {
+    while (game.round < total && guard < 60) {
+      playMatchweek(game);
+      guard++;
+      save();
+      await new Promise(r => setImmediate(r));
+      // the room was put back from a copy in the meantime: that copy is the game now
+      if (games[game.code] !== game) break;
+    }
+  } catch (e) {
+    // an error after a pause would not reach Express, so it is answered here like any other server error
+    console.error("Sim season stopped:", e);
+    return res.status(500).json({ error: "Something went wrong" });
+  } finally {
+    SIMMING.delete(game);
   }
   log(game, "SIM SEASON: the host simmed from week " + from + " to the end of the season.");
   save();
@@ -2875,6 +2911,7 @@ app.post("/api/nextseason", (req, res) => {
   const { game, user } = ctx;
   if (user.name !== game.host) return res.status(403).json({ error: "Only the host can start the next season." });
   if (!game.started) return res.status(400).json({ error: "Start the first season first." });
+  if (SIMMING.has(game)) return res.status(409).json(SIM_BUSY);
   if (game.round < (game.totalRounds || 38)) return res.status(400).json({ error: "The season isn't finished yet." });
   endOfSeason(game);
   game.lock = { active: false, week: 0 };
@@ -3372,7 +3409,7 @@ app.post("/api/staff", (req, res) => {
   const { game, user } = ctx;
   if (!user.team) return res.status(400).json({ error: "Pick a club first." });
   const key = req.body.key;
-  const def = STAFF[key];
+  const def = own(STAFF, key);
   if (!def) return res.status(400).json({ error: "No such staff role." });
   const club = game.clubs[user.team];
   club.staff = club.staff || {};
@@ -3389,7 +3426,7 @@ const PEN_DIRS = ["left", "center", "right"];
 app.post("/api/pens", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
-  const so = (game.shootouts || {})[req.body.key];
+  const so = own(game.shootouts, req.body.key);
   if (!so || so.done) return res.status(400).json({ error: "That shootout is over or does not exist." });
   const dir = req.body.dir;
   if (!PEN_DIRS.includes(dir)) return res.status(400).json({ error: "Pick left, center or right." });
@@ -3863,7 +3900,7 @@ app.post("/api/pc/read", (req, res) => {
 });
 app.post("/api/pc/moment", (req, res) => {
   const ctx = pcCtx(req, res); if (!ctx) return;
-  const m = (ctx.game.career.moments || {})[String(req.body.key || "")];
+  const m = own(ctx.game.career.moments, String(req.body.key || ""));
   if (m) m.seen = true;
   pcReply(res, ctx.game, { ok: true });
 });

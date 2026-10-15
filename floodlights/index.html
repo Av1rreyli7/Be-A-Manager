@@ -1175,6 +1175,8 @@ async function send(url, opts, retryPost) {
     await sleep(Math.min(4000, 500 * (i + 1)));
   }
 }
+// text other players typed (manager names, and the news and wire lines that carry them) always lands as text
+const escHtml = t => String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 async function api(path, body) {
   const opts = body ? { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ code: ME.code, name: ME.name, ...body }) } : {};
   const url = body ? path : path + (path.includes("?") ? "&" : "?") + "code=" + ME.code + "&name=" + encodeURIComponent(ME.name);
@@ -1365,7 +1367,7 @@ function renderPens(s) {
         <button onclick="penKick('${so.key}','right')">DIVE RIGHT</button>
       </div>`;
   } else {
-    act = `<div class="pen-wait">WAITING ON ${String(so.waitingOn || "AI").toUpperCase()}...</div>`;
+    act = `<div class="pen-wait">WAITING ON ${escHtml(String(so.waitingOn || "AI").toUpperCase())}...</div>`;
   }
   box.innerHTML = `
     <div class="pen-title">PENALTIES <span>&middot; ${so.cupTitle.toUpperCase()}</span></div>
@@ -1397,11 +1399,11 @@ function renderAwards(s) {
   if (!a) { ov.classList.add("hidden"); return; }
   const row = (k, v, sub, cls) => `<div class="awrow ${cls || ""}"><span class="ak">${k}</span><span class="av">${v}${sub ? `<small>${sub}</small>` : ""}</span></div>`;
   $("awardsBody").innerHTML =
-    row("CHAMPIONS \u00b7 " + lg.toUpperCase(), a.champion, a.championManager !== "AI" ? "MANAGER: " + a.championManager.toUpperCase() : "", "champ") +
+    row("CHAMPIONS \u00b7 " + lg.toUpperCase(), a.champion, a.championManager !== "AI" ? "MANAGER: " + escHtml(a.championManager.toUpperCase()) : "", "champ") +
     (a.boot ? row("GOLDEN BOOT", a.boot.name, a.boot.club.toUpperCase() + " \u00b7 " + a.boot.g + " GOALS") : "") +
     (a.ball ? row("GOLDEN BALL", a.ball.name, a.ball.club.toUpperCase() + " \u00b7 " + a.ball.a + " ASSISTS") : "") +
     (a.pots ? row("PLAYER OF THE SEASON", a.pots.name, a.pots.club.toUpperCase()) : "") +
-    (a.motss ? row("MANAGER OF THE SEASON", a.motss.manager !== "AI" ? a.motss.manager : a.motss.club, a.motss.manager !== "AI" ? a.motss.club.toUpperCase() : "OVERACHIEVED BY " + a.motss.over + " PLACES") : "") +
+    (a.motss ? row("MANAGER OF THE SEASON", a.motss.manager !== "AI" ? escHtml(a.motss.manager) : a.motss.club, a.motss.manager !== "AI" ? a.motss.club.toUpperCase() : "OVERACHIEVED BY " + a.motss.over + " PLACES") : "") +
     (a.relegated && a.relegated.length ? row("GOING DOWN", a.relegated.join(" \u00b7 "), "", "doom") : "");
   $("awardsGo").onclick = () => {
     try { localStorage.setItem(key, "1"); } catch (e) {}
@@ -1957,8 +1959,9 @@ function render() {
 
   renderMatchday(s);
 
-  // ticker: last matchweek line from feed
-  const mw = s.feed.find(f => f.text.startsWith("MATCHWEEK"));
+  // ticker: last matchweek line from feed (the server writes it as "PREMIER LEAGUE WEEK 3: ..."), your league first
+  const isWeek = f => /^[A-Z][A-Z0-9 .'&-]* WEEK \d+: /.test(f.text || "");
+  const mw = s.feed.find(f => isWeek(f) && s.myLeague && f.text.startsWith(s.myLeague.toUpperCase() + " WEEK ")) || s.feed.find(isWeek);
   $("ticker").textContent = mw ? mw.text : "Waiting for the first matchweek... " + s.users.map(u=>u.name+(u.team?" ("+u.team+")":"")).join(" · ");
 
   // managers map across all playable leagues
@@ -1981,12 +1984,12 @@ function render() {
     const pl2 = $("pickLeague").value || s.leagues[0];
     paint("teamPick", (s.clubsByLeague[pl2] || []).map(t => {
       const taken = t.manager !== "AI";
-      return `<button class="${taken?'taken':''}" ${taken?'disabled':''} style="--team:${clubKit(t.name)[0]}" onclick="pick('${t.name.replace(/'/g, "\\'")}')">${t.name}<br><span style="font-size:11px;color:var(--dim)">${money(t.budget)} \u00b7 ${taken?t.manager:'Free'}</span></button>`;
+      return `<button class="${taken?'taken':''}" ${taken?'disabled':''} style="--team:${clubKit(t.name)[0]}" onclick="pick('${t.name.replace(/'/g, "\\'")}')">${t.name}<br><span style="font-size:11px;color:var(--dim)">${money(t.budget)} \u00b7 ${taken?escHtml(t.manager):'Free'}</span></button>`;
     }).join(""));
     if ($("mgrCount")) $("mgrCount").textContent = "MANAGERS \u00b7 " + s.users.length;
     $("lobbyList").innerHTML = s.users.map((u, i) =>
       `<div class="mgrow"><span class="n">${String(i + 1).padStart(2, "0")}</span>
-        <div><div class="nm">${u.name}</div><div class="cl">${u.team ? u.team : "OUT OF WORK"}</div></div>
+        <div><div class="nm">${escHtml(u.name)}</div><div class="cl">${u.team ? u.team : "OUT OF WORK"}</div></div>
         ${u.name === s.you ? '<span class="tag human">YOU</span>' : ''}</div>`).join("");
   }
   else if (!s.started) {
@@ -1998,7 +2001,7 @@ function render() {
     paint("teamPick", (s.clubsByLeague[pl] || []).map(t => {
       const mine = s.myClub && s.myClub.name === t.name;
       const taken = t.manager !== "AI" && !mine;
-      return `<button class="${taken?'taken':''} ${mine?'mine':''}" ${taken?'disabled':''} style="--team:${clubKit(t.name)[0]}" onclick="pick('${t.name.replace(/'/g, "\\'")}')">${t.name}<br><span style="font-size:11px;color:var(--dim)">${money(t.budget)} · ${taken?t.manager:(mine?'You':'Free')}</span></button>`;
+      return `<button class="${taken?'taken':''} ${mine?'mine':''}" ${taken?'disabled':''} style="--team:${clubKit(t.name)[0]}" onclick="pick('${t.name.replace(/'/g, "\\'")}')">${t.name}<br><span style="font-size:11px;color:var(--dim)">${money(t.budget)} · ${taken?escHtml(t.manager):(mine?'You':'Free')}</span></button>`;
     }).join(""));
     $("startBtn").classList.toggle("hidden", s.you !== s.host);
     if ($("codeBoxes")) paint("codeBoxes", (s.code || "").split("").map(c => `<div class="codebox">${c}</div>`).join(""));
@@ -2008,7 +2011,7 @@ function render() {
         ? '<span class="tag human">YOU</span>'
         : (u.name === s.host ? '<span class="tag">HOST</span>' : (u.team ? '<span class="tag">READY</span>' : '<span class="tag">PICKING</span>'));
       return `<div class="mgrow"><span class="n">${String(i + 1).padStart(2, "0")}</span>
-        <div><div class="nm">${u.name}</div><div class="cl">${u.team ? u.team : "CHOOSING A CLUB\u2026"}</div></div>${tag}</div>`;
+        <div><div class="nm">${escHtml(u.name)}</div><div class="cl">${u.team ? u.team : "CHOOSING A CLUB\u2026"}</div></div>${tag}</div>`;
     }).join("") + '<div class="msub" style="padding:12px 0;color:var(--ghost)">WAITING FOR MORE MANAGERS\u2026</div>';
   }
 
@@ -2146,7 +2149,7 @@ function render() {
     const zone = i < 4 ? " zt" : (rows.length > 10 && i >= rows.length - 3 ? " zr" : "");
     const gd = r.gf - r.ga;
     return `<tr class="${meRow?'me':''}${zone}"><td>${i+1}</td><td><span class="tdot" style="--c:${clubKit(r.team)[0]}"></span>${r.team}</td>
-    <td>${boss==="AI"?'<span class="tag">AI</span>':'<span class="tag human">'+boss+'</span>'}</td>
+    <td>${boss==="AI"?'<span class="tag">AI</span>':'<span class="tag human">'+escHtml(boss)+'</span>'}</td>
     <td class="num">${r.p}</td><td class="num">${r.w}</td><td class="num">${r.d}</td><td class="num">${r.l}</td>
     <td class="num ${gd > 0 ? "gdu" : gd < 0 ? "gdd" : ""}">${gd > 0 ? "+" + gd : gd}</td><td class="num"><b>${r.pts}</b></td></tr>`;
   }).join(""));
@@ -2228,14 +2231,14 @@ function render() {
 
   // feed: your club's own news first, then the world
   const myNews = s.myClub && s.myClub.news && s.myClub.news.length
-    ? '<div class="clubnews"><div class="mlab sechead">Your club this season</div>' + s.myClub.news.map(x => '<p><span class="fchip ' + (/^TRAVEL:/.test(x.t) ? "info" : "warm") + '">WEEK ' + x.w + '</span>' + x.t + '</p>').join("") + '</div>'
+    ? '<div class="clubnews"><div class="mlab sechead">Your club this season</div>' + s.myClub.news.map(x => '<p><span class="fchip ' + (/^TRAVEL:/.test(x.t) ? "info" : "warm") + '">WEEK ' + x.w + '</span>' + escHtml(x.t) + '</p>').join("") + '</div>'
     : "";
   paint("feedInner", myNews + s.feed.map(f => {
     const m = /^([A-Z][A-Z .]{2,18}):\s*(.*)$/.exec(f.text || "");
     const tagCls = m ? (/DERBY/.test(m[1]) ? "fchip red" : /INJUR|COLLAPS|OUT OF/.test(m[1]) ? "fchip soft" : /CONTRACT|RENEW|WONDER/.test(m[1]) ? "fchip warm" : "fchip") : "";
     const head = m ? `<span class="${tagCls}">${m[1]}</span>` : "";
     const body = m ? m[2] : (f.text || "");
-    return `<p>${head}<span class="ftime">${new Date(f.t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span><br>${body}</p>`;
+    return `<p>${head}<span class="ftime">${new Date(f.t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span><br>${escHtml(body)}</p>`;
   }).join(""), ".clubnews p, .feedcol > p");
 
   // the first paint after joining: the club header rises in, then the open screen settles
@@ -2461,7 +2464,7 @@ $("tvSet").onclick = async () => {
 
 let MANAGERS = {};
 function fixtureRow(m, s, extra) {
-  const nm = t => { const b = MANAGERS[t]; return (b && b !== "AI") ? ` <span class="tag human">${b}</span>` : ""; };
+  const nm = t => { const b = MANAGERS[t]; return (b && b !== "AI") ? ` <span class="tag human">${escHtml(b)}</span>` : ""; };
   return `<div class="fixture${extra ? " mine" : ""}"><span class="fh">${m.home}${nm(m.home)}</span><span class="score">${m.hg===null?"v":m.hg+"-"+m.ag}${m.derby?' <span class="tag derby">DERBY</span>':''}${m.played?' <span class="tag human">PLAYED</span>':''}</span><span class="fa">${m.away}${nm(m.away)}</span>${extra || ""}</div>`;
 }
 
@@ -2584,7 +2587,7 @@ function offerCard(o, role) {
   return `<div class="offer" data-oid="${o.id}"><div class="ohead"><span class="who">${who}${keen}</span>
     <span class="msub status-${o.status}">${o.status.replace(/_/g," ").toUpperCase()}</span></div>
     <div class="fee">${money(shownFee)} <small>${feeTag}${o.swapName ? " + " + o.swapName.toUpperCase() + " (" + o.swapRating + ")" : ""}${o.status === "countered" && o.counterFee ? " · YOUR BID " + money(o.fee) : ""}</small></div>
-    ${o.note?`<div class="note">"${o.note}"</div>`:""}
+    ${o.note?`<div class="note">"${escHtml(o.note)}"</div>`:""}
     <div class="oact">${actions}</div></div>`;
 }
 
@@ -2836,7 +2839,7 @@ function renderRomano(s) {
         <span class="fabbadge ${b.cls}">${b.label}</span>
         <span class="fabtime" style="margin-left:auto">FABRIZIO ROMANO</span>
       </div>
-      <div class="fabtext">${p.text}</div>
+      <div class="fabtext">${escHtml(p.text)}</div>
     </div>`;
   }).join(""));
 }
@@ -2902,6 +2905,8 @@ function renderMatchday(s) {
   if (!show) { if (LIVE.timer) { clearInterval(LIVE.timer); LIVE.timer = null; } LIVE.week = null; return; }
   const myName = s.myClub ? s.myClub.name : null;
   $("mdWeek").textContent = lock.week;
+  // the league panel's label follows the week from the first live frame, not only from full time
+  if ($("mdLeagueLab")) $("mdLeagueLab").textContent = (s.myLeague || "LEAGUE").toUpperCase() + " \u00b7 MW " + lock.week;
   if ($("mdTeaser")) $("mdTeaser").classList.add("hidden");
   // fresh week: run the match live before revealing everything, unless already seen
   const liveWeekKey = lock.week + "_" + s.season;
@@ -2937,7 +2942,6 @@ function renderMatchday(s) {
     : "The whole lobby watches the results together until the host moves everyone on.";
   $("mdSub").textContent = champLine;
   evTeaser(s);
-  if ($("mdLeagueLab")) $("mdLeagueLab").textContent = (s.myLeague || "LEAGUE").toUpperCase() + " \u00b7 MW " + lock.week;
   const hero = $("mdHero");
   if (hero) {
     let mm = myName ? (s.lastWeek || []).find(m => m.home === myName || m.away === myName) : null;
@@ -2990,7 +2994,7 @@ function renderMatchday(s) {
     }
     const rf = $("reactFeed");
     if (rf) rf.innerHTML = (s.reacts || []).slice(-12).reverse()
-      .map(x => `<span class="reactchip"><b>${x.e}</b>${x.n}</span>`).join("");
+      .map(x => `<span class="reactchip"><b>${x.e}</b>${escHtml(x.n)}</span>`).join("");
   }
   paint("mdLeague", (s.lastWeek||[]).map(m => {
     const mine = myName && (m.home === myName || m.away === myName);
@@ -3024,7 +3028,7 @@ function renderMatchday(s) {
     if (sim) sim.onclick = () => evGate(sim.onclick) || (async () => { sim.disabled = true; try { await api("/api/sim",{}); await tick(); } catch(e){ alert(e.message); } })();
     $("mdBack").onclick = async () => { try { await api("/api/unlock",{}); await tick(); } catch(e){ alert(e.message); } };
   } else {
-    $("mdFoot").innerHTML = `<span class="msub">CUPS AND EUROPE SIM WITH THE WEEK. SEE THE CUPS TAB.</span><span class="waiting">WAITING FOR ${s.host.toUpperCase()} TO ROLL THE WORLD ON...</span>`;
+    $("mdFoot").innerHTML = `<span class="msub">CUPS AND EUROPE SIM WITH THE WEEK. SEE THE CUPS TAB.</span><span class="waiting">WAITING FOR ${escHtml(s.host.toUpperCase())} TO ROLL THE WORLD ON...</span>`;
   }
 }
 
@@ -3078,7 +3082,7 @@ function renderNations(s) {
     const taken = n.manager && !mine;
     let btn;
     if (mine) btn = `<button class="small red" onclick="leaveNation()">Leave job</button>`;
-    else if (taken) btn = `<span class="tag human">${n.manager}</span>`;
+    else if (taken) btn = `<span class="tag human">${escHtml(n.manager)}</span>`;
     else btn = `<button class="small" onclick="takeNation('${n.name}')">Take job</button>`;
     return `<div class="teamcard ${mine?'me':''}">
       <div class="tc-name">${n.name}</div>

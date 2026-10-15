@@ -576,9 +576,13 @@ select.k-input option,
   .k-entry,
   :where([data-kapp="fl"]) #lobby { padding: 44px 30px; align-items: start; }
   .k-entry-in,
-  :where([data-kapp="fl"]) .lobbyin { grid-template-columns: 1fr; gap: 34px; }
+  :where([data-kapp="fl"]) .lobbyin { grid-template-columns: minmax(0, 1fr); gap: 34px; }
   .k-title,
   :where([data-kapp="fl"]) #lobby h1 { font-size: clamp(34px, 11.2vw, 88px); }
+}
+@media (max-width: 480px) {
+  .k-stats div,
+  :where([data-kapp="fl"]) .lobbystats div { padding-right: 22px; margin-right: 22px; }
 }
 
 /* ---------- the room before the season: share the code, pick a team ---------- */
