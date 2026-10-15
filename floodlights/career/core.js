@@ -22,7 +22,7 @@ function makeCore(deps) {
   const C = game => game.career;
   const me = game => game.players[game.career.pid];
   const seasonYear = game => 2025 + (game.season || 1); // season 1 is 2026-27
-  function weekLabel(game) { const y = seasonYear(game); return "Season " + y + "-" + String(y + 1).slice(2) + ", week " + (game.round + 1); }
+  function weekLabel(game) { const y = seasonYear(game); return "Season " + y + "-" + String(y + 1).slice(2) + ", week " + Math.min(game.round + 1, game.totalRounds || 38); }
   function money(game, amt, text) {
     const c = C(game);
     c.money.cash = Math.round(c.money.cash + amt);

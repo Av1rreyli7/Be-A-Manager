@@ -827,6 +827,7 @@ export class Kit {
     }
     const ticks = this.ticks;
     const own = this.own;
+    const group = this.g;
     return {
       ...r,
       group: this.g,
@@ -836,9 +837,20 @@ export class Kit {
       slots: this.slots,
       dateSeats: this.dateSeats,
       tick: r.tick || (ticks.length ? (t, dt) => ticks.forEach((f) => f(t, dt)) : undefined),
-      dispose: () => own.forEach((o) => o.dispose()),
+      // an instanced mesh keeps its own per copy data on the GPU (where each copy stands, its colour); freeing only
+      // its geometry and material left that behind, about fifty buffers for every visit to a shop
+      dispose: () => {
+        own.forEach((o) => o.dispose());
+        freeInstances(group);
+      },
     };
   }
+}
+/** frees what every instanced mesh under root keeps on the GPU for its copies (its geometry and material are not touched) */
+export function freeInstances(root: THREE.Object3D) {
+  root.traverse((o) => {
+    if ((o as THREE.InstancedMesh).isInstancedMesh) (o as THREE.InstancedMesh).dispose();
+  });
 }
 const signMats = new Map<string, THREE.MeshBasicMaterial>();
 

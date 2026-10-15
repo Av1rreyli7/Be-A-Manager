@@ -659,6 +659,7 @@
   top: 0;
   z-index: 20;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 16px;
   padding: 14px 0;
@@ -669,6 +670,10 @@
   );
   backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--pc-line);
+}
+/* the screen tabs scroll sideways inside themselves, so in a narrow header they would shrink to nothing */
+.pc-top > .k-tabs {
+  flex: none;
 }
 .pc-brand {
   display: inline-flex;

@@ -1452,3 +1452,6 @@ then hostile and edge testing. Every defect is logged in AUDIT.md with how to ma
       names ran as page code in friends' browsers; the ticker never showed a week; the matchday label lagged a
       week; Sim season held the whole server for about a second (many on the free host); the entry card ran past
       the frame at phone width; Next.js smooth scroll warning on Game Night page changes.
+- [x] Batch 2 (defects 8 to 11): the open world leaked GPU memory at every door until the tab died (reflection map,
+      shop instances, body skeletons), now flat with 60 frames a second; the Player Career header at phone width hid
+      the way into the city; "week 39" of a 38 week season; date lines that only fit the evening.

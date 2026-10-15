@@ -479,7 +479,7 @@ function makeSocial(K) {
     }
     sc.result = { res, text: pickR(r, S.DATE_RESULT[res]) + note + stageNote, rel: Math.round(f.rel), stage: S.STAGE_WORD[f.stage] };
     pp.plan.status = "done";
-    msg(game, "f:" + f.id, f.name, res === "great" ? "Best night in ages. Text me when you are home 😊" : res === "good" ? "Thanks for tonight 🙂" : "Thanks. Goodnight.");
+    msg(game, "f:" + f.id, f.name, res === "great" ? "Best date in ages. Text me when you are home 😊" : res === "good" ? "Thanks, that was fun 🙂" : "Thanks. See you.");
     return { ok: true };
   }
   // ---------- the ring and the question ----------

@@ -145,20 +145,20 @@ const DATE_VENUES = {
 // the scenes: her line and three things he can say (a style, how much it costs)
 const BEATS = {
   arriveLate: { t: "You are late. I nearly left.", c: [["sorry", "I am sorry. It will not happen again.", 5], ["excuse", "Traffic was a nightmare, honestly", 1], ["joke", "Footballers run on match time 😅", 0]] },
-  arrive: { t: "Hi. I was not sure what to wear tonight.", c: [["compliment", "You look lovely", 5], ["joke", "Did you dress up for me?", 0], ["plain", "Let us get a seat", 2]] },
-  restaurant: { t: "Everything looks good. What are you having?", c: [["order:130", "The sea bass for both of us", 4], ["order:520", "The tasting menu. It is a special night", 4], ["order:150", "Let her choose for both of you", 5]] },
+  arrive: { t: "Hi. I was not sure what to wear.", c: [["compliment", "You look lovely", 5], ["joke", "Did you dress up for me?", 0], ["plain", "Let us get a seat", 2]] },
+  restaurant: { t: "Everything looks good. What are you having?", c: [["order:130", "The sea bass for both of us", 4], ["order:520", "The tasting menu. Today is special", 4], ["order:150", "Let her choose for both of you", 5]] },
   cafe: { t: "Coffee or tea person? This decides everything.", c: [["joke", "Whatever stops me falling asleep in team talks", 0], ["listen", "Ask what she likes and order the same", 4], ["plain", "Coffee, black, no sugar", 2]] },
   mall: { t: "Help me pick a jacket. These two. Go.", c: [["buy:80", "Buy her the one she keeps looking at", 5], ["honest", "Tell her honestly which one suits her", 4], ["phone", "Check the football scores while she decides", -5]] },
   club: { t: "Do you dance, or do footballers just do celebrations?", c: [["dance", "Dance like nobody is watching", 0], ["quiet", "Find a quiet corner to talk", 0], ["fans", "Stop to chat with the fans who know you", -4]] },
   walk: { t: "This view. Do you ever just stop and look at the city?", c: [["listen", "Stop, and ask what she sees", 5], ["football", "Point out the stadium lights", 0], ["joke", "Only when I am lost", 0]] },
   drive: { t: "Put your music on. I want to know what you listen to.", c: [["music", "Play the song you play before games", 4], ["ask", "Let her pick the music", 5], ["quiet", "Drive in silence, it is nice", 0]] },
   middle: { t: "So tell me something nobody knows about you.", c: [["home", "Tell her about home and your family", 0], ["football", "Tell her about the game last week", 0], ["ask", "Turn it round and ask about her", 5]] },
-  close: { t: "This was really nice.", c: [["again", "Ask to see her again", 5], ["home", "Offer to take her home", 4], ["hug", "Say goodnight with a hug", 3]] }
+  close: { t: "This was really nice.", c: [["again", "Ask to see her again", 5], ["home", "Offer to take her home", 4], ["hug", "Say goodbye with a hug", 3]] }
 };
 const DATE_RESULT = {
-  great: ["Neither of you wanted it to end.", "She was still smiling when you said goodnight.", "The best night you have had in a long time."],
-  good: ["A good night. She says she had fun.", "Easy and nice. You would do it again."],
-  bad: ["It never quite clicked tonight.", "Awkward silences. She checked the time twice."]
+  great: ["Neither of you wanted it to end.", "She was still smiling when you said goodbye.", "The best date you have had in a long time."],
+  good: ["A good date. She says she had fun.", "Easy and nice. You would do it again."],
+  bad: ["It never quite clicked.", "Awkward silences. She checked the time twice."]
 };
 const STAGE_WORD = { talking: "Talking", dating: "Dating", serious: "Serious", engaged: "Engaged", married: "Married", ex: "Ex" };
 

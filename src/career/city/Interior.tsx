@@ -288,6 +288,7 @@ export default function Interior({
       if (!petals) return;
       petals.im.geometry.dispose();
       (petals.im.material as THREE.Material).dispose();
+      petals.im.dispose();
     },
     [petals],
   );

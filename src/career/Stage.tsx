@@ -26,18 +26,26 @@ export const DPR_CAP = [1, 1.25, 1.6, 2];
 export function Environment({ intensity }: { intensity: number }) {
   const gl = useThree((s) => s.gl);
   const get = useThree((s) => s.get);
+  // the map is made once: the room and the generator are only needed to draw it, the map lives until the scene goes.
+  // (It was made again on every way in and out of a place, and the room and the map's render target were never
+  // freed, so the GPU kept two geometries and three textures more for every door he went through.)
   useEffect(() => {
     const scene = get().scene;
     const pm = new THREE.PMREMGenerator(gl);
-    const env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environment = env;
-    scene.environmentIntensity = intensity;
+    const room = new RoomEnvironment();
+    const target = pm.fromScene(room, 0.04);
+    room.dispose();
+    pm.dispose();
+    scene.environment = target.texture;
     return () => {
-      scene.environment = null;
-      env.dispose();
-      pm.dispose();
+      if (scene.environment === target.texture) scene.environment = null;
+      target.dispose();
     };
-  }, [gl, get, intensity]);
+  }, [gl, get]);
+  // brighter inside a place, softer in the street: only the strength changes
+  useEffect(() => {
+    get().scene.environmentIntensity = intensity;
+  }, [get, intensity]);
   return null;
 }
 

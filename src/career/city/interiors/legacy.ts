@@ -7,7 +7,7 @@ import * as THREE from "three";
 import type { CareerState, Life } from "../../types";
 import type { PlaceId } from "../CityScene";
 import { rbox, cyl, sphere, plane, mat, glass, glow, signTexture, cachedTexture, seeded, makeCar, lightCone, cone } from "../kit3d";
-import type { Hotspot, Room, Wall } from "./common";
+import { freeInstances, type Hotspot, type Room, type Wall } from "./common";
 
 // ---------- shared pieces ----------
 function floorTex(kind: "wood" | "rubber" | "tile" | "grass" | "stone" | "carpet", tint = "") {
@@ -646,6 +646,7 @@ export function buildLegacyRoom(place: PlaceId, st: CareerState, night: number):
       ownGeo.forEach((x) => x.dispose());
       ownTex.forEach((x) => x.dispose());
       for (const wl of walls) (wl.mesh as THREE.Mesh).geometry.dispose();
+      freeInstances(g);
     },
   };
 }

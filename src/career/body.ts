@@ -355,6 +355,8 @@ export function makeBody(look: Partial<Look>, person: Pick<Person, "height" | "w
     },
     dispose: () => {
       geo.dispose();
+      // the skeleton keeps its bones in a small texture on the GPU, one for every body made
+      mesh.skeleton.dispose();
       if (lite) {
         /* the shared materials stay */
       } else if (!materials) mats.forEach((m) => m.dispose());

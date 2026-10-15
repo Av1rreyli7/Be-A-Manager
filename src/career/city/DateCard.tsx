@@ -78,7 +78,7 @@ export default function DateCard({ scene, busy, onSay, onEnd, endLabel }: { scen
             <div className="pc-talk-opts">
               <button type="button" className="k-btn k-btn-primary k-btn-sm" disabled={busy} onClick={onEnd}>
                 <kbd aria-hidden="true">1</kbd>
-                {endLabel || "Say goodnight"}
+                {endLabel || "Say goodbye"}
               </button>
             </div>
           </>
