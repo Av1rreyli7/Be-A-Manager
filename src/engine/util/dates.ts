@@ -6,6 +6,14 @@ export function addDays(iso: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * The date an offseason step lands on: its own day on the calendar, or the day after now when the season already ran
+ * past it (a long playoff run ends after the lottery's day in May). The league's date never goes back.
+ */
+export function onOrAfter(now: string, day: string): string {
+  return day >= now ? day : addDays(now, 1);
+}
+
 export function daysBetween(a: string, b: string): number {
   return Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 86_400_000);
 }

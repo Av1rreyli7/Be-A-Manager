@@ -143,7 +143,7 @@ function PlayGame() {
         <Card>
           <p className="text-sm text-dim">You can play this game on game day. Sim to {fmtDate(g.date, { month: "short", day: "numeric" })} first.</p>
           {!guest && (
-            <Button className="mt-3" variant="primary" onClick={() => void useGame.getState().sim("game-day")}>
+            <Button className="mt-3" variant="primary" single onClick={() => void useGame.getState().sim("game-day")}>
               Sim to game day
             </Button>
           )}

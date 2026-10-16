@@ -154,7 +154,7 @@ export default function OffseasonHub() {
       )}
 
       {idx >= 0 && l.phase !== "preseason" && (
-        <Button variant="primary" disabled={!!busy} onClick={() => advance()}>Continue to {PHASE_LABEL[ORDER[idx + 1]] ?? "next phase"}</Button>
+        <Button variant="primary" single disabled={!!busy} onClick={() => advance()}>Continue to {PHASE_LABEL[ORDER[idx + 1]] ?? "next phase"}</Button>
       )}
     </div>
   );

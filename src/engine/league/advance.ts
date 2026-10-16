@@ -5,7 +5,7 @@
  */
 import type { BoxScore, DepthChart, League, Player, ScheduledGame, TeamId } from "../types/game";
 import { SLOTS, slotPenalty } from "./positions";
-import { addDays, dayOfWeek, seasonCalendar, seasonStartYear } from "../util/dates";
+import { addDays, dayOfWeek, onOrAfter, seasonCalendar, seasonStartYear } from "../util/dates";
 import { Rng } from "../util/rng";
 import { simulateGame, type SimTeam } from "../sim/game";
 import { severityOf } from "../sim/injuries";
@@ -340,7 +340,7 @@ export function advancePhase(l: League): string {
   switch (l.phase) {
     case "season-end": {
       const cal = seasonCalendar(seasonStartYear(l.season));
-      l.date = cal.draftLottery;
+      l.date = onOrAfter(l.date, cal.draftLottery);
       if (!l.draft) l.draft = generateDraftClass(l, seasonStartYear(l.season) + 1, rng);
       const results = runLottery(l, rng);
       l.draft.lottery = { results, done: true };
@@ -360,7 +360,7 @@ export function advancePhase(l: League): string {
       break;
     case "pre-draft":
       l.phase = "draft";
-      l.date = seasonCalendar(seasonStartYear(l.season)).draft;
+      l.date = onOrAfter(l.date, seasonCalendar(seasonStartYear(l.season)).draft);
       msg = "The draft is open";
       break;
     case "draft": {
@@ -385,13 +385,13 @@ export function advancePhase(l: League): string {
     case "free-agency":
       finishFreeAgency(l, rng);
       l.phase = "summer-league";
-      l.date = seasonCalendar(seasonStartYear(l.season)).summerLeague;
+      l.date = onOrAfter(l.date, seasonCalendar(seasonStartYear(l.season)).summerLeague);
       runSummerLeague(l, rng, seasonLabel(seasonStartYear(l.season) - 1));
       msg = "Summer League complete";
       break;
     case "summer-league": {
       l.phase = "training-camp";
-      l.date = seasonCalendar(seasonStartYear(l.season)).trainingCamp;
+      l.date = onOrAfter(l.date, seasonCalendar(seasonStartYear(l.season)).trainingCamp);
       progressAll(l, rng, seasonLabel(seasonStartYear(l.season) - 1));
       aiExtensions(l, rng);
       msg = "Training camp: player development revealed";

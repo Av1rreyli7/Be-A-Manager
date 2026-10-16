@@ -1444,8 +1444,9 @@ No new features: every screen, tab, popup, button and flow listed in AUDIT.md, t
 headless Chrome (every console message, page error and failed request recorded) and screenshots looked at by eye,
 then hostile and edge testing. Every defect is logged in AUDIT.md with how to make it happen, the cause and the fix.
 - [x] Step 1: AUDIT.md, the whole site as a checklist
-- [ ] Step 2: the systematic pass (in progress)
-- [ ] Step 3: hostile and edge testing
+- [-] Step 2: the systematic pass: first pass done over every area (status line by line in AUDIT.md)
+- [-] Step 3: hostile and edge testing: server fuzzing, spam clicks, races and a full career soak done; screen
+      inputs, restarts, a multi season Manager soak and 30 minutes in the open world left
 - [ ] Step 4: every defect fixed at its root
 - [ ] Step 5: the clean pass, every battery green three times
 - [x] Batch 1 (defects 1 to 7): a name or key like `__proto__` could change every game on the server; manager
@@ -1455,3 +1456,15 @@ then hostile and edge testing. Every defect is logged in AUDIT.md with how to ma
 - [x] Batch 2 (defects 8 to 11): the open world leaked GPU memory at every door until the tab died (reflection map,
       shop instances, body skeletons), now flat with 60 frames a second; the Player Career header at phone width hid
       the way into the city; "week 39" of a 38 week season; date lines that only fit the evening.
+- [x] Batch 3 (defects 12 to 15): Front Office double clicks simmed two weeks or two days and a held key kept simming;
+      the draft lottery put the date back a month after a June playoff run; three clicks on Create a game made two
+      rooms; two tabs pressing Play matchweek at once played two weeks. One page check (test_dom_sept) pinned the old
+      sim call text and was widened to the new one, same purpose.
+- [ ] Defect 16 open: a PeerJS console error when a Front Office league is started alone.
+- Checked and clean on the way, no change needed: every page and tab at 1440, 1280 and 390; a full 3D match, a full
+  Classic match and a quit at 60 s (one go, simmed); a full player lock match and one left at 45 s; the 3D view opened
+  and closed 20 times (no context warnings); every place in the city entered with purchases, a car with and without a
+  home, the bus, a date and a wedding; a whole Player Career (27 seasons) with money, ratings and weeks checked every
+  call; a Front Office season, playoffs and offseason; Hardwood menus, a quick game and quitting; the landing intro,
+  skips, short second visit and reduced motion; Esc during the city's loading screen; a refresh during Sim the season;
+  a tab closed during a purchase (charged once); 6025 hostile API requests (no server error, no NaN, no negative money).

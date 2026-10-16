@@ -47,7 +47,8 @@ export function SimControls() {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
       if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable)) return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      // a held key repeats: one press, one sim
+      if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
       const map: Record<string, SimTarget> = { d: "day", w: "week", m: "month", n: "next-user-game", g: "game-day", r: "regular-end", p: "playoffs-end", t: "deadline", s: "allstar" };
       if (e.key === "?") return setHelp(true);
       if (e.key === "a" && !inSeason && NEXT_PHASE[l.phase]) {
@@ -70,13 +71,13 @@ export function SimControls() {
     <div className="flex items-center gap-1.5">
       {inSeason && (
         <>
-          <Button size="sm" variant="primary" disabled={!!busy} onClick={() => sim("day")} title="Play one day (D)">
+          <Button size="sm" variant="primary" single disabled={!!busy} onClick={() => sim("day")} title="Play one day (D)">
             <Play size={13} weight="fill" /> Day
           </Button>
-          <Button size="sm" disabled={!!busy} onClick={() => sim("next-user-game")} title="Sim to next game (N)" className="max-sm:!hidden">
+          <Button size="sm" single disabled={!!busy} onClick={() => sim("next-user-game")} title="Sim to next game (N)" className="max-sm:!hidden">
             <FastForward size={13} weight="fill" /> Next game
           </Button>
-          <Button size="sm" disabled={!!busy} onClick={() => sim("week")} title="Sim a week (W)">
+          <Button size="sm" single disabled={!!busy} onClick={() => sim("week")} title="Sim a week (W)">
             Week
           </Button>
           <details ref={more} className="group relative">
@@ -95,7 +96,7 @@ export function SimControls() {
                   ["playoffs-end", "To the end of the playoffs (P)"],
                 ] as [SimTarget, string][]
               ).map(([t, label]) => (
-                <button key={t} disabled={!!busy} onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); void sim(t); }} className="block w-full rounded-[3px] px-3 py-2 text-left text-dim transition-colors hover:bg-ink/[0.06] hover:text-ink disabled:opacity-40">
+                <button key={t} disabled={!!busy} onClick={(e) => { if (e.detail > 1) return; (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); void sim(t); }} className="block w-full rounded-[3px] px-3 py-2 text-left text-dim transition-colors hover:bg-ink/[0.06] hover:text-ink disabled:opacity-40">
                   {label}
                 </button>
               ))}
@@ -106,16 +107,16 @@ export function SimControls() {
       )}
       {fa && (
         <>
-          <Button size="sm" disabled={!!busy} onClick={() => sim("day")} title="Next free agency day (D)">
+          <Button size="sm" single disabled={!!busy} onClick={() => sim("day")} title="Next free agency day (D)">
             <Play size={13} weight="fill" /> FA day {l.freeAgency.day + 1}
           </Button>
-          <Button size="sm" disabled={!!busy} onClick={() => sim("week")}>
+          <Button size="sm" single disabled={!!busy} onClick={() => sim("week")}>
             Week
           </Button>
         </>
       )}
       {NEXT_PHASE[l.phase] && (
-        <Button size="sm" variant={inSeason || fa ? "default" : "primary"} disabled={!!busy} onClick={() => advance()} title="Next step (A)">
+        <Button size="sm" variant={inSeason || fa ? "default" : "primary"} single disabled={!!busy} onClick={() => advance()} title="Next step (A)">
           {NEXT_PHASE[l.phase]}
         </Button>
       )}

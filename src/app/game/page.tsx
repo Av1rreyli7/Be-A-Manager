@@ -69,7 +69,7 @@ export default function Dashboard() {
                       <Basketball size={15} weight="fill" /> Play it
                     </Link>
                     {!guest && (
-                      <Button disabled={!!busy} onClick={() => void sim("day")} title="Sim today, including your game">
+                      <Button single disabled={!!busy} onClick={() => void sim("day")} title="Sim today, including your game">
                         Sim it
                       </Button>
                     )}
@@ -79,7 +79,7 @@ export default function Dashboard() {
                   <span className="text-xs text-dim">On game day you can play this one yourself in Hardwood Legends.</span>
                 ) : (
                   <>
-                    <Button disabled={!!busy} onClick={() => void sim("game-day")}>
+                    <Button single disabled={!!busy} onClick={() => void sim("game-day")}>
                       <FastForward size={14} weight="fill" /> Sim to game day
                     </Button>
                     <span className="w-full text-xs text-dim">Stops on the morning of the game so you can play it yourself.</span>

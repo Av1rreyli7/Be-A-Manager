@@ -34,13 +34,16 @@ export function SectionTitle({ children, className }: { children: ReactNode; cla
 
 type Variant = "default" | "primary" | "ghost" | "danger";
 
-export function Button({ children, onClick, variant = "default", size = "md", disabled, className, title, type = "button" }: { children: ReactNode; onClick?: () => void; variant?: Variant; size?: "sm" | "md"; disabled?: boolean; className?: string; title?: string; type?: "button" | "submit" }) {
+/** single: the second click of a double click does nothing (for buttons that move the league on, so a double click
+ * on Week sims one week, not two: a week can be done before the second click lands) */
+export function Button({ children, onClick, variant = "default", size = "md", disabled, className, title, type = "button", single }: { children: ReactNode; onClick?: () => void; variant?: Variant; size?: "sm" | "md"; disabled?: boolean; className?: string; title?: string; type?: "button" | "submit"; single?: boolean }) {
   return (
     <button
       type={type}
       title={title}
       disabled={disabled}
       onClick={(e) => {
+        if (single && e.detail > 1) return;
         km.press(e.currentTarget);
         onClick?.();
       }}

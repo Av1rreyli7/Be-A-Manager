@@ -305,7 +305,7 @@ ok("the page lets the engine ask for a fresh state", html.includes("recheck: () 
 ok("state polling keeps running while a match is open", html.includes("pollTimer = setInterval(tick, 3000)") && /STATE = await api\("\/api\/state"\);[\s\S]{0,200}FLMatch\.isOpen\(\)\)\) render\(\)/.test(html), null);
 ok("the old will not count banner is gone", !engine.includes("WILL NOT COUNT") && !engine.includes("stillValid") && !html.includes("stillValid"), null);
 ok("the engine has the host has simmed message", engine.includes("The host has simmed this week, your match was decided by the sim."), null);
-ok("the plain sim buttons have no confirm popup, they only wait for a new event to be seen", /\$\("simBtn"\)\.onclick = async \(\) => \{\s*\/\/[^\n]*\n\s*if \(evGate\(\(\) => \$\("simBtn"\)\.onclick\(\)\)\) return;\s*\$\("simBtn"\)\.disabled = true; try \{ await api\("\/api\/sim",\{\}\)/.test(html) && /sim\.onclick = \(\) => evGate\(sim\.onclick\) \|\| \(async \(\) => \{ sim\.disabled = true; try \{ await api\("\/api\/sim",\{\}\)/.test(html), null);
+ok("the plain sim buttons have no confirm popup, they only wait for a new event to be seen", /\$\("simBtn"\)\.onclick = async \(\) => \{\s*\/\/[^\n]*\n\s*if \(evGate\(\(\) => \$\("simBtn"\)\.onclick\(\)\)\) return;\s*\$\("simBtn"\)\.disabled = true; try \{ await api\("\/api\/sim",\{ round: STATE\.round \}\)/.test(html) && /sim\.onclick = \(\) => evGate\(sim\.onclick\) \|\| \(async \(\) => \{ sim\.disabled = true; try \{ await api\("\/api\/sim",\{ round: STATE\.round \}\)/.test(html), null);
 ok("kick off tells the server which fixture the page is showing", html.includes('api("/api/playstart", { kind, home: f.home, away: f.away })'), null);
 
 // the page helper that finds the simmed score once the round has moved on

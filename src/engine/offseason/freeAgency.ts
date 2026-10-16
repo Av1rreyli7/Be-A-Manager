@@ -12,7 +12,7 @@ import { cbaFor, capStatus } from "../cap/payroll";
 import { projectCba } from "../config/cba";
 import { signPlayer, refreshDepth, waivePlayer } from "../league/transactions";
 import { marketSalary, playerValue, positionalNeed, strategyOf } from "../trade/value";
-import { addDays, nextSeason, seasonCalendar, seasonStartYear } from "../util/dates";
+import { addDays, nextSeason, onOrAfter, seasonCalendar, seasonStartYear } from "../util/dates";
 import { clamp, Rng } from "../util/rng";
 import { emptyRecord } from "../season/standings";
 
@@ -123,7 +123,7 @@ export function startFreeAgency(l: League, rng: Rng) {
   l.season = season;
   l.phase = "free-agency";
   l.phaseDay = 0;
-  l.date = seasonCalendar(seasonStartYear(season)).freeAgencyStart;
+  l.date = onOrAfter(l.date, seasonCalendar(seasonStartYear(season)).freeAgencyStart);
   l.freeAgency = { offers: [], day: 0, log: [] };
   const cba = l.cba;
 

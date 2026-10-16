@@ -2640,6 +2640,8 @@ app.post("/api/sim", (req, res) => {
   if (!game.started) return res.status(400).json({ error: "Start the season first." });
   if (SIMMING.has(game)) return res.status(409).json(SIM_BUSY);
   if (game.round >= (game.totalRounds || 38)) return res.status(400).json({ error: "The season is over. Check the final tables and awards, then press Start next season." });
+  // the page says which week it is showing, so two presses for the same week (two tabs at once) play it once
+  if (req.body.round !== undefined && Number(req.body.round) !== game.round) return res.status(409).json({ error: "That week has already been played.", played: true });
   playMatchweek(game);
   save();
   res.json({ ok: true });
