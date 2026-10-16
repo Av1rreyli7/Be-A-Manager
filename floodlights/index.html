@@ -1970,7 +1970,7 @@ function render() {
   renderMatchday(s);
 
   // ticker: last matchweek line from feed (the server writes it as "PREMIER LEAGUE WEEK 3: ..."), your league first
-  const isWeek = f => /^[A-Z][A-Z0-9 .'&-]* WEEK \d+: /.test(f.text || "");
+  const isWeek = f => /^[A-Z0-9][A-Z0-9 .'&-]* WEEK \d+: /.test(f.text || "");
   const mw = s.feed.find(f => isWeek(f) && s.myLeague && f.text.startsWith(s.myLeague.toUpperCase() + " WEEK ")) || s.feed.find(isWeek);
   $("ticker").textContent = mw ? mw.text : "Waiting for the first matchweek... " + s.users.map(u=>u.name+(u.team?" ("+u.team+")":"")).join(" · ");
 

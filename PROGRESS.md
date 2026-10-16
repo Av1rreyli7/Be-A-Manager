@@ -1444,9 +1444,9 @@ No new features: every screen, tab, popup, button and flow listed in AUDIT.md, t
 headless Chrome (every console message, page error and failed request recorded) and screenshots looked at by eye,
 then hostile and edge testing. Every defect is logged in AUDIT.md with how to make it happen, the cause and the fix.
 - [x] Step 1: AUDIT.md, the whole site as a checklist
-- [-] Step 2: the systematic pass: first pass done over every area (status line by line in AUDIT.md)
-- [-] Step 3: hostile and edge testing: server fuzzing, spam clicks, races and a full career soak done; screen
-      inputs, restarts, a multi season Manager soak and 30 minutes in the open world left
+- [x] Step 2: the systematic pass, every item in AUDIT.md (status line by line there)
+- [x] Step 3: hostile and edge testing: server and screen fuzzing, spam clicks, races, conflicts between two
+      managers, a full Player Career, 8 Manager seasons, 30 minutes in the open world, performance, memory
 - [ ] Step 4: every defect fixed at its root
 - [ ] Step 5: the clean pass, every battery green three times
 - [x] Batch 1 (defects 1 to 7): a name or key like `__proto__` could change every game on the server; manager
@@ -1471,3 +1471,14 @@ then hostile and edge testing. Every defect is logged in AUDIT.md with how to ma
   call; a Front Office season, playoffs and offseason; Hardwood menus, a quick game and quitting; the landing intro,
   skips, short second visit and reduced motion; Esc during the city's loading screen; a refresh during Sim the season;
   a tab closed during a purchase (charged once); 6025 hostile API requests (no server error, no NaN, no negative money).
+- Also checked, no change needed: the remaining Manager buttons (train, list, loan out, recall, release, staff, tap
+  and drag in the lineup, the 9 sub cap, market filters, a bid accepted and one countered, travel bookings, all 20
+  tables, academy, a national job); a real penalty shootout taken on the matchday screen; Player Career files (save,
+  delete in two clicks, broken, empty and wrong files refused, the good one restored), a post, the bank, an agent, the
+  training plan, a transfer request, retiring; the map's waypoint; shopping with too little money; Front Office with
+  a friend over PeerJS (wrong code, join, both pick, the friend follows the host), the trade machine's answers;
+  Hardwood to the final buzzer with 2 minute quarters, a season into the play-in, a full room turns the fifth away;
+  two managers picking the same club or bidding for the same player at once resolve to one; 8 Manager seasons with
+  no NaN or negative budget, ratings 1 to 99, nobody in two squads (server memory levels at about 215 MB); the
+  production server idles at 178 MB after a Manager season, a Player Career and a Hardwood room; the 3D match and the
+  open world hold 60 frames a second on medium and low genuinely draws less; the production smoke sweep is clean.
