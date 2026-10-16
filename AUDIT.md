@@ -106,10 +106,10 @@ defects fixed and checked again). The status below is after the first systematic
 ## 8. Front Office (Game Night)
 
 - [x] Hub page: both tiles, continue lines
-- [-] GM entry: create a game alone, create and join with a code (PeerJS, by hand) (defect 16 open; left: join with a code by hand)
+- [x] GM entry: create a game alone, create and join with a code (two browsers over PeerJS: a wrong code says so, a friend joins, both pick, the host starts, the friend follows the host's sims; after a host refresh the friend gets Reconnect and the host Open room, by design)
 - [x] Every page in a save: roster, depth, team, player, players, compare, trade, free agency, draft, contracts, cap, finances, staff, schedule, standings, stats, box, play, playoffs, offseason, awards, history, news, finder, assets, settings, online
 - [x] Sim day, week, to the end of the season, offseason
-- [ ] Trade: propose, accept, refuse
+- [x] Trade: propose, accept, refuse (the AI's verdict, the cap check's refusal, a counter-offer request; a completed trade is covered by the trade unit tests)
 - [ ] Laptop and small widths
 - [x] Console clean
 
@@ -159,7 +159,9 @@ defects fixed and checked again). The status below is after the first systematic
 | 13 | Front Office, offseason | After a playoff run into June the draft lottery puts the date back to 12 May; a long run can do the same to the draft, Summer League, camp and free agency dates. | Each offseason step set the date to its calendar day without looking at the date it was already on. | A step lands on its own day, or the day after now when the season already ran past it (`onOrAfter`). | Fixed |
 | 14 | Manager Career, entry | Three quick clicks on Create a game made two rooms (one left empty on the server). | Create and Join had nothing stopping a second press while the first was still out. | Both stay off while their request is out. | Fixed |
 | 15 | Manager Career, the same game in two tabs | Two tabs (or a host and a stale second tab) pressing Play matchweek at the same moment played two weeks. | The server played a week for every press, whatever week the page was showing. | The page sends the week it shows; a press for a week that was already played is turned away quietly and the page catches up. (Kick off already worked this way.) | Fixed |
-| 16 | Front Office, starting a league alone | `ERROR PeerJS: Error: Lost connection to server.` in the console when a league is started alone. | Being looked into. | | Open |
+| 16 | Front Office, the online room | `ERROR PeerJS: Error: Lost connection to server.` in the console, and a red "Couldn't reach the matchmaking server" toast, whenever the room's link to the public PeerJS broker dropped for a moment (sleep, flaky Wi-Fi), even though the room reconnects by itself 1.5 s later. Made to happen every time by closing the broker socket in the lobby. | PeerJS was created with `debug: 1`, so it printed every error itself, and the room passed the dropped link to the screen as an error before its own reconnect had a chance. | PeerJS logs nothing itself (the game handles every peer error); a dropped broker link is only reported if the automatic reconnect also fails (checked: one drop reconnects silently, a reconnect that keeps failing still shows the message). | Fixed |
+| 17 | Manager Career, entry | Join with an empty or short code sent a request that came back 404, a red line in the console, then said "Game not found". | The page sent any code to the server. | A code that is not four letters and numbers is not sent: "Type the 4 character room code first." (Front Office already did this.) A wrong four letter code still asks the server, which answers "Game not found". | Fixed |
+| 18 | Front Office, trades, the draft, signings, commissioner edits | A double click on Propose trade showed its answer twice; Draft, Make offer, Match, 10-day and Two-way could act twice the same way. A commissioner could type a negative or astronomical salary into a contract (payroll and cap space then make no sense). | Those buttons acted on every click of a double click; the salary box took any number. | The second click of a double click does nothing on those buttons too; the salary box keeps a whole number from 0 to 1,000,000,000. | Fixed |
 
 ## Left after the first pass
 
@@ -170,6 +172,6 @@ Deliberately left, with the reason:
   THREE.Timer yet (only the 10.0 alpha); hiding the message would only hide it.
 - Esc does not close popups. No popup on the site has ever closed with Esc; adding it would be a new feature.
 
-Still to do: defect 16, the [-] and [ ] items above, then the clean pass.
+Still to do: the [-] and [ ] items above, then the clean pass.
 
 ## Clean pass log

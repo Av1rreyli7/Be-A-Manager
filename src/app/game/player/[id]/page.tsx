@@ -313,7 +313,7 @@ function CommissionerEdit({ id }: { id: string }) {
             {c.years.map((y, i) => (
               <div key={y.season} className="grid grid-cols-[80px_1fr_110px] items-center gap-2 text-sm">
                 <span>{y.season}</span>
-                <input type="number" className={inputCls} value={y.salary} onChange={(e) => mutate(() => { c.years[i].salary = Number(e.target.value); c.years[i].guaranteed = Math.min(c.years[i].guaranteed, c.years[i].salary); })} />
+                <input type="number" className={inputCls} value={y.salary} onChange={(e) => mutate(() => { c.years[i].salary = Math.round(Math.min(1e9, Math.max(0, Number(e.target.value) || 0))); c.years[i].guaranteed = Math.min(c.years[i].guaranteed, c.years[i].salary); })} />
                 <select className={inputCls} value={y.option ?? ""} onChange={(e) => mutate(() => void (c.years[i].option = (e.target.value || null) as never))}>
                   <option value="">No option</option><option value="player">Player</option><option value="team">Team</option><option value="eto">ETO</option>
                 </select>

@@ -144,7 +144,7 @@ function DraftView() {
                       <PlayerLink player={p} />
                       <span className="text-xs text-dim">{p.pos} · {p.college}</span>
                       <span className="ml-auto"><OvrPot p={p} /></span>
-                      {mineNow && <Button size="sm" variant="primary" onClick={() => mutate((lg) => { const r = draftPlayer(lg, id); toast(r === "ok" ? `You selected ${p.name}` : r, r === "ok" ? "success" : "error"); })}>Draft</Button>}
+                      {mineNow && <Button size="sm" variant="primary" single onClick={() => mutate((lg) => { const r = draftPlayer(lg, id); toast(r === "ok" ? `You selected ${p.name}` : r, r === "ok" ? "success" : "error"); })}>Draft</Button>}
                     </div>
                   );
                 })}

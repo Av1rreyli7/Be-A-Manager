@@ -1460,7 +1460,10 @@ then hostile and edge testing. Every defect is logged in AUDIT.md with how to ma
       the draft lottery put the date back a month after a June playoff run; three clicks on Create a game made two
       rooms; two tabs pressing Play matchweek at once played two weeks. One page check (test_dom_sept) pinned the old
       sim call text and was widened to the new one, same purpose.
-- [ ] Defect 16 open: a PeerJS console error when a Front Office league is started alone.
+- [x] Batch 4 (defects 16 to 18): a dropped link to the PeerJS broker printed an error and showed a false "Couldn't
+      reach the matchmaking server" toast although the room reconnects by itself (now only a failed reconnect is
+      reported); Join with an empty or short code no longer asks the server; a double click on Propose trade, Draft,
+      Make offer, Match or a short contract acts once; the commissioner's salary box keeps a sane whole number.
 - Checked and clean on the way, no change needed: every page and tab at 1440, 1280 and 390; a full 3D match, a full
   Classic match and a quit at 60 s (one go, simmed); a full player lock match and one left at 45 s; the 3D view opened
   and closed 20 times (no context warnings); every place in the city entered with purchases, a car with and without a

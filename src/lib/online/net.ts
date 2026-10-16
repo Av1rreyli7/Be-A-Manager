@@ -41,9 +41,12 @@ async function decode<T>(data: unknown): Promise<T | null> {
   }
 }
 
+// The game handles every peer error itself (a friendly line on screen, a reconnect when the broker link drops), so
+// PeerJS's own console logging stays off: at level 1 it printed a dropped broker link as an error even when the
+// room reconnected a moment later.
 async function createPeer(id?: string): Promise<PeerType> {
   const { Peer } = await import("peerjs");
-  return id ? new Peer(id, { debug: 1 }) : new Peer({ debug: 1 });
+  return id ? new Peer(id, { debug: 0 }) : new Peer({ debug: 0 });
 }
 
 function friendlyError(e: { type?: string; message?: string }): string {
@@ -79,8 +82,19 @@ export class HostNet {
       peer.once("open", () => resolve());
       peer.once("error", (e) => reject(new Error(friendlyError(e as never))));
     });
-    peer.on("error", (e) => this.onError(friendlyError(e as never)));
-    // the broker connection can drop on sleep; keep the room reachable
+    // the broker connection can drop on sleep or bad Wi-Fi: PeerJS reports it as a network error, then as disconnected,
+    // and the room reconnects by itself. Only a reconnect that fails is worth telling the host about.
+    let dropped = false;
+    peer.on("error", (e) => {
+      if ((e as { type?: string }).type === "network" && !dropped) {
+        dropped = true;
+        return;
+      }
+      this.onError(friendlyError(e as never));
+    });
+    peer.on("open", () => {
+      dropped = false;
+    });
     peer.on("disconnected", () => {
       // closing the room also fires this, just before the peer is marked destroyed: check again when the timer runs
       if (!peer.destroyed) setTimeout(() => !peer.destroyed && peer.reconnect(), 1500);

@@ -1298,6 +1298,8 @@ $("joinBtn").onclick = async () => {
   try {
     ME.name = $("nameIn").value.trim(); if (!ME.name) throw new Error("Enter a name first.");
     const code = $("codeIn").value.trim().toUpperCase();
+    // a code is four letters and numbers: anything else cannot be a game, so it is not sent
+    if (!/^[A-Z0-9]{4}$/.test(code)) throw new Error("Type the 4 character room code first.");
     try {
       const j = await api("/api/join", { name: ME.name, code });
       ME.code = j.code; persist(); enter();

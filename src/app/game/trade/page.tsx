@@ -161,9 +161,9 @@ function TradeMachine() {
                 ))
               )}
               <div className="mt-2 flex flex-wrap gap-2">
-                <Button variant="primary" disabled={!anyAssets || !tw.open} onClick={() => propose()}>Propose trade</Button>
-                {aiTeams.length > 0 && !ai.accept && anyAssets && <Button onClick={counter}>Ask for counter-offer</Button>}
-                {l.settings.commissioner && <Button variant="danger" disabled={!anyAssets} onClick={() => propose(true)}>Force (commissioner)</Button>}
+                <Button variant="primary" single disabled={!anyAssets || !tw.open} onClick={() => propose()}>Propose trade</Button>
+                {aiTeams.length > 0 && !ai.accept && anyAssets && <Button single onClick={counter}>Ask for counter-offer</Button>}
+                {l.settings.commissioner && <Button variant="danger" single disabled={!anyAssets} onClick={() => propose(true)}>Force (commissioner)</Button>}
               </div>
             </Card>
           </div>
@@ -310,7 +310,7 @@ function OffersTab({ onLoad }: { onLoad: (a: TradeAssets) => void }) {
             <ul className="mt-2 list-disc pl-5 text-xs text-dim">{o.reasoning.map((r) => <li key={r}>{r}</li>)}</ul>
             {!v.valid && <p className="mt-2 text-xs text-bad">No longer CBA-legal: {v.issues.find((i) => i.severity === "error")?.message}</p>}
             <div className="mt-3 flex gap-2">
-              <Button disabled={!v.valid} onClick={() => { mutate((lg) => { executeTrade(lg, o.assets); lg.tradeOffers = lg.tradeOffers.filter((x) => x.id !== o.id); }); toast("Trade completed", "success"); }}>Accept</Button>
+              <Button single disabled={!v.valid} onClick={() => { mutate((lg) => { executeTrade(lg, o.assets); lg.tradeOffers = lg.tradeOffers.filter((x) => x.id !== o.id); }); toast("Trade completed", "success"); }}>Accept</Button>
               <Button onClick={() => onLoad(o.assets)}>Negotiate</Button>
               <Button variant="ghost" onClick={() => mutate((lg) => void (lg.tradeOffers = lg.tradeOffers.filter((x) => x.id !== o.id)))}>Decline</Button>
             </div>

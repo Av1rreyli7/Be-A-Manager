@@ -67,7 +67,7 @@ function OfferModal({ p, onClose }: { p: Player; onClose: () => void }) {
       {rivals.length > 0 && <p className="mt-3 text-xs text-warn">Competing offers from: {rivals.map((o) => `${o.teamId} (${money(o.salary)}×${o.years})`).join(", ")}</p>}
       {errors.length > 0 && <ul className="mt-3 space-y-1 text-xs text-bad">{errors.map((e) => <li key={e}>• {e}</li>)}</ul>}
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="primary" disabled={!!errors.length} onClick={() => mutate((lg) => { const r = makeOffer(lg, me, p.id, terms); toast(r.ok ? `Offer sent. ${r.response}` : r.errors.join("; "), r.ok ? "success" : "error"); if (r.ok) onClose(); })}>
+        <Button variant="primary" single disabled={!!errors.length} onClick={() => mutate((lg) => { const r = makeOffer(lg, me, p.id, terms); toast(r.ok ? `Offer sent. ${r.response}` : r.errors.join("; "), r.ok ? "success" : "error"); if (r.ok) onClose(); })}>
           {l.phase === "free-agency" ? "Submit offer" : "Offer contract"}
         </Button>
         {l.phase !== "free-agency" && (
@@ -85,8 +85,8 @@ function OfferModal({ p, onClose }: { p: Player; onClose: () => void }) {
             Sign now
           </Button>
         )}
-        {inSeason && <Button size="sm" onClick={() => mutate((lg) => { const r = signTenDay(lg, me, lg.players[p.id]); toast(r.ok ? "10-day contract signed" : r.errors.join("; "), r.ok ? "success" : "error"); if (r.ok) onClose(); })}>10-day</Button>}
-        {p.experience <= 3 && <Button size="sm" onClick={() => mutate((lg) => { const r = signTwoWay(lg, me, lg.players[p.id]); toast(r.ok ? "Two-way contract signed" : r.errors.join("; "), r.ok ? "success" : "error"); if (r.ok) onClose(); })}>Two-way</Button>}
+        {inSeason && <Button size="sm" single onClick={() => mutate((lg) => { const r = signTenDay(lg, me, lg.players[p.id]); toast(r.ok ? "10-day contract signed" : r.errors.join("; "), r.ok ? "success" : "error"); if (r.ok) onClose(); })}>10-day</Button>}
+        {p.experience <= 3 && <Button size="sm" single onClick={() => mutate((lg) => { const r = signTwoWay(lg, me, lg.players[p.id]); toast(r.ok ? "Two-way contract signed" : r.errors.join("; "), r.ok ? "success" : "error"); if (r.ok) onClose(); })}>Two-way</Button>}
       </div>
     </Modal>
   );
@@ -115,7 +115,7 @@ function FreeAgency() {
         <div key={o.id} className="k-panel flex flex-wrap items-center justify-between gap-2 text-sm">
           <span><b>{l.players[o.playerId].name}</b> signed an offer sheet with {o.teamId}: {money(o.salary)} × {o.years}. Match by {o.matchDeadline}?</span>
           <span className="flex gap-2">
-            <Button onClick={() => mutate((lg) => matchOfferSheet(lg, o.id))}>Match</Button>
+            <Button single onClick={() => mutate((lg) => matchOfferSheet(lg, o.id))}>Match</Button>
             <Button variant="ghost" onClick={() => mutate((lg) => void (lg.freeAgency.offers.find((x) => x.id === o.id)!.matchDeadline = lg.date))}>Decline to match</Button>
           </span>
         </div>
