@@ -100,7 +100,12 @@ defects fixed and checked again). The status below is after the first systematic
 - [x] Garage and dealerships: buy a car with a home and without one
 - [x] Dates: pick up a date, go out, the date card
 - [x] Wedding
-- [ ] 30 minutes idle and roaming: frame rate and memory
+- [-] 30 minutes idle and roaming: frame rate and memory (two runs of roaming, places, idling and driving: nothing
+  grows without limit: JS heap 24 to 56 MB, DOM 1,300 to 2,500 nodes, GPU geometries flat at 66, textures only for
+  the signs of places seen for the first time; 60 frames a second on power, 30 once the Mac went to battery and
+  Chrome's energy saver capped it. Both runs ended early, at 17 and 25 minutes, with Chrome's connection to the page
+  dropped while Chrome itself kept running, no crash report, both times with the machine short of memory; to run
+  again on power)
 - [x] Console clean
 
 ## 8. Front Office (Game Night)
@@ -136,7 +141,7 @@ defects fixed and checked again). The status below is after the first systematic
 - [x] Races: leave mid match, refresh mid sim, close mid purchase, Esc during loading, same save in two tabs
 - [x] Money never negative or NaN, OVR in bounds, weeks advance once, no duplicate players, owned items persist across reload and restart
 - [ ] Server restart mid game: rooms come back; wrong codes; full room; leave and rejoin; two clients at once (football and basketball)
-- [-] Soak: multi season manager save, a full player career school to retirement, open world 30 minutes (a whole Player Career, 27 seasons, clean; 8 Manager seasons with two managers, clean, server memory level at about 215 MB; left: 30 minutes in the open world)
+- [-] Soak: multi season manager save, a full player career school to retirement, open world 30 minutes (a whole Player Career, 27 seasons, clean; 8 Manager seasons with two managers, clean, server memory level at about 215 MB; the open world: see section 7)
 - [x] Performance: landing, open world, both 3D match modes; low lighter than medium Done: landing at 60 a second, first paint about 0.7 s in dev; open world and 3D match low against medium measured.
 - [x] Server memory under 400 MB idle Done: production 86 MB at boot, 178 MB idle after a Manager season, a Player Career and a Hardwood room. Memory grows with the number of saved games the server holds (about 10 MB each), not with time.
 
