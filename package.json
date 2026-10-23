@@ -16,7 +16,8 @@
     "test:boot": "node tests-site/test_boot.js",
     "test:restart": "node tests-site/test_restart.js",
     "test:hardwood": "node tests-site/test_hardwood_mp.js",
-    "test:all": "npm run typecheck && npm run test && npm run test:floodlights && npm run upload && npm run test:site && npm run build && npm run test:boot && npm run test:restart && npm run test:hardwood",
+    "test:prize": "tsx tests-site/test_prize.ts",
+    "test:all": "npm run typecheck && npm run test && npm run test:prize && npm run test:floodlights && npm run upload && npm run test:site && npm run build && npm run test:boot && npm run test:restart && npm run test:hardwood",
     "upload": "node scripts/make-upload.js"
   },
   "dependencies": {

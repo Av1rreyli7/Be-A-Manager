@@ -1482,3 +1482,62 @@ then hostile and edge testing. Every defect is logged in AUDIT.md with how to ma
   no NaN or negative budget, ratings 1 to 99, nobody in two squads (server memory levels at about 215 MB); the
   production server idles at 178 MB after a Manager season, a Player Career and a Hardwood room; the 3D match and the
   open world hold 60 frames a second on medium and low genuinely draws less; the production smoke sweep is clean.
+
+## PRIZE FIGHTER: first person boxing, the third game on the site
+
+Goal: a first person boxing game in 3D (Three.js and React Three Fiber, GSAP for the screens), its own entry page
+cloned from the Floodlights entry, a third card on the landing between Floodlights and Game Night, single player,
+everything in the browser (saves on the device, the server only serves the page). The user's pasted brief is the
+source of truth; its zero bug acceptance list is part of the build. Commit and push after every phase; the last
+push uses "PRIZE FIGHTER, first person boxing, third game on the site". Resume from the first unchecked box.
+
+Decisions (made at the start, change only with a note):
+- Page: a Next.js page at /prize-fighter (src/app/prize-fighter/page.tsx). Express does not own the path, Next
+  serves it. Code lives in src/prize/: engine/ (pure TypeScript, no DOM, no three.js: the whole fight, the AI,
+  scoring, roster, created fighters), view/ (React Three Fiber scene: arena, crowd, boxer bodies, first person
+  arms, camera, effects), ui/ (entry, roster pick, creator, setup, HUD, corner, results), and save.ts.
+- One fixed step fight sim at 60 steps a second, stepped from the render loop with interpolation, so a key press
+  starts the punch on the very next frame. The state is plain data (JSON), so a fight can be saved mid round and
+  put back after a refresh. Both corners use the same input shape; the AI writes it for the computer's corner,
+  and for both corners in the headless battery.
+- Boxer bodies reuse the site's own body builder (floodlights/m3d/view/rig.mjs at close up detail, the same body
+  Player Career uses): bare chest, trunks with a waistband and stripe, high boots, gloves on the hand bones, the
+  sculpted head with hair and beard. A boxing animator poses the bones (stance, guards, punches with arm IK,
+  slips, hits, staggers, falls, the stool). First person arms and gloves are their own meshes on the camera.
+- Accent: a new kit mode, data-kmode="ring", hot red orange (distinct from volt and Game Night's orange).
+- Saves on the device with the site's localStorage pattern (try and catch everywhere, versioned keys): created
+  fighters, records, settings, and a mid fight snapshot. No server routes, no server memory.
+- Graphics low, medium, high, ultra like Player Career (pixel ratio, shadows, crowd size, haze, post effects),
+  with the frame guard stepping down before frames drop. Crowd and effects go first.
+- No new npm packages (three, @react-three/fiber, gsap are already here; no drei).
+- Tests: tests-site/test_prize.ts (headless battery, run with tsx) and tests-site/test_prize_browser.js (headless
+  Chrome pass: every screen, every boxer, key spam, pause, refresh, resize, console watch, soak), both in test:all.
+
+Checklist (each phase tested before the next, then committed and pushed):
+- [x] PF1 fight engine: movement and range, six punches head and body, combos and spam, three guards, slips,
+      duck, lean back, shoulder roll, stamina, head and body health, stun, rocked, knockdowns and the count with
+      the get up mini game, TKO rules, cuts and swelling, clinch, rounds, ten point must scoring by three judges,
+      every decision type, the AI (four styles, five tiers, adapts), snapshot and restore; headless battery
+      Result: src/prize/engine (types, rules, fight, ai, scoring, roster, create) and src/prize/save.ts, with the
+      headless battery tests-site/test_prize.ts (385 checks, about 16 s, all seeded so every run is the same).
+      Tuning notes (all numbers in engine/rules.ts): health damage is a share of each punch's impact (head 0.36,
+      body 0.3), the rest becomes stun; rocked at 34 stun, down at 72 or from one big clean shot on a hurt boxer;
+      a guard is a chance to block, not a wall (normal 62 percent of head shots, high 86 percent of head shots and
+      8 of body shots); the computer shows a tell before its first punch (20 frames at Tune up down to 6 at
+      Nightmare) so a person can read it, reacts in 0.2 s down to 0.065 s, reads a punch thrown 45 percent of the
+      time, then learns its rhythm and slips the next one before it starts, and counters out of the slip.
+      Computer against computer over twelve rounds: about 35 to 75 punches a round, 25 to 40 percent landed, evenly
+      matched greats mostly go to the cards (unanimous, split, majority and draws all happen), mismatches end
+      early by knockout or stoppage. Against jab spam, the computer that reads it lands over twice the counters of
+      one that does not and wins the exchange.
+- [ ] PF2 roster of real boxers and created fighters (points budget, every creator option), device saves
+- [ ] PF3 the arena and the bodies: ring, ropes, lights, haze, crowd, referee, the opponent with the boxing
+      animator, first person arms and gloves, camera, graphics tiers and frame guard
+- [ ] PF4 the feel: input with no lag, impacts, shake, glove squash, sweat, hurt vision, slow motion slips,
+      stagger, knockdown fall and get up, clinch, sound
+- [ ] PF5 the screens: entry page (Floodlights clone), quick fight pick, creator, setup, ring walk and announcer,
+      round cards, HUD, controls strip, pause, corner, scorecards and results, refresh recovery
+- [ ] PF6 landing: the third card between Floodlights and Game Night with the glove entrance, site checks
+- [ ] PF7 acceptance: browser pass, every boxer, key spam, refresh, resize, console clean, soak of three 12
+      round fights, every defect fixed
+- [ ] PF8 clean pass three times (every battery), screenshots, upload, push, report
