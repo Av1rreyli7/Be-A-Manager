@@ -29,12 +29,19 @@ let store: Store | null = null;
 export function useStore(s: Store | null) {
   store = s;
 }
+// when the browser refuses storage (a private window, blocked site data) the game still works for this visit
+const memory = new Map<string, string>();
+const memStore: Store = { getItem: k => memory.get(k) ?? null, setItem: (k, v) => void memory.set(k, v), removeItem: k => void memory.delete(k) };
 function st(): Store | null {
   if (store) return store;
   try {
-    return typeof localStorage === "undefined" ? null : localStorage;
+    if (typeof localStorage === "undefined") return memStore;
+    const probe = "pf_probe";
+    localStorage.setItem(probe, "1");
+    localStorage.removeItem(probe);
+    return localStorage;
   } catch {
-    return null;
+    return typeof window === "undefined" ? null : memStore;
   }
 }
 function read<T>(k: string): T | null {

@@ -538,8 +538,12 @@ function stepKD(st: FightState, inputs: [Input, Input]) {
   A.x += A.vx * DT;
   A.z += A.vz * DT;
   A.stamina = Math.min(A.maxStam, A.stamina + 4 * DT);
-  // the referee stands over the boxer who is down
-  moveRef(st, D.x * 0.7, D.z * 0.7, "count");
+  // the referee stands over the boxer who is down, a long step away, between him and the middle of the ring
+  {
+    const cl = Math.hypot(D.x, D.z);
+    const ux = cl > 0.3 ? -D.x / cl : -(A.x - D.x) / (Math.hypot(A.x - D.x, A.z - D.z) || 1), uz = cl > 0.3 ? -D.z / cl : -(A.z - D.z) / (Math.hypot(A.x - D.x, A.z - D.z) || 1);
+    moveRef(st, clamp(D.x + ux * 1.15, -RING + 0.4, RING - 0.4), clamp(D.z + uz * 1.15, -RING + 0.4, RING - 0.4), "count");
+  }
 
   if (kd.stage === "count") {
     if (D.getup) stepGetUp(st, D, inputs[kd.who]);
@@ -670,7 +674,10 @@ function refWatch(st: FightState) {
   const roomA = RING - Math.max(Math.abs(mx + px * 1.4), Math.abs(mz + pz * 1.4));
   const roomB = RING - Math.max(Math.abs(mx - px * 1.4), Math.abs(mz - pz * 1.4));
   const s = roomA >= roomB ? 1 : -1;
-  moveRef(st, clamp(mx + px * 1.35 * s, -RING + 0.4, RING - 0.4), clamp(mz + pz * 1.35 * s, -RING + 0.4, RING - 0.4), st.clinch ? "break" : "watch");
+  // off to the side of the fight and a little toward corner 1, so he is in the picture, not in your face
+  const [bx, bz] = toward(st, 0);
+  const off = st.clinch ? 0.9 : 2.1;
+  moveRef(st, clamp(mx + px * off * s + bx * 0.35, -RING + 0.4, RING - 0.4), clamp(mz + pz * off * s + bz * 0.35, -RING + 0.4, RING - 0.4), st.clinch ? "break" : "watch");
 }
 
 // ------------------------------------------------------------------ rounds

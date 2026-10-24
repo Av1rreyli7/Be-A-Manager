@@ -1530,9 +1530,19 @@ Checklist (each phase tested before the next, then committed and pushed):
       matched greats mostly go to the cards (unanimous, split, majority and draws all happen), mismatches end
       early by knockout or stoppage. Against jab spam, the computer that reads it lands over twice the counters of
       one that does not and wins the exchange.
-- [ ] PF2 roster of real boxers and created fighters (points budget, every creator option), device saves
-- [ ] PF3 the arena and the bodies: ring, ropes, lights, haze, crowd, referee, the opponent with the boxing
+- [x] PF2 roster of real boxers and created fighters (points budget, every creator option), device saves
+      (landed with PF1: 27 real boxers in engine/roster.ts, created fighters in engine/create.ts, saves in save.ts)
+- [x] PF3 the arena and the bodies: ring, ropes, lights, haze, crowd, referee, the opponent with the boxing
       animator, first person arms and gloves, camera, graphics tiers and frame guard
+      Result: src/prize/view: boxer.ts (the rig's close up body recoloured into a boxer: bare chest with muscle
+      shading, satin trunks with waistband and stripe, boots, arms slimmed for close up, gloves on the hand bones,
+      a face texture repainted for cuts and swelling, sweat shine), glove.ts, animator.ts (stance, guards, punch
+      paths with two bone IK, slips matched to the engine's head offset, hit springs, tells, falls, the stool),
+      arms.ts (your arms in first person), arena.ts (ring, ropes that give, light rig, haze, dust), crowd.ts
+      (instanced, lit by the ring's spill, cheers), people.ts (referee and trainer from Player Career's body
+      module), camera.ts, world.ts, gfx.ts (four levels and the frame guard), post.ts (hurt vision on High and
+      Ultra), FightCanvas.tsx (the React Three Fiber host). Headless Chrome with the display awake holds 60
+      frames a second at every level on this M3 (relative numbers only; a sleeping display stalls it).
 - [ ] PF4 the feel: input with no lag, impacts, shake, glove squash, sweat, hurt vision, slow motion slips,
       stagger, knockdown fall and get up, clinch, sound
 - [ ] PF5 the screens: entry page (Floodlights clone), quick fight pick, creator, setup, ring walk and announcer,

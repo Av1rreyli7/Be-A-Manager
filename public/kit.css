@@ -9,7 +9,8 @@
    - pitch (Floodlights): volt and turf green, floodlight white
    - court (Game Night): warm orange, amber, hardwood
    - shared: aurora teal, violet and sky for depth, gold for wins
-   A page picks its mode with data-kmode="pitch" or "court" on <html> or <body>.
+   - ring (PRIZE FIGHTER): hot red orange into crimson
+   A page picks its mode with data-kmode="pitch", "court" or "ring" on <html> or <body>.
    --k-accent, --k-accent-2 and the glow button follow the mode.
    ========================================================== */
 :root {
@@ -122,6 +123,19 @@
   --k-accent-rgb: 255, 138, 61;
   --k-accent-2-rgb: 255, 190, 74;
   --k-grad: var(--k-grad-court);
+}
+
+/* ring mode: PRIZE FIGHTER leans hot red orange into crimson, apart from volt and Game Night's orange */
+[data-kmode="ring"] {
+  --k-accent: #ff4630;
+  --k-accent-hi: #ff7a5c;
+  --k-accent-2: #e8174f;
+  --k-accent-ink: #1a0604;
+  --k-accent-wash: rgba(255, 70, 48, 0.1);
+  --k-accent-edge: rgba(255, 70, 48, 0.42);
+  --k-accent-rgb: 255, 70, 48;
+  --k-accent-2-rgb: 232, 23, 79;
+  --k-grad: linear-gradient(100deg, #ff9a6b 0%, #ff4630 48%, #d8164c 100%);
 }
 
 /* the aurora: a soft colour field behind a page, painted once, never animated */
