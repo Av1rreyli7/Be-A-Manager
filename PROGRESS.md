@@ -1543,8 +1543,17 @@ Checklist (each phase tested before the next, then committed and pushed):
       module), camera.ts, world.ts, gfx.ts (four levels and the frame guard), post.ts (hurt vision on High and
       Ultra), FightCanvas.tsx (the React Three Fiber host). Headless Chrome with the display awake holds 60
       frames a second at every level on this M3 (relative numbers only; a sleeping display stalls it).
-- [ ] PF4 the feel: input with no lag, impacts, shake, glove squash, sweat, hurt vision, slow motion slips,
+- [x] PF4 the feel: input with no lag, impacts, shake, glove squash, sweat, hurt vision, slow motion slips,
       stagger, knockdown fall and get up, clinch, sound
+      Result: keys and mouse go to the very next fight step (Controls in view/input.ts, physical keys, one press of
+      each kind per step, the rest queued); your own punches leave with no wind up; the other boxer shows a tell.
+      Landing a punch squashes the glove, flashes the impact, sprays sweat off a head shot and lifts the crowd;
+      taking one snaps your head on a spring and shakes the camera by its size; a perfect slip or roll gives a beat
+      of slow motion with the colour drained and a COUNTER call out; rocked makes the world sway, blur and double;
+      the edges close in as your head health drops (the page draws it on Low and Medium, a shader on High and
+      Ultra); a knockdown drops your eyes to the canvas under the lights and the referee, with the count and the
+      beat ring; the clinch puts your head beside his. Sound is made at run time with WebAudio (whooshes, thuds
+      with a crunch for big shots, leather on blocks, the bell, the count, a heartbeat when hurt, the crowd).
 - [ ] PF5 the screens: entry page (Floodlights clone), quick fight pick, creator, setup, ring walk and announcer,
       round cards, HUD, controls strip, pause, corner, scorecards and results, refresh recovery
 - [ ] PF6 landing: the third card between Floodlights and Game Night with the glove entrance, site checks

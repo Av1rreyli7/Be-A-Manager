@@ -94,8 +94,8 @@ export function poseTrainer(tr: BodyRig, t: number, talking: number) {
   turn(b[B.spine1], 0.25, 0, 0);
   turn(b[B.chest], 0.1, 0, 0);
   const g = Math.sin(t * 3.1) * talking, g2 = Math.sin(t * 2.3 + 1) * talking;
-  turn(b[B.armL], -1.0 - g * 0.3, 0, 0.3);
-  turn(b[B.armR], -1.1 - g2 * 0.35, 0, -0.35);
+  turn(b[B.armL], -0.7 - g * 0.25, 0, 0.3);
+  turn(b[B.armR], -0.8 - g2 * 0.3, 0, -0.35);
   turn(b[B.foreL], -0.8 + g * 0.3, 0, 0);
   turn(b[B.foreR], -0.9 + g2 * 0.3, 0, 0);
   turn(b[B.head], -0.1 + Math.sin(t * 1.7) * 0.05 * talking, Math.sin(t * 0.9) * 0.1, 0);

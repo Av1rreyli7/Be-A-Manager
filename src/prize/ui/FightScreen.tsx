@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import FightCanvas from "../view/FightCanvas";
 import { World, type WorldMode } from "../view/world";
 import { FrameGuard, GFX } from "../view/gfx";
-import { createFight, testKnockDown } from "../engine/fight";
+import { createFight, testClinch, testKnockDown } from "../engine/fight";
 import type { FightConfig, FightEvent, FightState, FighterDef } from "../engine/types";
 import { addResult, clearFight, saveFight, type Settings } from "../save";
 import Hud, { type HudApi } from "./Hud";
@@ -122,6 +122,9 @@ export default function FightScreen(props: {
       frame: w => {
         hud.current?.frame(w);
         if (guard.current.tick(performance.now(), w.workMs) && settingsRef.current.auto && quality > 0) {
+          const why = guard.current.reason;
+          const pf = (window as unknown as { __PF?: { guardLog?: unknown[] } }).__PF;
+          if (pf) (pf.guardLog = pf.guardLog || []).push({ at: performance.now(), from: quality, why, phase: w.st.phase, mode: w.mode });
           props.onSettings({ gfx: quality - 1 });
           setQuality(q => Math.max(0, q - 1));
           hud.current?.say("Graphics lowered to " + GFX[quality - 1].name + " to keep it smooth");
@@ -211,6 +214,7 @@ export default function FightScreen(props: {
       world, st, overlay, paused, quality, togglePause, introDone, roundDone, cornerDone,
       // levers for the browser battery and the screenshots
       kd: (who: 0 | 1) => testKnockDown(st, who),
+      clinch: () => testClinch(st),
       endRound: () => { if (st.phase === "fight") st.clock = 0.05; },
       hurt: (who: 0 | 1, hp: number) => { st.f[who].headHP = hp; },
     });

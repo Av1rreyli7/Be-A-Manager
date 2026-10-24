@@ -132,6 +132,7 @@ export class World {
   private trainer: BodyRig | null = null;
   private stools: THREE.Mesh[] = [];
   private camRig: CameraRig | null = null;
+  private fill: THREE.PointLight | null = null;
   private spray: Spray;
   private flash: THREE.Sprite | null = null;
   private flashT = 0;
@@ -195,6 +196,13 @@ export class World {
 
   attachCamera(camera: THREE.PerspectiveCamera) {
     this.camRig = new CameraRig(camera);
+    // a soft fill from your own eyes: faces and gloves read in the round instead of flat under the rig
+    if (this.quality >= 1) {
+      const fill = new THREE.PointLight(0xffe8d6, this.quality >= 2 ? 1.6 : 1.2, 5, 1.6);
+      fill.position.set(0, 0.25, 0.1);
+      camera.add(fill);
+      this.fill = fill;
+    }
     camera.near = 0.03;
     camera.far = 140;
     camera.fov = 60;
@@ -533,7 +541,7 @@ export class World {
       if (corner) {
         const toC = new THREE.Vector3(-meX, 0, -meZ).normalize();
         const side = new THREE.Vector3(-toC.z, 0, toC.x);
-        const tp = new THREE.Vector3(meX, 0, meZ).addScaledVector(toC, 0.85).addScaledVector(side, 0.28);
+        const tp = new THREE.Vector3(meX, 0, meZ).addScaledVector(toC, 1.25).addScaledVector(side, 0.75);
         this.trainer.root.position.copy(tp);
         this.trainer.tick(dt, Math.atan2(meX - tp.x, meZ - tp.z), 0);
         poseTrainer(this.trainer, this.time, 1);
@@ -639,6 +647,8 @@ export class World {
     this.stools[0]?.geometry.dispose();
     if (this.flash) (this.flash.material as THREE.Material).dispose();
     this.arms.group.removeFromParent();
+    this.fill?.removeFromParent();
+    this.fill?.dispose();
   }
 }
 

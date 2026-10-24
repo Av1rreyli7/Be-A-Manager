@@ -31,3 +31,9 @@ export function inches(cm: number) {
   const inch = Math.round(cm / 2.54);
   return `${Math.floor(inch / 12)} ft ${inch % 12} in`;
 }
+
+/** the name to show in tight places: the surname, without a Jr. or a Sr. */
+export function shortName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(p => !/^(jr\.?|sr\.?|ii|iii|iv)$/i.test(p));
+  return parts.length ? parts[parts.length - 1] : name;
+}

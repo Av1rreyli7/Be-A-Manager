@@ -62,11 +62,12 @@ export function gloveGeometry(side: 1 | -1, col: GloveColours, detail = 1): THRE
     const p = thumb.getAttribute("position") as THREE.BufferAttribute;
     const c = new Float32Array(p.count * 3);
     for (let i = 0; i < p.count; i++) {
+      // a thin seam of the trim round the middle of the thumb (judged on the sphere before it is shaped)
+      const seam = Math.abs(p.getY(i)) < 0.08;
       const x = p.getX(i) * 0.024, y = p.getY(i) * 0.05, z = p.getZ(i) * 0.026;
       // tilted so the tip leans in toward the palm
       const ty = y * 0.94 - x * 0.2, tx = x * 0.94 + y * 0.18;
       p.setXYZ(i, (tx - 0.018) * side, ty - 0.035, z + 0.062);
-      const seam = Math.abs(p.getY(i)) < 0.08;
       const cc = seam ? trim : main;
       c[i * 3] = cc[0]; c[i * 3 + 1] = cc[1]; c[i * 3 + 2] = cc[2];
     }

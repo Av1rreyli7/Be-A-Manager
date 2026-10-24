@@ -14,6 +14,7 @@ import { GFX } from "../view/gfx";
 import { KEYMAP } from "../view/input";
 import { recordOf, recordText, type Settings } from "../save";
 import { announcer, coachLine } from "./coach";
+import { shortName } from "./fighters";
 
 /** Space, Enter or a click moves on */
 function useContinue(on: () => void, enabled = true) {
@@ -200,8 +201,8 @@ export function Corner({ st, world, onDone, paused }: { st: FightState; world: W
             <thead>
               <tr>
                 <th />
-                <th className="k-num">{st.defs[0].name.split(" ").slice(-1)[0]}</th>
-                <th className="k-num">{st.defs[1].name.split(" ").slice(-1)[0]}</th>
+                <th className="k-num">{shortName(st.defs[0].name)}</th>
+                <th className="k-num">{shortName(st.defs[1].name)}</th>
               </tr>
             </thead>
             <tbody>
@@ -364,8 +365,8 @@ export function Result({ st, me, them, meRef, onRematch, onExit }: { st: FightSt
             <thead>
               <tr>
                 <th />
-                <th className="k-num">{me.name.split(" ").slice(-1)[0]}</th>
-                <th className="k-num">{them.name.split(" ").slice(-1)[0]}</th>
+                <th className="k-num">{shortName(me.name)}</th>
+                <th className="k-num">{shortName(them.name)}</th>
               </tr>
             </thead>
             <tbody>

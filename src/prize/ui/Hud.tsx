@@ -12,6 +12,7 @@ import type { FightEvent, FightState, FighterDef, Guard } from "../engine/types"
 import { PUNCH_NAME, rangeOf } from "../engine/rules";
 import type { World } from "../view/world";
 import { GFX } from "../view/gfx";
+import { shortName } from "./fighters";
 
 export interface HudApi {
   frame(w: World): void;
@@ -57,6 +58,8 @@ const Hud = forwardRef<HudApi, { st: FightState; me: FighterDef; them: FighterDe
   const stripT = useRef(0);
   const sayQ = useRef<HTMLDivElement>(null);
   const cheap = !GFX[quality]?.post;
+  const hiddenRef = useRef(hidden);
+  hiddenRef.current = hidden;
 
   const put = (k: string, v: string | number, how: "text" | "w" | "o" = "text") => {
     const el = els.current[k];
@@ -109,7 +112,7 @@ const Hud = forwardRef<HudApi, { st: FightState; me: FighterDef; them: FighterDe
       // the strip: full at the bell and in a pause, faint once the fight is going
       stripT.current += 1 / 60;
       const fighting = s.phase === "fight" && !w.paused;
-      put("strip", !fighting ? 1 : stripT.current < 4 ? 1 : 0.22, "o");
+      put("strip", hiddenRef.current ? 0 : !fighting ? 1 : stripT.current < 4 ? 1 : 0.22, "o");
       // the page's own hurt vision on Low and Medium
       if (cheap) {
         const hurt = Math.max(0, (70 - a.headHP) / 70) * 0.7 + (a.rocked > 0 ? 0.25 : 0) + (a.stamina < 35 ? ((35 - a.stamina) / 35) * (0.5 + 0.5 * Math.sin(w.time * 3.2)) * 0.15 : 0);
@@ -128,7 +131,8 @@ const Hud = forwardRef<HudApi, { st: FightState; me: FighterDef; them: FighterDe
           const mine = kd.who === 0;
           put("kdWho", mine ? "You are down" : `${them.name} is down`);
           const g = s.f[0].getup;
-          let help = mine ? "" : kd.stage === "count" ? "Go to the neutral corner" : kd.stage === "rising" ? "He is getting up" : "The referee checks him";
+          const nm = shortName(them.name);
+          let help = mine ? "" : kd.stage === "count" ? "Go to the neutral corner" : kd.stage === "rising" ? `${nm} is getting up` : `The referee checks ${nm}`;
           if (mine && g) {
             if (g.stage === "rhythm") help = "Tap Space or J on the beat to get up";
             else if (g.stage === "rising") help = "Getting up";
@@ -206,7 +210,7 @@ const Hud = forwardRef<HudApi, { st: FightState; me: FighterDef; them: FighterDe
     last.current = {};
   }, [quality]);
 
-  const nameOf = (f: FighterDef) => f.name.split(" ").slice(-1)[0];
+  const nameOf = (f: FighterDef) => shortName(f.name);
   return (
     <div ref={root} className="pf-hud" data-hidden={hidden ? "1" : "0"} data-strip={strip ? "1" : "0"}>
       {cheap && (

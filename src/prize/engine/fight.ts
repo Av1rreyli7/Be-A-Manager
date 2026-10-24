@@ -1055,3 +1055,17 @@ export function testKnockDown(st: FightState, who: 0 | 1) {
   if (st.phase !== "fight") return;
   knockDown(st, who, "head");
 }
+
+/** for the headless battery and the screenshots: tie the two boxers up */
+export function testClinch(st: FightState) {
+  if (st.phase !== "fight" || st.clinch) return;
+  const [a, b] = st.f;
+  const [ux, uz] = toward(st, 0);
+  b.x = a.x + ux * 0.7;
+  b.z = a.z + uz * 0.7;
+  a.action = b.action = null;
+  st.clinch = { t: 0, breakAt: 150, sep: 0 };
+  a.action = { type: "clinch", t: 0, dur: 0 };
+  b.action = { type: "clinch", t: 0, dur: 0 };
+  emit(st, { type: "clinch", who: 0 });
+}

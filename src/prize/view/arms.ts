@@ -151,10 +151,9 @@ export class FirstPersonArms {
       const S = a.startup!, A = a.active!, R = a.recovery!;
       const tt = a.t + alpha;
       let e: number;
-      if (tt < S) {
-        const p = tt / S;
-        e = p < 0.15 ? -0.08 * (p / 0.15) : -0.08 + 1.08 * Math.pow((p - 0.15) / 0.85, 1.4);
-      } else if (tt < S + A) e = 1;
+      // your own punch leaves at once: no wind up, so the glove moves on the very next frame
+      if (tt < S) e = Math.pow(tt / S, 1.2);
+      else if (tt < S + A) e = 1;
       else e = 1 - easeOut((tt - S - A) / R);
       const key = kind + ":" + a.startup + ":" + a.recovery;
       if (a.t <= 1 || this.punchKey !== key) {

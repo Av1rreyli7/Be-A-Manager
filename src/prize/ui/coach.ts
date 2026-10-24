@@ -4,14 +4,14 @@
  */
 import type { FightState } from "../engine/types";
 import { PUNCH_NAME } from "../engine/rules";
-import { inches } from "./fighters";
+import { inches, shortName } from "./fighters";
 
 export function coachLine(st: FightState): string {
   const [me, op] = st.f;
   const last = st.rounds[st.rounds.length - 1];
   if (!last) return "Find your range with the jab, then let your hands go.";
   const [a, b] = last;
-  const them = st.defs[1].name.split(" ").slice(-1)[0];
+  const them = shortName(st.defs[1].name);
   const read = st.ai[1].read;
   const lines: [number, string][] = [];
   if (me.headHP < 40) lines.push([10, `You're hurt. When ${them} comes in, tie him up with G and get your legs back.`]);

@@ -28,6 +28,8 @@ export class FrameGuard {
   private cool = 0;
   /** frames to ignore (a scene change, a pause, a hidden tab) */
   private skip = 30;
+  /** why it last stepped down: the median frame and the median CPU work (ms) */
+  reason: { frame: number; cpu: number } | null = null;
 
   hold(frames = 45) {
     this.skip = Math.max(this.skip, frames);
@@ -61,13 +63,17 @@ export class FrameGuard {
       return false;
     }
     if (this.times.length < 120) return false;
-    const avg = this.times.reduce((s, x) => s + x, 0) / this.times.length;
-    const cpu = this.work.reduce((s, x) => s + x, 0) / this.work.length;
+    // the median frame, so a one off stall (a screenshot, a garbage collection, a new body being built) never
+    // counts as the scene being slow
+    const med = (a: number[]) => [...a].sort((x, y) => x - y)[a.length >> 1];
+    const avg = med(this.times);
+    const cpu = med(this.work);
     // a screen or a battery saver that caps the page at 30 (or 40, 48) frames a second shows as frames all the same
     // length; that is not the scene being slow, so it is left alone
     const capped = [33.33, 25, 20.83].some(cap => this.times.filter(x => Math.abs(x - cap) < 1.6).length > this.times.length * 0.8);
     // under about 50 frames a second on the clock, or the CPU work alone over 12 ms a frame
     if ((avg > 20 && !capped) || cpu > 12) {
+      this.reason = { frame: avg, cpu };
       this.cool = 180;
       this.times.length = 0;
       this.work.length = 0;

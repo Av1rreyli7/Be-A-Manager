@@ -201,8 +201,9 @@ export function boxerGeometry(def: FighterDef, detail: number): THREE.BufferGeom
 
 function materials(quality: number, faceTex: THREE.Texture | null): THREE.MeshPhysicalMaterial[] {
   const hi = quality >= 2;
-  const trunks = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.46, metalness: 0, sheen: hi ? 0.35 : 0.2, sheenRoughness: 0.35, sheenColor: new THREE.Color("#d8d8d8"), envMapIntensity: 0.7 });
-  const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.5, metalness: 0, sheen: hi ? 0.35 : 0, sheenRoughness: 0.45, sheenColor: new THREE.Color("#ff9a7a"), clearcoat: 0.06, clearcoatRoughness: 0.5 });
+  // skin and trunks are drawn from both sides: up close the open tops of the body's tubes never show as dark gaps
+  const trunks = new THREE.MeshPhysicalMaterial({ side: THREE.DoubleSide, vertexColors: true, roughness: 0.46, metalness: 0, sheen: hi ? 0.35 : 0.2, sheenRoughness: 0.35, sheenColor: new THREE.Color("#d8d8d8"), envMapIntensity: 0.7 });
+  const skin = new THREE.MeshPhysicalMaterial({ side: THREE.DoubleSide, vertexColors: true, roughness: 0.5, metalness: 0, sheen: hi ? 0.35 : 0, sheenRoughness: 0.45, sheenColor: new THREE.Color("#ff9a7a"), clearcoat: 0.06, clearcoatRoughness: 0.5 });
   const hair = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.5, metalness: 0, sheen: hi ? 0.8 : 0, sheenRoughness: 0.35, sheenColor: new THREE.Color("#b9a68f") });
   const boot = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.34, metalness: 0.02, clearcoat: hi ? 0.6 : 0.3, clearcoatRoughness: 0.3 });
   const eye = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.08, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05 });

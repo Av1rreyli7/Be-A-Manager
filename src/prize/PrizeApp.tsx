@@ -94,7 +94,10 @@ export default function PrizeApp() {
     t.speed = t.on ? Math.max(1, Math.min(40, Number(q.get("speed")) || 1)) : 1;
     t.skipIntro = t.on && q.has("skipintro");
     Promise.resolve().then(() => {
-      setSettingsState(readSettings());
+      const base = readSettings();
+      const g = Number(q.get("gfx"));
+      // a test link can pick the graphics level for this visit (it is not saved)
+      setSettingsState(t.on && q.has("gfx") && g >= 0 && g <= 3 ? { ...base, gfx: g } : base);
       setCreated(listFighters());
       refreshResume();
       const s = t.on ? q.get("screen") : null;
