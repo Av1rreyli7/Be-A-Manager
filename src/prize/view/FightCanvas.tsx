@@ -99,6 +99,8 @@ export default function FightCanvas({ world, quality }: { world: World; quality:
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 1.05;
         gl.outputColorSpace = THREE.SRGBColorSpace;
+        // the browser battery reads the renderer's counts (geometries, textures, programs) to catch leaks
+        if (window.location.search.includes("pftest")) (window as unknown as { __pfGL?: THREE.WebGLRenderer }).__pfGL = gl;
       }}
     >
       <Host world={world} quality={quality} dpr={dpr} />

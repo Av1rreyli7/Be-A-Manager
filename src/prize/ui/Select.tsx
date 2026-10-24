@@ -113,7 +113,7 @@ export default function Select(props: {
                   <button key={s} className={clsx("pf-plate", side === s && "is-on", s)} data-pf={"side-" + s} onClick={() => setSide(s)}>
                     <span className="pf-plate-who">{s === "me" ? "You" : "Opponent"}</span>
                     <b>{f ? f.name : "Pick from the list"}</b>
-                    <span className="pf-plate-sub">{f ? (f.real ? recordText(recordOf(f.id)) === "0-0-0" ? f.era : `Your record as him ${recordText(recordOf(f.id))}` : `Record ${recordText(recordOf(f.id))}`) : side === s ? "Choosing now" : "Click to choose"}</span>
+                    <span className="pf-plate-sub">{f ? (f.real ? recordText(recordOf(f.id)) === "0-0-0" ? f.era : `Your record ${recordText(recordOf(f.id))}` : `Record ${recordText(recordOf(f.id))}`) : side === s ? "Choosing now" : "Click to choose"}</span>
                   </button>
                 );
               })}

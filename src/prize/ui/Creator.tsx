@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import clsx from "clsx";
 import { ATTR_BUDGET, ATTR_KEYS, ATTR_MAX, ATTR_MIN } from "../engine/rules";
-import { BEARDS, BODY_TYPES, COUNTRIES, HAIR_COLOURS, HAIR_STYLES, KIT_COLOURS, NAME_MAX, NICK_MAX, attrsUsed, defaultCreated, sanitize, toDef, type Created } from "../engine/create";
+import { BEARDS, BODY_TYPES, COUNTRIES, HAIR_COLOURS, HAIR_STYLES, KIT_COLOURS, NAME_MAX, NICK_MAX, attrsUsed, cleanTyping, defaultCreated, sanitize, toDef, type Created } from "../engine/create";
 import type { Attrs } from "../engine/types";
 import { STYLE_NAME, inches } from "./fighters";
 
@@ -82,10 +82,10 @@ export default function Creator(props: { initial: Created | null; quality: numbe
             {stepI === 0 && (
               <>
                 <Field label="Name" htmlFor="pfName">
-                  <input id="pfName" className="k-input" maxLength={NAME_MAX} placeholder="Your fighter's name" value={c.name} onChange={e => { set("name", e.target.value); setMsg(""); }} />
+                  <input id="pfName" className="k-input" maxLength={NAME_MAX} placeholder="Your fighter's name" value={c.name} onChange={e => { set("name", cleanTyping(e.target.value, NAME_MAX)); setMsg(""); }} />
                 </Field>
                 <Field label="Ring name (optional)" htmlFor="pfNick">
-                  <input id="pfNick" className="k-input" maxLength={NICK_MAX} placeholder="The Hammer" value={c.nick} onChange={e => set("nick", e.target.value)} />
+                  <input id="pfNick" className="k-input" maxLength={NICK_MAX} placeholder="The Hammer" value={c.nick} onChange={e => set("nick", cleanTyping(e.target.value, NICK_MAX))} />
                 </Field>
                 <Field label="Fights for" htmlFor="pfCountry">
                   <select id="pfCountry" className="k-input" value={c.country} onChange={e => set("country", e.target.value)}>

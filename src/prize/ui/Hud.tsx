@@ -171,10 +171,10 @@ const Hud = forwardRef<HudApi, { st: FightState; me: FighterDef; them: FighterDe
           if (mine && e.tag === "counter" && (e.dmg ?? 0) > 4) say("Counter " + PUNCH_NAME[e.kind!].toLowerCase(), "good");
           break;
         case "rocked":
-          say(mine ? "You are rocked. Cover up or tie him up (G)" : `${them.name} is rocked`, mine ? "bad" : "good");
+          say(mine ? "You are rocked. Cover up or hold on (G)" : `${them.name} is rocked`, mine ? "bad" : "good");
           break;
         case "cut":
-          say(mine ? `You are cut over the ${e.n === 0 ? "left" : "right"} eye` : `He is cut over the ${e.n === 0 ? "left" : "right"} eye`, mine ? "bad" : "good");
+          say(mine ? `You are cut over the ${e.n === 0 ? "left" : "right"} eye` : `${them.name} is cut over the ${e.n === 0 ? "left" : "right"} eye`, mine ? "bad" : "good");
           break;
         case "warn":
           say(mine ? "The referee warns you for holding" : `${them.name} is warned for holding`, mine ? "bad" : "info");
@@ -183,7 +183,7 @@ const Hud = forwardRef<HudApi, { st: FightState; me: FighterDef; them: FighterDe
           say(mine ? "A point taken away for holding" : `${them.name} loses a point for holding`, mine ? "bad" : "good");
           break;
         case "clinch":
-          if (e.tag === "fail" && mine) say("He slipped the clinch", "info");
+          if (e.tag === "fail" && mine) say(`${them.name} got out of the clinch`, "info");
           break;
         case "stance":
           if (mine) say(e.tag === "orthodox" ? "Orthodox" : "Southpaw", "info");

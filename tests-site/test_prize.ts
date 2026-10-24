@@ -6,7 +6,7 @@
 // computer reading a spammed punch, tiers, range, spam, combinations, guards, slips and the corner.
 import {
   ROSTER, aiInput, begin, blankInput, createFight, decide, nextRound, restore, scoreRound, snapshot, step, testKnockDown, validState,
-  toDef, sanitize, fitAttrs, attrsUsed, defaultCreated, cleanName, emptyStats, makeJudges, PUNCH, ATTR_BUDGET, ATTR_MAX, ATTR_MIN, NAME_MAX, KINDS,
+  toDef, sanitize, fitAttrs, attrsUsed, defaultCreated, cleanName, cleanTyping, emptyStats, makeJudges, PUNCH, ATTR_BUDGET, ATTR_MAX, ATTR_MIN, NAME_MAX, KINDS,
   type FightState, type FighterDef, type Input, type Judge, type RoundStats, type Tier, type FightConfig,
 } from "../src/prize/engine/index";
 import * as save from "../src/prize/save";
@@ -499,6 +499,9 @@ const t0 = Date.now();
   const jose = "Jos" + ch(0xe9) + " " + ch(0xc1) + "lvarez", inoue = ch(0x4e95, 0x4e0a, 0x5c1a, 0x5f25);
   ok("names in other alphabets and with accents are kept", cleanName(jose, 24) === jose && cleanName(inoue, 24) === inoue);
   ok("an emoji name does not break the limit", Array.from(cleanName(ch(0xd83e, 0xdd4a).repeat(40), 24)).length === 24);
+  const typing = cleanTyping("Rocky " + EM + " Balboa " + EN + " " + ch(0x200b), NAME_MAX);
+  ok("while typing, long dashes become plain ones and hidden marks go, but the spaces stay", typing === "Rocky - Balboa - " && cleanTyping("Ali ", NAME_MAX) === "Ali ", typing);
+  ok("and typing past the limit stops at the limit", Array.from(cleanTyping("x".repeat(60), NAME_MAX)).length === NAME_MAX);
   const over = fitAttrs({ power: 95, speed: 95, chin: 95, stamina: 95, defense: 95 });
   ok("attributes over the budget are taken back to it", attrsUsed(over) === ATTR_BUDGET && Object.values(over).every(v => v >= ATTR_MIN && v <= ATTR_MAX), over);
   const junk = fitAttrs({ power: NaN, speed: -50, chin: 1e9, stamina: "x" as unknown as number, defense: undefined });

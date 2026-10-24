@@ -89,6 +89,10 @@ export function cleanName(v: unknown, max: number): string {
   const s = v.replace(INVISIBLE, "").replace(LONG_DASH, "-").replace(/\s+/g, " ").trim();
   return Array.from(s).slice(0, max).join("").trim();
 }
+/** the same cleaning while someone types: no trimming, so a space can still go between two words */
+export function cleanTyping(v: string, max: number): string {
+  return Array.from(v.replace(INVISIBLE, "").replace(LONG_DASH, "-")).slice(0, max).join("");
+}
 // control characters, zero width and direction marks; and every long dash or minus sign (written as escapes on purpose)
 const INVISIBLE = new RegExp("[\\u0000-\\u001f\\u007f-\\u009f\\u200b-\\u200f\\u2028-\\u202e\\u2060-\\u206f\\ufeff]", "g");
 const LONG_DASH = new RegExp("[\\u2010-\\u2015\\u2212]", "g");

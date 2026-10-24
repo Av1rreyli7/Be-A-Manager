@@ -1572,6 +1572,27 @@ Checklist (each phase tested before the next, then committed and pushed):
       glove), tests-site/test_site.js (landing order and entrance, ring mode in the kit, the entry is the
       Floodlights entry, client side only), tests-site/test_boot.js (the landing links all three, /prize-fighter
       is served, no server routes).
-- [ ] PF7 acceptance: browser pass, every boxer, key spam, refresh, resize, console clean, soak of three 12
+- [x] PF7 acceptance: browser pass, every boxer, key spam, refresh, resize, console clean, soak of three 12
       round fights, every defect fixed
+      Result: tests-site/test_prize_browser.js (npm run test:prize-browser, in test:all after the build): 86 checks
+      in headless Chrome on the production build with every console message, page error and failed load recorded
+      (any error fails; the only warning allowed is React Three Fiber's own THREE.Clock note). It goes in from the
+      landing, opens every screen and panel, builds a fighter with a 60 character name full of dashes and emoji
+      and every option and slider at its top, saves it, reloads, changes and deletes; works the quick fight
+      filters, search, sides and setup; fights with the keys (a jab at once, guard switches in the middle of
+      punches, Tab, stance), presses every key and the mouse together for four seconds, pauses and carries on,
+      refreshes mid round, mid count and on the stool and carries on each time, throws a fight away, survives
+      broken saves; fits 390, 600, 820, 1024 and 1440 wide; fights a round with all 27 legends in one page
+      (renderer counts and memory flat); runs a fight to the result, rematch and new fight. PF_ONLY= runs parts,
+      PF_SHOTS= saves pictures. tests-site/test_prize_soak.js (npm run test:prize-soak, about 20 minutes): three
+      full 12 round fights back to back at Medium (Mayweather and Pacquiao, Leonard and Hearns, Usyk and Lewis, all
+      went the distance): memory after collection 10.9 MB at the start, 12.5 MB in the third fight; geometries 53
+      the whole night; textures 13 to 14 and programs 23 to 24 (a new boxer's look); page elements 171 throughout;
+      median frame 16.7 ms at the start and at the end (headless timings compared with each other only).
+      Defects found and fixed: a long dash typed into a name showed in the live preview (names are cleaned as you
+      type now, cleanTyping in engine/create.ts); the trainer and HUD said he and him about the other boxer
+      (names now); the screens load their code on first use and showed a blank moment (the entry now fetches them
+      in the background). Test side traps, noted for next time: headless Chrome on macOS can mark the page hidden
+      and stop frames (launch flags and focus emulation fix it); wait for a screen's own content, not only the
+      app's note of it; &fixed keeps the graphics level for a whole visit.
 - [ ] PF8 clean pass three times (every battery), screenshots, upload, push, report

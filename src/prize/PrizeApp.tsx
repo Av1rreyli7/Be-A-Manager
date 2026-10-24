@@ -6,7 +6,8 @@
  * mounts, behind a still dark screen, so nothing flashes.
  *
  * Test hooks (?pftest=1): window.__PF exposes the screen, the world and the fight state and a few levers for the
- * browser battery: &auto (the computer plays your corner), &speed=N, &skipintro, and &screen= with &me= and &them=.
+ * browser battery: &auto (the computer plays your corner), &speed=N, &skipintro, &screen= with &me= and &them=,
+ * &gfx= &rounds= &sec= &tier= for this visit only, and &fixed (the graphics level never steps down by itself).
  */
 import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
@@ -99,6 +100,8 @@ export default function PrizeApp() {
       // a test link can pick the graphics level for this visit (it is not saved)
       const over: Partial<Settings> = {};
       if (t.on && q.has("gfx") && g >= 0 && g <= 3) over.gfx = g;
+      // &fixed keeps that level for the whole visit (the soak compares the start of a night with its end)
+      if (t.on && q.has("fixed")) over.auto = false;
       const r = Number(q.get("rounds")), sec = Number(q.get("sec")), tier = Number(q.get("tier"));
       if (t.on && (r === 3 || r === 6 || r === 12)) over.rounds = r;
       if (t.on && (sec === 60 || sec === 120 || sec === 180)) over.roundSec = sec;
@@ -151,6 +154,18 @@ export default function PrizeApp() {
     pendingFight.current = null;
     Promise.resolve().then(() => startFight(a, b));
   }, [settings, startFight]);
+
+  // the other screens load their code on first use; fetch it quietly once the entry is up so they open at once
+  useEffect(() => {
+    if (screen.s !== "entry") return;
+    const warm = () => {
+      import("./ui/Select");
+      import("./ui/Creator");
+      import("./ui/FightScreen");
+    };
+    const t = window.setTimeout(warm, 1200);
+    return () => window.clearTimeout(t);
+  }, [screen.s]);
 
   // the test hook
   useEffect(() => {
