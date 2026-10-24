@@ -4,10 +4,10 @@ import { chakra, inter, instrument } from "@/lib/fonts";
 
 export const metadata: Metadata = {
   title: { absolute: "Be-A-Manager" },
-  description: "Run a football club with your friends in Floodlights, or open Game Night for two basketball games in one: Front Office, where you are the GM, and Hardwood Legends, where you play the games yourself.",
+  description: "Run a football club with your friends in Floodlights, step into the ring for first person boxing in PRIZE FIGHTER, or open Game Night for two basketball games in one: Front Office, where you are the GM, and Hardwood Legends, where you play the games yourself.",
   openGraph: {
     title: "Be-A-Manager",
-    description: "Floodlights and Game Night on one site.",
+    description: "Floodlights, PRIZE FIGHTER and Game Night on one site.",
     type: "website",
   },
 };

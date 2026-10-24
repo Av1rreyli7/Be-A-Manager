@@ -1,7 +1,8 @@
 /* ==========================================================
    Be-A-Manager landing page.
    Reads the shared kit (public/kit.css): palette, glow button, chips.
-   Floodlights cards run in pitch mode (volt, turf), Game Night in court mode (orange, amber).
+   Floodlights cards run in pitch mode (volt, turf), PRIZE FIGHTER in ring mode (hot red orange into crimson),
+   Game Night in court mode (orange, amber).
    Everything that moves is moved by GSAP (Landing.tsx) with transform and opacity only.
    The resting state below is the calm page reduced motion users get.
    ========================================================== */
@@ -66,8 +67,9 @@ html:has(.bam) {
   position: absolute;
   inset: -8%;
   background:
-    radial-gradient(40% 36% at 24% 46%, rgba(208, 232, 92, 0.15), transparent 72%),
-    radial-gradient(38% 38% at 78% 48%, rgba(255, 138, 61, 0.17), transparent 72%),
+    radial-gradient(34% 34% at 16% 46%, rgba(208, 232, 92, 0.15), transparent 72%),
+    radial-gradient(32% 34% at 50% 50%, rgba(255, 70, 48, 0.15), transparent 72%),
+    radial-gradient(34% 36% at 84% 48%, rgba(255, 138, 61, 0.16), transparent 72%),
     radial-gradient(46% 34% at 50% 2%, rgba(139, 108, 255, 0.17), transparent 72%),
     radial-gradient(60% 40% at 50% 112%, rgba(62, 230, 196, 0.12), transparent 72%),
     radial-gradient(30% 30% at 6% 96%, rgba(79, 179, 255, 0.1), transparent 72%),
@@ -291,13 +293,13 @@ html:has(.bam) {
   background-clip: text;
   color: transparent;
 }
-/* ---------- the two games: no boxes, just a pool of colour, the title, one line and a way in ---------- */
+/* ---------- the three games: no boxes, just a pool of colour, the title, one line and a way in ---------- */
 .bam-games {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(16px, 3vw, 48px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 2.4vw, 40px);
   width: 100%;
-  max-width: 1320px;
+  max-width: 1440px;
   margin: 0 auto auto;
 }
 .bam-card {
@@ -344,6 +346,9 @@ html:has(.bam) {
 .bam-card[data-kmode="court"] {
   --k-accent-2-rgb: 255, 190, 74;
 }
+.bam-card[data-kmode="ring"] {
+  --k-accent-2-rgb: 232, 23, 79;
+}
 
 .bam-title {
   position: relative;
@@ -352,7 +357,7 @@ html:has(.bam) {
   align-items: center;
   font-family: var(--f-lbl);
   font-weight: 700;
-  font-size: clamp(38px, 11.6cqi, 96px);
+  font-size: clamp(28px, 10cqi, 96px);
   line-height: 0.95;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -388,6 +393,13 @@ html:has(.bam) {
 .is-frontoffice .bam-ball {
   margin-left: -0.12em;
 }
+/* the glove rests just off the end of PRIZE FIGHTER, knuckles to the title it just landed */
+.is-prizefighter .bam-ball {
+  width: 1.22em;
+  height: 1.22em;
+  margin-left: 0.04em;
+  margin-right: -0.12em;
+}
 .bam-ball-lift,
 .bam-ball-squash,
 .bam-ball-spin {
@@ -409,6 +421,42 @@ html:has(.bam) {
 }
 .is-frontoffice:hover .bam-ball-svg {
   transform: translateY(-10%);
+}
+.is-prizefighter:hover .bam-ball-svg {
+  transform: rotate(-14deg) translateX(-6%);
+}
+/* the punch lands: a ring of light and six short sparks round the knuckles */
+.bam-ring {
+  position: absolute;
+  left: 30%;
+  top: 50%;
+  width: 0.9em;
+  height: 0.9em;
+  margin: -0.45em 0 0 -0.45em;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 150, 120, 0.95);
+  box-shadow: 0 0 20px rgba(255, 70, 48, 0.7);
+  opacity: 0;
+}
+.bam-sparks {
+  position: absolute;
+  left: 30%;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+.bam-sparks i {
+  position: absolute;
+  left: 0;
+  top: -1.5px;
+  width: 0.62em;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(255, 214, 196, 0), #ffd2c2 60%, #ffffff);
+  transform-origin: 0 50%;
+  rotate: var(--a);
+  translate: 0.22em 0;
+  opacity: 0;
 }
 /* the kick: a light trail that grows behind the football */
 .bam-streak {
@@ -610,6 +658,7 @@ html:has(.bam) {
 .bam[data-anim] :is(.bam-dim, .bam-beam, .bam-lamps i, .bam-frame .ln, .bam-frame .cn, .bam-bloom, .bam-flare,
   .bam-welcome .ch, .bam-welcome .rule, .bam-big, .bam-big .L, .bam-big .L .c, .bam-big .L .s, .bam-brand, .bam-card, .bam-card-glow,
   .bam-title .ch, .bam-title, .bam-ball, .bam-ball-lift, .bam-ball-squash, .bam-ball-spin, .bam-streak, .bam-shock,
+  .bam-ring, .bam-sparks i,
   .bam-line, .bam-enter, .bam-by) {
   will-change: transform, opacity;
 }
@@ -631,7 +680,7 @@ html:has(.bam) {
     font-size: clamp(26px, 8.4vw, 40px);
   }
   .bam-games {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .bam-card-lift {
     padding: 26px 8px 28px;

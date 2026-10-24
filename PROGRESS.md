@@ -1563,7 +1563,15 @@ Checklist (each phase tested before the next, then committed and pushed):
       ui/Overlays.tsx (introductions, round card, corner with open scoring and the trainer, result with the cards,
       pause with controls and settings), ui/coach.ts, prize.css (kit tokens in ring mode). Test links: ?pftest=1
       with &screen=, &me=, &them=, &auto, &speed=, &skipintro, &gfx=, &rounds=, &sec=, &tier=.
-- [ ] PF6 landing: the third card between Floodlights and Game Night with the glove entrance, site checks
+- [x] PF6 landing: the third card between Floodlights and Game Night with the glove entrance, site checks
+      Result: src/landing/games.ts (PRIZE FIGHTER between Floodlights and Game Night, ring mode, one line, ENTER
+      PRIZE FIGHTER), Balls.tsx (the glove, drawn like the two balls), Landing.tsx (swing: the glove comes in on a
+      hook, accelerating, squashes into the title as the letters land from its side with a jolt, a ring of light
+      and six sparks), landing.css (three columns, the ring glow, a red orange wash in the middle of the aurora).
+      The whole intro still plays in under 3.8 s. Tests: tests/landing.test.tsx (three cards, order, modes, the
+      glove), tests-site/test_site.js (landing order and entrance, ring mode in the kit, the entry is the
+      Floodlights entry, client side only), tests-site/test_boot.js (the landing links all three, /prize-fighter
+      is served, no server routes).
 - [ ] PF7 acceptance: browser pass, every boxer, key spam, refresh, resize, console clean, soak of three 12
       round fights, every defect fixed
 - [ ] PF8 clean pass three times (every battery), screenshots, upload, push, report

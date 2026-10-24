@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /**
- * Landing page checks: the welcome headline, both games (title, one line, glass enter button), the intro
+ * Landing page checks: the welcome headline, the three games (title, one line, glass enter button), the intro
  * timeline (skip, Esc, the short version for a second visit), the calm version for reduced motion, and the
- * wording rules. The landing has no 3D scene: the lights, the aurora and the two balls carry it.
+ * wording rules. The landing has no 3D scene: the lights, the aurora, the two balls and the glove carry it.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
@@ -67,12 +67,15 @@ describe("landing page content", () => {
     expect($(".bam-welcome").textContent).toBe("WELCOME TO");
   });
 
-  it("has a card for each game with its enter button, both always in the page", () => {
+  it("has a card for each game with its enter button, all three always in the page, PRIZE FIGHTER in the middle", () => {
     mount({ reduce: true });
-    expect($$(".bam-card")).toHaveLength(2);
+    expect($$(".bam-card")).toHaveLength(3);
+    expect($$(".bam-card").map((c) => c.getAttribute("data-game"))).toEqual(["floodlights", "prizefighter", "frontoffice"]);
     expect($('[data-enter="floodlights"]').getAttribute("href")).toBe("/floodlights/");
+    expect($('[data-enter="prizefighter"]').getAttribute("href")).toBe("/prize-fighter");
     expect($('[data-enter="frontoffice"]').getAttribute("href")).toBe("/front-office");
     expect($('[data-enter="floodlights"]').textContent).toBe("ENTER FLOODLIGHTS");
+    expect($('[data-enter="prizefighter"]').textContent).toBe("ENTER PRIZE FIGHTER");
     expect($('[data-enter="frontoffice"]').textContent).toBe("ENTER GAME NIGHT");
     for (const id of ORDER) {
       const btn = $(`[data-enter="${id}"]`);
@@ -89,18 +92,24 @@ describe("landing page content", () => {
     expect($$(".bam-nav, .bam-pill")).toHaveLength(0);
   });
 
-  it("gives each game its colour mode from the shared kit: pitch for Floodlights, court for Game Night", () => {
+  it("gives each game its colour mode from the shared kit: pitch for Floodlights, ring for PRIZE FIGHTER, court for Game Night", () => {
     mount({ reduce: true });
     expect($('.bam-card[data-game="floodlights"]').getAttribute("data-kmode")).toBe("pitch");
+    expect($('.bam-card[data-game="prizefighter"]').getAttribute("data-kmode")).toBe("ring");
     expect($('.bam-card[data-game="frontoffice"]').getAttribute("data-kmode")).toBe("court");
     expect(GAMES.floodlights.mode).toBe("pitch");
+    expect(GAMES.prizefighter.mode).toBe("ring");
     expect(GAMES.frontoffice.mode).toBe("court");
   });
 
-  it("shows a ball with each title: a football for Floodlights, a basketball for Game Night", () => {
+  it("shows a mark with each title: a football for Floodlights, a glove for PRIZE FIGHTER, a basketball for Game Night", () => {
     mount({ reduce: true });
     expect($$('.bam-card[data-game="floodlights"] .bam-ball svg')).toHaveLength(1);
     expect($$('.bam-card[data-game="floodlights"] .bam-streak')).toHaveLength(1);
+    expect($$('.bam-card[data-game="prizefighter"] .bam-ball svg')).toHaveLength(1);
+    expect($$('.bam-card[data-game="prizefighter"] .bam-ring')).toHaveLength(1);
+    expect($$('.bam-card[data-game="prizefighter"] .bam-sparks i')).toHaveLength(6);
+    expect($('.bam-card[data-game="prizefighter"] .bam-title .sr-only').textContent).toBe("Prize Fighter");
     expect($$('.bam-card[data-game="frontoffice"] .bam-ball svg')).toHaveLength(1);
     expect($$('.bam-card[data-game="frontoffice"] .bam-shock')).toHaveLength(1);
     expect($('.bam-card[data-game="floodlights"] .bam-title .sr-only').textContent).toBe("Floodlights");
@@ -110,6 +119,7 @@ describe("landing page content", () => {
   it("says almost nothing: each game is its title, one short line and the enter button", () => {
     mount({ reduce: true });
     expect($('.bam-card[data-game="floodlights"] .bam-line').textContent).toBe("Run a football club with your mates.");
+    expect($('.bam-card[data-game="prizefighter"] .bam-line').textContent).toBe("First person boxing under the ring lights.");
     expect($('.bam-card[data-game="frontoffice"] .bam-line').textContent).toBe("Run the team, or play it yourself.");
     for (const id of ORDER) {
       const card = $(`.bam-card[data-game="${id}"]`);
@@ -154,7 +164,7 @@ describe("landing page content", () => {
 });
 
 describe("the credit line", () => {
-  it("sits under the two games as one small line, outside both cards", () => {
+  it("sits under the three games as one small line, outside every card", () => {
     mount({ reduce: true });
     const by = $$(".bam-by");
     expect(by).toHaveLength(1);
@@ -166,7 +176,7 @@ describe("the credit line", () => {
     expect(by[0].getAttribute("aria-hidden")).toBeNull();
   });
 
-  it("fades in last, after the two card moments, inside the intro", () => {
+  it("fades in last, after the card moments, inside the intro", () => {
     mount();
     const t = tl()!;
     const L = t.labels as Record<string, number>;
@@ -178,7 +188,7 @@ describe("the credit line", () => {
 });
 
 describe("the intro", () => {
-  it("plays the welcome first, then the two card moments, all in under 3.8 seconds", () => {
+  it("plays the welcome first, then the three card moments, all in under 3.8 seconds", () => {
     mount();
     const t = tl();
     expect(t).toBeTruthy();
@@ -226,6 +236,8 @@ describe("the intro", () => {
     mount();
     expect($('.bam-card[data-game="frontoffice"]').style.opacity).toBe("0");
     expect($('.bam-card[data-game="frontoffice"] .bam-enter').style.opacity).toBe("0");
+    expect($('.bam-card[data-game="prizefighter"]').style.opacity).toBe("0");
+    expect($('.bam-card[data-game="prizefighter"] .bam-enter').style.opacity).toBe("0");
   });
 });
 

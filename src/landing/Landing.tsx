@@ -1,6 +1,6 @@
 "use client";
 /**
- * Be-A-Manager landing page: a short cinematic intro, then the two games side by side.
+ * Be-A-Manager landing page: a short cinematic intro, then the three games side by side.
  * Mostly motion and colour, barely any reading: each game is its animated title, one short line and a way in.
  *
  * One GSAP timeline runs the whole show (about 3.6 seconds), always in this order:
@@ -8,8 +8,9 @@
  *      WELCOME TO tracks in from the middle, the big letters flip up from below from the middle out, the
  *      colour runs across them, a band of light sweeps over the word with a lens streak and a small
  *      heartbeat, then the word flies up and lands as the headline
- *   2. only then the games: a football is kicked in and the FLOODLIGHTS letters chase it, a basketball
- *      drops in and bounces and GAME NIGHT slams down behind it on the first bounce
+ *   2. only then the games: a football is kicked in and the FLOODLIGHTS letters chase it, a boxing glove
+ *      swings in on a hook and PRIZE FIGHTER lands with the impact, a basketball drops in and bounces and
+ *      GAME NIGHT slams down behind it on the first bounce
  *
  * Rules: transform and opacity only (the GPU does the work). Every link works from the first frame:
  * the intro layer never takes pointer events. Skip, Esc or a scroll jump to the end. A second visit in the
@@ -24,7 +25,7 @@ import { useGSAP } from "@gsap/react";
 import { GAMES, ORDER, type GameId } from "./games";
 import { STARS_A, STARS_B } from "./starfield";
 import { BEAM_L, BEAM_R } from "./beams";
-import { Basketball, Football } from "./Balls";
+import { Basketball, Football, Glove } from "./Balls";
 import { km } from "@/lib/motion";
 import "./landing.css";
 
@@ -159,13 +160,17 @@ function buildIntro(root: HTMLElement): gsap.core.Timeline {
   tl.to(intro, { opacity: 0, duration: 0.14, ease: "none" }, "fly+=0.52");
   tl.set(intro, { display: "none" }, "fly+=0.66");
 
-  /* 3 and 4. the two games */
+  /* 3 and 4. the three games */
   // the games come in only after the welcome has landed
   tl.addLabel("cards", "fly+=0.66");
-  const [fl, gn] = ORDER.map((id) => root.querySelector<HTMLElement>(`.bam-card[data-game="${id}"]`));
+  const [fl, pf, gn] = ORDER.map((id) => root.querySelector<HTMLElement>(`.bam-card[data-game="${id}"]`));
   if (fl) {
     cardIn(tl, fl, "cards");
     kick(tl, fl, "cards+=0.08");
+  }
+  if (pf) {
+    cardIn(tl, pf, "cards+=0.18");
+    swing(tl, pf, "cards+=0.2");
   }
   if (gn) {
     cardIn(tl, gn, "cards+=0.36");
@@ -196,6 +201,25 @@ function kick(tl: gsap.core.Timeline, card: HTMLElement, at: string) {
   tl.to(q(".bam-streak"), { opacity: 0, duration: 0.35, ease: "power1.in" }, `${at}+=0.36`);
   tl.fromTo(q(".bam-title .ch"), { opacity: 0, x: -80, skewX: -20 }, { opacity: 1, x: 0, skewX: 0, duration: 0.46, stagger: 0.028 }, `${at}+=0.1`);
   tl.fromTo(q(".bam-ball-squash"), { scaleX: 1, scaleY: 1 }, { keyframes: [{ scaleX: 0.84, scaleY: 1.12, duration: 0.07 }, { scaleX: 1, scaleY: 1, duration: 0.32, ease: "elastic.out(1, 0.45)" }] }, `${at}+=0.55`);
+}
+
+/** PRIZE FIGHTER: the glove swings in on a hook, accelerating, and the title lands with the impact */
+function swing(tl: gsap.core.Timeline, card: HTMLElement, at: string) {
+  const q = gsap.utils.selector(card);
+  const glove = card.querySelector<HTMLElement>(".bam-ball");
+  const D = 0.42;
+  const hit = `${at}+=${D}`;
+  const offLeft = () => -((glove?.getBoundingClientRect().left ?? 0) + (glove?.offsetWidth ?? 80) + 40);
+  // the hook: in from off screen left and a little low, the glove turned back, speeding up into the target
+  tl.fromTo(glove, { x: offLeft, opacity: 1 }, { x: 0, duration: D, ease: "power3.in" }, at);
+  tl.fromTo(q(".bam-ball-lift"), { y: 46 }, { keyframes: { y: [46, -24, 0], easeEach: "sine.inOut" }, duration: D, ease: "none" }, at);
+  tl.fromTo(q(".bam-ball-spin"), { rotation: -70 }, { keyframes: { rotation: [-70, -10, 0, 9, 0] }, duration: D + 0.4, ease: "none" }, at);
+  // contact: the glove squashes into the title, the letters land with a jolt, a ring of light, the sparks
+  tl.fromTo(q(".bam-ball-squash"), { scaleX: 1, scaleY: 1 }, { keyframes: [{ scaleX: 0.8, scaleY: 1.14, duration: 0.06 }, { scaleX: 1, scaleY: 1, duration: 0.4, ease: "elastic.out(1, 0.4)" }] }, hit);
+  tl.fromTo(q(".bam-title .ch"), { opacity: 0, scale: 1.7, y: -10 }, { opacity: 1, scale: 1, y: 0, duration: 0.22, ease: "power4.in", stagger: { each: 0.016, from: "end" } }, `${hit}-=0.18`);
+  tl.fromTo(q(".bam-title"), { x: 0 }, { keyframes: { x: [0, -9, 6, -3, 0] }, duration: 0.32, ease: "none" }, hit);
+  tl.fromTo(q(".bam-ring"), { opacity: 0.95, scale: 0.2 }, { opacity: 0, scale: 2.6, duration: 0.5, ease: "power2.out" }, hit);
+  tl.fromTo(q(".bam-sparks i"), { opacity: 1, scaleX: 0.15 }, { opacity: 0, scaleX: 1, duration: 0.42, ease: "power3.out" }, hit);
 }
 
 /** Game Night: the ball drops in and bounces; the title slams down behind it on the first bounce */
@@ -394,7 +418,7 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
         <section className="bam-games" aria-label="Pick a game">
           {ORDER.map((id) => {
             const g = GAMES[id];
-            const Ball = id === "floodlights" ? Football : Basketball;
+            const Ball = id === "floodlights" ? Football : id === "prizefighter" ? Glove : Basketball;
             return (
               <article
                 key={id}
@@ -416,6 +440,16 @@ export default function Landing({ fontVars = "" }: { fontVars?: string }) {
                     <span className="bam-ball" aria-hidden="true">
                       {id === "floodlights" && <span className="bam-streak" />}
                       {id === "frontoffice" && <span className="bam-shock" />}
+                      {id === "prizefighter" && (
+                        <>
+                          <span className="bam-ring" />
+                          <span className="bam-sparks">
+                            {Array.from({ length: 6 }, (_, k) => (
+                              <i key={k} style={{ ["--a" as string]: `${k * 60 - 90}deg` }} />
+                            ))}
+                          </span>
+                        </>
+                      )}
                       <span className="bam-ball-lift">
                         <span className="bam-ball-squash">
                           <span className="bam-ball-spin">

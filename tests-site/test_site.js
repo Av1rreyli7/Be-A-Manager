@@ -126,7 +126,7 @@ ok("Hardwood Legends uses the kit glass primary button and cut corner panels", !
 ok("the headline and both games are in the landing source", landing.includes("Be-A-Manager") && landing.includes("ORDER.map"), null);
 ok("the landing is light: no 3D scene, no three.js, no stats fetch", !has("src/landing/Backdrop3D.tsx") && !/from "three"/.test(landing) && !landing.includes("@react-three/fiber") && !landing.includes("Backdrop3D") && !landing.includes("stats.json"), null);
 ok("each game shows only its title, one short line and the enter button", landing.includes('className="bam-line">{g.line}') && !/bam-(lede|kind|blurb|inside|chips|foot|stats|mini|credit|pill|card-bg|card-art|btnflash|glowbtn)/.test(landing + css) && read("src/landing/games.ts").includes("line: "), null);
-ok("the credit line sits under the two games, small and quiet, and fades in after the cards", landing.includes('<p className="bam-by">by avir and ayanssh</p>') && landing.indexOf('className="bam-by"') > landing.indexOf('className="bam-games"') && /\.bam-by \{[^}]*font: 600 11px/.test(css) && landing.includes('q(".bam-by")') && page.includes(".bam-by,"), null);
+ok("the credit line sits under the three games, small and quiet, and fades in after the cards", landing.includes('<p className="bam-by">by avir and ayanssh</p>') && landing.indexOf('className="bam-by"') > landing.indexOf('className="bam-games"') && /\.bam-by \{[^}]*font: 600 11px/.test(css) && landing.includes('q(".bam-by")') && page.includes(".bam-by,"), null);
 ok("reduced motion gets the calm page", landing.includes("prefers-reduced-motion") && css.includes("@media (prefers-reduced-motion: reduce)"), null);
 ok("warm on intent and idle warmup are wired", landing.includes("onPointerEnter={() => warm(id)}") && landing.includes("onFocus={() => warm(id)}") && landing.includes("requestIdleCallback") && !landing.includes("motion/react"), null);
 ok("the intro is one GSAP timeline with the welcome flight and the two ball moments", landing.includes('from "gsap"') && landing.includes('from "@gsap/react"') && landing.includes("useGSAP(") && landing.includes("gsap.matchMedia()") && /addLabel\("lights"/.test(landing) && /addLabel\("fly"/.test(landing) && /addLabel\("cards"/.test(landing) && landing.includes("function kick(") && landing.includes("function bounce(") && landing.includes('"bounce.out"'), null);
@@ -135,7 +135,22 @@ ok("a second visit in the same tab gets the short version", landing.includes("se
 ok("the first paint is guarded so the end state never flashes, and the guard lifts itself", page.includes('s.id="bam-prehide"') && page.includes("4500") && page.includes("prefers-reduced-motion: reduce") && landing.includes('getElementById("bam-prehide")?.remove()'), null);
 ok("the intro moves only transform and opacity: no layout properties in the timeline", !/(width|height|top|left|margin|padding)\s*:\s*[^,}]*[,}]/.test(landing.slice(landing.indexOf("function buildIntro"), landing.indexOf("export default function Landing"))), null);
 ok("black is forced in three places", css.includes("html:has(.bam)") && landing.includes('style={{ background: "#000", color: "#fff" }}') && landing.includes("html,body{background:#000000 !important"), null);
-ok("the landing reads the shared kit: glass enter buttons tinted by pitch and court modes", landing.includes("k-btn k-btn-primary") && !landing.includes("k-btn-glow") && read("src/landing/games.ts").includes('mode: "pitch"') && read("src/landing/games.ts").includes('mode: "court"') && landing.includes("data-kmode={g.mode}") && css.includes("var(--k-grad)") && css.includes("var(--k-accent-rgb)"), null);
+ok("the landing reads the shared kit: glass enter buttons tinted by pitch, ring and court modes", landing.includes("k-btn k-btn-primary") && !landing.includes("k-btn-glow") && read("src/landing/games.ts").includes('mode: "pitch"') && read("src/landing/games.ts").includes('mode: "ring"') && read("src/landing/games.ts").includes('mode: "court"') && landing.includes("data-kmode={g.mode}") && css.includes("var(--k-grad)") && css.includes("var(--k-accent-rgb)"), null);
+{
+  // PRIZE FIGHTER: the third game, between Floodlights and Game Night, with its own glove entrance
+  const games = read("src/landing/games.ts");
+  ok("PRIZE FIGHTER is on the landing between Floodlights and Game Night", games.includes('export const ORDER: GameId[] = ["floodlights", "prizefighter", "frontoffice"];') && games.includes('href: "/prize-fighter"') && games.includes('enter: "ENTER PRIZE FIGHTER"'), null);
+  ok("PRIZE FIGHTER's entrance is in the same choreography: a glove swings in and the title lands with impact", landing.includes("function swing(") && landing.includes('swing(tl, pf, "cards+=0.2")') && landing.includes("Glove") && read("src/landing/Balls.tsx").includes("export function Glove(") && css.includes(".bam-ring") && css.includes(".bam-sparks i"), null);
+  const kitCss = read("public/kit.css");
+  ok("ring mode is in the kit: a hot red orange accent apart from volt and Game Night's orange", /\[data-kmode="ring"\] \{[^}]*--k-accent: #ff4630/.test(kitCss) && !/\[data-kmode="ring"\] \{[^}]*#d0e85c/.test(kitCss) && !/\[data-kmode="ring"\] \{[^}]*--k-accent: #ff8a3d/.test(kitCss), null);
+  const entry = read("src/prize/ui/Entry.tsx");
+  ok("PRIZE FIGHTER's entry is the Floodlights entry: frame, stars, brand row, two word title, line, three numbers, panel, mode card", ["k-stars", "k-frame", "k-entry-in", "k-brand", "homelink", "k-title", "hrise", "k-sub", "<em>", "k-stats", "Fighters", "Real legends", "Modes", "k-card", "k-create", "cardsplit", "k-mode", "useKitEntry"].every(t => entry.includes(t)), null);
+  ok("QUICK FIGHT and CREATE A FIGHTER are where Floodlights has its ways in", entry.includes("Quick fight") && entry.includes("Create a fighter") && entry.indexOf("Quick fight") < entry.indexOf("Create a fighter"), null);
+  const pfFiles = walk(path.join(root, "src", "prize"), new Set(), []);
+  const pfText = pfFiles.map(f => fs.readFileSync(f, "utf8")).join("\n");
+  ok("PRIZE FIGHTER runs in the browser: no fetch to the server, saves on the device", !/fetch\(/.test(pfText) && read("src/prize/save.ts").includes("localStorage") && !has("src/app/api/prize"), null);
+  ok("PRIZE FIGHTER uses three.js through React Three Fiber and GSAP for its screens", pfText.includes('from "@react-three/fiber"') && pfText.includes('from "gsap"'), null);
+}
 {
   // performance: the beams are cone images drawn once (beams.ts), never blended, masked or filtered at run time
   const beamsTs = read("src/landing/beams.ts");

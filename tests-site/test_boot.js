@@ -50,16 +50,26 @@ async function main() {
   let r = await get("/");
   ok("the landing page is served at the root", r.status === 200 && r.type.includes("text/html"), r.status);
   ok("the landing has the title", r.text.includes("<title>Be-A-Manager</title>") && /<h1[^>]*>[\s\S]*Be-A-Manager[\s\S]*<\/h1>/.test(r.text), null);
-  ok("the landing links to both games", r.text.includes('href="/floodlights/"') && r.text.includes('href="/front-office"'), null);
-  ok("the landing has both enter buttons", r.text.includes("ENTER FLOODLIGHTS") && r.text.includes("ENTER GAME NIGHT") && !r.text.includes("ENTER FRONT OFFICE"), null);
+  ok("the landing links to all three games", r.text.includes('href="/floodlights/"') && r.text.includes('href="/prize-fighter"') && r.text.includes('href="/front-office"'), null);
+  ok("the landing has the three enter buttons", r.text.includes("ENTER FLOODLIGHTS") && r.text.includes("ENTER PRIZE FIGHTER") && r.text.includes("ENTER GAME NIGHT") && !r.text.includes("ENTER FRONT OFFICE"), null);
+  ok("PRIZE FIGHTER sits between Floodlights and Game Night", r.text.indexOf('data-game="floodlights"') < r.text.indexOf('data-game="prizefighter"') && r.text.indexOf('data-game="prizefighter"') < r.text.indexOf('data-game="frontoffice"'), null);
   ok("the landing is the light version: no footer, stats, chips or long copy", !r.text.includes("bam-foot") && !r.text.includes("bam-stats") && !r.text.includes("k-chip") && !r.text.includes("bam-blurb") && !r.text.includes("BASKETBALL BUNDLE"), null);
   ok("the landing forces a black page from the first byte", r.text.includes("html,body{background:#000000 !important") && r.text.includes("background:#000"), null);
   ok("the starfield is in the first HTML, before any script runs", r.text.includes("bam-stars") && (r.text.match(/vw [0-9.]+vh/g) || []).length >= 168, null);
-  ok("both games are in the first HTML with their glass enter buttons", r.text.includes('data-game="floodlights"') && r.text.includes('data-game="frontoffice"') && (r.text.match(/k-btn-primary/g) || []).length >= 2, null);
-  ok("each game has its one short line", r.text.includes("Run a football club with your mates.") && r.text.includes("Run the team, or play it yourself."), null);
+  ok("all three games are in the first HTML with their glass enter buttons", r.text.includes('data-game="floodlights"') && r.text.includes('data-game="prizefighter"') && r.text.includes('data-game="frontoffice"') && (r.text.match(/k-btn-primary/g) || []).length >= 3, null);
+  ok("each game has its one short line", r.text.includes("Run a football club with your mates.") && r.text.includes("First person boxing under the ring lights.") && r.text.includes("Run the team, or play it yourself."), null);
   ok("no em or en dashes in the landing HTML", !r.text.includes(String.fromCharCode(8212)) && !r.text.includes(String.fromCharCode(8211)), null);
   ok("three.js is not in the first HTML", !r.text.includes("WebGLRenderer"), null);
   ok("the landing has no side preview card", !r.text.includes("bam-side-cap") && !r.text.includes("bam-mock") && !r.text.includes("ALSO HERE"), null);
+
+  // ---- PRIZE FIGHTER (Next, all in the browser: no API of its own) ----
+  r = await get("/prize-fighter");
+  ok("the PRIZE FIGHTER page is served", r.status === 200 && r.type.includes("text/html") && r.text.includes("<title>PRIZE FIGHTER</title>"), r.status);
+  ok("PRIZE FIGHTER runs in ring mode on the shared kit", r.text.includes('data-kmode="ring"') && r.text.includes('href="/kit.css"'), null);
+  ok("PRIZE FIGHTER's first HTML is a still screen (it reads the device after it starts, so nothing flashes)", r.text.includes("pf-still") && !r.text.includes("WebGLRenderer"), null);
+  ok("no em or en dashes in the PRIZE FIGHTER HTML", !r.text.includes(String.fromCharCode(8212)) && !r.text.includes(String.fromCharCode(8211)), null);
+  r = await get("/api/pf/state");
+  ok("PRIZE FIGHTER needs no server routes (an /api/pf path is a 404)", r.status === 404, r.status);
 
   // ---- Floodlights (Express) ----
   r = await get("/floodlights");
