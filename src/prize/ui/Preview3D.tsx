@@ -151,10 +151,10 @@ function Stage({ fighters, mode, quality }: { fighters: (FighterDef | null)[]; m
         const head = new THREE.Vector3(Math.sin(yaw) * 2, sl.body.h * 0.93, Math.cos(yaw) * 2);
         const body = head.clone();
         body.y -= 0.5;
-        sl.anim.update(sl.f, { x: 0, z: 0, yaw, head, body, time: t, mode: "fight", downT: 0, riseT: 0, speed: 0, alpha: 0 }, dt);
+        sl.anim.update(sl.f, { x: 0, z: 0, yaw, head, body, time: t, mode: "idle", downT: 0, riseT: 0, speed: 0, alpha: 0 }, dt);
       }
-      cam.position.set(0.35, 1.45, 2.55);
-      cam.lookAt(0, 1.1, 0);
+      cam.position.set(0.55, 1.25, 4.1);
+      cam.lookAt(0, 0.98, 0);
     }
   });
   return null;

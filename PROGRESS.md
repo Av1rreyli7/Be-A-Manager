@@ -1554,8 +1554,15 @@ Checklist (each phase tested before the next, then committed and pushed):
       Ultra); a knockdown drops your eyes to the canvas under the lights and the referee, with the count and the
       beat ring; the clinch puts your head beside his. Sound is made at run time with WebAudio (whooshes, thuds
       with a crunch for big shots, leather on blocks, the bell, the count, a heartbeat when hurt, the crowd).
-- [ ] PF5 the screens: entry page (Floodlights clone), quick fight pick, creator, setup, ring walk and announcer,
+- [x] PF5 the screens: entry page (Floodlights clone), quick fight pick, creator, setup, ring walk and announcer,
       round cards, HUD, controls strip, pause, corner, scorecards and results, refresh recovery
+      Result: src/prize/PrizeApp.tsx (screens, settings and saves read after mount behind a still screen, resume,
+      rematch, test hooks), ui/Entry.tsx (the Floodlights entry with QUICK FIGHT and CREATE A FIGHTER, the resume
+      card, your fighters, graphics and sound), ui/Select.tsx (roster, 3D face off, tale of the tape, rounds,
+      round length, five tiers), ui/Creator.tsx (five steps and a live 3D preview), ui/FightScreen.tsx, ui/Hud.tsx,
+      ui/Overlays.tsx (introductions, round card, corner with open scoring and the trainer, result with the cards,
+      pause with controls and settings), ui/coach.ts, prize.css (kit tokens in ring mode). Test links: ?pftest=1
+      with &screen=, &me=, &them=, &auto, &speed=, &skipintro, &gfx=, &rounds=, &sec=, &tier=.
 - [ ] PF6 landing: the third card between Floodlights and Game Night with the glove entrance, site checks
 - [ ] PF7 acceptance: browser pass, every boxer, key spam, refresh, resize, console clean, soak of three 12
       round fights, every defect fixed

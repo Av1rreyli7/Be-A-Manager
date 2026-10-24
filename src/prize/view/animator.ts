@@ -46,7 +46,7 @@ export interface PoseCtx {
   /** seconds since the fight view started (for idle motion) */
   time: number;
   /** whole body states set by the scene */
-  mode: "fight" | "down" | "clinch" | "stool" | "walk" | "win" | "lose";
+  mode: "fight" | "down" | "clinch" | "stool" | "walk" | "win" | "lose" | "idle";
   /** for down: seconds since the fall, and whether he is getting up (seconds since the rise began) */
   downT: number;
   riseT: number;
@@ -372,6 +372,13 @@ export class BoxerAnimator {
     const philly = f.guard === "philly" && ctx.mode === "fight";
     let lFwd = guardFwd.clone(), rFwd = guardFwd.clone();
     let lThumb = guardThumb.clone(), rThumb = guardThumb.clone();
+    // relaxed (the creator's stage): the hands hang loose, knuckles down
+    if (ctx.mode === "idle") {
+      lFwd = new THREE.Vector3(0, -1, 0).addScaledVector(fwdW, 0.25).normalize();
+      rFwd = lFwd.clone();
+      lThumb = fwdW.clone();
+      rThumb = fwdW.clone();
+    }
     // the Philly lead hand lies across the belly, knuckles pointing to the other side
     if (philly) {
       const across = new THREE.Vector3(-L, 0.15, 0.3).applyQuaternion(root.quaternion).normalize();
@@ -489,6 +496,7 @@ export class BoxerAnimator {
       else { right = leadV; left = rearV; }
     };
     if (mode === "walk") set([L * 0.1, 0.62, 0.12], [R * 0.1, 0.62, 0.12]);
+    else if (mode === "idle") set([L * 0.13, 0.6, 0.09], [R * 0.13, 0.6, 0.09]);
     else if (guard === "high") set([L * 0.05, 0.94, 0.15], [R * 0.055, 0.935, 0.13]);
     else if (guard === "philly") set([R * 0.02, 0.63, 0.13], [R * 0.055, 0.9, 0.11]);
     else set([L * 0.055, 0.895, 0.19], [R * 0.06, 0.885, 0.13]);

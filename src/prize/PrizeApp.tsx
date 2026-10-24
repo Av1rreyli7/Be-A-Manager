@@ -97,7 +97,14 @@ export default function PrizeApp() {
       const base = readSettings();
       const g = Number(q.get("gfx"));
       // a test link can pick the graphics level for this visit (it is not saved)
-      setSettingsState(t.on && q.has("gfx") && g >= 0 && g <= 3 ? { ...base, gfx: g } : base);
+      const over: Partial<Settings> = {};
+      if (t.on && q.has("gfx") && g >= 0 && g <= 3) over.gfx = g;
+      const r = Number(q.get("rounds")), sec = Number(q.get("sec")), tier = Number(q.get("tier"));
+      if (t.on && (r === 3 || r === 6 || r === 12)) over.rounds = r;
+      if (t.on && (sec === 60 || sec === 120 || sec === 180)) over.roundSec = sec;
+      if (t.on && q.has("tier") && tier >= 0 && tier <= 4) over.tier = tier as Settings["tier"];
+      // a test link can set these for this visit (they are not saved)
+      setSettingsState({ ...base, ...over });
       setCreated(listFighters());
       refreshResume();
       const s = t.on ? q.get("screen") : null;

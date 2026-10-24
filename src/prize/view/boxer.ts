@@ -91,21 +91,24 @@ export function boxerGeometry(def: FighterDef, detail: number): THREE.BufferGeom
   root.updateMatrixWorld(true);
   const wrist = { [B.handL]: new THREE.Vector3().setFromMatrixPosition(bones[B.handL].matrixWorld), [B.handR]: new THREE.Vector3().setFromMatrixPosition(bones[B.handR].matrixWorld) };
   // the match body's arms are built to read from a broadcast camera; up close they are slimmed to real proportions
-  const armBones = new Set([B.armL, B.armR, B.foreL, B.foreR]);
+  const armBones = new Set([B.armL, B.armR, B.foreL, B.foreR, B.clavL, B.clavR]);
   const axis: Record<number, number> = {};
   for (const side of [1, -1]) {
     let sx = 0, cnt = 0;
     for (let v = 0; v < n; v++) {
       const bn = sw.getY(v) > 0.5 ? si.getY(v) : si.getX(v);
-      if ((bn === B.armL || bn === B.foreL) === side > 0 && armBones.has(bn)) { sx += pos.getX(v); cnt++; }
+      if ((bn === B.armL || bn === B.foreL) === side > 0 && (bn === B.armL || bn === B.foreL || bn === B.armR || bn === B.foreR)) { sx += pos.getX(v); cnt++; }
     }
     axis[side] = cnt ? sx / cnt : 0;
   }
   for (let v = 0; v < n; v++) {
     const bn = sw.getY(v) > 0.5 ? si.getY(v) : si.getX(v);
     if (!armBones.has(bn)) continue;
-    const ax = axis[bn === B.armL || bn === B.foreL ? 1 : -1];
-    const k = bn === B.foreL || bn === B.foreR ? 0.8 : 0.84;
+    const left = bn === B.armL || bn === B.foreL || bn === B.clavL;
+    const ax = axis[left ? 1 : -1];
+    // the shoulder caps hang on the collar bones: only the part out over the arm is slimmed
+    if ((bn === B.clavL || bn === B.clavR) && Math.abs(pos.getX(v)) < Math.abs(ax) * 0.75) continue;
+    const k = bn === B.foreL || bn === B.foreR ? 0.8 : bn === B.clavL || bn === B.clavR ? 0.88 : 0.84;
     pos.setX(v, ax + (pos.getX(v) - ax) * k);
     pos.setZ(v, pos.getZ(v) * k);
   }
@@ -129,7 +132,7 @@ export function boxerGeometry(def: FighterDef, detail: number): THREE.BufferGeom
         // the trunks: waistband, a stripe down the side, a band at the hem
         m = M.trunks;
         if (yy > 0.468) c = band;
-        else if (xx > 0.092 || (thighs.has(bone) && xx > 0.09)) c = stripe;
+        else if (thighs.has(bone) ? xx > 0.118 : xx > 0.097) c = stripe;
         else if (thighs.has(bone) && yy < 0.398) c = band;
         else c = trunk;
       } else if (yy > 0.17) {
@@ -153,7 +156,7 @@ export function boxerGeometry(def: FighterDef, detail: number): THREE.BufferGeom
       ao += Math.exp(-(xa * xa) / 0.00002) * (yy > 0.56 && yy < 0.79 ? 1 : 0) * 0.22;
       for (const ly of [0.605, 0.638, 0.668]) ao += Math.exp(-((yy - ly) ** 2) / 0.00003) * (xa < 0.045 ? 1 : 0) * 0.16;
       ao += Math.exp(-((xa - 0.075) ** 2) / 0.0001) * (yy > 0.55 && yy < 0.68 ? 1 : 0) * 0.12;
-      const k = 1 - ao * (0.55 + muscle * 0.6);
+      const k = 1 - ao * (0.3 + muscle * 0.35);
       c = c.map(cc => cc * k);
       // a heavier middle for the big men
       if (L.belly > 0) {

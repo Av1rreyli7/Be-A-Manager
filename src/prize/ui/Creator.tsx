@@ -239,7 +239,7 @@ export default function Creator(props: { initial: Created | null; quality: numbe
               {c.nick.trim() ? `"${c.nick.trim()}" · ` : ""}
               {c.country} · {c.stance === "orthodox" ? "Orthodox" : "Southpaw"} · {def.weightClass}
             </span>
-            <span className="pf-note">Drag to turn him round.</span>
+            <span className="pf-note">Drag to turn round.</span>
           </div>
         </section>
       </div>
